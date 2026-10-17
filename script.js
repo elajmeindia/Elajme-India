@@ -7,7 +7,7 @@
 */
 const SITE_CONFIG = {
   brandName: "Elajme India",
-  whatsappNumber: "REPLACE_WITH_BUSINESS_WHATSAPP_NUMBER"
+  whatsappNumber: "917488955154"
 };
 
 const translations = {
