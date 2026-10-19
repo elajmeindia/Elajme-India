@@ -115,3 +115,26 @@ if (patientEnquiryForm) {
   });
 }
 
+
+// HIDE FLOATING WHATSAPP WHILE ENQUIRY FORM IS VISIBLE
+
+const enquirySection = document.getElementById("enquiry");
+const mobileWhatsApp = document.querySelector(".mobile-whatsapp");
+
+if (enquirySection && mobileWhatsApp) {
+  const enquiryObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        mobileWhatsApp.classList.toggle(
+          "hide-during-enquiry",
+          entry.isIntersecting
+        );
+      });
+    },
+    {
+      threshold: 0.15
+    }
+  );
+
+  enquiryObserver.observe(enquirySection);
+}
