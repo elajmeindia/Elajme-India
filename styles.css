@@ -17,3 +17,52 @@ body[dir=rtl] .desktop-nav,body[dir=rtl] .nav-actions{direction:rtl}body[dir=rtl
   align-items: center;
   text-decoration: none;
 }
+/* Elajme India compact header branding */
+.brand-wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-decoration: none;
+  line-height: 1.05;
+  min-width: 170px;
+}
+
+.brand-main {
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  color: #075985;
+}
+
+.brand-main::after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: #159447;
+}
+
+.brand-ar {
+  margin-top: 5px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #16865b;
+  direction: rtl;
+}
+
+@media (max-width: 700px) {
+  .brand-main {
+    font-size: 20px;
+  }
+
+  .brand-ar {
+    font-size: 13px;
+  }
+
+  .brand-wordmark {
+    min-width: auto;
+  }
+}
