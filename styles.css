@@ -409,3 +409,37 @@ html[dir="rtl"] .enquiry-wrap {
   width: 100%;
   max-width: none;
 }
+/* FINAL FIX - HOW IT WORKS PROCESS LAYOUT */
+
+.process-list {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.process-item {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  column-gap: 18px;
+  width: 100%;
+}
+
+.process-item > div {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.process-item h3,
+.process-item p {
+  display: block;
+  width: 100%;
+  max-width: none;
+}
+
+@media (max-width: 760px) {
+  .process-item {
+    grid-template-columns: 42px minmax(0, 1fr);
+    column-gap: 13px;
+  }
+}
