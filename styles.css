@@ -175,3 +175,75 @@ body[dir=rtl] .desktop-nav,body[dir=rtl] .nav-actions{direction:rtl}body[dir=rtl
     font-size: 15px;
   }
 }
+/* WHY CHOOSE ELAJME INDIA */
+
+.why-choose-section {
+  background: #f7faf9;
+}
+
+.why-choose-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  margin-top: 42px;
+}
+
+.why-choose-card {
+  background: #ffffff;
+  border: 1px solid rgba(17, 47, 65, 0.09);
+  border-radius: 18px;
+  padding: 30px 25px;
+  box-shadow: 0 12px 35px rgba(17, 47, 65, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.why-choose-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(17, 47, 65, 0.10);
+}
+
+.why-choose-icon {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  background: rgba(32, 143, 110, 0.10);
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 22px;
+}
+
+.why-choose-card h3 {
+  margin: 0 0 12px;
+  font-size: 19px;
+  line-height: 1.35;
+}
+
+.why-choose-card p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+html[dir="rtl"] .why-choose-card {
+  text-align: right;
+}
+
+@media (max-width: 1000px) {
+  .why-choose-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .why-choose-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 30px;
+  }
+
+  .why-choose-card {
+    padding: 24px 22px;
+  }
+}
