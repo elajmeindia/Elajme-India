@@ -61,3 +61,50 @@ document.getElementById("languageToggle").addEventListener("click", () => {
 });
 document.getElementById("year").textContent = new Date().getFullYear();
 updateLanguage("en");
+// PATIENT ENQUIRY FORM → WHATSAPP
+
+const patientEnquiryForm = document.getElementById("patientEnquiryForm");
+
+if (patientEnquiryForm) {
+  patientEnquiryForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const patientName = document.getElementById("patientName").value.trim();
+    const patientCountry = document.getElementById("patientCountry").value.trim();
+    const patientAge = document.getElementById("patientAge").value.trim();
+    const medicalNeed = document.getElementById("medicalNeed").value.trim();
+    const preferredLanguage = document.getElementById("preferredLanguage").value;
+
+    let message;
+
+    if (preferredLanguage === "Arabic") {
+      message =
+        "السلام عليكم، أود الاستفسار عن تنسيق العلاج في الهند.\n\n" +
+        "اسم المريض: " + patientName + "\n" +
+        "الدولة: " + patientCountry + "\n" +
+        (patientAge ? "العمر: " + patientAge + "\n" : "") +
+        "العلاج المطلوب / الحالة الطبية: " + medicalNeed + "\n" +
+        "اللغة المفضلة: العربية\n\n" +
+        "يرجى توضيح الخطوات التالية.";
+    } else {
+      message =
+        "Hello Elajme India,\n\n" +
+        "I would like to enquire about treatment coordination in India.\n\n" +
+        "Patient name: " + patientName + "\n" +
+        "Country: " + patientCountry + "\n" +
+        (patientAge ? "Age: " + patientAge + "\n" : "") +
+        "Treatment / medical condition: " + medicalNeed + "\n" +
+        "Preferred language: English\n\n" +
+        "Please explain the next steps.";
+    }
+
+    const whatsappUrl =
+      "https://wa.me/" +
+      SITE_CONFIG.whatsappNumber +
+      "?text=" +
+      encodeURIComponent(message);
+
+    window.open(whatsappUrl, "_blank");
+  });
+}
+
