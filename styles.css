@@ -399,4 +399,13 @@ html[dir="rtl"] .enquiry-wrap {
 .mobile-whatsapp {
   transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
 }
+/* Fix How It Works text width */
+.process-item > div {
+  min-width: 0;
+  width: 100%;
+}
 
+.process-item p {
+  width: 100%;
+  max-width: none;
+}
