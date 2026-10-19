@@ -142,3 +142,36 @@ body[dir=rtl] .desktop-nav,body[dir=rtl] .nav-actions{direction:rtl}body[dir=rtl
     font-size: 15px;
   }
 }
+/* Final logo refinement */
+.brand-wordmark {
+  gap: 8px;
+}
+
+.brand-icon {
+  width: 60px;
+  height: 60px;
+}
+
+.brand-main {
+  font-size: 23px;
+}
+
+.brand-ar {
+  font-size: 18px;
+  margin-top: 4px;
+}
+
+@media (max-width: 700px) {
+  .brand-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .brand-main {
+    font-size: 18px;
+  }
+
+  .brand-ar {
+    font-size: 15px;
+  }
+}
