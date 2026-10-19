@@ -66,3 +66,79 @@ body[dir=rtl] .desktop-nav,body[dir=rtl] .nav-actions{direction:rtl}body[dir=rtl
     min-width: auto;
   }
 }
+/* Final Elajme India bilingual header */
+.brand-wordmark {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  min-width: 220px;
+}
+
+.brand-icon {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1;
+}
+
+.brand-main {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+.brand-main::after {
+  display: none;
+}
+
+.brand-elajme {
+  color: #075985;
+}
+
+.brand-india {
+  color: #07834a;
+}
+
+.brand-ar {
+  margin-top: 6px;
+  font-size: 19px;
+  font-weight: 700;
+  color: #075985;
+  direction: rtl;
+  text-align: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .brand-wordmark {
+    gap: 7px;
+    min-width: auto;
+  }
+
+  .brand-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .brand-main {
+    font-size: 18px;
+  }
+
+  .brand-ar {
+    margin-top: 4px;
+    font-size: 15px;
+  }
+}
