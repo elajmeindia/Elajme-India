@@ -26,9 +26,16 @@ function updateLanguage(language) {
   document.getElementById("languageToggle").textContent = settings.toggle;
 
   document.querySelectorAll("[data-en][data-ar]").forEach((element) => {
-    const value = element.getAttribute(`data-${language}`);
-    if (value !== null) element.innerHTML = value;
-  });
+  const value = element.getAttribute(`data-${language}`);
+  if (value !== null) element.innerHTML = value;
+});
+
+document.querySelectorAll("[data-placeholder-en][data-placeholder-ar]").forEach((element) => {
+  const placeholder = element.getAttribute(`data-placeholder-${language}`);
+  if (placeholder !== null) {
+    element.setAttribute("placeholder", placeholder);
+  }
+});
 
   document.title = language === "ar"
     ? "العلاج في الهند | تنسيق المرضى باللغة العربية"
