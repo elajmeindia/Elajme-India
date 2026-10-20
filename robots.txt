@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://elajmeindia.github.io/Elajme-India/sitemap.xml
