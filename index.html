@@ -54,7 +54,7 @@
     <div class="container nav-wrap">
 
       <a class="brand brand-wordmark"
-         href="#home"
+         href="index.html#home"
          aria-label="Elajme India Home">
 
         <img src="Healthcare%20Travel%20Swoosh%20Emblem.png"
@@ -82,28 +82,34 @@
       <nav class="desktop-nav"
            aria-label="Main navigation">
 
-        <a href="#services"
-           data-en="Services"
-           data-ar="خدماتنا">
-          Services
+        <a href="index.html#home"
+           data-en="Home"
+           data-ar="الرئيسية">
+          Home
         </a>
 
-        <a href="#how-it-works"
+        <a href="index.html#treatments"
+           data-en="Treatments"
+           data-ar="العلاجات">
+          Treatments
+        </a>
+
+        <a href="index.html#countries"
+           data-en="International Patients"
+           data-ar="المرضى الدوليون">
+          International Patients
+        </a>
+
+        <a href="index.html#how-it-works"
            data-en="How it works"
            data-ar="كيف نعمل">
           How it works
         </a>
 
-        <a href="#treatments"
-           data-en="Treatments"
-           data-ar="التخصصات">
-          Treatments
-        </a>
-
-        <a href="#about"
-           data-en="About us"
+        <a href="index.html#about"
+           data-en="About"
            data-ar="من نحن">
-          About us
+          About
         </a>
 
       </nav>
@@ -540,18 +546,18 @@
           <div class="form-field">
 
             <label for="medicalNeed"
-                   data-en="Treatment or medical condition"
-                   data-ar="العلاج المطلوب أو الحالة الطبية">
-              Treatment or medical condition
+                   data-en="Medical condition / treatment needed"
+                   data-ar="الحالة الطبية / العلاج المطلوب">
+              Medical condition / treatment needed
             </label>
 
             <textarea id="medicalNeed"
                       name="medicalNeed"
-                      rows="3"
+                      rows="5"
                       required
-                      data-placeholder-en="Briefly tell us what treatment or medical support you are looking for"
-                      data-placeholder-ar="اذكر باختصار حالتك الطبية أو العلاج الذي تبحث عنه"
-                      placeholder="Briefly tell us what treatment or medical support you are looking for"></textarea>
+                      data-placeholder-en="Briefly describe the condition or treatment you are looking for"
+                      data-placeholder-ar="اذكر بإيجاز الحالة الطبية أو العلاج الذي تبحث عنه"
+                      placeholder="Briefly describe the condition or treatment you are looking for"></textarea>
 
           </div>
 
@@ -567,12 +573,16 @@
             <select id="preferredLanguage"
                     name="preferredLanguage">
 
-              <option value="English">
+              <option value="English"
+                      data-en="English"
+                      data-ar="الإنجليزية">
                 English
               </option>
 
-              <option value="Arabic">
-                العربية
+              <option value="Arabic"
+                      data-en="Arabic"
+                      data-ar="العربية">
+                Arabic
               </option>
 
             </select>
@@ -593,7 +603,7 @@
           </button>
 
 
-          <p class="enquiry-privacy"
+          <p class="form-note"
              data-en="After you continue to WhatsApp, you can attach relevant medical reports directly in the WhatsApp conversation. Please share only documents needed for your enquiry."
              data-ar="بعد المتابعة عبر واتساب، يمكنك إرفاق التقارير الطبية ذات الصلة مباشرةً في محادثة واتساب. يرجى مشاركة المستندات اللازمة لاستفسارك فقط.">
             After you continue to WhatsApp, you can attach relevant medical reports directly in the WhatsApp conversation. Please share only documents needed for your enquiry.
@@ -605,169 +615,15 @@
       </div>
 
     </section>
-    <!-- END START YOUR ENQUIRY -->
 
 
-    <!-- SERVICES -->
-    <section class="section section-white"
-             id="services">
-
-      <div class="container">
-
-        <div class="section-heading">
-
-          <span class="section-label"
-                data-en="HOW WE CAN HELP"
-                data-ar="كيف نساعدك">
-            HOW WE CAN HELP
-          </span>
-
-          <h2
-            data-en="Practical support for a complex journey."
-            data-ar="دعم عملي لرحلتك العلاجية في الهند.">
-            Practical support for a complex journey.
-          </h2>
-
-          <p
-            data-en="We help organise the non-clinical parts of seeking care in India, so you can make informed decisions with the hospital and your treating doctor."
-            data-ar="نساعدك في تنسيق الجوانب غير الطبية لرحلتك العلاجية في الهند، لتتمكن من اتخاذ قراراتك بالتشاور مع المستشفى وطبيبك المعالج.">
-            We help organise the non-clinical parts of seeking care in India, so you can make informed decisions with the hospital and your treating doctor.
-          </p>
-
-        </div>
-
-
-        <div class="service-grid">
-
-
-          <article class="service-card">
-
-            <div class="service-icon">✉</div>
-
-            <h3
-              data-en="Medical case coordination"
-              data-ar="تنسيق الحالة العلاجية">
-              Medical case coordination
-            </h3>
-
-            <p
-              data-en="Help organise your enquiry and share the relevant information with a suitable hospital team, with your consent."
-              data-ar="نساعدك في تنظيم استفسارك ومشاركة المعلومات اللازمة مع فريق المستشفى المناسب بعد الحصول على موافقتك.">
-              Help organise your enquiry and share the relevant information with a suitable hospital team, with your consent.
-            </p>
-
-          </article>
-
-
-          <article class="service-card">
-
-            <div class="service-icon">⌕</div>
-
-            <h3
-              data-en="Hospital and appointment coordination"
-              data-ar="التنسيق مع المستشفيات والمواعيد">
-              Hospital and appointment coordination
-            </h3>
-
-            <p
-              data-en="Coordinate hospital communication, appointment requests and the information you need before deciding."
-              data-ar="نساعدك في تنسيق التواصل مع المستشفى وطلبات المواعيد والحصول على المعلومات التي تحتاج إليها قبل اتخاذ القرار.">
-              Coordinate hospital communication, appointment requests and the information you need before deciding.
-            </p>
-
-          </article>
-
-
-          <article class="service-card">
-
-            <div class="service-icon">◷</div>
-
-            <h3
-              data-en="Treatment estimate coordination"
-              data-ar="تنسيق التكلفة التقديرية للعلاج">
-              Treatment estimate coordination
-            </h3>
-
-            <p
-              data-en="Request a treatment plan and estimated costs from the hospital where available. Actual costs depend on the clinical assessment."
-              data-ar="نساعدك في طلب خطة علاج وتكلفة تقديرية من المستشفى عند توفرهما، مع العلم أن التكلفة الفعلية تعتمد على التقييم الطبي.">
-              Request a treatment plan and estimated costs from the hospital where available. Actual costs depend on the clinical assessment.
-            </p>
-
-          </article>
-
-
-          <article class="service-card">
-
-            <div class="service-icon">✈</div>
-
-            <h3
-              data-en="Travel and stay assistance"
-              data-ar="المساعدة في السفر والإقامة">
-              Travel and stay assistance
-            </h3>
-
-            <p
-              data-en="Practical coordination for medical-visa information, accommodation, local transport and airport transfers."
-              data-ar="نساعدك في تنسيق المعلومات المتعلقة بالتأشيرة الطبية، ترتيبات الإقامة الفندقية، خدمات النقل، والاستقبال والتوديع من وإلى المطار.">
-              Practical coordination for medical-visa information, accommodation, local transport and airport transfers.
-            </p>
-
-          </article>
-
-
-          <article class="service-card">
-
-            <div class="service-icon">ع</div>
-
-            <h3
-              data-en="Arabic &amp; English support"
-              data-ar="دعم بالعربية والإنجليزية">
-              Arabic &amp; English support
-            </h3>
-
-            <p
-              data-en="Communicate your questions clearly and understand the practical steps in Arabic or English."
-              data-ar="تواصل بوضوح واطرح استفساراتك وافهم الخطوات العملية باللغة العربية أو الإنجليزية.">
-              Communicate your questions clearly and understand the practical steps in Arabic or English.
-            </p>
-
-          </article>
-
-
-          <article class="service-card">
-
-            <div class="service-icon">↗</div>
-
-            <h3
-              data-en="Journey coordination"
-              data-ar="تنسيق الرحلة العلاجية">
-              Journey coordination
-            </h3>
-
-            <p
-              data-en="Keep appointments, travel details and coordination updates organised through one point of contact."
-              data-ar="تنظيم المواعيد وتفاصيل السفر والتحديثات من خلال نقطة اتصال واحدة.">
-              Keep appointments, travel details and coordination updates organised through one point of contact.
-            </p>
-
-          </article>
-
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- WHY CHOOSE ELAJME INDIA -->
-    <section class="section why-choose-section"
-             id="why-choose-us">
+    <!-- WHY ELAJME -->
+    <section class="section why-section"
+             id="why-elajme">
 
       <div class="container">
 
-        <div class="section-heading">
+        <div class="section-heading centered">
 
           <span class="section-label"
                 data-en="WHY CHOOSE ELAJME INDIA"
@@ -790,139 +646,202 @@
         </div>
 
 
-        <div class="why-choose-grid">
+        <div class="why-grid">
 
 
-          <article class="why-choose-card">
+          <div class="why-card">
 
-            <div class="why-choose-icon">10+</div>
+            <div class="why-number">10+</div>
 
-            <h3
-              data-en="Years of Professional Experience"
-              data-ar="سنوات من الخبرة المهنية">
-              Years of Professional Experience
-            </h3>
+            <div>
 
-            <p
-              data-en="More than 10 years of professional experience in Arabic communication and working with clients and partners from the Middle East."
-              data-ar="أكثر من عشر سنوات من الخبرة المهنية في التواصل باللغة العربية والعمل مع العملاء والشركاء من منطقة الشرق الأوسط.">
-              More than 10 years of professional experience in Arabic communication and working with clients and partners from the Middle East.
-            </p>
+              <h3 data-en="Years of Professional Experience"
+                  data-ar="سنوات من الخبرة المهنية">
+                Years of Professional Experience
+              </h3>
 
-          </article>
-
-
-          <article class="why-choose-card">
-
-            <div class="why-choose-icon"
-                 aria-hidden="true">
-
-              <svg width="27"
-                   height="27"
-                   viewBox="0 0 24 24"
-                   fill="none"
-                   stroke="currentColor"
-                   stroke-width="1.8"
-                   stroke-linecap="round"
-                   stroke-linejoin="round">
-
-                <path d="M4 5h16v11H8l-4 3V5z"/>
-                <path d="M8 9h8"/>
-                <path d="M8 12h5"/>
-
-              </svg>
+              <p data-en="Experience in Arabic communication, international client support, travel coordination and cross-functional operations."
+                 data-ar="خبرة في التواصل باللغة العربية، ودعم العملاء الدوليين، وتنسيق السفر، والعمل مع فرق متعددة التخصصات.">
+                Experience in Arabic communication, international client support, travel coordination and cross-functional operations.
+              </p>
 
             </div>
 
-            <h3
-              data-en="Arabic &amp; English Support"
-              data-ar="دعم بالعربية والإنجليزية">
-              Arabic &amp; English Support
-            </h3>
-
-            <p
-              data-en="Communicate comfortably in Arabic or English throughout your treatment journey."
-              data-ar="تواصل بسهولة باللغة العربية أو الإنجليزية طوال رحلتك العلاجية.">
-              Communicate comfortably in Arabic or English throughout your treatment journey.
-            </p>
-
-          </article>
+          </div>
 
 
-          <article class="why-choose-card">
+          <div class="why-card">
 
-            <div class="why-choose-icon"
-                 aria-hidden="true">
+            <div class="why-icon">ع</div>
 
-              <svg width="27"
-                   height="27"
-                   viewBox="0 0 24 24"
-                   fill="none"
-                   stroke="currentColor"
-                   stroke-width="1.8"
-                   stroke-linecap="round"
-                   stroke-linejoin="round">
+            <div>
 
-                <path d="M5 21V5h14v16"/>
-                <path d="M9 21v-4h6v4"/>
-                <path d="M12 8v5"/>
-                <path d="M9.5 10.5h5"/>
+              <h3 data-en="Arabic &amp; English Support"
+                  data-ar="دعم بالعربية والإنجليزية">
+                Arabic &amp; English Support
+              </h3>
 
-              </svg>
+              <p data-en="Clear communication for patients and families who prefer Arabic or English throughout the coordination process."
+                 data-ar="تواصل واضح مع المرضى وعائلاتهم باللغتين العربية والإنجليزية طوال مراحل التنسيق.">
+                Clear communication for patients and families who prefer Arabic or English throughout the coordination process.
+              </p>
 
             </div>
 
-            <h3
-              data-en="Hospital Coordination in India"
-              data-ar="التنسيق مع المستشفيات في الهند">
-              Hospital Coordination in India
-            </h3>
-
-            <p
-              data-en="We help coordinate hospital enquiries, medical opinions, appointments and treatment-related information."
-              data-ar="نساعدك في تنسيق الاستفسارات مع المستشفيات والآراء الطبية والمواعيد والمعلومات المتعلقة بالعلاج.">
-              We help coordinate hospital enquiries, medical opinions, appointments and treatment-related information.
-            </p>
-
-          </article>
+          </div>
 
 
-          <article class="why-choose-card">
+          <div class="why-card">
 
-            <div class="why-choose-icon"
-                 aria-hidden="true">
+            <div class="why-icon">+</div>
 
-              <svg width="27"
-                   height="27"
-                   viewBox="0 0 24 24"
-                   fill="none"
-                   stroke="currentColor"
-                   stroke-width="1.8"
-                   stroke-linecap="round"
-                   stroke-linejoin="round">
+            <div>
 
-                <circle cx="10" cy="8" r="3"/>
-                <path d="M4 19c.7-3.2 2.8-5 6-5 1.5 0 2.8.4 3.8 1.2"/>
-                <path d="M15 18l2 2 4-5"/>
+              <h3 data-en="Hospital Coordination in India"
+                  data-ar="التنسيق مع المستشفيات في الهند">
+                Hospital Coordination in India
+              </h3>
 
-              </svg>
+              <p data-en="Support in coordinating medical case reviews, hospital communication, appointments and treatment estimates."
+                 data-ar="المساعدة في تنسيق مراجعة الحالات الطبية، والتواصل مع المستشفيات، والمواعيد، والتكلفة التقديرية للعلاج.">
+                Support in coordinating medical case reviews, hospital communication, appointments and treatment estimates.
+              </p>
 
             </div>
 
-            <h3
-              data-en="Dedicated Support Throughout Your Journey"
-              data-ar="دعم مخصص طوال رحلتك العلاجية">
-              Dedicated Support Throughout Your Journey
+          </div>
+
+
+          <div class="why-card">
+
+            <div class="why-icon">✓</div>
+
+            <div>
+
+              <h3 data-en="Dedicated Support Throughout Your Journey"
+                  data-ar="دعم مخصص طوال رحلتك العلاجية">
+                Dedicated Support Throughout Your Journey
+              </h3>
+
+              <p data-en="From your first enquiry to treatment and travel coordination, we help you understand what comes next."
+                 data-ar="من استفسارك الأول وحتى تنسيق العلاج والسفر، نساعدك على معرفة الخطوات التالية بوضوح.">
+                From your first enquiry to treatment and travel coordination, we help you understand what comes next.
+              </p>
+
+            </div>
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- SERVICES -->
+    <section class="section"
+             id="services">
+
+      <div class="container">
+
+        <div class="section-heading">
+
+          <span class="section-label"
+                data-en="WHAT WE HELP WITH"
+                data-ar="كيف نساعدك">
+            WHAT WE HELP WITH
+          </span>
+
+          <h2
+            data-en="Practical support for a complex journey."
+            data-ar="دعم عملي لرحلتك العلاجية في الهند.">
+            Practical support for a complex journey.
+          </h2>
+
+          <p
+            data-en="International treatment can involve medical, travel and communication challenges. We help you organise the journey step by step."
+            data-ar="قد تتضمن رحلة العلاج في الخارج ترتيبات طبية وسفرية وتحديات في التواصل. نساعدك على تنظيم الرحلة خطوة بخطوة.">
+            International treatment can involve medical, travel and communication challenges. We help you organise the journey step by step.
+          </p>
+
+        </div>
+
+
+        <div class="service-grid">
+
+          <article class="service-card">
+            <div class="service-number">01</div>
+            <h3 data-en="Medical case coordination"
+                data-ar="تنسيق الحالة العلاجية">
+              Medical case coordination
             </h3>
-
-            <p
-              data-en="Get support from your first enquiry through hospital coordination, travel arrangements and your visit to India."
-              data-ar="نقدم لك الدعم منذ استفسارك الأول، مروراً بالتنسيق مع المستشفى وترتيبات السفر، وحتى زيارتك إلى الهند.">
-              Get support from your first enquiry through hospital coordination, travel arrangements and your visit to India.
+            <p data-en="We help organise the information needed to coordinate your case with hospitals and medical teams."
+               data-ar="نساعدك على تنظيم المعلومات اللازمة لتنسيق حالتك مع المستشفيات والفرق الطبية.">
+              We help organise the information needed to coordinate your case with hospitals and medical teams.
             </p>
-
           </article>
 
+          <article class="service-card">
+            <div class="service-number">02</div>
+            <h3 data-en="Hospital and appointment coordination"
+                data-ar="التنسيق مع المستشفيات والمواعيد">
+              Hospital and appointment coordination
+            </h3>
+            <p data-en="We coordinate with hospitals regarding medical review, consultations and appointment planning."
+               data-ar="نتولى التنسيق مع المستشفيات بشأن مراجعة الحالة الطبية والاستشارات وترتيب المواعيد.">
+              We coordinate with hospitals regarding medical review, consultations and appointment planning.
+            </p>
+          </article>
+
+          <article class="service-card">
+            <div class="service-number">03</div>
+            <h3 data-en="Treatment estimate coordination"
+                data-ar="تنسيق التكلفة التقديرية للعلاج">
+              Treatment estimate coordination
+            </h3>
+            <p data-en="We help obtain and explain available hospital treatment estimates so you can review your options."
+               data-ar="نساعدك في الحصول على التكلفة التقديرية المتاحة من المستشفى وفهمها لتتمكن من مراجعة خياراتك.">
+              We help obtain and explain available hospital treatment estimates so you can review your options.
+            </p>
+          </article>
+
+          <article class="service-card">
+            <div class="service-number">04</div>
+            <h3 data-en="Travel and stay assistance"
+                data-ar="المساعدة في السفر والإقامة">
+              Travel and stay assistance
+            </h3>
+            <p data-en="We can assist with practical travel, accommodation and local coordination related to your treatment visit."
+               data-ar="يمكننا مساعدتك في ترتيبات السفر والإقامة والتنسيق المحلي المرتبط بزيارتك العلاجية.">
+              We can assist with practical travel, accommodation and local coordination related to your treatment visit.
+            </p>
+          </article>
+
+          <article class="service-card">
+            <div class="service-number">05</div>
+            <h3 data-en="Arabic &amp; English support"
+                data-ar="دعم بالعربية والإنجليزية">
+              Arabic &amp; English support
+            </h3>
+            <p data-en="We support clear communication with patients and families in Arabic and English."
+               data-ar="نقدم دعماً واضحاً في التواصل مع المرضى وعائلاتهم باللغتين العربية والإنجليزية.">
+              We support clear communication with patients and families in Arabic and English.
+            </p>
+          </article>
+
+          <article class="service-card">
+            <div class="service-number">06</div>
+            <h3 data-en="Journey coordination"
+                data-ar="تنسيق الرحلة العلاجية">
+              Journey coordination
+            </h3>
+            <p data-en="We stay involved across the coordination journey so you know the next practical step."
+               data-ar="نبقى على تواصل معك خلال مراحل التنسيق لتعرف الخطوة العملية التالية.">
+              We stay involved across the coordination journey so you know the next practical step.
+            </p>
+          </article>
 
         </div>
 
@@ -935,10 +854,9 @@
     <section class="section process-section"
              id="how-it-works">
 
-      <div class="container process-grid">
+      <div class="container">
 
-
-        <div class="process-intro">
+        <div class="section-heading centered">
 
           <span class="section-label"
                 data-en="A CLEAR PROCESS"
@@ -946,151 +864,87 @@
             A CLEAR PROCESS
           </span>
 
-          <h2
-            data-en="Know what happens next."
-            data-ar="تعرّف على الخطوة التالية.">
+          <h2 data-en="Know what happens next."
+              data-ar="تعرّف على الخطوة التالية.">
             Know what happens next.
           </h2>
 
-          <p
-            data-en="You stay in control at every stage. Clinical decisions are made by qualified doctors and hospitals, not by our coordination team."
-            data-ar="تبقى أنت صاحب القرار في كل مرحلة. ويتخذ الأطباء المؤهلون والمستشفيات القرارات الطبية، وليس فريق التنسيق.">
-            You stay in control at every stage. Clinical decisions are made by qualified doctors and hospitals, not by our coordination team.
+          <p data-en="A simple coordination process helps you move from enquiry to a planned treatment visit with greater clarity."
+             data-ar="تساعدك خطوات التنسيق الواضحة على الانتقال من الاستفسار إلى التخطيط لزيارتك العلاجية بثقة ووضوح أكبر.">
+            A simple coordination process helps you move from enquiry to a planned treatment visit with greater clarity.
           </p>
-
-          <a class="text-link whatsapp-link"
-             href="#"
-             target="_blank"
-             rel="noopener">
-
-            <span data-en="Ask us a question"
-                  data-ar="أرسل لنا استفسارك">
-              Ask us a question
-            </span>
-
-            <span aria-hidden="true">↗</span>
-
-          </a>
 
         </div>
 
 
-        <div class="process-list">
+        <div class="process-grid">
+
+          <div class="process-line"></div>
 
 
-          <div class="process-item">
-
-            <span class="process-no">01</span>
-
-            <div>
-
-              <h3
-                data-en="Tell us what you need"
+          <article class="process-step">
+            <div class="process-dot">1</div>
+            <h3 data-en="Tell us what you need"
                 data-ar="أخبرنا بما تحتاج إليه">
-                Tell us what you need
-              </h3>
-
-              <p
-                data-en="Start with a few basic details about the patient and treatment need, then continue your enquiry with us on WhatsApp."
-                data-ar="ابدأ بمشاركة بعض المعلومات الأساسية عن حالتك واحتياجاتك العلاجية، ثم تابع استفسارك معنا عبر واتساب.">
-                Start with a few basic details about the patient and treatment need, then continue your enquiry with us on WhatsApp.
-              </p>
-
-            </div>
-
-          </div>
+              Tell us what you need
+            </h3>
+            <p data-en="Share your treatment enquiry and basic details."
+               data-ar="شاركنا استفسارك عن العلاج وبعض المعلومات الأساسية.">
+              Share your treatment enquiry and basic details.
+            </p>
+          </article>
 
 
-          <div class="process-item">
-
-            <span class="process-no">02</span>
-
-            <div>
-
-              <h3
-                data-en="Share relevant reports securely"
+          <article class="process-step">
+            <div class="process-dot">2</div>
+            <h3 data-en="Share relevant reports securely"
                 data-ar="شارك التقارير ذات الصلة بطريقة آمنة">
-                Share relevant reports securely
-              </h3>
-
-              <p
-                data-en="After starting your enquiry, you can share relevant medical documents through the agreed communication channel. We obtain your consent before passing them to a hospital."
-                data-ar="بعد بدء استفسارك، يمكنك مشاركة المستندات الطبية ذات الصلة عبر وسيلة التواصل المتفق عليها، ونحصل على موافقتك قبل إرسالها إلى المستشفى.">
-                After starting your enquiry, you can share relevant medical documents through the agreed communication channel. We obtain your consent before passing them to a hospital.
-              </p>
-
-            </div>
-
-          </div>
+              Share relevant reports securely
+            </h3>
+            <p data-en="We guide you on sharing the medical information needed for hospital review."
+               data-ar="نرشدك إلى مشاركة المعلومات الطبية اللازمة لمراجعة المستشفى.">
+              We guide you on sharing the medical information needed for hospital review.
+            </p>
+          </article>
 
 
-          <div class="process-item">
-
-            <span class="process-no">03</span>
-
-            <div>
-
-              <h3
-                data-en="Hospital &amp; doctor review"
+          <article class="process-step">
+            <div class="process-dot">3</div>
+            <h3 data-en="Hospital &amp; doctor review"
                 data-ar="مراجعة المستشفى والطبيب">
-                Hospital &amp; doctor review
-              </h3>
-
-              <p
-                data-en="The hospital or doctor reviews the case and may request more information before providing a medical opinion."
-                data-ar="يراجع المستشفى أو الطبيب الحالة، وقد يطلب معلومات إضافية قبل تقديم الرأي الطبي.">
-                The hospital or doctor reviews the case and may request more information before providing a medical opinion.
-              </p>
-
-            </div>
-
-          </div>
+              Hospital &amp; doctor review
+            </h3>
+            <p data-en="Your case is coordinated with the relevant hospital or medical team for review."
+               data-ar="يتم تنسيق حالتك مع المستشفى أو الفريق الطبي المختص للمراجعة.">
+              Your case is coordinated with the relevant hospital or medical team for review.
+            </p>
+          </article>
 
 
-          <div class="process-item">
-
-            <span class="process-no">04</span>
-
-            <div>
-
-              <h3
-                data-en="Review your options"
+          <article class="process-step">
+            <div class="process-dot">4</div>
+            <h3 data-en="Review your options"
                 data-ar="راجع الخيارات المتاحة">
-                Review your options
-              </h3>
-
-              <p
-                data-en="Consider the medical team's advice, estimated costs and practical arrangements before making a decision."
-                data-ar="راجع رأي الفريق الطبي والتكاليف التقديرية والترتيبات العملية قبل اتخاذ القرار.">
-                Consider the medical team's advice, estimated costs and practical arrangements before making a decision.
-              </p>
-
-            </div>
-
-          </div>
+              Review your options
+            </h3>
+            <p data-en="Review available medical guidance, treatment planning information and hospital estimates."
+               data-ar="راجع المعلومات الطبية المتاحة وخطة العلاج والتكلفة التقديرية المقدمة من المستشفى.">
+              Review available medical guidance, treatment planning information and hospital estimates.
+            </p>
+          </article>
 
 
-          <div class="process-item">
-
-            <span class="process-no">05</span>
-
-            <div>
-
-              <h3
-                data-en="Plan your visit with confidence"
+          <article class="process-step">
+            <div class="process-dot">5</div>
+            <h3 data-en="Plan your visit with confidence"
                 data-ar="خطط لزيارتك بثقة">
-                Plan your visit with confidence
-              </h3>
-
-              <p
-                data-en="If you choose to proceed, we can help coordinate the practical arrangements for your visit to India, including travel, accommodation, airport transfers and other agreed support."
-                data-ar="إذا قررت المتابعة، يمكننا مساعدتك في تنسيق الترتيبات العملية لزيارتك إلى الهند، بما في ذلك السفر والإقامة والاستقبال من المطار وغيرها من خدمات الدعم المتفق عليها.">
-                If you choose to proceed, we can help coordinate the practical arrangements for your visit to India, including travel, accommodation, airport transfers and other agreed support.
-              </p>
-
-            </div>
-
-          </div>
+              Plan your visit with confidence
+            </h3>
+            <p data-en="If you choose to proceed, we help coordinate the practical next steps for your treatment visit."
+               data-ar="إذا قررت المتابعة، نساعدك في تنسيق الخطوات العملية التالية لزيارتك العلاجية.">
+              If you choose to proceed, we help coordinate the practical next steps for your treatment visit.
+            </p>
+          </article>
 
 
         </div>
@@ -1100,8 +954,8 @@
     </section>
 
 
-    <!-- AREAS OF CARE -->
-    <section class="section section-white"
+    <!-- TREATMENTS -->
+    <section class="section treatments-section"
              id="treatments">
 
       <div class="container">
@@ -1114,16 +968,14 @@
             AREAS OF CARE
           </span>
 
-          <h2
-            data-en="Explore treatment options in India."
-            data-ar="تعرّف على خيارات العلاج في الهند.">
+          <h2 data-en="Explore treatment options in India."
+              data-ar="تعرّف على خيارات العلاج في الهند.">
             Explore treatment options in India.
           </h2>
 
-          <p
-            data-en="Tell us what treatment you are seeking, and we’ll help direct your enquiry to hospitals providing the relevant specialty. Availability and suitability are confirmed by the medical provider."
-            data-ar="أخبرنا عن العلاج الذي تبحث عنه، وسنساعدك في توجيه استفسارك إلى المستشفيات التي توفر التخصص المناسب. ويؤكد مقدم الرعاية الطبية مدى توفر الخدمة وملاءمتها للحالة.">
-            Tell us what treatment you are seeking, and we’ll help direct your enquiry to hospitals providing the relevant specialty. Availability and suitability are confirmed by the medical provider.
+          <p data-en="Tell us the area of care you are looking for, and we can help coordinate the next steps with relevant hospitals and medical teams."
+             data-ar="أخبرنا عن مجال العلاج الذي تبحث عنه، وسنساعدك في تنسيق الخطوات التالية مع المستشفيات والفرق الطبية المناسبة.">
+            Tell us the area of care you are looking for, and we can help coordinate the next steps with relevant hospitals and medical teams.
           </p>
 
         </div>
@@ -1208,25 +1060,19 @@
             <span class="card-arrow">↗</span>
           </a>
 
+
         </div>
-
-
-        <p class="small-note"
-           data-en="These are broad service categories, not medical advice. We do not diagnose, prescribe or guarantee outcomes."
-           data-ar="هذه فئات عامة للخدمات وليست مشورة طبية. نحن لا نشخّص الحالات ولا نصف العلاج ولا نضمن النتائج.">
-          These are broad service categories, not medical advice. We do not diagnose, prescribe or guarantee outcomes.
-        </p>
 
       </div>
 
     </section>
 
 
-    <!-- COUNTRIES / APPROACH -->
-    <section class="section country-section"
+    <!-- INTERNATIONAL PATIENTS -->
+    <section class="section countries-section"
              id="countries">
 
-      <div class="container country-grid">
+      <div class="container country-layout">
 
 
         <div>
@@ -1237,54 +1083,42 @@
             BUILT AROUND YOUR NEEDS
           </span>
 
-          <h2
-            data-en="Clear communication makes your treatment journey easier to navigate."
-            data-ar="التواصل الواضح يجعل رحلتك العلاجية أسهل وأيسر.">
-            Clear communication makes your treatment journey easier to navigate.
+          <h2 data-en="Clear communication makes your treatment journey easier."
+              data-ar="التواصل الواضح يجعل رحلتك العلاجية أسهل وأيسر.">
+            Clear communication makes your treatment journey easier.
           </h2>
 
-          <p
-            data-en="We support international patients and their families throughout their treatment journey in India, with clear communication and personal assistance in Arabic and English."
-            data-ar="ندعم المرضى الدوليين وعائلاتهم طوال رحلتهم العلاجية في الهند، من خلال التواصل الواضح والدعم الشخصي باللغتين العربية والإنجليزية.">
-            We support international patients and their families throughout their treatment journey in India, with clear communication and personal assistance in Arabic and English.
+          <p data-en="We support international patients and their families throughout their treatment journey in India, with clear communication and personalised support in Arabic and English."
+             data-ar="ندعم المرضى الدوليين وعائلاتهم طوال رحلتهم العلاجية في الهند، من خلال التواصل الواضح والدعم الشخصي باللغتين العربية والإنجليزية.">
+            We support international patients and their families throughout their treatment journey in India, with clear communication and personalised support in Arabic and English.
           </p>
 
 
-          <div class="country-pills">
+          <div class="country-tags">
 
-            <span>
-              <span data-en="Saudi Arabia"
-                    data-ar="السعودية">
-                Saudi Arabia
-              </span>
+            <span data-en="Saudi Arabia"
+                  data-ar="السعودية">
+              Saudi Arabia
             </span>
 
-            <span>
-              <span data-en="Oman"
-                    data-ar="سلطنة عُمان">
-                Oman
-              </span>
+            <span data-en="Oman"
+                  data-ar="سلطنة عُمان">
+              Oman
             </span>
 
-            <span>
-              <span data-en="UAE"
-                    data-ar="الإمارات">
-                UAE
-              </span>
+            <span data-en="United Arab Emirates"
+                  data-ar="الإمارات العربية المتحدة">
+              United Arab Emirates
             </span>
 
-            <span>
-              <span data-en="Nigeria"
-                    data-ar="نيجيريا">
-                Nigeria
-              </span>
+            <span data-en="Nigeria"
+                  data-ar="نيجيريا">
+              Nigeria
             </span>
 
-            <span>
-              <span data-en="Other Countries"
-                    data-ar="بلدان أخرى">
-                Other Countries
-              </span>
+            <span data-en="Other Countries"
+                  data-ar="بلدان أخرى">
+              Other Countries
             </span>
 
           </div>
@@ -1292,48 +1126,40 @@
         </div>
 
 
-        <div class="promise-card">
+        <div class="country-panel">
 
-          <div class="promise-top">
-
-            <span class="promise-icon">✓</span>
-
-            <span data-en="OUR APPROACH"
-                  data-ar="نهجنا">
-              OUR APPROACH
+          <div class="panel-line">
+            <span data-en="Communication"
+                  data-ar="التواصل">
+              Communication
             </span>
-
+            <strong data-en="Arabic + English"
+                    data-ar="العربية + الإنجليزية">
+              Arabic + English
+            </strong>
           </div>
 
+          <div class="panel-line">
+            <span data-en="Hospital coordination"
+                  data-ar="التنسيق مع المستشفيات">
+              Hospital coordination
+            </span>
+            <strong data-en="India"
+                    data-ar="الهند">
+              India
+            </strong>
+          </div>
 
-          <h3
-            data-en="Clear information. Respectful coordination. Your decision."
-            data-ar="معلومات واضحة، تنسيق باهتمام، والقرار لك.">
-            Clear information. Respectful coordination. Your decision.
-          </h3>
-
-
-          <ul>
-
-            <li
-              data-en="We explain the coordination process before proceeding."
-              data-ar="نوضح لك خطوات التنسيق قبل البدء في الإجراءات.">
-              We explain the coordination process before proceeding.
-            </li>
-
-            <li
-              data-en="Medical opinions and treatment estimates are provided by the hospital or medical provider."
-              data-ar="تصدر الآراء الطبية وتقديرات تكلفة العلاج عن المستشفى أو مقدم الرعاية الطبية.">
-              Medical opinions and treatment estimates are provided by the hospital or medical provider.
-            </li>
-
-            <li
-              data-en="Treatment outcomes and visa approvals cannot be guaranteed."
-              data-ar="لا يمكن ضمان نتائج العلاج أو الموافقة على التأشيرة.">
-              Treatment outcomes and visa approvals cannot be guaranteed.
-            </li>
-
-          </ul>
+          <div class="panel-line">
+            <span data-en="Support approach"
+                  data-ar="أسلوب الدعم">
+              Support approach
+            </span>
+            <strong data-en="Personal &amp; clear"
+                    data-ar="شخصي وواضح">
+              Personal &amp; clear
+            </strong>
+          </div>
 
         </div>
 
@@ -1343,54 +1169,109 @@
     </section>
 
 
+    <!-- APPROACH -->
+    <section class="section approach-section">
+
+      <div class="container approach-grid">
+
+        <div>
+
+          <span class="section-label"
+                data-en="OUR APPROACH"
+                data-ar="منهجنا">
+            OUR APPROACH
+          </span>
+
+          <h2 data-en="Clear information. Respectful coordination. Your decision."
+              data-ar="معلومات واضحة، تنسيق باهتمام، والقرار لك.">
+            Clear information. Respectful coordination. Your decision.
+          </h2>
+
+        </div>
+
+
+        <div class="approach-points">
+
+          <div>
+            <span>01</span>
+            <p data-en="We explain the coordination process clearly so you understand what is happening and what comes next."
+               data-ar="نوضح لك خطوات التنسيق بوضوح لتعرف ما يجري وما هي الخطوة التالية.">
+              We explain the coordination process clearly so you understand what is happening and what comes next.
+            </p>
+          </div>
+
+          <div>
+            <span>02</span>
+            <p data-en="We coordinate with hospitals and service providers, while medical decisions remain with qualified healthcare professionals."
+               data-ar="نتولى التنسيق مع المستشفيات ومقدمي الخدمات، بينما تبقى القرارات الطبية من اختصاص الأطباء والجهات الطبية المؤهلة.">
+              We coordinate with hospitals and service providers, while medical decisions remain with qualified healthcare professionals.
+            </p>
+          </div>
+
+          <div>
+            <span>03</span>
+            <p data-en="You remain free to review the information provided and decide whether you wish to proceed."
+               data-ar="تبقى لك حرية مراجعة المعلومات المقدمة واتخاذ قرارك بشأن المتابعة.">
+              You remain free to review the information provided and decide whether you wish to proceed.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
     <!-- ABOUT -->
-    <section class="section section-white"
+    <section class="section about-section"
              id="about">
 
       <div class="container about-grid">
 
 
-        <div class="about-mark">
+        <div>
 
-          <span class="about-plus">+</span>
-
-          <span
-            data-en="INTERNATIONAL PATIENT SUPPORT"
-            data-ar="دعم المرضى الدوليين">
-            INTERNATIONAL PATIENT SUPPORT
+          <span class="section-label"
+                data-en="ABOUT ELAJME INDIA"
+                data-ar="عن علاج مي إنديا">
+            ABOUT ELAJME INDIA
           </span>
+
+          <h2 data-en="Clear communication. Coordinated support throughout your journey."
+              data-ar="تواصل واضح، ودعم منسق طوال رحلتك العلاجية.">
+            Clear communication. Coordinated support throughout your journey.
+          </h2>
 
         </div>
 
 
         <div class="about-copy">
 
-          <span class="section-label"
-                data-en="ABOUT US"
-                data-ar="من نحن">
-            ABOUT US
-          </span>
+          <p data-en="Elajme India is a healthcare facilitation and international patient coordination service for people seeking treatment in India. We help patients and families navigate hospital communication, treatment planning, travel-related arrangements and practical coordination."
+             data-ar="علاج مي إنديا جهة متخصصة في تسهيل وتنسيق الرحلات العلاجية للمرضى الدوليين الراغبين في العلاج في الهند. نساعد المرضى وعائلاتهم في التواصل مع المستشفيات، وفهم خطوات العلاج، وترتيبات السفر، والجوانب العملية المرتبطة بالرحلة العلاجية.">
+            Elajme India is a healthcare facilitation and international patient coordination service for people seeking treatment in India. We help patients and families navigate hospital communication, treatment planning, travel-related arrangements and practical coordination.
+          </p>
 
-
-          <h2
-            data-en="Clear communication. Coordinated support throughout your journey."
-            data-ar="تواصل واضح، ودعم منسق طوال رحلتك العلاجية.">
-            Clear communication. Coordinated support throughout your journey.
-          </h2>
-
-
-          <p
-            data-en="Elajme India supports international patients seeking treatment in India. With more than 10 years of professional experience in Arabic communication, along with experience in Middle Eastern client coordination and travel services, we help make the practical side of your treatment journey clearer and easier to manage in Arabic or English."
-            data-ar="تدعم علاج مي إنديا المرضى الدوليين الباحثين عن العلاج في الهند. وبخبرة مهنية تزيد على عشر سنوات في التواصل باللغة العربية، إلى جانب الخبرة في التنسيق مع عملاء من الشرق الأوسط وخدمات السفر، نساعد في جعل الجوانب العملية لرحلتك العلاجية أكثر وضوحاً وسهولة، بالعربية أو الإنجليزية.">
-            Elajme India supports international patients seeking treatment in India. With more than 10 years of professional experience in Arabic communication, along with experience in Middle Eastern client coordination and travel services, we help make the practical side of your treatment journey clearer and easier to manage in Arabic or English.
+          <p data-en="Our focus is on clear communication, organised coordination and personalised support in Arabic and English."
+             data-ar="نركز على التواصل الواضح، والتنظيم الجيد، وتقديم دعم شخصي باللغتين العربية والإنجليزية.">
+            Our focus is on clear communication, organised coordination and personalised support in Arabic and English.
           </p>
 
 
-          <p class="small-note"
-             data-en="We are a healthcare facilitation and coordination service, not a hospital or medical provider."
-             data-ar="نحن جهة لتسهيل وتنسيق الخدمات المرتبطة بالعلاج، ولسنا مستشفى أو مقدم خدمة طبية.">
-            We are a healthcare facilitation and coordination service, not a hospital or medical provider.
-          </p>
+          <div class="about-disclaimer">
+
+            <strong data-en="Important"
+                    data-ar="مهم">
+              Important
+            </strong>
+
+            <p data-en="We are a healthcare facilitation and coordination service, not a hospital or medical provider."
+               data-ar="نحن جهة لتسهيل وتنسيق الخدمات المرتبطة بالعلاج، ولسنا مستشفى أو مقدم خدمة طبية.">
+              We are a healthcare facilitation and coordination service, not a hospital or medical provider.
+            </p>
+
+          </div>
 
         </div>
 
@@ -1404,102 +1285,83 @@
     <section class="section faq-section"
              id="faq">
 
-      <div class="container faq-grid">
+      <div class="container">
 
-
-        <div class="section-heading faq-heading">
+        <div class="section-heading centered">
 
           <span class="section-label"
-                data-en="COMMON QUESTIONS"
-                data-ar="أسئلة شائعة">
-            COMMON QUESTIONS
+                data-en="FREQUENTLY ASKED QUESTIONS"
+                data-ar="الأسئلة الشائعة">
+            FREQUENTLY ASKED QUESTIONS
           </span>
 
-
-          <h2
-            data-en="What you may want to know before getting started."
-            data-ar="معلومات مهمة قبل بدء رحلتك العلاجية.">
-            What you may want to know before getting started.
+          <h2 data-en="Questions international patients often ask."
+              data-ar="أسئلة يطرحها المرضى الدوليون كثيراً.">
+            Questions international patients often ask.
           </h2>
-
-
-          <p
-            data-en="Find answers to common questions about treatment coordination, costs, medical visas and sharing your medical information."
-            data-ar="تعرّف على إجابات لأبرز الاستفسارات المتعلقة بتنسيق العلاج والتكاليف والتأشيرة الطبية ومشاركة المعلومات الطبية.">
-            Find answers to common questions about treatment coordination, costs, medical visas and sharing your medical information.
-          </p>
 
         </div>
 
 
         <div class="faq-list">
 
-
           <details>
-
-            <summary
-              data-en="Is there a fee for the initial enquiry?"
-              data-ar="هل توجد رسوم على الاستفسار الأولي؟">
-              Is there a fee for the initial enquiry?
+            <summary data-en="How do I start a treatment enquiry?"
+                     data-ar="كيف أبدأ استفساراً عن العلاج؟">
+              How do I start a treatment enquiry?
             </summary>
-
-            <p
-              data-en="You can contact us for an initial discussion about your treatment needs and the coordination process. If any service fees apply, they will be clearly explained and agreed with you in advance."
-              data-ar="يمكنك التواصل معنا لإجراء مناقشة أولية حول احتياجاتك العلاجية وخطوات التنسيق. وفي حال وجود أي رسوم مقابل خدماتنا، فسيتم توضيحها لك بشكل واضح والاتفاق عليها مسبقاً.">
-              You can contact us for an initial discussion about your treatment needs and the coordination process. If any service fees apply, they will be clearly explained and agreed with you in advance.
+            <p data-en="You can contact us on WhatsApp or complete the enquiry form on this page. Share your basic details and treatment requirement, and we will guide you on the next steps."
+               data-ar="يمكنك التواصل معنا عبر واتساب أو تعبئة نموذج الاستفسار في هذه الصفحة. شاركنا معلوماتك الأساسية واحتياجك العلاجي، وسنرشدك إلى الخطوات التالية.">
+              You can contact us on WhatsApp or complete the enquiry form on this page. Share your basic details and treatment requirement, and we will guide you on the next steps.
             </p>
-
           </details>
 
 
           <details>
-
-            <summary
-              data-en="How are treatment costs and expected outcomes determined?"
-              data-ar="كيف يتم تحديد تكلفة العلاج والنتائج المتوقعة؟">
-              How are treatment costs and expected outcomes determined?
+            <summary data-en="Do you provide medical advice?"
+                     data-ar="هل تقدمون استشارات طبية؟">
+              Do you provide medical advice?
             </summary>
-
-            <p
-              data-en="Treatment plans and cost estimates are provided by the hospital or treating medical team following a clinical assessment of the patient’s condition and medical information. The final cost may vary depending on the treatment required, investigations, length of stay and other clinical factors. Treatment outcomes also vary from patient to patient and cannot be guaranteed."
-              data-ar="تُحدَّد الخطة العلاجية والتكلفة التقديرية من قِبل المستشفى أو الفريق الطبي المعالج بعد تقييم حالة المريض ومراجعة معلوماته الطبية. وقد تختلف التكلفة النهائية بحسب طبيعة العلاج المطلوب والفحوصات ومدة الإقامة وغيرها من العوامل الطبية. كما تختلف نتائج العلاج من مريض إلى آخر، ولا يمكن ضمان نتائج محددة مسبقاً.">
-              Treatment plans and cost estimates are provided by the hospital or treating medical team following a clinical assessment of the patient’s condition and medical information. The final cost may vary depending on the treatment required, investigations, length of stay and other clinical factors. Treatment outcomes also vary from patient to patient and cannot be guaranteed.
+            <p data-en="No. Elajme India provides healthcare facilitation and coordination services. Medical advice, diagnosis and treatment decisions are provided by qualified doctors and hospitals."
+               data-ar="لا. تقدم علاج مي إنديا خدمات تسهيل وتنسيق الرحلة العلاجية. أما الاستشارات الطبية والتشخيص وقرارات العلاج فتقدمها الجهات الطبية والأطباء المؤهلون.">
+              No. Elajme India provides healthcare facilitation and coordination services. Medical advice, diagnosis and treatment decisions are provided by qualified doctors and hospitals.
             </p>
-
           </details>
 
 
           <details>
-
-            <summary
-              data-en="Can you assist with the medical visa process?"
-              data-ar="هل يمكنكم مساعدتي في إجراءات التأشيرة الطبية؟">
-              Can you assist with the medical visa process?
+            <summary data-en="Can you help me with the medical visa process?"
+                     data-ar="هل يمكنكم مساعدتي في إجراءات التأشيرة الطبية؟">
+              Can you help me with the medical visa process?
             </summary>
-
-            <p
-              data-en="We can assist with information and practical guidance related to the medical visa process and coordinate supporting documents from the hospital where applicable. Visa requirements, eligibility and final approval are determined by the relevant government authorities."
-              data-ar="يمكننا مساعدتك بالمعلومات والإرشادات العملية المتعلقة بإجراءات التأشيرة الطبية، والتنسيق مع المستشفى للحصول على المستندات الداعمة عند الحاجة. وتخضع متطلبات التأشيرة وشروط الأهلية والموافقة النهائية للجهات الحكومية المختصة.">
-              We can assist with information and practical guidance related to the medical visa process and coordinate supporting documents from the hospital where applicable. Visa requirements, eligibility and final approval are determined by the relevant government authorities.
+            <p data-en="We can help explain the practical steps and coordinate supporting hospital documentation where available. Visa applications and approvals remain subject to the relevant Indian authorities."
+               data-ar="يمكننا مساعدتك في فهم الخطوات العملية والتنسيق بشأن المستندات الداعمة من المستشفى عند توفرها. وتبقى طلبات التأشيرة والموافقة عليها خاضعة للجهات الهندية المختصة.">
+              We can help explain the practical steps and coordinate supporting hospital documentation where available. Visa applications and approvals remain subject to the relevant Indian authorities.
             </p>
-
           </details>
 
 
           <details>
-
-            <summary
-              data-en="When should I share my medical reports?"
-              data-ar="متى ينبغي لي مشاركة تقاريري الطبية؟">
+            <summary data-en="When should I share my medical reports?"
+                     data-ar="متى ينبغي لي مشاركة تقاريري الطبية؟">
               When should I share my medical reports?
             </summary>
-
-            <p
-              data-en="You can begin with a brief enquiry about your treatment needs. If medical reports are required for further evaluation, you can share the relevant documents with us through WhatsApp. We obtain your consent before sharing them with the hospital."
-              data-ar="يمكنك البدء باستفسار مختصر حول احتياجاتك العلاجية. وإذا كانت التقارير الطبية مطلوبة لمزيد من التقييم، يمكنك مشاركة المستندات ذات الصلة معنا عبر واتساب، ونحصل على موافقتك قبل مشاركتها مع المستشفى.">
-              You can begin with a brief enquiry about your treatment needs. If medical reports are required for further evaluation, you can share the relevant documents with us through WhatsApp. We obtain your consent before sharing them with the hospital.
+            <p data-en="After your initial enquiry, we will guide you on which relevant reports are needed. You can then share them directly in the WhatsApp conversation for coordination with the hospital or medical team."
+               data-ar="بعد استفسارك الأول، سنوضح لك التقارير ذات الصلة المطلوبة. ويمكنك بعد ذلك مشاركتها مباشرةً عبر محادثة واتساب لتنسيقها مع المستشفى أو الفريق الطبي.">
+              After your initial enquiry, we will guide you on which relevant reports are needed. You can then share them directly in the WhatsApp conversation for coordination with the hospital or medical team.
             </p>
+          </details>
 
+
+          <details>
+            <summary data-en="Can you guarantee treatment results or costs?"
+                     data-ar="هل يمكنكم ضمان نتائج العلاج أو تكلفته؟">
+              Can you guarantee treatment results or costs?
+            </summary>
+            <p data-en="No. Treatment outcomes cannot be guaranteed, and costs may change depending on the patient's condition, medical findings, hospital policies and the treatment ultimately required."
+               data-ar="لا. لا يمكن ضمان نتائج العلاج، كما قد تتغير التكلفة وفقاً لحالة المريض والنتائج الطبية وسياسات المستشفى والعلاج المطلوب فعلياً.">
+              No. Treatment outcomes cannot be guaranteed, and costs may change depending on the patient's condition, medical findings, hospital policies and the treatment ultimately required.
+            </p>
           </details>
 
 
@@ -1510,29 +1372,27 @@
     </section>
 
 
-    <!-- FINAL CTA -->
-    <section class="final-cta">
+    <!-- CTA -->
+    <section class="section final-cta">
 
-      <div class="container final-cta-inner">
+      <div class="container cta-card">
 
         <div>
 
-          <span class="section-label light-label"
+          <span class="section-label light"
                 data-en="YOUR NEXT STEP"
                 data-ar="خطوتك نحو العلاج في الهند">
             YOUR NEXT STEP
           </span>
 
-          <h2
-            data-en="Start with a conversation."
-            data-ar="ابدأ رحلتك العلاجية بالتواصل معنا.">
+          <h2 data-en="Start with a conversation."
+              data-ar="ابدأ رحلتك العلاجية بالتواصل معنا.">
             Start with a conversation.
           </h2>
 
-          <p
-            data-en="Tell us about your treatment needs, and we’ll guide you through the next steps with clear, personalised support in Arabic or English."
-            data-ar="أخبرنا عن احتياجاتك العلاجية، وسنرشدك خلال الخطوات التالية بوضوح، مع تقديم دعم شخصي باللغة العربية أو الإنجليزية.">
-            Tell us about your treatment needs, and we’ll guide you through the next steps with clear, personalised support in Arabic or English.
+          <p data-en="Tell us about your treatment needs, and we will guide you through the next steps clearly, with personalised support in Arabic or English."
+             data-ar="أخبرنا عن احتياجاتك العلاجية، وسنرشدك خلال الخطوات التالية بوضوح، مع تقديم دعم شخصي باللغة العربية أو الإنجليزية.">
+            Tell us about your treatment needs, and we will guide you through the next steps clearly, with personalised support in Arabic or English.
           </p>
 
         </div>
@@ -1541,15 +1401,10 @@
         <a class="button button-light button-large whatsapp-link"
            href="#"
            target="_blank"
-           rel="noopener">
-
-          <span data-en="Message us on WhatsApp"
-                data-ar="راسلنا عبر واتساب">
-            Message us on WhatsApp
-          </span>
-
-          <span aria-hidden="true">↗</span>
-
+           rel="noopener"
+           data-en="Message us on WhatsApp"
+           data-ar="راسلنا عبر واتساب">
+          Message us on WhatsApp
         </a>
 
       </div>
@@ -1563,54 +1418,69 @@
   <!-- FOOTER -->
   <footer class="site-footer">
 
-
-    <div class="container footer-main">
-
-      <a class="brand footer-brand"
-         href="#home">
-
-        <span class="brand-mark">+</span>
-
-        <span class="brand-copy">
-
-          <strong data-en="Elajme India"
-                  data-ar="علاج مي إنديا">
-            Elajme India
-          </strong>
-
-          <small
-            data-en="International patient coordination in India"
-            data-ar="تنسيق الرحلة العلاجية للمرضى الدوليين في الهند">
-            International patient coordination in India
-          </small>
-
-        </span>
-
-      </a>
+    <div class="container footer-grid">
 
 
-      <p
-        data-en="Healthcare and travel coordination for international patients seeking treatment in India, with personalised support in Arabic and English."
-        data-ar="تنسيق الخدمات العلاجية وترتيبات السفر للمرضى الدوليين القادمين للعلاج في الهند، مع تقديم دعم شخصي باللغتين العربية والإنجليزية.">
-        Healthcare and travel coordination for international patients seeking treatment in India, with personalised support in Arabic and English.
-      </p>
+      <div>
+
+        <a class="brand footer-brand"
+           href="index.html#home">
+
+          <span class="brand-mark">+</span>
+
+          <span>
+
+            <strong data-en="Elajme India"
+                    data-ar="علاج مي إنديا">
+              Elajme India
+            </strong>
+
+            <small data-en="International patient coordination in India"
+                   data-ar="تنسيق الرحلة العلاجية للمرضى الدوليين في الهند">
+              International patient coordination in India
+            </small>
+
+          </span>
+
+        </a>
+
+
+        <p
+          data-en="Healthcare and travel coordination for international patients seeking treatment in India, with personalised support in Arabic and English."
+          data-ar="تنسيق الخدمات العلاجية وترتيبات السفر للمرضى الدوليين القادمين للعلاج في الهند، مع تقديم دعم شخصي باللغتين العربية والإنجليزية.">
+          Healthcare and travel coordination for international patients seeking treatment in India, with personalised support in Arabic and English.
+        </p>
+
+      </div>
 
 
       <div class="footer-links">
 
-        <a href="#services"
-           data-en="Services"
-           data-ar="الخدمات">
-          Services
+        <a href="index.html#treatments"
+           data-en="Treatments"
+           data-ar="العلاجات">
+          Treatments
         </a>
 
-        <a href="#how-it-works"
+        <a href="index.html#countries"
+           data-en="International Patients"
+           data-ar="المرضى الدوليون">
+          International Patients
+        </a>
+
+        <a href="index.html#how-it-works"
            data-en="How it works"
            data-ar="كيف نعمل">
           How it works
         </a>
 
-        <a href="#faq"
+        <a href="index.html#about"
+           data-en="About"
+           data-ar="من نحن">
+          About
+        </a>
+
+        <a href="index.html#faq"
            data-en="FAQs"
            data-ar="أسئلة شائعة">
           FAQs
@@ -1646,27 +1516,27 @@
 
       <p
         data-en="Elajme India provides healthcare facilitation and coordination services and does not provide medical advice, diagnosis or treatment. All clinical decisions are made by qualified healthcare professionals. Treatment costs, availability, visa approvals and treatment outcomes may vary and cannot be guaranteed."
-        data-ar="تقدم علاج مي إنديا خدمات تسهيل وتنسيق الرحلة العلاجية، ولا تقدم المشورة الطبية أو خدمات التشخيص أو العلاج. وتبقى جميع القرارات الطبية من اختصاص مقدمي الرعاية الصحية المؤهلين. وقد تختلف تكاليف العلاج ومدى توفر الخدمات وقرارات التأشيرة والنتائج العلاجية، ولا يمكن ضمانها.">
+        data-ar="تقدم علاج مي إنديا خدمات تسهيل وتنسيق الرحلة العلاجية، ولا تقدم المشورة الطبية أو خدمات التشخيص أو العلاج. وتبقى جميع القرارات الطبية من اختصاص الأطباء والجهات الطبية المؤهلة. وقد تختلف تكاليف العلاج ومدى توفر الخدمات والموافقات على التأشيرات ونتائج العلاج، ولا يمكن ضمانها.">
         Elajme India provides healthcare facilitation and coordination services and does not provide medical advice, diagnosis or treatment. All clinical decisions are made by qualified healthcare professionals. Treatment costs, availability, visa approvals and treatment outcomes may vary and cannot be guaranteed.
       </p>
 
     </div>
 
-
   </footer>
 
 
-  <!-- MOBILE WHATSAPP -->
-  <a class="mobile-whatsapp whatsapp-link"
+  <!-- FLOATING WHATSAPP -->
+  <a class="floating-whatsapp whatsapp-link"
      href="#"
      target="_blank"
-     rel="noopener">
+     rel="noopener"
+     aria-label="Contact Elajme India on WhatsApp">
 
-    <span>☏</span>
+    <span class="wa-icon">◉</span>
 
-    <span data-en="WhatsApp us"
-          data-ar="راسلنا عبر واتساب">
-      WhatsApp us
+    <span data-en="WhatsApp"
+          data-ar="واتساب">
+      WhatsApp
     </span>
 
   </a>
