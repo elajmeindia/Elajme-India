@@ -9,11 +9,24 @@ const SITE_CONFIG = {
 };
 
 const translations = {
-  en: { lang: "en", dir: "ltr", toggle: "العربية" },
-  ar: { lang: "ar", dir: "rtl", toggle: "English" }
+  en: {
+    lang: "en",
+    dir: "ltr",
+    toggle: "العربية"
+  },
+  ar: {
+    lang: "ar",
+    dir: "rtl",
+    toggle: "English"
+  }
 };
 
 let currentLanguage = "en";
+
+
+/* ========================================
+   LANGUAGE SWITCHING
+======================================== */
 
 function updateLanguage(language) {
   currentLanguage = language;
@@ -24,18 +37,31 @@ function updateLanguage(language) {
   document.documentElement.dir = settings.dir;
   document.body.dir = settings.dir;
 
+
+  // Language toggle button
   const languageToggle = document.getElementById("languageToggle");
+
   if (languageToggle) {
     languageToggle.textContent = settings.toggle;
+
+    languageToggle.setAttribute(
+      "aria-label",
+      language === "ar"
+        ? "Switch to English"
+        : "التبديل إلى العربية"
+    );
   }
 
-  // Switch English / Arabic page content
+
+  // Switch English / Arabic text
   document.querySelectorAll("[data-en][data-ar]").forEach((element) => {
     const value = element.getAttribute(`data-${language}`);
+
     if (value !== null) {
       element.innerHTML = value;
     }
   });
+
 
   // Switch form placeholders
   document
@@ -50,14 +76,24 @@ function updateLanguage(language) {
       }
     });
 
-  // Page title
+
+  /* ========================================
+     PAGE TITLE
+  ======================================== */
+
   document.title =
     language === "ar"
       ? "علاج مي إنديا | تنسيق علاج المرضى الدوليين في الهند"
       : "Elajme India | International Patient Coordination for Healthcare in India";
 
-  // Meta description
-  const description = document.querySelector('meta[name="description"]');
+
+  /* ========================================
+     META DESCRIPTION
+  ======================================== */
+
+  const description = document.querySelector(
+    'meta[name="description"]'
+  );
 
   if (description) {
     description.setAttribute(
@@ -68,8 +104,14 @@ function updateLanguage(language) {
     );
   }
 
-  // Open Graph title
-  const ogTitle = document.querySelector('meta[property="og:title"]');
+
+  /* ========================================
+     OPEN GRAPH TITLE
+  ======================================== */
+
+  const ogTitle = document.querySelector(
+    'meta[property="og:title"]'
+  );
 
   if (ogTitle) {
     ogTitle.setAttribute(
@@ -80,7 +122,11 @@ function updateLanguage(language) {
     );
   }
 
-  // Open Graph description
+
+  /* ========================================
+     OPEN GRAPH DESCRIPTION
+  ======================================== */
+
   const ogDescription = document.querySelector(
     'meta[property="og:description"]'
   );
@@ -94,11 +140,20 @@ function updateLanguage(language) {
     );
   }
 
-  // Update WhatsApp links according to selected language
+
+  /* ========================================
+     UPDATE GENERAL WHATSAPP LINKS
+  ======================================== */
+
   document.querySelectorAll(".whatsapp-link").forEach((link) => {
     link.href = makeWhatsAppUrl(language);
   });
 }
+
+
+/* ========================================
+   GENERAL WHATSAPP LINK
+======================================== */
 
 function makeWhatsAppUrl(language) {
   const number = SITE_CONFIG.whatsappNumber;
@@ -120,104 +175,198 @@ function makeWhatsAppUrl(language) {
   );
 }
 
-// Language switcher
+
+/* ========================================
+   LANGUAGE BUTTON
+======================================== */
+
 const languageToggle = document.getElementById("languageToggle");
 
 if (languageToggle) {
   languageToggle.addEventListener("click", () => {
-    updateLanguage(currentLanguage === "en" ? "ar" : "en");
+    updateLanguage(
+      currentLanguage === "en"
+        ? "ar"
+        : "en"
+    );
   });
 }
 
-// Current year
+
+/* ========================================
+   COPYRIGHT YEAR
+======================================== */
+
 const yearElement = document.getElementById("year");
 
 if (yearElement) {
   yearElement.textContent = new Date().getFullYear();
 }
 
-// Load website in English initially
+
+/* Load website in English initially */
+
 updateLanguage("en");
 
 
-// PATIENT ENQUIRY FORM → WHATSAPP
+/* ========================================
+   PATIENT ENQUIRY FORM → WHATSAPP
+======================================== */
 
-const patientEnquiryForm = document.getElementById("patientEnquiryForm");
+const patientEnquiryForm = document.getElementById(
+  "patientEnquiryForm"
+);
 
 if (patientEnquiryForm) {
-  patientEnquiryForm.addEventListener("submit", function (event) {
-    event.preventDefault();
+  patientEnquiryForm.addEventListener(
+    "submit",
+    function (event) {
+      event.preventDefault();
 
-    const patientName = document
-      .getElementById("patientName")
-      .value.trim();
 
-    const patientCountry = document
-      .getElementById("patientCountry")
-      .value.trim();
+      /* Patient details */
 
-    const patientAge = document
-      .getElementById("patientAge")
-      .value.trim();
+      const patientName = document
+        .getElementById("patientName")
+        .value
+        .trim();
 
-    const medicalNeed = document
-      .getElementById("medicalNeed")
-      .value.trim();
+      const patientCountry = document
+        .getElementById("patientCountry")
+        .value
+        .trim();
 
-    const preferredLanguage = document
-      .getElementById("preferredLanguage")
-      .value;
+      const patientAge = document
+        .getElementById("patientAge")
+        .value
+        .trim();
 
-    let message;
+      const patientMobile = document
+        .getElementById("patientMobile")
+        .value
+        .trim();
 
-    if (preferredLanguage === "Arabic") {
-      message =
-        "السلام عليكم، أود الاستفسار عن تنسيق العلاج في الهند.\n\n" +
-        "اسم المريض: " +
-        patientName +
-        "\n" +
-        "الدولة: " +
-        patientCountry +
-        "\n" +
-        (patientAge ? "العمر: " + patientAge + "\n" : "") +
-        "العلاج المطلوب / الحالة الطبية: " +
-        medicalNeed +
-        "\n" +
-        "اللغة المفضلة: العربية\n\n" +
-        "يرجى توضيح الخطوات التالية.";
-    } else {
-      message =
-        "Hello Elajme India,\n\n" +
-        "I would like to enquire about treatment coordination in India.\n\n" +
-        "Patient name: " +
-        patientName +
-        "\n" +
-        "Country: " +
-        patientCountry +
-        "\n" +
-        (patientAge ? "Age: " + patientAge + "\n" : "") +
-        "Treatment / medical condition: " +
-        medicalNeed +
-        "\n" +
-        "Preferred language: English\n\n" +
-        "Please explain the next steps.";
+      const medicalNeed = document
+        .getElementById("medicalNeed")
+        .value
+        .trim();
+
+      const preferredLanguage = document
+        .getElementById("preferredLanguage")
+        .value;
+
+
+      let message;
+
+
+      /* ========================================
+         ARABIC ENQUIRY MESSAGE
+      ======================================== */
+
+      if (preferredLanguage === "Arabic") {
+        message =
+          "السلام عليكم، أود الاستفسار عن تنسيق العلاج في الهند.\n\n" +
+
+          "اسم المريض: " +
+          patientName +
+          "\n" +
+
+          "الدولة: " +
+          patientCountry +
+          "\n" +
+
+          (
+            patientAge
+              ? "العمر: " +
+                patientAge +
+                "\n"
+              : ""
+          ) +
+
+          "رقم الجوال / واتساب: " +
+          patientMobile +
+          "\n" +
+
+          "العلاج المطلوب / الحالة الطبية: " +
+          medicalNeed +
+          "\n" +
+
+          "اللغة المفضلة: العربية\n\n" +
+
+          "يرجى توضيح الخطوات التالية. ويمكنني إرفاق التقارير الطبية ذات الصلة في هذه المحادثة.";
+      }
+
+
+      /* ========================================
+         ENGLISH ENQUIRY MESSAGE
+      ======================================== */
+
+      else {
+        message =
+          "Hello Elajme India,\n\n" +
+
+          "I would like to enquire about treatment coordination in India.\n\n" +
+
+          "Patient name: " +
+          patientName +
+          "\n" +
+
+          "Country: " +
+          patientCountry +
+          "\n" +
+
+          (
+            patientAge
+              ? "Age: " +
+                patientAge +
+                "\n"
+              : ""
+          ) +
+
+          "Mobile / WhatsApp: " +
+          patientMobile +
+          "\n" +
+
+          "Treatment / medical condition: " +
+          medicalNeed +
+          "\n" +
+
+          "Preferred language: English\n\n" +
+
+          "Please explain the next steps. I can attach the relevant medical reports in this WhatsApp conversation.";
+      }
+
+
+      /* ========================================
+         OPEN WHATSAPP
+      ======================================== */
+
+      const whatsappUrl =
+        "https://wa.me/" +
+        SITE_CONFIG.whatsappNumber +
+        "?text=" +
+        encodeURIComponent(message);
+
+      window.open(
+        whatsappUrl,
+        "_blank",
+        "noopener"
+      );
     }
-
-    const whatsappUrl =
-      "https://wa.me/" +
-      SITE_CONFIG.whatsappNumber +
-      "?text=" +
-      encodeURIComponent(message);
-
-    window.open(whatsappUrl, "_blank", "noopener");
-  });
+  );
 }
 
 
-// HIDE FLOATING WHATSAPP WHILE ENQUIRY FORM IS VISIBLE
+/* ========================================
+   HIDE FLOATING WHATSAPP
+   WHILE ENQUIRY FORM IS VISIBLE
+======================================== */
 
 const enquirySection = document.getElementById("enquiry");
-const mobileWhatsApp = document.querySelector(".mobile-whatsapp");
+
+const mobileWhatsApp = document.querySelector(
+  ".mobile-whatsapp"
+);
 
 if (enquirySection && mobileWhatsApp) {
   const enquiryObserver = new IntersectionObserver(
