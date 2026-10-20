@@ -38,14 +38,14 @@ document.querySelectorAll("[data-placeholder-en][data-placeholder-ar]").forEach(
 });
 
   document.title = language === "ar"
-    ? "العلاج في الهند | تنسيق المرضى باللغة العربية"
-    : "Healthcare in India | Arabic Patient Coordination";
+    ? "علاج مي إنديا | تنسيق علاج المرضى الدوليين في الهند"
+    : "Elajme India | International Patient Coordination for Healthcare in India";
 
   const description = document.querySelector('meta[name="description"]');
   if (description) {
     description.setAttribute("content", language === "ar"
-      ? "مساعدة باللغة العربية للمرضى الذين يبحثون عن العلاج في الهند، مع تنسيق الاستفسارات الطبية والمواعيد والسفر."
-      : "Arabic-speaking support for patients exploring treatment in India. Coordinate hospital enquiries, medical opinions, appointments and travel arrangements.");
+      ? "تدعم علاج مي إنديا المرضى الدوليين الباحثين عن العلاج في الهند، مع تنسيق المستشفيات والعلاج والسفر ودعم المرضى باللغتين العربية والإنجليزية."
+      : "Elajme India supports international patients seeking treatment in India with hospital, treatment, travel and patient coordination in Arabic and English.");
   }
   document.querySelectorAll(".whatsapp-link").forEach((link) => {
     link.href = makeWhatsAppUrl(language);
