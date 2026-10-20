@@ -50,7 +50,12 @@ document.querySelectorAll("[data-placeholder-en][data-placeholder-ar]").forEach(
   document.querySelectorAll(".whatsapp-link").forEach((link) => {
     link.href = makeWhatsAppUrl(language);
   });
-}
+}  const ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle) {
+    ogTitle.setAttribute("content", language === "ar"
+      ? "علاج مي إنديا | تنسيق علاج المرضى الدوليين في الهند"
+      : "Elajme India | International Patient Coordination in India");
+  }
 
 function makeWhatsAppUrl(language) {
   const number = SITE_CONFIG.whatsappNumber;
