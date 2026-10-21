@@ -11,45 +11,66 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download hospital images and switch directory to local assets
+      - name: Localize the three remaining hospital images
         shell: bash
         run: |
           set -u
           mkdir -p assets/images/hospitals
-          getimg(){ out="$1"; shift; for u in "$@"; do echo "Trying $u"; if curl -A 'Mozilla/5.0' -L --fail --retry 2 --connect-timeout 15 --max-time 60 "$u" -o "assets/images/hospitals/$out"; then test -s "assets/images/hospitals/$out" && return 0; fi; done; rm -f "assets/images/hospitals/$out"; return 1; }
-          getimg max-saket.webp 'https://static.wixstatic.com/media/28d981_7112f8c0047040269d2dfb4986bb78f2~mv2.webp/v1/fill/w_2000,h_1333,al_c/28d981_7112f8c0047040269d2dfb4986bb78f2~mv2.webp' || true
-          getimg apollo-delhi.png 'https://prime-medical-solutions.b-cdn.net/hospitals/indraprastha-apollo-hospital-new-delhi.png' 'https://www.apollohospitals.com/sites/default/files/2025-02/apollo-hospitals-delhi.jpg' || true
-          getimg blk-max.webp 'https://racurehealthcare.com/assets/hospital/gallery/f4acc48abc1eaf527fa64ecade82a37a.webp' 'https://crossborderscare.com/wp-content/uploads/2023/05/Blk-Max-hospital.jpg' || true
-          getimg fortis-escorts.jpg 'https://mitc.b-cdn.net/wp-content/uploads/2021/11/131.jpg' || true
-          getimg fmri.webp 'https://www.fortishealthcare.com/drupal-data/styles/webp/public/2023-03/Fortis-Hospital-Gurgaon.jpg.webp' 'https://www.mejocare.com/admin/assets/img/hospital/500-Fortis-Memorial-Research-Institute.jpg' || true
-          getimg medanta-gurugram.jpg 'https://res.cloudinary.com/alfplus-com/image/upload/v1549703949/Alfplus.com/Hospics/Medanta_the_medicity_Gurgaon.jpg' || true
-          getimg artemis.png 'https://i0.wp.com/ketto.blog/wp-content/uploads/2023/05/Artemis-Hospital-Gurgaon_.png?fit=1920%2C1080&ssl=1' || true
-          getimg max-noida.jpg 'https://max-website20-images.s3.ap-south-1.amazonaws.com/Noida_128_811e8fe56b.jpg' || true
-          getimg fortis-noida.jpg 'https://res.cloudinary.com/dkc7yjciw/image/upload/v1749808871/uploads/1749808871226-Fortis%20Noida%20Home%20Image.jpg.jpg' || true
-          getimg medanta-noida.jpg 'https://etimg.etb2bimg.com/thumb/msid-128496337,width-1200,height-900,resizemode-4/.jpg' || true
-          getimg apollo-navi.jpg 'https://www.apollohospitals.com/sites/default/files/2025-02/apollo-home-navi-mumbai.jpg' || true
-          getimg fortis-mulund.jpg 'https://mitc.b-cdn.net/wp-content/uploads/2021/11/129.jpg' 'https://www.fortishealthcare.com/drupal-data/styles/webp/public/2023-03/Fortis-Hospital-Mulund.jpg.webp' || true
-          getimg wockhardt.jpg 'https://pimwp.s3-accelerate.amazonaws.com/2024/11/Untitled-design_20241120_234344_0000.jpg' || true
-          getimg sl-raheja.webp 'https://arthrosolutions.com/SL-Raheja.webp' 'https://slrhapi.rahejahospital.com/images/career/career.png' || true
-          getimg gleneagles.jpg 'https://cdn-assets-eu.frontify.com/s3/frontify-enterprise-files-eu/eyJvYXV0aCI6eyJjbGllbnRfaWQiOiJjbGllbnQtY2hkcnR4NWphaHV0Y2hsdiJ9LCJwYXRoIjoiaWhoLWhlYWx0aGNhcmUtYmVyaGFkXC9maWxlXC9NZ0dkRnkyc2pNb3hNTXhSREhjNC5qcGcifQ%3Aihh-healthcare-berhad%3AouVTzhAR0APUme3c8f7jnm9QL_KXYpcsArNg1YdpN6A?crop=fp&fp=0.5%2C0.5&fp_zoom=1&height=520&width=900' || true
+          download(){
+            out="$1"; referer="$2"; shift 2
+            for u in "$@"; do
+              echo "Trying $u"
+              if curl -L --fail --retry 3 --retry-all-errors --connect-timeout 20 --max-time 90 \
+                -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36' \
+                -H 'Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8' \
+                -H 'Accept-Language: en-US,en;q=0.9' -e "$referer" "$u" -o "assets/images/hospitals/$out"; then
+                if test -s "assets/images/hospitals/$out" && file "assets/images/hospitals/$out" | grep -qiE 'image|jpeg|png|webp'; then return 0; fi
+              fi
+            done
+            rm -f "assets/images/hospitals/$out"; return 1
+          }
+
+          download fmri.jpg 'https://www.mejocare.com/' \
+            'https://www.mejocare.com/admin/assets/img/hospital/500-Fortis-Memorial-Research-Institute.jpg' \
+            'https://www.fortishealthcare.com/drupal-data/styles/webp/public/2023-03/Fortis-Hospital-Gurgaon.jpg.webp' || true
+
+          download fortis-noida.jpg 'https://architizer.com/' \
+            'https://architizer-prod.imgix.net/media/mediadata/uploads/1760501277156IIDC-FortisNoida-001.jpg?auto=format%2Ccompress&cs=strip&q=80&w=1680' \
+            'https://res.cloudinary.com/dkc7yjciw/image/upload/v1749808871/uploads/1749808871226-Fortis%20Noida%20Home%20Image.jpg.jpg' || true
+
+          download apollo-navi.jpg 'https://www.devdiscourse.com/' \
+            'https://www.devdiscourse.com/img?format=jpeg&imageUrl=https%3A%2F%2Fdevdiscourse.blob.core.windows.net%2Fdevnews%2F26_04_2025_16_41_00_649645.jpg&width=920' \
+            'https://www.apollohospitals.com/sites/default/files/2025-02/apollo-home-navi-mumbai.jpg' || true
+
           python3 - <<'PY'
           from pathlib import Path
           import re
           p=Path('hospitals/index.html')
           s=p.read_text()
           mapping={
-          'Max Super Speciality Hospital, Saket':'max-saket.webp','Indraprastha Apollo Hospital, New Delhi':'apollo-delhi.png','BLK-Max Super Speciality Hospital, New Delhi':'blk-max.webp','Fortis Escorts Heart Institute, New Delhi':'fortis-escorts.jpg','Fortis Memorial Research Institute, Gurugram':'fmri.webp','Medanta – The Medicity, Gurugram':'medanta-gurugram.jpg','Artemis Hospital, Gurugram':'artemis.png','Max Super Speciality Hospital, Noida':'max-noida.jpg','Fortis Hospital, Noida':'fortis-noida.jpg','Medanta Super Speciality Hospital, Noida':'medanta-noida.jpg','Apollo Hospitals, Navi Mumbai':'apollo-navi.jpg','Fortis Hospital, Mulund, Mumbai':'fortis-mulund.jpg','Wockhardt Hospitals, Mumbai Central':'wockhardt.jpg','S.L. Raheja Hospital, Mumbai':'sl-raheja.webp','Gleneagles Hospital, Parel, Mumbai':'gleneagles.jpg'}
+            'Fortis Memorial Research Institute, Gurugram':'fmri.jpg',
+            'Fortis Hospital, Noida':'fortis-noida.jpg',
+            'Apollo Hospitals, Navi Mumbai':'apollo-navi.jpg'
+          }
           for alt,f in mapping.items():
-              if Path('assets/images/hospitals/'+f).exists():
+              fp=Path('assets/images/hospitals')/f
+              if fp.exists() and fp.stat().st_size>0:
                   pat=r'<img class="photo"[^>]*alt="'+re.escape(alt)+r'"[^>]*>'
                   rep=f'<img class="photo" loading="lazy" src="../assets/images/hospitals/{f}" alt="{alt}">'
                   s,n=re.subn(pat,rep,s)
-                  print(alt,n)
+                  print(f'{alt}: {n} replacement(s)')
+              else:
+                  print(f'{alt}: download failed')
           p.write_text(s)
           PY
-      - name: Commit local images
+      - name: Commit localized images
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add assets/images/hospitals hospitals/index.html
-          if ! git diff --cached --quiet; then git commit -m 'Host hospital directory images locally'; git push; fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'Localize remaining three hospital images'
+            git push
+          else
+            echo 'No files changed'
+          fi
