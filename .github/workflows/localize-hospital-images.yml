@@ -14,34 +14,14 @@ jobs:
       - name: Localize the three remaining hospital images
         shell: bash
         run: |
-          set -u
+          set -e
           mkdir -p assets/images/hospitals
-          download(){
-            out="$1"; referer="$2"; shift 2
-            for u in "$@"; do
-              echo "Trying $u"
-              if curl -L --fail --retry 3 --retry-all-errors --connect-timeout 20 --max-time 90 \
-                -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36' \
-                -H 'Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8' \
-                -H 'Accept-Language: en-US,en;q=0.9' -e "$referer" "$u" -o "assets/images/hospitals/$out"; then
-                if test -s "assets/images/hospitals/$out" && file "assets/images/hospitals/$out" | grep -qiE 'image|jpeg|png|webp'; then return 0; fi
-              fi
-            done
-            rm -f "assets/images/hospitals/$out"; return 1
-          }
-
-          download fmri.jpg 'https://www.mejocare.com/' \
-            'https://www.mejocare.com/admin/assets/img/hospital/500-Fortis-Memorial-Research-Institute.jpg' \
-            'https://www.fortishealthcare.com/drupal-data/styles/webp/public/2023-03/Fortis-Hospital-Gurgaon.jpg.webp' || true
-
-          download fortis-noida.jpg 'https://architizer.com/' \
-            'https://architizer-prod.imgix.net/media/mediadata/uploads/1760501277156IIDC-FortisNoida-001.jpg?auto=format%2Ccompress&cs=strip&q=80&w=1680' \
-            'https://res.cloudinary.com/dkc7yjciw/image/upload/v1749808871/uploads/1749808871226-Fortis%20Noida%20Home%20Image.jpg.jpg' || true
-
-          download apollo-navi.jpg 'https://www.devdiscourse.com/' \
-            'https://www.devdiscourse.com/img?format=jpeg&imageUrl=https%3A%2F%2Fdevdiscourse.blob.core.windows.net%2Fdevnews%2F26_04_2025_16_41_00_649645.jpg&width=920' \
-            'https://www.apollohospitals.com/sites/default/files/2025-02/apollo-home-navi-mumbai.jpg' || true
-
+          curl -L --fail --retry 3 -A 'Mozilla/5.0' 'https://www.livontaglobal.com/wp-content/uploads/2025/09/fe-img2.jpg' -o assets/images/hospitals/fmri.jpg
+          curl -L --fail --retry 3 -A 'Mozilla/5.0' 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Fortis_Hospital_Noida_-_panoramio.jpg' -o assets/images/hospitals/fortis-noida.jpg
+          curl -L --fail --retry 3 -A 'Mozilla/5.0' 'https://www.devdiscourse.com/img?format=jpeg&imageUrl=https%3A%2F%2Fdevdiscourse.blob.core.windows.net%2Fdevnews%2F26_04_2025_16_41_00_649645.jpg&width=920' -o assets/images/hospitals/apollo-navi.jpg
+          file assets/images/hospitals/fmri.jpg | grep -qiE 'jpeg|image'
+          file assets/images/hospitals/fortis-noida.jpg | grep -qiE 'jpeg|image'
+          file assets/images/hospitals/apollo-navi.jpg | grep -qiE 'jpeg|image'
           python3 - <<'PY'
           from pathlib import Path
           import re
@@ -53,24 +33,16 @@ jobs:
             'Apollo Hospitals, Navi Mumbai':'apollo-navi.jpg'
           }
           for alt,f in mapping.items():
-              fp=Path('assets/images/hospitals')/f
-              if fp.exists() and fp.stat().st_size>0:
-                  pat=r'<img class="photo"[^>]*alt="'+re.escape(alt)+r'"[^>]*>'
-                  rep=f'<img class="photo" loading="lazy" src="../assets/images/hospitals/{f}" alt="{alt}">'
-                  s,n=re.subn(pat,rep,s)
-                  print(f'{alt}: {n} replacement(s)')
-              else:
-                  print(f'{alt}: download failed')
+              pat=r'<img class="photo"[^>]*alt="'+re.escape(alt)+r'"[^>]*>'
+              rep=f'<img class="photo" loading="lazy" src="../assets/images/hospitals/{f}?v=3" alt="{alt}">'
+              s,n=re.subn(pat,rep,s)
+              if n != 1: raise SystemExit(f'Expected one card for {alt}, found {n}')
           p.write_text(s)
           PY
       - name: Commit localized images
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add assets/images/hospitals hospitals/index.html
-          if ! git diff --cached --quiet; then
-            git commit -m 'Localize remaining three hospital images'
-            git push
-          else
-            echo 'No files changed'
-          fi
+          git add assets/images/hospitals/fmri.jpg assets/images/hospitals/fortis-noida.jpg assets/images/hospitals/apollo-navi.jpg hospitals/index.html
+          git commit -m 'Fix FMRI Fortis Noida and Apollo Navi Mumbai images'
+          git push
