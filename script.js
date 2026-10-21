@@ -9,7 +9,7 @@ const SITE_CONFIG = {
 };
 
 const translations = {
-  en: { lang: "en", dir: "ltr", toggle: "العربية" },
+  en: { lang: "en", dir: "ltr", toggle: "Arabic" },
   ar: { lang: "ar", dir: "rtl", toggle: "English" }
 };
 
@@ -28,9 +28,17 @@ function updateLanguage(language) {
     languageToggle.textContent = settings.toggle;
     languageToggle.setAttribute(
       "aria-label",
-      language === "ar" ? "Switch to English" : "التبديل إلى العربية"
+      language === "ar" ? "Switch to English" : "Switch to Arabic"
     );
   }
+
+  /* Keep the English view visually English-only while preserving the Arabic experience. */
+  document.querySelectorAll(".brand-ar").forEach((element) => {
+    element.style.display = language === "ar" ? "block" : "none";
+  });
+  document.querySelectorAll(".note-icon").forEach((element) => {
+    element.textContent = language === "ar" ? "ع" : "EN";
+  });
 
   document.querySelectorAll("[data-en][data-ar]").forEach((element) => {
     const value = element.getAttribute(`data-${language}`);
@@ -175,6 +183,14 @@ if (treatmentGrid && !document.querySelector(".advanced-treatment-links")) {
   treatmentGrid.appendChild(moreTreatments);
 }
 
+/* Main navigation: use crawlable destination pages where dedicated hubs exist. */
+document.querySelectorAll('.desktop-nav a[data-en="Treatments"]').forEach((link) => {
+  link.href = "treatments/";
+});
+document.querySelectorAll('.desktop-nav a[data-en="International Patients"]').forEach((link) => {
+  link.href = "international-patients/mea/";
+});
+
 /* International patient pages */
 const countryPageLinks = {
   "Saudi Arabia": "saudi-arabia/treatment-in-india/",
@@ -201,10 +217,6 @@ document.querySelectorAll(".audience-strip .country").forEach((country) => {
       openCountryPage();
     }
   });
-});
-
-document.querySelectorAll('.desktop-nav a[data-en="International Patients"]').forEach((link) => {
-  link.href = "international-patients/mea/";
 });
 
 /* Legal footer */
