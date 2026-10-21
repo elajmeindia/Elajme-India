@@ -11,60 +11,65 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download and localize doctor portraits
+      - name: Localize remaining doctor portraits
         shell: bash
         run: |
           set -e
           mkdir -p assets/images/doctors
           python3 - <<'PY'
           from pathlib import Path
-          from html.parser import HTMLParser
-          import re, subprocess, unicodedata
-
-          p=Path('doctors/index.html')
-          s=p.read_text()
-          class P(HTMLParser):
-              def __init__(self): super().__init__(); self.items=[]
-              def handle_starttag(self,tag,attrs):
-                  if tag!='img': return
-                  d=dict(attrs)
-                  if 'photo' in d.get('class','').split() and d.get('src','').startswith(('http://','https://')):
-                      self.items.append((d.get('alt','doctor'),d['src']))
-          q=P(); q.feed(s)
-          print(f'Found {len(q.items)} external doctor portraits')
+          import re, subprocess, urllib.request
+          p=Path('doctors/index.html'); s=p.read_text()
+          # Verified source pages. Instead of blocked direct CDN hotlinks, discover current image URLs from pages where possible.
+          doctors={
+            'Dr. Ankur Bahl':('https://www.fortishealthcare.com/coe/speciality/medical-oncology','dr-ankur--bahl-1319.png'),
+            'Dr. Boman Nariman Dhabhar':('https://www.fortishealthcare.com/coe/hospitals/fortis-cancer-institute-mulund','dr-boman-nariman-dhabhar-2980.jpg'),
+            'Dr. Atul Limaye':('https://www.fortishealthcare.com/location/fortis-hospital-mulund-mumbai','dr-atul--limaye-3049.jpg'),
+            'Dr. Aditya J Nanavati':('https://www.fortishealthcare.com/location/fortis-hospital-mulund-mumbai','dr-aditya-j-nanavati-5504.jpg'),
+            'Dr. Jayesh Sardhara':('https://www.fortishealthcare.com/specialities/hospital/ent-73/fortis-hospital-kalyan-mumbai','dr-jayesh--sardhara-3235.jpg'),
+            'Dr. Haresh Dodeja':('https://www.fortishealthcare.com/specialities/hospital/nephrology-28/fortis-hospital-mulund-mumbai','dr-haresh--dodeja-2626.png'),
+            'Dr. Pushpak Chirmade':('https://www.apollohospitals.com/corporate/doctors/medical-oncologist/mumbai/dr-pushpak-chirmade','pushpak'),
+          }
+          headers={'User-Agent':'Mozilla/5.0','Accept':'text/html,image/avif,image/webp,image/apng,image/*,*/*;q=0.8'}
+          def get(url):
+            req=urllib.request.Request(url,headers=headers)
+            return urllib.request.urlopen(req,timeout=30).read().decode('utf-8','ignore')
+          def download(url,dest,referer):
+            cmd=['curl','-L','--fail','--retry','2','-A','Mozilla/5.0','-e',referer,url,'-o',str(dest)]
+            if subprocess.run(cmd).returncode: return False
+            probe=subprocess.run(['file',str(dest)],capture_output=True,text=True).stdout.lower()
+            return any(x in probe for x in ('image','jpeg','png','webp'))
           changed=0
-          for alt,url in q.items:
-              slug=unicodedata.normalize('NFKD',alt).encode('ascii','ignore').decode().lower()
-              slug=re.sub(r'[^a-z0-9]+','-',slug).strip('-')
-              dest=Path('assets/images/doctors')/(slug+'.jpg')
-              cmd=['curl','-L','--fail','--retry','3','--connect-timeout','20','--max-time','90','-A','Mozilla/5.0',url,'-o',str(dest)]
-              ok=subprocess.run(cmd).returncode==0
-              if ok:
-                  probe=subprocess.run(['file',str(dest)],capture_output=True,text=True).stdout.lower()
-                  ok='image' in probe or 'jpeg' in probe or 'png' in probe or 'webp' in probe
-              if not ok:
-                  dest.unlink(missing_ok=True)
-                  print('FAILED:',alt,url)
-                  continue
-              pat=r'<img class="photo"[^>]*src="'+re.escape(url)+r'"[^>]*>'
-              rep=f'<img class="photo" loading="lazy" src="../assets/images/doctors/{dest.name}?v=1" alt="{alt}">'
-              s,n=re.subn(pat,rep,s,count=1)
-              if n==1:
-                  changed+=1; print('LOCALIZED:',alt)
-              else:
-                  dest.unlink(missing_ok=True); print('HTML MATCH FAILED:',alt)
-          if changed==0: raise SystemExit('No doctor portraits could be localized')
+          for name,(page,needle) in doctors.items():
+            try: html=get(page)
+            except Exception as e: print('PAGE FAILED',name,e); continue
+            urls=re.findall(r'https?[^\"\'<> ]+',html.replace('\\/','/'))
+            cand=[]
+            for u in urls:
+              u=u.replace('&amp;','&')
+              if needle.lower() in u.lower() or (needle=='pushpak' and 'pushpak' in u.lower()): cand.append(u)
+            # Also reconstruct Fortis current media paths from page-confirmed filenames.
+            if needle.startswith('dr-'):
+              cand += [f'https://www.fortishealthcare.com/drupal-data/doctors/{needle}', f'https://www.fortishealthcare.com/drupal-data/styles/webp/public/doctors/{needle}.webp']
+            slug=re.sub(r'[^a-z0-9]+','-',name.lower()).strip('-')
+            dest=Path('assets/images/doctors')/(slug+'.jpg')
+            ok=False
+            for u in dict.fromkeys(cand):
+              if download(u,dest,page): ok=True; print('DOWNLOADED',name,u); break
+            if not ok:
+              dest.unlink(missing_ok=True); print('FAILED',name); continue
+            pat=r'<img class="photo"[^>]*alt="'+re.escape(name)+r'"[^>]*>'
+            rep=f'<img class="photo" loading="lazy" src="../assets/images/doctors/{dest.name}?v=2" alt="{name}">'
+            s,n=re.subn(pat,rep,s,count=1)
+            if n: changed+=1
           p.write_text(s)
-          print(f'Localized {changed} doctor portraits')
+          print('localized remaining:',changed)
           PY
-      - name: Commit localized doctor images
+      - name: Commit fixes
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add assets/images/doctors doctors/index.html
-          if git diff --cached --quiet; then
-            echo 'No changes to commit'
-            exit 0
-          fi
-          git commit -m 'Host doctor directory images locally'
+          if git diff --cached --quiet; then echo 'No new images localized'; exit 0; fi
+          git commit -m 'Fix remaining doctor directory images'
           git push
