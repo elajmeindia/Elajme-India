@@ -177,7 +177,10 @@ if (enquirySection && mobileWhatsApp) {
 const treatmentPageLinks = {
   "Cancer Care": "treatments/cancer-treatment-india/",
   "Cardiac care": "treatments/heart-treatment-india/",
-  "Orthopaedics and joints": "treatments/knee-replacement-india/"
+  "Orthopaedics and joints": "treatments/knee-replacement-india/",
+  "Neurosciences": "treatments/neurosurgery-india/",
+  "Urology and kidney care": "treatments/urology-treatment-india/",
+  "Gastroenterology": "treatments/gastroenterology-treatment-india/"
 };
 
 Object.entries(treatmentPageLinks).forEach(([label, url]) => {
