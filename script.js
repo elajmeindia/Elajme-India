@@ -174,19 +174,27 @@ if (enquirySection && mobileWhatsApp) {
    TREATMENT PAGE LINKS
 ======================================== */
 
-const cancerTreatmentLabel = document.querySelector(
-  '.treatment-card [data-en="Cancer Care"]'
-);
+const treatmentPageLinks = {
+  "Cancer Care": "treatments/cancer-treatment-india/",
+  "Cardiac care": "treatments/heart-treatment-india/",
+  "Orthopaedics and joints": "treatments/knee-replacement-india/"
+};
 
-if (cancerTreatmentLabel) {
-  const cancerTreatmentCard = cancerTreatmentLabel.closest(".treatment-card");
-  if (cancerTreatmentCard) {
-    cancerTreatmentCard.classList.remove("whatsapp-link");
-    cancerTreatmentCard.href = "treatments/cancer-treatment-india/";
-    cancerTreatmentCard.removeAttribute("target");
-    cancerTreatmentCard.removeAttribute("rel");
+Object.entries(treatmentPageLinks).forEach(([label, url]) => {
+  const treatmentLabel = document.querySelector(
+    `.treatment-card [data-en="${label}"]`
+  );
+
+  if (treatmentLabel) {
+    const treatmentCard = treatmentLabel.closest(".treatment-card");
+    if (treatmentCard) {
+      treatmentCard.classList.remove("whatsapp-link");
+      treatmentCard.href = url;
+      treatmentCard.removeAttribute("target");
+      treatmentCard.removeAttribute("rel");
+    }
   }
-}
+});
 
 /* ========================================
    LEGAL FOOTER LINKS
