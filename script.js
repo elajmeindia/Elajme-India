@@ -200,6 +200,48 @@ Object.entries(treatmentPageLinks).forEach(([label, url]) => {
 });
 
 /* ========================================
+   INTERNATIONAL PATIENT PAGE LINKS
+======================================== */
+
+const countryPageLinks = {
+  "Saudi Arabia": "saudi-arabia/treatment-in-india/",
+  "Oman": "oman/treatment-in-india/",
+  "United Arab Emirates": "uae/treatment-in-india/",
+  "Nigeria": "nigeria/treatment-in-india/"
+};
+
+document.querySelectorAll(".audience-strip .country").forEach((country) => {
+  const label = country.querySelector("[data-en]");
+  if (!label) return;
+
+  const countryName = label.getAttribute("data-en");
+  const url = countryPageLinks[countryName];
+  if (!url) return;
+
+  country.setAttribute("role", "link");
+  country.setAttribute("tabindex", "0");
+  country.style.cursor = "pointer";
+  country.setAttribute("aria-label", `Treatment in India for patients from ${countryName}`);
+
+  const openCountryPage = () => {
+    window.location.href = url;
+  };
+
+  country.addEventListener("click", openCountryPage);
+  country.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openCountryPage();
+    }
+  });
+});
+
+/* Main International Patients navigation now opens the dedicated MEA hub. */
+document.querySelectorAll('.desktop-nav a[data-en="International Patients"]').forEach((link) => {
+  link.href = "international-patients/mea/";
+});
+
+/* ========================================
    LEGAL FOOTER LINKS
 ======================================== */
 
