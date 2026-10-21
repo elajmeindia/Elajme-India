@@ -1,18 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://elajmeindia.github.io/Elajme-India/</loc>
-  </url>
-  <url>
-    <loc>https://elajmeindia.github.io/Elajme-India/treatments/cancer-treatment-india/</loc>
-  </url>
-  <url>
-    <loc>https://elajmeindia.github.io/Elajme-India/treatments/heart-treatment-india/</loc>
-  </url>
-  <url>
-    <loc>https://elajmeindia.github.io/Elajme-India/privacy.html</loc>
-  </url>
-  <url>
-    <loc>https://elajmeindia.github.io/Elajme-India/terms.html</loc>
-  </url>
+  <url><loc>https://elajmeindia.github.io/Elajme-India/</loc></url>
+  <url><loc>https://elajmeindia.github.io/Elajme-India/treatments/cancer-treatment-india/</loc></url>
+  <url><loc>https://elajmeindia.github.io/Elajme-India/treatments/heart-treatment-india/</loc></url>
+  <url><loc>https://elajmeindia.github.io/Elajme-India/treatments/knee-replacement-india/</loc></url>
+  <url><loc>https://elajmeindia.github.io/Elajme-India/treatments/neurosurgery-india/</loc></url>
+  <url><loc>https://elajmeindia.github.io/Elajme-India/treatments/urology-treatment-india/</loc></url>
+  <url><loc>https://elajmeindia.github.io/Elajme-India/treatments/gastroenterology-treatment-india/</loc></url>
+  <url><loc>https://elajmeindia.github.io/Elajme-India/privacy.html</loc></url>
+  <url><loc>https://elajmeindia.github.io/Elajme-India/terms.html</loc></url>
 </urlset>
