@@ -7,53 +7,45 @@ on:
 permissions:
   contents: write
 jobs:
-  recover-final-three:
+  recover-anant-kumar:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Recover final three portraits from alternate verified image sources
+      - name: Localize Dr Anant Kumar portrait
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p assets/images/doctors
+          URL='https://medglobe.health/images/UrologyTreatment/AnantKumar.png'
+          DEST='assets/images/doctors/dr-anant-kumar.png'
+          curl -L --fail --retry 3 --connect-timeout 20 --max-time 90 -A 'Mozilla/5.0' "$URL" -o "$DEST"
+          test -s "$DEST"
+          test $(stat -c%s "$DEST") -gt 4000
+          file "$DEST" | grep -Eqi 'image|png|jpeg|webp'
           python3 - <<'PY'
           from pathlib import Path
-          import subprocess,re
-          page=Path('doctors/index.html'); text=page.read_text()
-          doctors={
-            'Dr. Anant Kumar':('dr-anant-kumar',["https://i0.wp.com/www.dranantkumarurologist.com/wp-content/uploads/2021/09/Dr-Anant-Kumar-3.jpg?ssl=1","https://www.dranantkumarurologist.com/wp-content/uploads/2021/09/Dr-Anant-Kumar-3.jpg"]),
-            'Dr. Ashok Kumar Vaid':('dr-ashok-kumar-vaid',["https://www.medijourney.co.in/uploads/51ba570fe68fc088e0a942bdf8700cdce7eb8b1d/1710739262Add-a-heading-86.png"]),
-            'Dr. Pushpak Chirmade':('dr-pushpak-chirmade',["https://kdahweb-static-1.kokilabenhospital.com/kdah-2019/product/1661011228.jpg","https://cdn.askapollo.com/live/images/doctors/medical-oncology/dr-pushpak-chirmade-medical-oncology-in-mumbai.png"]),
-          }
-          failures=[]
-          for name,(slug,urls) in doctors.items():
-            dest=Path('assets/images/doctors')/(slug+'.jpg'); ok=False
-            for url in urls:
-              for headers in [[],['-e',url.rsplit('/',1)[0]+'/'],['-H','Referer: https://www.google.com/']]:
-                cmd=['curl','-L','--fail','--retry','2','--connect-timeout','20','--max-time','90','-A','Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36']+headers+[url,'-o',str(dest)]
-                if subprocess.run(cmd).returncode==0 and dest.exists() and dest.stat().st_size>4000:
-                  probe=subprocess.run(['file',str(dest)],capture_output=True,text=True).stdout.lower()
-                  if any(x in probe for x in ['jpeg','png','webp','image']): ok=True; break
-              if ok: break
-            if not ok:
-              dest.unlink(missing_ok=True); failures.append(name); print('FAILED',name); continue
-            cards=re.findall(r'<article class="card".*?</article>',text,re.S); replaced=False
-            for card in cards:
-              if name in card:
-                newcard=re.sub(r'<img class="photo"[^>]*>',f'<img class="photo" loading="lazy" src="../assets/images/doctors/{slug}.jpg?v=6" alt="{name}">',card,count=1)
-                text=text.replace(card,newcard,1); replaced=True; break
-            if not replaced: failures.append(name); dest.unlink(missing_ok=True); print('CARD FAILED',name)
-            else: print('LOCALIZED',name,dest.stat().st_size)
-          page.write_text(text)
-          Path('/tmp/fails').write_text('\n'.join(failures))
+          import re
+          p=Path('doctors/index.html')
+          text=p.read_text()
+          cards=re.findall(r'<article class="card".*?</article>',text,re.S)
+          done=False
+          for card in cards:
+              if 'Dr. Anant Kumar' in card:
+                  new=re.sub(r'<img class="photo"[^>]*>', '<img class="photo" loading="lazy" src="../assets/images/doctors/dr-anant-kumar.png?v=7" alt="Dr. Anant Kumar">', card, count=1)
+                  if new == card:
+                      raise SystemExit('Dr Anant Kumar image tag not found')
+                  text=text.replace(card,new,1)
+                  done=True
+                  break
+          if not done:
+              raise SystemExit('Dr Anant Kumar card not found')
+          p.write_text(text)
           PY
-      - name: Commit every recovered portrait
+      - name: Commit localized portrait
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add assets/images/doctors doctors/index.html
-          if ! git diff --cached --quiet; then git commit -m 'Fix final three doctor portraits'; git push; fi
-      - name: Strict result
-        run: |
-          if [ -s /tmp/fails ]; then echo 'Remaining failures:'; cat /tmp/fails; exit 1; fi
-          echo 'All final doctor portraits localized successfully.'
+          git add assets/images/doctors/dr-anant-kumar.png doctors/index.html
+          git diff --cached --quiet && { echo 'No changes produced'; exit 1; }
+          git commit -m 'Localize Dr Anant Kumar portrait'
+          git push
