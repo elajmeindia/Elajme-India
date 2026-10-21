@@ -1,0 +1,70 @@
+name: Localize doctor images
+on:
+  push:
+    paths:
+      - '.github/workflows/localize-doctor-images.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  localize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and localize doctor portraits
+        shell: bash
+        run: |
+          set -e
+          mkdir -p assets/images/doctors
+          python3 - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          import re, subprocess, unicodedata
+
+          p=Path('doctors/index.html')
+          s=p.read_text()
+          class P(HTMLParser):
+              def __init__(self): super().__init__(); self.items=[]
+              def handle_starttag(self,tag,attrs):
+                  if tag!='img': return
+                  d=dict(attrs)
+                  if 'photo' in d.get('class','').split() and d.get('src','').startswith(('http://','https://')):
+                      self.items.append((d.get('alt','doctor'),d['src']))
+          q=P(); q.feed(s)
+          print(f'Found {len(q.items)} external doctor portraits')
+          changed=0
+          for alt,url in q.items:
+              slug=unicodedata.normalize('NFKD',alt).encode('ascii','ignore').decode().lower()
+              slug=re.sub(r'[^a-z0-9]+','-',slug).strip('-')
+              dest=Path('assets/images/doctors')/(slug+'.jpg')
+              cmd=['curl','-L','--fail','--retry','3','--connect-timeout','20','--max-time','90','-A','Mozilla/5.0',url,'-o',str(dest)]
+              ok=subprocess.run(cmd).returncode==0
+              if ok:
+                  probe=subprocess.run(['file',str(dest)],capture_output=True,text=True).stdout.lower()
+                  ok='image' in probe or 'jpeg' in probe or 'png' in probe or 'webp' in probe
+              if not ok:
+                  dest.unlink(missing_ok=True)
+                  print('FAILED:',alt,url)
+                  continue
+              pat=r'<img class="photo"[^>]*src="'+re.escape(url)+r'"[^>]*>'
+              rep=f'<img class="photo" loading="lazy" src="../assets/images/doctors/{dest.name}?v=1" alt="{alt}">'
+              s,n=re.subn(pat,rep,s,count=1)
+              if n==1:
+                  changed+=1; print('LOCALIZED:',alt)
+              else:
+                  dest.unlink(missing_ok=True); print('HTML MATCH FAILED:',alt)
+          if changed==0: raise SystemExit('No doctor portraits could be localized')
+          p.write_text(s)
+          print(f'Localized {changed} doctor portraits')
+          PY
+      - name: Commit localized doctor images
+        run: |
+          git config user.name 'Elajme India Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add assets/images/doctors doctors/index.html
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+            exit 0
+          fi
+          git commit -m 'Host doctor directory images locally'
+          git push
