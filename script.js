@@ -3,51 +3,22 @@ const SITE_CONFIG={brandName:"Elajme India",whatsappNumber:"917488955154"};
 const translations={en:{lang:"en",dir:"ltr",toggle:"Arabic"},ar:{lang:"ar",dir:"rtl",toggle:"English"}};
 const requestedLanguage=new URLSearchParams(window.location.search).get("lang");
 let currentLanguage=requestedLanguage==="ar"?"ar":(localStorage.getItem("elajmeLanguage")==="ar"?"ar":"en");
-
-const treatmentPageLinks={
- "Cancer Care":"cancer-treatment-india/",
- "Cardiac care":"heart-treatment-india/",
- "Orthopaedics and joints":"knee-replacement-india/",
- "Neurosciences":"neurosurgery-india/",
- "Urology and kidney care":"urology-treatment-india/",
- "Gastroenterology":"gastroenterology-treatment-india/"
-};
-const advancedTreatmentLinks={
- "Kidney Transplant":"kidney-transplant-india/",
- "Liver Transplant":"liver-transplant-india/",
- "Spine Surgery":"spine-surgery-india/"
-};
-
+const treatmentPageLinks={"Cancer Care":"cancer-treatment-india/","Cardiac care":"heart-treatment-india/","Orthopaedics and joints":"knee-replacement-india/","Neurosciences":"neurosurgery-india/","Urology and kidney care":"urology-treatment-india/","Gastroenterology":"gastroenterology-treatment-india/"};
+const advancedTreatmentLinks={"Kidney Transplant":"kidney-transplant-india/","Liver Transplant":"liver-transplant-india/","Spine Surgery":"spine-surgery-india/"};
 function treatmentDestination(slug){return currentLanguage==="ar"?"ar/treatments/"+slug:"treatments/"+slug;}
 function applyLocalizedDestinations(){
  Object.entries(treatmentPageLinks).forEach(([label,slug])=>{const el=document.querySelector(`.treatment-card [data-en="${label}"]`);if(!el)return;const card=el.closest(".treatment-card");if(!card)return;card.classList.remove("whatsapp-link");card.href=treatmentDestination(slug);card.removeAttribute("target");card.removeAttribute("rel");});
- document.querySelectorAll('.desktop-nav a[data-en="Treatments"]').forEach(link=>{link.href=currentLanguage==="ar"?"ar/treatments/":"treatments/";});
- document.querySelectorAll('.desktop-nav a[data-en="International Patients"]').forEach(link=>{link.href=currentLanguage==="ar"?"international-patients/mea/?lang=ar":"international-patients/mea/";});
+ document.querySelectorAll('.desktop-nav a[data-en="Treatments"]').forEach(link=>link.href=currentLanguage==="ar"?"ar/treatments/":"treatments/");
+ document.querySelectorAll('.desktop-nav a[data-en="International Patients"]').forEach(link=>link.href=currentLanguage==="ar"?"ar/international-patients/mea/":"international-patients/mea/");
  document.querySelectorAll('.advanced-treatment-links a[data-en]').forEach(link=>{const slug=advancedTreatmentLinks[link.getAttribute('data-en')];if(slug)link.href=treatmentDestination(slug);});
+ document.querySelectorAll('.footer-links a[data-en="Privacy Policy"]').forEach(link=>link.href=currentLanguage==="ar"?"ar/privacy.html":"privacy.html");
+ document.querySelectorAll('.footer-links a[data-en="Terms & Medical Disclaimer"]').forEach(link=>link.href=currentLanguage==="ar"?"ar/terms.html":"terms.html");
 }
-
-function updateLanguage(language){
- currentLanguage=language;localStorage.setItem("elajmeLanguage",language);const s=translations[language];document.documentElement.lang=s.lang;document.documentElement.dir=s.dir;document.body.dir=s.dir;
- const toggle=document.getElementById("languageToggle");if(toggle){toggle.textContent=s.toggle;toggle.setAttribute("aria-label",language==="ar"?"Switch to English":"Switch to Arabic");}
- document.querySelectorAll(".brand-ar").forEach(el=>el.style.display=language==="ar"?"block":"none");
- document.querySelectorAll(".note-icon").forEach(el=>el.textContent=language==="ar"?"ع":"EN");
- document.querySelectorAll("[data-en][data-ar]").forEach(el=>{const v=el.getAttribute(`data-${language}`);if(v!==null)el.innerHTML=v;});
- document.querySelectorAll("[data-placeholder-en][data-placeholder-ar]").forEach(el=>{const v=el.getAttribute(`data-placeholder-${language}`);if(v!==null)el.setAttribute("placeholder",v);});
- document.title=language==="ar"?"علاج مي إنديا | تنسيق علاج المرضى الدوليين في الهند":"Elajme India | International Patient Coordination for Healthcare in India";
- const d=document.querySelector('meta[name="description"]');if(d)d.content=language==="ar"?"تدعم علاج مي إنديا المرضى الدوليين الباحثين عن العلاج في الهند، مع تنسيق المستشفيات والعلاج والسفر ودعم المرضى باللغتين العربية والإنجليزية.":"Elajme India supports international patients seeking treatment in India with hospital, treatment, travel and patient coordination in Arabic and English.";
- document.querySelectorAll(".whatsapp-link").forEach(link=>link.href=makeWhatsAppUrl(language));applyLocalizedDestinations();
-}
+function updateLanguage(language){currentLanguage=language;localStorage.setItem("elajmeLanguage",language);const s=translations[language];document.documentElement.lang=s.lang;document.documentElement.dir=s.dir;document.body.dir=s.dir;const toggle=document.getElementById("languageToggle");if(toggle){toggle.textContent=s.toggle;toggle.setAttribute("aria-label",language==="ar"?"Switch to English":"Switch to Arabic");}document.querySelectorAll(".brand-ar").forEach(el=>el.style.display=language==="ar"?"block":"none");document.querySelectorAll(".note-icon").forEach(el=>el.textContent=language==="ar"?"ع":"EN");document.querySelectorAll("[data-en][data-ar]").forEach(el=>{const v=el.getAttribute(`data-${language}`);if(v!==null)el.innerHTML=v;});document.querySelectorAll("[data-placeholder-en][data-placeholder-ar]").forEach(el=>{const v=el.getAttribute(`data-placeholder-${language}`);if(v!==null)el.setAttribute("placeholder",v);});document.title=language==="ar"?"علاج مي إنديا | تنسيق علاج المرضى الدوليين في الهند":"Elajme India | International Patient Coordination for Healthcare in India";const d=document.querySelector('meta[name="description"]');if(d)d.content=language==="ar"?"تدعم علاج مي إنديا المرضى الدوليين الباحثين عن العلاج في الهند، مع تنسيق المستشفيات والعلاج والسفر ودعم المرضى باللغتين العربية والإنجليزية.":"Elajme India supports international patients seeking treatment in India with hospital, treatment, travel and patient coordination in Arabic and English.";document.querySelectorAll(".whatsapp-link").forEach(link=>link.href=makeWhatsAppUrl(language));applyLocalizedDestinations();}
 function makeWhatsAppUrl(language){const m=language==="ar"?"السلام عليكم، أود الاستفسار عن تنسيق العلاج في الهند. يرجى توضيح الخطوات التالية.":"Hello, I would like to enquire about coordinating treatment in India. Please explain the next steps.";return "https://wa.me/"+SITE_CONFIG.whatsappNumber+"?text="+encodeURIComponent(m);}
-const languageToggle=document.getElementById("languageToggle");if(languageToggle)languageToggle.addEventListener("click",()=>updateLanguage(currentLanguage==="en"?"ar":"en"));
-const yearElement=document.getElementById("year");if(yearElement)yearElement.textContent=new Date().getFullYear();
-
+const languageToggle=document.getElementById("languageToggle");if(languageToggle)languageToggle.addEventListener("click",()=>updateLanguage(currentLanguage==="en"?"ar":"en"));const yearElement=document.getElementById("year");if(yearElement)yearElement.textContent=new Date().getFullYear();
 const patientEnquiryForm=document.getElementById("patientEnquiryForm");if(patientEnquiryForm)patientEnquiryForm.addEventListener("submit",function(e){e.preventDefault();const n=document.getElementById("patientName").value.trim(),c=document.getElementById("patientCountry").value.trim(),a=document.getElementById("patientAge").value.trim(),p=document.getElementById("patientMobile").value.trim(),m=document.getElementById("medicalNeed").value.trim(),l=document.getElementById("preferredLanguage").value;let msg=l==="Arabic"?"السلام عليكم، أود الاستفسار عن تنسيق العلاج في الهند.\n\nاسم المريض: "+n+"\nالدولة: "+c+"\n"+(a?"العمر: "+a+"\n":"")+"رقم الجوال / واتساب: "+p+"\nالعلاج المطلوب / الحالة الطبية: "+m+"\nاللغة المفضلة: العربية":"Hello Elajme India,\n\nPatient name: "+n+"\nCountry: "+c+"\n"+(a?"Age: "+a+"\n":"")+"Mobile / WhatsApp: "+p+"\nTreatment / medical condition: "+m+"\nPreferred language: English";window.open("https://wa.me/"+SITE_CONFIG.whatsappNumber+"?text="+encodeURIComponent(msg),"_blank","noopener");});
-
 const enquirySection=document.getElementById("enquiry"),mobileWhatsApp=document.querySelector(".mobile-whatsapp");if(enquirySection&&mobileWhatsApp){const o=new IntersectionObserver(entries=>entries.forEach(entry=>mobileWhatsApp.classList.toggle("hide-during-enquiry",entry.isIntersecting)),{threshold:.15});o.observe(enquirySection);}
-
 const treatmentGrid=document.querySelector(".treatment-grid");if(treatmentGrid&&!document.querySelector(".advanced-treatment-links")){const box=document.createElement("div");box.className="advanced-treatment-links";box.style.cssText="grid-column:1/-1;margin-top:18px;padding:22px;border:1px solid #dce7e9;border-radius:16px;background:#f7fbfa;";box.innerHTML=`<strong data-en="More treatment coordination" data-ar="خدمات علاجية إضافية">More treatment coordination</strong><div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px"><a href="treatments/kidney-transplant-india/" data-en="Kidney Transplant" data-ar="زراعة الكلى">Kidney Transplant</a><a href="treatments/liver-transplant-india/" data-en="Liver Transplant" data-ar="زراعة الكبد">Liver Transplant</a><a href="treatments/spine-surgery-india/" data-en="Spine Surgery" data-ar="جراحة العمود الفقري">Spine Surgery</a></div>`;treatmentGrid.appendChild(box);}
-
-const countryPageLinks={"Saudi Arabia":"saudi-arabia/treatment-in-india/","Oman":"oman/treatment-in-india/","United Arab Emirates":"uae/treatment-in-india/","Nigeria":"nigeria/treatment-in-india/"};document.querySelectorAll(".audience-strip .country").forEach(country=>{const label=country.querySelector("[data-en]");if(!label)return;const url=countryPageLinks[label.getAttribute("data-en")];if(!url)return;country.setAttribute("role","link");country.setAttribute("tabindex","0");country.style.cursor="pointer";const open=()=>window.location.href=currentLanguage==="ar"?url+"?lang=ar":url;country.addEventListener("click",open);country.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});});
-
-const footerLinks=document.querySelector(".footer-links");if(footerLinks&&!footerLinks.querySelector('a[href="privacy.html"]')){const p=document.createElement("a");p.href="privacy.html";p.setAttribute("data-en","Privacy Policy");p.setAttribute("data-ar","سياسة الخصوصية");const t=document.createElement("a");t.href="terms.html";t.setAttribute("data-en","Terms & Medical Disclaimer");t.setAttribute("data-ar","الشروط وإخلاء المسؤولية الطبية");footerLinks.appendChild(p);footerLinks.appendChild(t);}
-updateLanguage(currentLanguage);
+const countryPageLinks={"Saudi Arabia":"saudi-arabia/treatment-in-india/","Oman":"oman/treatment-in-india/","United Arab Emirates":"uae/treatment-in-india/","Nigeria":"nigeria/treatment-in-india/"};document.querySelectorAll(".audience-strip .country").forEach(country=>{const label=country.querySelector("[data-en]");if(!label)return;const url=countryPageLinks[label.getAttribute("data-en")];if(!url)return;country.setAttribute("role","link");country.setAttribute("tabindex","0");country.style.cursor="pointer";const open=()=>window.location.href=currentLanguage==="ar"?"ar/"+url:url;country.addEventListener("click",open);country.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});});
+const footerLinks=document.querySelector(".footer-links");if(footerLinks&&!footerLinks.querySelector('a[data-en="Privacy Policy"]')){const p=document.createElement("a");p.href="privacy.html";p.setAttribute("data-en","Privacy Policy");p.setAttribute("data-ar","سياسة الخصوصية");const t=document.createElement("a");t.href="terms.html";t.setAttribute("data-en","Terms & Medical Disclaimer");t.setAttribute("data-ar","الشروط وإخلاء المسؤولية الطبية");footerLinks.appendChild(p);footerLinks.appendChild(t);}updateLanguage(currentLanguage);
