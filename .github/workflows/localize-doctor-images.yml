@@ -7,76 +7,53 @@ on:
 permissions:
   contents: write
 jobs:
-  localize-final-three:
+  recover-final-three:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Recover final three doctor portraits
+      - name: Recover final three portraits from alternate verified image sources
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p assets/images/doctors
           python3 - <<'PY'
           from pathlib import Path
-          from urllib.parse import urljoin, quote
-          import re, subprocess, html
-
-          page=Path('doctors/index.html')
-          text=page.read_text()
-          doctors=[
-            ('Dr. Anant Kumar','dr-anant-kumar','https://www.dranantkumarurologist.com/'),
-            ('Dr. Ashok Kumar Vaid','dr-ashok-kumar-vaid','https://medworldindia.com/doctors/dr-ashok-kumar-vaid'),
-            ('Dr. Pushpak Chirmade','dr-pushpak-chirmade','https://www.apollohospitals.com/corporate/doctors/medical-oncologist/mumbai/dr-pushpak-chirmade'),
-          ]
+          import subprocess,re
+          page=Path('doctors/index.html'); text=page.read_text()
+          doctors={
+            'Dr. Anant Kumar':('dr-anant-kumar',["https://i0.wp.com/www.dranantkumarurologist.com/wp-content/uploads/2021/09/Dr-Anant-Kumar-3.jpg?ssl=1","https://www.dranantkumarurologist.com/wp-content/uploads/2021/09/Dr-Anant-Kumar-3.jpg"]),
+            'Dr. Ashok Kumar Vaid':('dr-ashok-kumar-vaid',["https://www.medijourney.co.in/uploads/51ba570fe68fc088e0a942bdf8700cdce7eb8b1d/1710739262Add-a-heading-86.png"]),
+            'Dr. Pushpak Chirmade':('dr-pushpak-chirmade',["https://kdahweb-static-1.kokilabenhospital.com/kdah-2019/product/1661011228.jpg","https://cdn.askapollo.com/live/images/doctors/medical-oncology/dr-pushpak-chirmade-medical-oncology-in-mumbai.png"]),
+          }
           failures=[]
-          for name,slug,profile in doctors:
-            dest=Path('assets/images/doctors')/(slug+'.jpg')
-            hp=Path('/tmp')/(slug+'.html')
-            r=subprocess.run(['curl','-L','--fail','--retry','2','-A','Mozilla/5.0','--max-time','90',profile,'-o',str(hp)])
-            candidates=[]
-            if r.returncode==0 and hp.exists():
-              h=hp.read_text(errors='ignore')
-              pats=[r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)',r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',r'<img[^>]+(?:class|alt)=["\'][^"\']*(?:doctor|'+re.escape(name.split()[-1])+r')[^"\']*["\'][^>]+src=["\']([^"\']+)']
-              for pat in pats:
-                for x in re.findall(pat,h,re.I):
-                  x=html.unescape(x); x=urljoin(profile,x)
-                  if x.startswith('http') and x not in candidates: candidates.append(x)
-            # Known verified profile-image fallbacks.
-            if slug=='dr-anant-kumar': candidates += ['https://i0.wp.com/www.dranantkumarurologist.com/wp-content/uploads/2021/09/Dr-Anant-Kumar-3.jpg?ssl=1']
-            if slug=='dr-pushpak-chirmade': candidates += ['https://cdn.askapollo.com/live/images/doctors/medical-oncology/dr-pushpak-chirmade-medical-oncology-in-mumbai.png']
-            ok=False
-            for u in candidates:
-              sources=[u,'https://images.weserv.nl/?url='+quote(u.split('://',1)[-1],safe='/:?=&%')+'&output=jpg&q=90&w=900&h=1100&fit=cover']
-              for src in sources:
-                rr=subprocess.run(['curl','-L','--fail','--retry','2','-A','Mozilla/5.0','--max-time','90',src,'-o',str(dest)])
-                if rr.returncode==0 and dest.exists() and dest.stat().st_size>4000:
+          for name,(slug,urls) in doctors.items():
+            dest=Path('assets/images/doctors')/(slug+'.jpg'); ok=False
+            for url in urls:
+              for headers in [[],['-e',url.rsplit('/',1)[0]+'/'],['-H','Referer: https://www.google.com/']]:
+                cmd=['curl','-L','--fail','--retry','2','--connect-timeout','20','--max-time','90','-A','Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36']+headers+[url,'-o',str(dest)]
+                if subprocess.run(cmd).returncode==0 and dest.exists() and dest.stat().st_size>4000:
                   probe=subprocess.run(['file',str(dest)],capture_output=True,text=True).stdout.lower()
-                  if 'image' in probe or 'jpeg' in probe or 'png' in probe or 'webp' in probe:
-                    ok=True; break
+                  if any(x in probe for x in ['jpeg','png','webp','image']): ok=True; break
               if ok: break
             if not ok:
               dest.unlink(missing_ok=True); failures.append(name); print('FAILED',name); continue
-            # Replace this doctor's external card image with permanent local file.
-            cardpat=r'(<article class="card"[^>]*>.*?<h2>'+re.escape(name)+r'</h2>.*?</article>)'
-            # Locate article by data-search/name more safely using card containing alt/name.
-            cards=re.findall(r'<article class="card".*?</article>',text,re.S)
-            replaced=False
+            cards=re.findall(r'<article class="card".*?</article>',text,re.S); replaced=False
             for card in cards:
-              if name in card and re.search(r'<img class="photo"[^>]*src="https?://',card):
-                newcard=re.sub(r'<img class="photo"[^>]*src="https?://[^\"]+"[^>]*>',f'<img class="photo" loading="lazy" src="../assets/images/doctors/{slug}.jpg?v=5" alt="{name}">',card,count=1)
+              if name in card:
+                newcard=re.sub(r'<img class="photo"[^>]*>',f'<img class="photo" loading="lazy" src="../assets/images/doctors/{slug}.jpg?v=6" alt="{name}">',card,count=1)
                 text=text.replace(card,newcard,1); replaced=True; break
-            if not replaced:
-              print('Card already local or not found:',name)
+            if not replaced: failures.append(name); dest.unlink(missing_ok=True); print('CARD FAILED',name)
             else: print('LOCALIZED',name,dest.stat().st_size)
           page.write_text(text)
-          Path('/tmp/final-doctor-failures.txt').write_text('\n'.join(failures))
+          Path('/tmp/fails').write_text('\n'.join(failures))
           PY
-      - name: Commit recovered final portraits
+      - name: Commit every recovered portrait
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
           git add assets/images/doctors doctors/index.html
-          if git diff --cached --quiet; then echo 'No new files recovered'; else git commit -m 'Localize final doctor portraits'; git push; fi
-      - name: Report status
+          if ! git diff --cached --quiet; then git commit -m 'Fix final three doctor portraits'; git push; fi
+      - name: Strict result
         run: |
-          if [ -s /tmp/final-doctor-failures.txt ]; then echo 'Still blocked:'; cat /tmp/final-doctor-failures.txt; else echo 'All final doctor portraits recovered locally.'; fi
+          if [ -s /tmp/fails ]; then echo 'Remaining failures:'; cat /tmp/fails; exit 1; fi
+          echo 'All final doctor portraits localized successfully.'
