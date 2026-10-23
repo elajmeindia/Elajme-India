@@ -11,102 +11,73 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Arabic directory and profile image parity
+      - name: Localize verified remaining images and polish conversion headers
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
+          import re, urllib.request, html
 
-          # Remove obsolete target attributes from internal enquiry CTAs.
-          for rel in ('ar/doctors/index.html','ar/hospitals/index.html'):
-              p=Path(rel)
-              s=p.read_text(encoding='utf-8')
-              s=s.replace(' href="/?lang=ar#enquiry" target="_blank" rel="noopener"',' href="/?lang=ar#enquiry"')
-              s=s.replace('>واتساب</a>','>ابدأ استفسارك</a>')
+          def fetch(url):
+              req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'})
+              return urllib.request.urlopen(req,timeout=25).read().decode('utf-8','ignore')
+
+          def og_image(url):
+              try: page=fetch(url)
+              except Exception: return None
+              pats=[r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)',r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']']
+              for pat in pats:
+                  m=re.search(pat,page,re.I)
+                  if m: return html.unescape(m.group(1))
+              return None
+
+          def download(url,dest):
+              try:
+                  req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0','Referer':url})
+                  data=urllib.request.urlopen(req,timeout=30).read()
+                  if len(data)<5000: return False
+                  Path(dest).parent.mkdir(parents=True,exist_ok=True)
+                  Path(dest).write_bytes(data)
+                  return True
+              except Exception:
+                  return False
+
+          # Dr Abhideep Chaudhary: official Max Healthcare page and portrait metadata.
+          doctor_page='https://www.maxhealthcare.in/doctor/abhideep-chaudhary'
+          img=og_image(doctor_page)
+          doctor_dest='assets/images/doctors/dr-abhideep-chaudhary.jpg'
+          if img and download(img,doctor_dest):
+              p=Path('doctors/dr-abhideep-chaudhary/index.html'); s=p.read_text(encoding='utf-8')
+              tag='<img class="profile-photo" loading="lazy" src="../../assets/images/doctors/dr-abhideep-chaudhary.jpg" alt="Dr. Abhideep Chaudhary">'
+              s=re.sub(r'<div class="profile-photo profile-photo-fallback"[^>]*>.*?</div>',tag,s,count=1,flags=re.S)
+              if 'og:image' not in s:
+                  s=s.replace('<meta property="og:type" content="profile">','<meta property="og:type" content="profile"><meta property="og:image" content="https://elajmeindia.com/assets/images/doctors/dr-abhideep-chaudhary.jpg">',1)
               p.write_text(s,encoding='utf-8')
 
-          # Arabic doctor directory: add verified local portraits where we already have assets.
-          p=Path('ar/doctors/index.html'); s=p.read_text(encoding='utf-8')
-          doctor_images={
-            'د. أنانت كومار':'dr-anant-kumar.png',
-            'أ. د. أتول شارما':'prof-dr-atul-sharma.jpg',
-            'د. فيفيكا كومار':'dr-viveka-kumar.jpg',
-            'د. أنكور باهل':'dr-ankur-bahl.jpg'
-          }
-          for name,img in doctor_images.items():
-              pattern=r'(<article class="card">)(<h2>'+re.escape(name)+r'</h2>)'
-              repl=r'\1<img class="directory-photo" loading="lazy" src="../../assets/images/doctors/'+img+r'" alt="'+name+r'">\2'
-              s=re.sub(pattern,repl,s,count=1)
-          p.write_text(s,encoding='utf-8')
-
-          # Arabic hospital directory: add local hospital photography for cards with existing assets.
-          p=Path('ar/hospitals/index.html'); s=p.read_text(encoding='utf-8')
-          hospital_images={
-            'مستشفى ماكس سوبر سبيشاليتي، ساكيت':'max-saket.webp',
-            'فورتيس ميموريال ريسيرش إنستيتيوت':'fmri.jpg',
-            'مستشفى إندرابراستا أبولو':'apollo-delhi.png',
-            'ميدانتا – ذا ميديسيتي':'medanta-gurugram.jpg',
-            'مستشفيات أبولو، نافي مومباي':'apollo-navi.jpg',
-            'مستشفى فورتيس، مولوند':'fortis-mulund.jpg'
-          }
-          for name,img in hospital_images.items():
-              pattern=r'(<article class="card">)(<h2>'+re.escape(name)+r'</h2>)'
-              repl=r'\1<img class="directory-photo hospital" loading="lazy" src="../../assets/images/hospitals/'+img+r'" alt="'+name+r'">\2'
-              s=re.sub(pattern,repl,s,count=1)
-          p.write_text(s,encoding='utf-8')
-
-          # Styling shared by Arabic doctor/hospital directory cards.
-          p=Path('assets/css/ar-core.css'); s=p.read_text(encoding='utf-8')
-          if '.directory-photo{' not in s:
-              s += '\n.directory-photo{display:block;width:100%;height:210px;object-fit:cover;object-position:top center;border-radius:11px;margin:0 0 15px;background:#edf3f3}.directory-photo.hospital{height:190px;object-position:center}@media(max-width:760px){.directory-photo{height:260px}.directory-photo.hospital{height:220px}}\n'
-          p.write_text(s,encoding='utf-8')
-
-          # Ensure every English doctor profile uses its matching local portrait when available.
-          doctor_dir=Path('assets/images/doctors')
-          for p in Path('doctors').glob('*/index.html'):
-              slug=p.parent.name
-              candidates=[]
-              for ext in ('jpg','jpeg','png','webp'):
-                  candidates.append(doctor_dir/f'{slug}.{ext}')
-              if slug=='dr-atul-sharma': candidates.insert(0,doctor_dir/'prof-dr-atul-sharma.jpg')
-              img=next((q for q in candidates if q.exists()),None)
-              if not img: continue
-              src=f'../../assets/images/doctors/{img.name}'
-              s=p.read_text(encoding='utf-8')
-              if src not in s:
-                  if '<div class="c profile">' in s:
-                      s=s.replace('<div class="c profile">',f'<div class="c profile"><img class="photo" loading="lazy" src="{src}" alt="Doctor profile photo">',1)
-                  elif '<div class="profile-container profile-hero-grid">' in s:
-                      s=s.replace('<div class="profile-container profile-hero-grid">',f'<div class="profile-container profile-hero-grid"><img class="profile-photo" loading="lazy" src="{src}" alt="Doctor profile photo">',1)
+          # Sir H. N. Reliance: only use official hospital metadata image if available.
+          hospital_page='https://www.rfhospital.org/about-us/our-hospital'
+          himg=og_image(hospital_page)
+          hospital_dest='assets/images/hospitals/sir-hn-reliance.jpg'
+          if himg and ('rfhospital.org' in himg or 'reliance' in himg.lower()) and download(himg,hospital_dest):
+              p=Path('hospitals/sir-hn-reliance-foundation-hospital-mumbai/index.html'); s=p.read_text(encoding='utf-8')
+              tag='<img class="hospital-photo" loading="lazy" src="../../assets/images/hospitals/sir-hn-reliance.jpg" alt="Sir H. N. Reliance Foundation Hospital, Mumbai">'
+              s=re.sub(r'<div class="visual">.*?</div>',tag,s,count=1,flags=re.S)
               p.write_text(s,encoding='utf-8')
 
-          # Ensure hospital profiles use local images where a verified/local asset mapping exists.
-          hospital_map={
-            'apollo-hospitals-navi-mumbai':'apollo-navi.jpg',
-            'artemis-hospital-gurugram':'artemis.png',
-            'blk-max-super-speciality-hospital-delhi':'blk-max.webp',
-            'fortis-escorts-heart-institute-delhi':'fortis-escorts.jpg',
-            'fortis-hospital-mulund-mumbai':'fortis-mulund.jpg',
-            'fortis-hospital-noida':'fortis-noida.jpg',
-            'fortis-memorial-research-institute-gurugram':'fmri.jpg',
-            'indraprastha-apollo-hospital-delhi':'apollo-delhi.png',
-            'max-super-speciality-hospital-noida':'max-noida.jpg',
-            'max-super-speciality-hospital-saket':'max-saket.webp',
-            'medanta-super-speciality-hospital-noida':'medanta-noida.jpg',
-            'medanta-the-medicity-gurugram':'medanta-gurugram.jpg',
-            'sl-raheja-hospital-mumbai':'sl-raheja.webp',
-            'wockhardt-hospitals-mumbai-central':'wockhardt.jpg'
-          }
-          for slug,img in hospital_map.items():
-              p=Path('hospitals')/slug/'index.html'
-              if not p.exists(): continue
-              src=f'../../assets/images/hospitals/{img}'
-              s=p.read_text(encoding='utf-8')
-              if src not in s:
-                  if '<div class="c profile">' in s:
-                      s=s.replace('<div class="c profile">',f'<div class="c profile"><img class="photo hospital-photo" loading="lazy" src="{src}" alt="Hospital building">',1)
-                  elif '<div class="c herogrid">' in s and '<div class="visual">' in s:
-                      s=re.sub(r'<div class="visual">.*?</div>',f'<img class="hospital-photo" loading="lazy" src="{src}" alt="Hospital building">',s,count=1,flags=re.S)
+          # Add Elajme phone to doctor/hospital profile headers without adding WhatsApp clutter.
+          phone='<a class="profile-phone" href="tel:+917488955154">+91 74889 55154</a>'
+          for base in ('doctors','hospitals'):
+              for p in Path(base).glob('*/index.html'):
+                  s=p.read_text(encoding='utf-8')
+                  if 'tel:+917488955154' not in s:
+                      if '</div></header>' in s:
+                          s=s.replace('</div></header>',phone+'</div></header>',1)
+                  p.write_text(s,encoding='utf-8')
+
+          # Responsive phone styling for both profile systems.
+          for rel in ('assets/css/profile.css','assets/css/profile-directory.css'):
+              p=Path(rel); s=p.read_text(encoding='utf-8')
+              if '.profile-phone{' not in s:
+                  s += '\n.profile-phone{font-weight:800;white-space:nowrap;color:#123b50}.profile-phone:hover{text-decoration:underline}@media(max-width:760px){.profile-phone{display:block;width:100%;text-align:center;padding:8px 10px;border:1px solid #dce7e9;border-radius:9px}}\n'
               p.write_text(s,encoding='utf-8')
           PY
       - name: Commit
@@ -115,5 +86,5 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add -A
           git diff --cached --quiet && exit 0
-          git commit -m 'Improve Arabic directories and profile image parity'
+          git commit -m 'Localize verified images and improve profile headers'
           git push
