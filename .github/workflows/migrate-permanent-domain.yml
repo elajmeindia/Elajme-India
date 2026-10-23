@@ -1,0 +1,52 @@
+name: One-time permanent domain migration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/migrate-permanent-domain.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Replace legacy GitHub Pages domain
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          old = 'https://elajmeindia.github.io/Elajme-India'
+          new = 'https://elajmeindia.com'
+          changed = []
+          for p in Path('.').rglob('*'):
+              if not p.is_file() or '.git' in p.parts or p.as_posix() == '.github/workflows/migrate-permanent-domain.yml':
+                  continue
+              try:
+                  s = p.read_text(encoding='utf-8')
+              except (UnicodeDecodeError, OSError):
+                  continue
+              if old in s:
+                  p.write_text(s.replace(old, new), encoding='utf-8')
+                  changed.append(p.as_posix())
+          print(f'Updated {len(changed)} files')
+          for p in changed:
+              print(p)
+          PY
+      - name: Commit migrated URLs
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No legacy domain references found.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Migrate remaining site URLs to elajmeindia.com'
+          git push
