@@ -8,7 +8,7 @@
   X-Permitted-Cross-Domain-Policies: none
 
 /assets/*
-  Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+  Cache-Control: public, max-age=0, must-revalidate
 
 /*.png
   Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
