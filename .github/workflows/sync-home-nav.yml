@@ -1,0 +1,31 @@
+name: Sync homepage navigation
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-home-nav.yml'
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Match homepage navigation to site-wide tabs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='<a href="#how-it-works" data-en="How it works" data-ar="كيف نعمل">How it works</a><a href="about/" data-en="About Us" data-ar="من نحن">About Us</a>'
+          new='<a href="patient-guide/" data-en="Patient Guide" data-ar="دليل المريض">Patient Guide</a><a href="medical-visa/" data-en="Medical Visa" data-ar="التأشيرة الطبية">Medical Visa</a><a href="about/" data-en="About Us" data-ar="من نحن">About Us</a>'
+          if old not in s:
+              raise SystemExit('Expected homepage navigation fragment not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit navigation sync
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Match homepage header tabs across main pages'
+          git push
