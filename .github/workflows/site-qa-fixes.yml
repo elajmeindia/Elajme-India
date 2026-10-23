@@ -11,48 +11,69 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Complete directory consistency pass
+      - name: GCC and conversion UX pass
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
 
-          def image_for(slug):
-              d=Path('assets/images/doctors')
-              for ext in ('jpg','jpeg','png','webp'):
-                  q=d/f'{slug}.{ext}'
-                  if q.exists(): return f'../../assets/images/doctors/{q.name}'
-              return None
+          PHONE='+91 74889 55154'
+          TEL='tel:+917488955154'
 
-          for p in Path('doctors').glob('*/index.html'):
-              slug=p.parent.name
-              img=image_for(slug)
-              s=p.read_text(encoding='utf-8')
-              s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
-              s=s.replace(' target="_blank" rel="noopener"','')
-              if img and img not in s:
-                  name=' '.join(x.capitalize() for x in slug.replace('dr-','').split('-'))
-                  tag=f'<img class="profile-photo" loading="lazy" src="{img}" alt="Dr. {name}">'
-                  if 'profile-photo-fallback' in s:
-                      s=re.sub(r'<div class="profile-photo profile-photo-fallback"[^>]*>.*?</div>',tag,s,count=1,flags=re.S)
-                  elif '<section class="profile-hero">' in s:
-                      s=s.replace('<div class="profile-container profile-hero-grid">','<div class="profile-container profile-hero-grid">'+tag,1)
+          # Homepage: all six GCC countries, visible phone, cleaner CTA hierarchy.
+          p=Path('index.html'); s=p.read_text(encoding='utf-8')
+          s=s.replace('"areaServed":["Saudi Arabia","Oman","United Arab Emirates","Nigeria","International"]','"areaServed":["Saudi Arabia","United Arab Emirates","Oman","Qatar","Kuwait","Bahrain","Nigeria","International"]')
+          old='<div class="nav-actions"><button class="lang-toggle" id="languageToggle" type="button" aria-label="Switch language">العربية</button><a class="button button-small button-primary whatsapp-link" href="#" target="_blank" rel="noopener" data-en="WhatsApp us" data-ar="راسلنا عبر واتساب">WhatsApp us</a></div>'
+          new=f'<div class="nav-actions"><a class="header-phone" href="{TEL}" aria-label="Call Elajme India"><span data-en="Call" data-ar="اتصل">Call</span> {PHONE}</a><button class="lang-toggle" id="languageToggle" type="button" aria-label="Switch language">العربية</button><a class="button button-small button-primary" href="#enquiry" data-en="Get Medical Opinion" data-ar="اطلب رأياً طبياً">Get Medical Opinion</a></div>'
+          s=s.replace(old,new)
+          s=re.sub(r'<section class="audience-strip">.*?</section>', '<section class="audience-strip"><div class="container audience-inner"><span class="audience-label" data-en="Supporting patients across the GCC" data-ar="نقدم الدعم للمرضى في دول الخليج">Supporting patients across the GCC</span><div class="country"><span data-en="Saudi Arabia" data-ar="السعودية">Saudi Arabia</span></div><div class="country"><span data-en="United Arab Emirates" data-ar="الإمارات">United Arab Emirates</span></div><div class="country"><span data-en="Oman" data-ar="عُمان">Oman</span></div><div class="country"><span data-en="Qatar" data-ar="قطر">Qatar</span></div><div class="country"><span data-en="Kuwait" data-ar="الكويت">Kuwait</span></div><div class="country"><span data-en="Bahrain" data-ar="البحرين">Bahrain</span></div></div></section>', s, count=1, flags=re.S)
+          p.write_text(s,encoding='utf-8')
+
+          # Homepage routing for all GCC country cards.
+          p=Path('script.js'); s=p.read_text(encoding='utf-8')
+          s=re.sub(r'const countryPageLinks=\{.*?\};document\.querySelectorAll', 'const countryPageLinks={"Saudi Arabia":"saudi-arabia/treatment-in-india/","United Arab Emirates":"uae/treatment-in-india/","Oman":"oman/treatment-in-india/","Qatar":"qatar/treatment-in-india/","Kuwait":"kuwait/treatment-in-india/","Bahrain":"bahrain/treatment-in-india/"};document.querySelectorAll', s, count=1)
+          p.write_text(s,encoding='utf-8')
+
+          # Header phone styling.
+          p=Path('styles.css'); s=p.read_text(encoding='utf-8')
+          if '.header-phone{' not in s:
+              s += '\n.header-phone{font-size:12px;font-weight:750;color:var(--navy);white-space:nowrap}.header-phone:hover{color:var(--teal)}@media(max-width:1080px){.header-phone{font-size:0}.header-phone:after{content:"Call";font-size:12px}}@media(max-width:760px){.header-phone{display:none}}\n'
+          p.write_text(s,encoding='utf-8')
+
+          # Existing GCC pages: remove repeated WhatsApp buttons, show phone, route primary actions to structured enquiry.
+          for root in ('saudi-arabia','oman','uae'):
+              p=Path(root)/'treatment-in-india/index.html'; s=p.read_text(encoding='utf-8')
+              s=re.sub(r'<a class="wa" href="https://wa\.me/917488955154[^\"]*" target="_blank" rel="noopener">WhatsApp</a>',f'<a href="{TEL}">Call {PHONE}</a>',s)
+              s=re.sub(r'<a class="btn" href="https://wa\.me/917488955154[^\"]*" target="_blank" rel="noopener">Start your enquiry</a>','<a class="btn" href="/#enquiry">Get Medical Opinion</a>',s)
+              s=re.sub(r'<a class="btn" href="https://wa\.me/917488955154[^\"]*" target="_blank" rel="noopener">Contact Elajme India</a>','<a class="btn" href="/#enquiry">Request Case Review</a>',s)
+              p.write_text(s,encoding='utf-8')
+          for root in ('saudi-arabia','oman','uae'):
+              p=Path('ar')/root/'treatment-in-india/index.html'; s=p.read_text(encoding='utf-8')
+              s=s.replace('../../../assets/css/arabic.css','../../../assets/css/international-patients.css')
+              s=re.sub(r'<a class="btn" href="https://wa\.me/917488955154[^\"]*" target="_blank" rel="noopener">.*?</a>','<a class="btn" href="/?lang=ar#enquiry">اطلب تنسيق الحالة</a>',s,count=1)
+              s=s.replace('</div></header>',f'<a href="{TEL}">اتصل {PHONE}</a></div></header>')
               p.write_text(s,encoding='utf-8')
 
-          for p in Path('hospitals').glob('*/index.html'):
-              s=p.read_text(encoding='utf-8')
-              s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
-              s=s.replace(' target="_blank" rel="noopener"','')
-              p.write_text(s,encoding='utf-8')
+          countries={
+            'qatar':('Qatar','قطر'),
+            'kuwait':('Kuwait','الكويت'),
+            'bahrain':('Bahrain','البحرين')
+          }
+          en_template='''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Treatment in India for {country} Patients | Elajme India</title><meta name="description" content="Treatment coordination in India for patients from {country}, with Arabic and English support through Elajme India."><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="https://elajmeindia.com/{slug}/treatment-in-india/"><link rel="alternate" hreflang="en" href="https://elajmeindia.com/{slug}/treatment-in-india/"><link rel="alternate" hreflang="ar" href="https://elajmeindia.com/ar/{slug}/treatment-in-india/"><link rel="alternate" hreflang="x-default" href="https://elajmeindia.com/{slug}/treatment-in-india/"><link rel="stylesheet" href="../../assets/css/international-patients.css"></head><body><header class="head"><div class="c nav"><a class="brand" href="../../">Elajme India</a><a href="../../treatments/">Treatments</a><a href="../../hospitals/">Hospitals</a><a href="../../doctors/">Doctors</a><a href="../../patient-guide/">Patient Guide</a><a href="../../ar/{slug}/treatment-in-india/">العربية</a><a href="tel:+917488955154">Call +91 74889 55154</a></div></header><main><section class="hero"><div class="c"><span class="ey">{country} → India</span><h1>Medical treatment in India for patients from {country}</h1><p class="lead">Elajme India helps patients and families from {country} coordinate medical-case review requests, hospital and doctor communication, consultations, available treatment estimates and practical treatment-visit planning in India. Arabic and English support is available.</p><a class="btn" href="/#enquiry">Get Medical Opinion</a></div></section><section class="sec"><div class="c"><h2>A clear treatment coordination journey</h2><div class="grid"><article class="card"><h3>Share medical reports</h3><p>Send the relevant diagnosis, reports and scans available for your case.</p></article><article class="card"><h3>Coordinate hospital review</h3><p>We coordinate the enquiry with an appropriate hospital or specialist team.</p></article><article class="card"><h3>Review available information</h3><p>Receive available hospital feedback, consultation information and treatment estimates.</p></article><article class="card"><h3>Plan the visit</h3><p>We help coordinate practical treatment-related travel and visit requirements when needed.</p></article></div><div class="note">Elajme India provides coordination support. Diagnosis and treatment recommendations are made by qualified medical professionals. Hospital acceptance, visa approval and treatment outcomes cannot be guaranteed.</div></div></section><section class="sec alt"><div class="c"><h2>Useful resources</h2><div class="related"><a href="../../treatments/">Treatments</a><a href="../../hospitals/">Hospitals</a><a href="../../doctors/">Doctors</a><a href="../../medical-visa/">Medical visa guidance</a><a href="../../patient-guide/">Patient guide</a></div></div></section><section class="cta"><div class="c"><h2>Start your {country}-to-India treatment enquiry</h2><p>Share your basic case details through our structured enquiry so our coordination team can guide the next steps.</p><a class="btn" href="/#enquiry">Request Case Review</a></div></section></main><footer class="footer"><div class="c">© Elajme India · <a href="../../privacy.html">Privacy Policy</a><a href="../../terms.html">Terms &amp; Medical Disclaimer</a></div></footer></body></html>'''
+          ar_template='''<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>العلاج في الهند للمرضى من {ar} | علاج مي إنديا</title><meta name="description" content="تنسيق العلاج في الهند للمرضى من {ar} مع دعم باللغة العربية والإنجليزية."><meta name="robots" content="index,follow,max-image-preview:large"><link rel="canonical" href="https://elajmeindia.com/ar/{slug}/treatment-in-india/"><link rel="alternate" hreflang="en" href="https://elajmeindia.com/{slug}/treatment-in-india/"><link rel="alternate" hreflang="ar" href="https://elajmeindia.com/ar/{slug}/treatment-in-india/"><link rel="stylesheet" href="../../../assets/css/international-patients.css"></head><body><header class="head"><div class="c nav"><a class="brand" href="../../../?lang=ar">علاج مي إنديا</a><a href="../../treatments/">العلاجات</a><a href="../../hospitals/">المستشفيات</a><a href="../../doctors/">الأطباء</a><a href="../../patient-guide/">دليل المريض</a><a href="../../../{slug}/treatment-in-india/">English</a><a href="tel:+917488955154">اتصل +91 74889 55154</a></div></header><main><section class="hero"><div class="c"><span class="ey">{ar} ← الهند</span><h1>العلاج في الهند للمرضى من {ar}</h1><p class="lead">تساعد علاج مي إنديا المرضى والعائلات من {ar} في تنسيق مراجعة التقارير الطبية والتواصل مع المستشفيات والأطباء والاستشارات والمعلومات المتاحة عن العلاج وترتيبات الزيارة إلى الهند، مع دعم باللغة العربية والإنجليزية.</p><a class="btn" href="/?lang=ar#enquiry">اطلب تنسيق الحالة</a></div></section><section class="sec"><div class="c"><h2>رحلة علاجية أكثر وضوحاً</h2><div class="grid"><article class="card"><h3>شارك التقارير الطبية</h3><p>أرسل التشخيص والتقارير والفحوصات المتاحة ذات الصلة بالحالة.</p></article><article class="card"><h3>تنسيق مراجعة الحالة</h3><p>ننسق الاستفسار مع مستشفى أو فريق طبي مناسب للحالة.</p></article><article class="card"><h3>مراجعة المعلومات المتاحة</h3><p>نساعدك في الحصول على المعلومات المتاحة عن الاستشارة وخطة العلاج والتكلفة التقديرية.</p></article><article class="card"><h3>التخطيط للزيارة</h3><p>نساعد في تنسيق المتطلبات العملية المتعلقة برحلة العلاج عند الحاجة.</p></article></div><div class="note">علاج مي إنديا تقدم خدمات التنسيق. التشخيص والتوصيات العلاجية من اختصاص الأطباء المؤهلين، ولا يمكن ضمان قبول المستشفى أو التأشيرة أو نتائج العلاج.</div></div></section><section class="cta"><div class="c"><h2>ابدأ استفسارك للعلاج في الهند</h2><p>شارك المعلومات الأساسية عن الحالة من خلال نموذج الاستفسار المنظم وسنساعدك في الخطوات التالية.</p><a class="btn" href="/?lang=ar#enquiry">اطلب مراجعة الحالة</a></div></section></main><footer class="footer"><div class="c">© علاج مي إنديا · تنسيق المرضى الدوليين.</div></footer></body></html>'''
+          for slug,(country,ar) in countries.items():
+              ep=Path(slug)/'treatment-in-india/index.html'; ep.parent.mkdir(parents=True,exist_ok=True); ep.write_text(en_template.format(slug=slug,country=country),encoding='utf-8')
+              ap=Path('ar')/slug/'treatment-in-india/index.html'; ap.parent.mkdir(parents=True,exist_ok=True); ap.write_text(ar_template.format(slug=slug,ar=ar),encoding='utf-8')
 
-          for rel in ('doctors/index.html','hospitals/index.html'):
-              p=Path(rel); s=p.read_text(encoding='utf-8')
-              s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
-              p.write_text(s,encoding='utf-8')
-          for rel in ('ar/doctors/index.html','ar/hospitals/index.html'):
-              p=Path(rel); s=p.read_text(encoding='utf-8')
-              s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/?lang=ar#enquiry"',s)
-              p.write_text(s,encoding='utf-8')
+          # Sitemap: add all new GCC English/Arabic URLs.
+          p=Path('sitemap.xml'); s=p.read_text(encoding='utf-8')
+          additions=[]
+          for slug in countries:
+              for prefix in ('','ar/'):
+                  url=f'https://elajmeindia.com/{prefix}{slug}/treatment-in-india/'
+                  if url not in s: additions.append(f'<url><loc>{url}</loc></url>')
+          if additions: s=s.replace('</urlset>','\n'+'\n'.join(additions)+'\n</urlset>')
+          p.write_text(s,encoding='utf-8')
           PY
       - name: Commit
         run: |
@@ -60,5 +81,5 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add -A
           git diff --cached --quiet && exit 0
-          git commit -m 'Complete directory image and enquiry consistency pass'
+          git commit -m 'Add full GCC coverage and professional contact UX'
           git push
