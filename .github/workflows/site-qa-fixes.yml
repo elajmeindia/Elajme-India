@@ -1,0 +1,39 @@
+name: Apply site QA fixes
+on:
+  push:
+    paths:
+      - '.github/workflows/site-qa-fixes.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix routing and profile consistency
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          for p in Path('.').rglob('*.html'):
+              s=p.read_text(encoding='utf-8')
+              s=s.replace('/Elajme-India/','/')
+              if p.as_posix() in ('doctors/index.html','hospitals/index.html'):
+                  s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
+                  s=s.replace('>Enquire</a>','>Enquire through Elajme India</a>').replace('>Request Consultation</a>','>Enquire through Elajme India</a>')
+              elif p.as_posix() in ('ar/doctors/index.html','ar/hospitals/index.html'):
+                  s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/?lang=ar#enquiry"',s)
+              elif p.as_posix().startswith(('doctors/','hospitals/')) and p.name=='index.html':
+                  s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
+                  s=s.replace(' target="_blank" rel="noopener"','')
+              p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'Elajme India Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m 'Apply website QA routing fixes'
+          git push
