@@ -11,22 +11,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix routing and profile consistency
+      - name: Fix routing SEO and directory consistency
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
+          root='https://elajmeindia.com'
           for p in Path('.').rglob('*.html'):
               s=p.read_text(encoding='utf-8')
               s=s.replace('/Elajme-India/','/')
-              if p.as_posix() in ('doctors/index.html','hospitals/index.html'):
+              rel=p.as_posix()
+              if rel in ('doctors/index.html','hospitals/index.html'):
                   s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
                   s=s.replace('>Enquire</a>','>Enquire through Elajme India</a>').replace('>Request Consultation</a>','>Enquire through Elajme India</a>')
-              elif p.as_posix() in ('ar/doctors/index.html','ar/hospitals/index.html'):
+              elif rel in ('ar/doctors/index.html','ar/hospitals/index.html'):
                   s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/?lang=ar#enquiry"',s)
-              elif p.as_posix().startswith(('doctors/','hospitals/')) and p.name=='index.html':
+              elif rel.startswith(('doctors/','hospitals/')) and p.name=='index.html':
                   s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
                   s=s.replace(' target="_blank" rel="noopener"','')
+              if rel in ('doctors/index.html','hospitals/index.html'):
+                  canon=root+'/'+rel[:-10]
+                  if not canon.endswith('/'): canon+='/'
+                  if 'hreflang="en"' not in s:
+                      ar=canon.replace(root+'/',root+'/ar/')
+                      tags=f'<link rel="alternate" hreflang="en" href="{canon}"><link rel="alternate" hreflang="ar" href="{ar}"><link rel="alternate" hreflang="x-default" href="{canon}">'
+                      s=s.replace('</head>',tags+'</head>')
               p.write_text(s,encoding='utf-8')
           PY
       - name: Commit
@@ -35,5 +44,5 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add -A
           git diff --cached --quiet && exit 0
-          git commit -m 'Apply website QA routing fixes'
+          git commit -m 'Apply expanded website QA fixes'
           git push
