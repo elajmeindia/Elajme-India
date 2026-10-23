@@ -11,31 +11,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix routing SEO and directory consistency
+      - name: Complete directory consistency pass
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
-          root='https://elajmeindia.com'
-          for p in Path('.').rglob('*.html'):
+
+          def image_for(slug):
+              d=Path('assets/images/doctors')
+              for ext in ('jpg','jpeg','png','webp'):
+                  q=d/f'{slug}.{ext}'
+                  if q.exists(): return f'../../assets/images/doctors/{q.name}'
+              return None
+
+          for p in Path('doctors').glob('*/index.html'):
+              slug=p.parent.name
+              img=image_for(slug)
               s=p.read_text(encoding='utf-8')
-              s=s.replace('/Elajme-India/','/')
-              rel=p.as_posix()
-              if rel in ('doctors/index.html','hospitals/index.html'):
-                  s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
-                  s=s.replace('>Enquire</a>','>Enquire through Elajme India</a>').replace('>Request Consultation</a>','>Enquire through Elajme India</a>')
-              elif rel in ('ar/doctors/index.html','ar/hospitals/index.html'):
-                  s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/?lang=ar#enquiry"',s)
-              elif rel.startswith(('doctors/','hospitals/')) and p.name=='index.html':
-                  s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
-                  s=s.replace(' target="_blank" rel="noopener"','')
-              if rel in ('doctors/index.html','hospitals/index.html'):
-                  canon=root+'/'+rel[:-10]
-                  if not canon.endswith('/'): canon+='/'
-                  if 'hreflang="en"' not in s:
-                      ar=canon.replace(root+'/',root+'/ar/')
-                      tags=f'<link rel="alternate" hreflang="en" href="{canon}"><link rel="alternate" hreflang="ar" href="{ar}"><link rel="alternate" hreflang="x-default" href="{canon}">'
-                      s=s.replace('</head>',tags+'</head>')
+              s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
+              s=s.replace(' target="_blank" rel="noopener"','')
+              if img and img not in s:
+                  name=' '.join(x.capitalize() for x in slug.replace('dr-','').split('-'))
+                  tag=f'<img class="profile-photo" loading="lazy" src="{img}" alt="Dr. {name}">'
+                  if 'profile-photo-fallback' in s:
+                      s=re.sub(r'<div class="profile-photo profile-photo-fallback"[^>]*>.*?</div>',tag,s,count=1,flags=re.S)
+                  elif '<section class="profile-hero">' in s:
+                      s=s.replace('<div class="profile-container profile-hero-grid">','<div class="profile-container profile-hero-grid">'+tag,1)
+              p.write_text(s,encoding='utf-8')
+
+          for p in Path('hospitals').glob('*/index.html'):
+              s=p.read_text(encoding='utf-8')
+              s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
+              s=s.replace(' target="_blank" rel="noopener"','')
+              p.write_text(s,encoding='utf-8')
+
+          for rel in ('doctors/index.html','hospitals/index.html'):
+              p=Path(rel); s=p.read_text(encoding='utf-8')
+              s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/#enquiry"',s)
+              p.write_text(s,encoding='utf-8')
+          for rel in ('ar/doctors/index.html','ar/hospitals/index.html'):
+              p=Path(rel); s=p.read_text(encoding='utf-8')
+              s=re.sub(r'href="https://wa\.me/917488955154[^\"]*"','href="/?lang=ar#enquiry"',s)
               p.write_text(s,encoding='utf-8')
           PY
       - name: Commit
@@ -44,5 +60,5 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add -A
           git diff --cached --quiet && exit 0
-          git commit -m 'Apply expanded website QA fixes'
+          git commit -m 'Complete directory image and enquiry consistency pass'
           git push
