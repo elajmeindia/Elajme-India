@@ -16,7 +16,6 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
-          from urllib.parse import urlparse
 
           ROOT=Path('.')
           html_files=[p for p in ROOT.rglob('*.html') if '.git' not in p.parts]
@@ -30,57 +29,53 @@ jobs:
           def local_target(p, href):
               href=href.split('#',1)[0].split('?',1)[0]
               if not href or href.startswith(('http://','https://','mailto:','tel:','javascript:')): return None
-              if href.startswith('/'):
-                  t=ROOT/href.lstrip('/')
-              else:
-                  t=p.parent/href
+              t=ROOT/href.lstrip('/') if href.startswith('/') else p.parent/href
               if str(t).endswith('/') or t.is_dir(): t=t/'index.html'
               return t
 
           broken=[]
           for p in html_files:
               s=p.read_text(encoding='utf-8')
-              # Safe baseline metadata on indexable pages.
               if '<meta name="viewport"' not in s:
                   s=s.replace('<meta charset="utf-8">','<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',1)
               if '<meta name="robots"' not in s and p.name!='404.html':
                   s=s.replace('</title>','</title><meta name="robots" content="index,follow,max-image-preview:large">',1)
               if '<link rel="canonical"' not in s and p.name!='404.html':
-                  canonical=page_url(p)
-                  s=s.replace('</title>',f'</title><link rel="canonical" href="{canonical}">',1)
-              # Lazy-load non-critical images; preserve likely hero/brand images.
+                  s=s.replace('</title>',f'</title><link rel="canonical" href="{page_url(p)}">',1)
+
+              # Hospital and doctor directories use the same production header/footer as the main site.
+              if p.as_posix() in ('hospitals/index.html','doctors/index.html'):
+                  if '/assets/css/directory-shell.css' not in s:
+                      s=s.replace('</head>','<link rel="stylesheet" href="/assets/css/directory-shell.css"></head>',1)
+                  if '/assets/js/directory-shell.js' not in s:
+                      s=s.replace('</body>','<script src="/assets/js/directory-shell.js" defer></script></body>',1)
+
               def imgfix(m):
-                  tag=m.group(0)
-                  low=tag.lower()
+                  tag=m.group(0); low=tag.lower()
                   if ' loading=' not in low and not any(x in low for x in ('brand-icon','shell-brand','hero-image','fetchpriority=')):
                       tag=tag[:-1]+' loading="lazy">'
                   if ' decoding=' not in tag.lower(): tag=tag[:-1]+' decoding="async">'
                   return tag
               s=re.sub(r'<img\b[^>]*>',imgfix,s,flags=re.I)
-              # External new-tab safety.
               def relfix(m):
                   tag=m.group(0)
                   if 'target="_blank"' in tag.lower() and 'rel=' not in tag.lower(): tag=tag[:-1]+' rel="noopener noreferrer">'
                   return tag
               s=re.sub(r'<a\b[^>]*>',relfix,s,flags=re.I)
               p.write_text(s,encoding='utf-8')
-
               for href in re.findall(r'href=["\']([^"\']+)',s,re.I):
                   t=local_target(p,href)
                   if t is not None and not t.exists(): broken.append((p.as_posix(),href))
 
-          # Generate a clean sitemap from indexable HTML pages so new pages are not omitted.
           urls=[]
           for p in html_files:
               if p.name=='404.html': continue
               s=p.read_text(encoding='utf-8')
               if re.search(r'<meta[^>]+name=["\']robots["\'][^>]+content=["\'][^"\']*noindex',s,re.I): continue
-              u=page_url(p)
-              urls.append(u)
+              urls.append(page_url(p))
           urls=sorted(set(urls),key=lambda u:(u!='https://elajmeindia.com/',u))
           sitemap='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+''.join(f'  <url><loc>{u}</loc></url>\n' for u in urls)+'</urlset>\n'
           Path('sitemap.xml').write_text(sitemap,encoding='utf-8')
-
           if broken:
               print('Broken local links found (reported, not guessed):')
               for src,href in broken[:100]: print(f'{src}: {href}')
@@ -92,5 +87,5 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add -A
           git diff --cached --quiet && exit 0
-          git commit -m 'Apply site-wide technical SEO and performance QA'
+          git commit -m 'Apply unified directory shell and site QA'
           git push
