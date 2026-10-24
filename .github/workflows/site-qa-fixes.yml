@@ -15,33 +15,15 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          from urllib.parse import unquote
           import re
 
           ROOT=Path('.')
           html_files=[p for p in ROOT.rglob('*.html') if '.git' not in p.parts]
           doctor_assets={p.stem:p for p in Path('assets/images/doctors').glob('*') if p.is_file()}
           hospital_assets={p.stem:p for p in Path('assets/images/hospitals').glob('*') if p.is_file()}
-
-          # Explicit aliases where the profile slug and localized image filename differ.
-          doctor_alias={
-            'dr-atul-sharma':'prof-dr-atul-sharma',
-          }
-          hospital_alias={
-            'apollo-hospitals-navi-mumbai':'apollo-navi',
-            'artemis-hospital-gurugram':'artemis',
-            'blk-max-super-speciality-hospital-delhi':'blk-max',
-            'fortis-escorts-heart-institute-delhi':'fortis-escorts',
-            'fortis-hospital-mulund-mumbai':'fortis-mulund',
-            'fortis-hospital-noida':'fortis-noida',
-            'fortis-memorial-research-institute-gurugram':'fmri',
-            'indraprastha-apollo-hospital-delhi':'apollo-delhi',
-            'max-super-speciality-hospital-noida':'max-noida',
-            'max-super-speciality-hospital-saket':'max-saket',
-            'medanta-super-speciality-hospital-noida':'medanta-noida',
-            'medanta-the-medicity-gurugram':'medanta-gurugram',
-            'sl-raheja-hospital-mumbai':'sl-raheja',
-            'wockhardt-hospitals-mumbai-central':'wockhardt',
-          }
+          doctor_alias={'dr-atul-sharma':'prof-dr-atul-sharma'}
+          hospital_alias={'apollo-hospitals-navi-mumbai':'apollo-navi','artemis-hospital-gurugram':'artemis','blk-max-super-speciality-hospital-delhi':'blk-max','fortis-escorts-heart-institute-delhi':'fortis-escorts','fortis-hospital-mulund-mumbai':'fortis-mulund','fortis-hospital-noida':'fortis-noida','fortis-memorial-research-institute-gurugram':'fmri','indraprastha-apollo-hospital-delhi':'apollo-delhi','max-super-speciality-hospital-noida':'max-noida','max-super-speciality-hospital-saket':'max-saket','medanta-super-speciality-hospital-noida':'medanta-noida','medanta-the-medicity-gurugram':'medanta-gurugram','sl-raheja-hospital-mumbai':'sl-raheja','wockhardt-hospitals-mumbai-central':'wockhardt'}
 
           def page_url(p):
               rel=p.as_posix()
@@ -50,103 +32,72 @@ jobs:
               return 'https://elajmeindia.com/'+rel
 
           def local_target(p, href):
-              href=href.split('#',1)[0].split('?',1)[0]
+              href=unquote(href.split('#',1)[0].split('?',1)[0])
               if not href or href.startswith(('http://','https://','mailto:','tel:','javascript:')): return None
               t=ROOT/href.lstrip('/') if href.startswith('/') else p.parent/href
               if str(t).endswith('/') or t.is_dir(): t=t/'index.html'
               return t
 
-          def asset_url(asset):
-              return '/'+asset.as_posix()
+          def asset_url(asset): return '/'+asset.as_posix()
 
-          # Replace fragile external/profile images with an already-localized matching asset whenever one exists.
           def localize_profile_image(p,s):
               parts=p.parts
               if len(parts)>=3 and parts[0]=='doctors' and p.name=='index.html':
-                  slug=parts[1]; key=doctor_alias.get(slug,slug)
-                  asset=doctor_assets.get(key)
-                  if asset:
-                      s=re.sub(r'<img\b[^>]*(?:class=["\'][^"\']*(?:profile-photo|doctor-photo)[^"\']*["\'])[^>]*>',
-                               lambda m: re.sub(r'src=["\'][^"\']+["\']',f'src="{asset_url(asset)}"',m.group(0)),s,count=1,flags=re.I)
+                  asset=doctor_assets.get(doctor_alias.get(parts[1],parts[1]))
+                  if asset: s=re.sub(r'<img\b[^>]*(?:class=["\'][^"\']*(?:profile-photo|doctor-photo)[^"\']*["\'])[^>]*>',lambda m:re.sub(r'src=["\'][^"\']+["\']',f'src="{asset_url(asset)}"',m.group(0)),s,count=1,flags=re.I)
               if len(parts)>=3 and parts[0]=='hospitals' and p.name=='index.html':
-                  slug=parts[1]; key=hospital_alias.get(slug,slug)
-                  asset=hospital_assets.get(key)
-                  if asset:
-                      s=re.sub(r'<img\b[^>]*(?:class=["\'][^"\']*(?:profile-photo|hospital-photo)[^"\']*["\'])[^>]*>',
-                               lambda m: re.sub(r'src=["\'][^"\']+["\']',f'src="{asset_url(asset)}"',m.group(0)),s,count=1,flags=re.I)
+                  asset=hospital_assets.get(hospital_alias.get(parts[1],parts[1]))
+                  if asset: s=re.sub(r'<img\b[^>]*(?:class=["\'][^"\']*(?:profile-photo|hospital-photo)[^"\']*["\'])[^>]*>',lambda m:re.sub(r'src=["\'][^"\']+["\']',f'src="{asset_url(asset)}"',m.group(0)),s,count=1,flags=re.I)
               return s
 
-          # Build known external->local replacements from English profile pages with matching localized assets.
           replacements={}
           for p in list(Path('doctors').glob('*/index.html'))+list(Path('hospitals').glob('*/index.html')):
-              s=p.read_text(encoding='utf-8')
-              slug=p.parent.name
+              s=p.read_text(encoding='utf-8'); slug=p.parent.name
               amap=doctor_assets if p.parts[0]=='doctors' else hospital_assets
               aliases=doctor_alias if p.parts[0]=='doctors' else hospital_alias
               asset=amap.get(aliases.get(slug,slug))
               if not asset: continue
-              for src in re.findall(r'<img\b[^>]*src=["\'](https?://[^"\']+)["\'][^>]*>',s,re.I):
-                  replacements[src]=asset_url(asset)
+              for src in re.findall(r'<img\b[^>]*src=["\'](https?://[^"\']+)["\'][^>]*>',s,re.I): replacements[src]=asset_url(asset)
 
-          broken=[]
-          image_issues=[]
+          broken=[]; image_issues=[]; metadata_issues=[]; accessibility_issues=[]
           for p in html_files:
-              s=p.read_text(encoding='utf-8')
-              original=s
-
-              # Arabic navigation and enquiry routing must stay inside the Arabic experience.
+              s=p.read_text(encoding='utf-8'); original=s
               if p.parts and p.parts[0]=='ar':
-                  s=s.replace('href="/?lang=ar#enquiry"','href="/ar/#enquiry"')
-                  s=s.replace("href='/?lang=ar#enquiry'","href='/ar/#enquiry'")
-                  s=s.replace('href="/#enquiry"','href="/ar/#enquiry"')
-                  s=s.replace("href='/#enquiry'","href='/ar/#enquiry'")
-                  s=s.replace('href="/?lang=ar"','href="/ar/"')
-                  s=s.replace("href='/?lang=ar'","href='/ar/'")
-
-              # Reuse verified/localized repository assets instead of hotlinks where available.
-              for old,new in replacements.items():
-                  s=s.replace(old,new)
+                  for old,new in [('href="/?lang=ar#enquiry"','href="/ar/#enquiry"'),("href='/?lang=ar#enquiry'","href='/ar/#enquiry'"),('href="/#enquiry"','href="/ar/#enquiry"'),("href='/#enquiry'","href='/ar/#enquiry'"),('href="/?lang=ar"','href="/ar/"'),("href='/?lang=ar'","href='/ar/'")]: s=s.replace(old,new)
+              for old,new in replacements.items(): s=s.replace(old,new)
               s=localize_profile_image(p,s)
-
-              if '<meta name="viewport"' not in s:
-                  s=s.replace('<meta charset="utf-8">','<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',1)
-              if '<meta name="robots"' not in s and p.name!='404.html':
-                  s=s.replace('</title>','</title><meta name="robots" content="index,follow,max-image-preview:large">',1)
-              if '<link rel="canonical"' not in s and p.name!='404.html':
-                  s=s.replace('</title>',f'</title><link rel="canonical" href="{page_url(p)}">',1)
-
+              if '<meta name="viewport"' not in s: s=s.replace('<meta charset="utf-8">','<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',1)
+              if '<meta name="robots"' not in s and p.name!='404.html': s=s.replace('</title>','</title><meta name="robots" content="index,follow,max-image-preview:large">',1)
+              if '<link rel="canonical"' not in s and p.name!='404.html': s=s.replace('</title>',f'</title><link rel="canonical" href="{page_url(p)}">',1)
               if p.as_posix() in ('hospitals/index.html','doctors/index.html'):
-                  if '/assets/css/directory-shell.css' not in s:
-                      s=s.replace('</head>','<link rel="stylesheet" href="/assets/css/directory-shell.css"></head>',1)
-                  if '/assets/js/directory-shell.js' not in s:
-                      s=s.replace('</body>','<script src="/assets/js/directory-shell.js" defer></script></body>',1)
-
+                  if '/assets/css/directory-shell.css' not in s: s=s.replace('</head>','<link rel="stylesheet" href="/assets/css/directory-shell.css"></head>',1)
+                  if '/assets/js/directory-shell.js' not in s: s=s.replace('</body>','<script src="/assets/js/directory-shell.js" defer></script></body>',1)
               def imgfix(m):
                   tag=m.group(0); low=tag.lower()
-                  if ' loading=' not in low and not any(x in low for x in ('brand-icon','shell-brand','hero-image','fetchpriority=')):
-                      tag=tag[:-1]+' loading="lazy">'
+                  if ' loading=' not in low and not any(x in low for x in ('brand-icon','shell-brand','hero-image','fetchpriority=')): tag=tag[:-1]+' loading="lazy">'
                   if ' decoding=' not in tag.lower(): tag=tag[:-1]+' decoding="async">'
                   return tag
               s=re.sub(r'<img\b[^>]*>',imgfix,s,flags=re.I)
-
               def relfix(m):
                   tag=m.group(0)
                   if 'target="_blank"' in tag.lower() and 'rel=' not in tag.lower(): tag=tag[:-1]+' rel="noopener noreferrer">'
                   return tag
               s=re.sub(r'<a\b[^>]*>',relfix,s,flags=re.I)
-
               if s!=original: p.write_text(s,encoding='utf-8')
-
+              if p.name!='404.html':
+                  if not re.search(r'<meta[^>]+name=["\']description["\']',s,re.I): metadata_issues.append((p.as_posix(),'missing meta description'))
+                  if not re.search(r'<link[^>]+rel=["\']canonical["\']',s,re.I): metadata_issues.append((p.as_posix(),'missing canonical'))
+                  if not re.search(r'<h1\b',s,re.I): accessibility_issues.append((p.as_posix(),'missing h1'))
+              for tag in re.findall(r'<img\b[^>]*>',s,re.I):
+                  if not re.search(r'\balt=["\']',tag,re.I): accessibility_issues.append((p.as_posix(),'image missing alt'))
               for href in re.findall(r'href=["\']([^"\']+)',s,re.I):
                   t=local_target(p,href)
                   if t is not None and not t.exists(): broken.append((p.as_posix(),href))
               for src in re.findall(r'<img\b[^>]*src=["\']([^"\']+)',s,re.I):
                   if src.startswith(('http://','https://','data:')): continue
-                  t=ROOT/src.lstrip('/') if src.startswith('/') else p.parent/src
-                  t=Path(str(t).split('?',1)[0])
+                  clean=unquote(src.split('?',1)[0]); t=ROOT/clean.lstrip('/') if clean.startswith('/') else p.parent/clean
                   if not t.exists(): image_issues.append((p.as_posix(),src))
 
-          # Sitemap reflects every indexable HTML page actually present in the repository.
           urls=[]
           for p in html_files:
               if p.name=='404.html': continue
@@ -156,15 +107,11 @@ jobs:
           urls=sorted(set(urls),key=lambda u:(u!='https://elajmeindia.com/',u))
           sitemap='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+''.join(f'  <url><loc>{u}</loc></url>\n' for u in urls)+'</urlset>\n'
           Path('sitemap.xml').write_text(sitemap,encoding='utf-8')
-
           print(f'Audited {len(html_files)} HTML files; sitemap contains {len(urls)} indexable URLs.')
           print(f'Localized replacement map: {len(replacements)} external image URL(s).')
-          if broken:
-              print('Broken local links found:')
-              for src,href in broken[:200]: print(f'{src}: {href}')
-          if image_issues:
-              print('Missing local image references found:')
-              for src,img in image_issues[:200]: print(f'{src}: {img}')
+          for label,items in [('Broken local links',broken),('Missing local image references',image_issues),('Metadata issues',metadata_issues),('Accessibility issues',accessibility_issues)]:
+              print(f'{label}: {len(items)}')
+              for src,msg in items[:200]: print(f'{src}: {msg}')
           PY
       - name: Commit final safe QA fixes
         run: |
