@@ -6,9 +6,19 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Cross-Origin-Opener-Policy: same-origin-allow-popups
   X-Permitted-Cross-Domain-Policies: none
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
 
 /assets/*
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/*.css
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/*.js
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/*.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
 
 /*.png
   Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
@@ -21,15 +31,6 @@
 
 /*.webp
   Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
-
-/*.css
-  Cache-Control: public, max-age=0, must-revalidate
-
-/*.js
-  Cache-Control: public, max-age=0, must-revalidate
-
-/*.html
-  Cache-Control: public, max-age=0, must-revalidate
 
 /robots.txt
   Cache-Control: public, max-age=3600
