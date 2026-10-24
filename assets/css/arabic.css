@@ -1,0 +1,2 @@
+/* Compatibility entry point for Arabic pages. The maintained RTL styles live in ar-core.css. */
+@import url('/assets/css/ar-core.css');
