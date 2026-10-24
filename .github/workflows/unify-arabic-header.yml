@@ -1,0 +1,75 @@
+name: Unify Arabic headers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/unify-arabic-header.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Standardize Arabic header structure
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('ar')
+          pages = list(root.rglob('*.html'))
+
+          def active(path, key):
+              p='/' + str(path).replace('\\','/')
+              checks={
+                'treatments':'/ar/treatments/',
+                'hospitals':'/ar/hospitals/',
+                'doctors':'/ar/doctors/',
+                'international':'/ar/international-patients/',
+                'about':'/ar/about/',
+                'contact':'/ar/contact/'
+              }
+              return ' aria-current="page"' if checks[key] in p else ''
+
+          def english_url(path):
+              p='/' + str(path).replace('\\','/')
+              if p == '/ar/hospitals/index.html': return '/hospitals/'
+              if p == '/ar/doctors/index.html': return '/doctors/'
+              if p.startswith('/ar/international-patients/'): return '/international-patients/mea/'
+              if p.startswith('/ar/treatments/'): return p.replace('/ar/','/',1).replace('index.html','')
+              if p == '/ar/about/index.html': return '/about/'
+              if p == '/ar/contact/index.html': return '/contact/'
+              return '/'
+
+          for path in pages:
+              text=path.read_text(encoding='utf-8')
+              if '<header' not in text:
+                  continue
+              # Keep the same primary information architecture as English:
+              # Home, Treatments, Hospitals, Doctors, International Patients, About, Contact.
+              header=f'''<header class="shell-header"><div class="shell-container shell-nav"><a class="shell-brand" href="/?lang=ar"><img src="/Healthcare%20Travel%20Swoosh%20Emblem.png" alt="شعار علاج مي إنديا" decoding="async"><span class="shell-wordmark"><span class="shell-name">Elajme <b>India</b></span><span class="shell-ar">علاج مي إنديا</span></span></a><nav class="shell-links" aria-label="التنقل الرئيسي"><a href="/?lang=ar">الرئيسية</a><a href="/ar/treatments/"{active(path,'treatments')}>العلاجات</a><a href="/ar/hospitals/"{active(path,'hospitals')}>المستشفيات</a><a href="/ar/doctors/"{active(path,'doctors')}>الأطباء</a><a href="/ar/international-patients/mea/"{active(path,'international')}>المرضى الدوليون</a><a href="/ar/about/"{active(path,'about')}>من نحن</a><a href="/ar/contact/"{active(path,'contact')}>اتصل بنا</a></nav><div class="shell-actions"><a class="shell-phone" href="tel:+917488955154">+91 74889 55154</a><a class="shell-lang" href="{english_url(path)}">English</a><a class="shell-cta" href="/#enquiry">ابدأ استفسارك</a></div></div></header>'''
+              text2=re.sub(r'<header\b[^>]*>.*?</header>', header, text, count=1, flags=re.S)
+              if text2 == text:
+                  continue
+              if '/assets/css/site-shell.css' not in text2:
+                  text2=text2.replace('</head>','<link rel="stylesheet" href="/assets/css/site-shell.css"></head>',1)
+              # shell header works independently, while this class makes shared typography consistent.
+              text2=re.sub(r'<body(?![^>]*class=)([^>]*)>', r'<body class="site-shell"\1>', text2, count=1)
+              path.write_text(text2,encoding='utf-8')
+          PY
+      - name: Commit Arabic header standardization
+        run: |
+          if git diff --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ar
+          git commit -m "Unify Arabic portal header with English structure"
+          git push
