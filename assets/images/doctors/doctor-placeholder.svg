@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="720" viewBox="0 0 600 720" role="img" aria-labelledby="title desc">
+  <title id="title">Elajme India doctor profile placeholder</title>
+  <desc id="desc">Branded placeholder used when a verified local doctor portrait is not available.</desc>
+  <rect width="600" height="720" rx="36" fill="#f3f8f7"/>
+  <circle cx="300" cy="235" r="105" fill="#d7e8e4"/>
+  <path d="M135 585c18-128 83-200 165-200s147 72 165 200" fill="#d7e8e4"/>
+  <circle cx="300" cy="235" r="70" fill="#ffffff" opacity=".88"/>
+  <path d="M202 530c24-70 57-105 98-105s74 35 98 105" fill="#ffffff" opacity=".88"/>
+  <text x="300" y="635" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#174f49">Elajme India</text>
+  <text x="300" y="675" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#496d69">Doctor profile</text>
+</svg>
