@@ -5,6 +5,10 @@ name: Localize verified hospital images
 # verify a suitable facility photograph.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/localize-hospital-images.yml'
 
 permissions:
   contents: write
@@ -96,7 +100,6 @@ jobs:
                               if 'image' not in ctype and not re.search(r'\.(jpe?g|png|webp)(?:\?|$)',u,re.I): continue
                               im=Image.open(io.BytesIO(rr.content)); w,h=im.size
                               if w<600 or h<250: continue
-                              # Prefer landscape or near-landscape facility imagery.
                               score2=score+(w*h/100000)+(20 if w>=h else 0)
                               if chosen is None or score2>chosen[0]: chosen=(score2,u,rr.content,im.format,w,h,label)
                           except Exception as e:
@@ -133,7 +136,6 @@ jobs:
               for page in (Path('hospitals')/slug/'index.html',Path('ar/hospitals')/slug/'index.html'):
                   if not page.exists(): continue
                   text=page.read_text(encoding='utf-8')
-                  # Replace known verification/placeholder visual containers only.
                   patterns=[
                     r'<div[^>]+class="[^"]*hospital-image-pending[^"]*"[^>]*>.*?</div>',
                     r'<div[^>]+class="[^"]*hospital-visual[^"]*"[^>]*>.*?</div>',
@@ -148,7 +150,6 @@ jobs:
               for page in (Path('hospitals/index.html'),Path('ar/hospitals/index.html')):
                   if not page.exists(): continue
                   text=page.read_text(encoding='utf-8')
-                  # Limit replacement to the card segment surrounding this slug.
                   pos=text.find(slug)
                   if pos<0: continue
                   start=max(0,text.rfind('<article',0,pos))
