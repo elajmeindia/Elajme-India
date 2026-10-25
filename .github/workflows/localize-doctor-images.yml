@@ -16,19 +16,88 @@ jobs:
           fetch-depth: 0
       - name: Install image dependencies
         run: python3 -m pip install --quiet pillow beautifulsoup4 requests
-      - name: Localize portraits from verified official hospital pages
+      - name: Clean mismatches and localize verified portraits
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p assets/images/doctors
           python3 - <<'PY'
           from pathlib import Path
-          from urllib.parse import urljoin, urlparse, unquote
+          from urllib.parse import urljoin,urlparse,unquote
           from bs4 import BeautifulSoup
           from PIL import Image
-          import io, re, requests
-
+          import io,re,requests
           root=Path('.')
+          placeholder='/assets/images/doctors/doctor-placeholder.svg'
+          pending={
+            'dr-abhideep-chaudhary':'Dr. Abhideep Chaudhary',
+            'dr-anil-mandhani':'Dr. Anil Mandhani',
+            'dr-harsh-dua':'Dr. Harsh Dua',
+            'dr-sanjay-gogoi':'Dr. Sanjay Gogoi',
+            'prof-dr-subhash-gupta':'Prof. Dr. Subhash Gupta',
+          }
+          # These doctors may have a correctly named local portrait from a verified run.
+          verified_slugs={'dr-aditya-gupta','dr-arvind-kumar-khurana','dr-rajneesh-malhotra','dr-ramneek-mahajan'}
+
+          def local_asset_exists(slug):
+              return any(p.is_file() for p in (root/'assets/images/doctors').glob(slug+'.*'))
+
+          def clean_en_directory(slug,name):
+              path=root/'doctors/index.html'
+              if not path.exists(): return
+              text=path.read_text(encoding='utf-8'); old=text
+              cards=list(re.finditer(r'<article class="card".*?</article>',text,re.S))
+              for m in reversed(cards):
+                  card=m.group(0)
+                  if slug not in card: continue
+                  mm=re.search(r'<img class="photo"[^>]*src="([^"]+)"[^>]*>',card)
+                  if not mm: continue
+                  src=mm.group(1)
+                  # A pending doctor's card must never borrow another doctor's portrait.
+                  if slug in pending and slug not in src:
+                      new=re.sub(r'<img class="photo"[^>]*>',f'<img class="photo" onerror="this.onerror=null;this.src=\'{placeholder}\'" loading="lazy" src="{placeholder}" alt="{name}" decoding="async">',card,count=1)
+                      text=text[:m.start()]+new+text[m.end():]
+                      print('cleaned mismatched EN directory portrait',slug,src)
+              if text!=old: path.write_text(text,encoding='utf-8')
+
+          def clean_ar_directory(slug,name):
+              path=root/'ar/doctors/index.html'
+              if not path.exists(): return
+              text=path.read_text(encoding='utf-8'); old=text
+              # Arabic cards link to the English slug even when no Arabic profile exists.
+              cards=list(re.finditer(r'<article class="card".*?</article>',text,re.S))
+              for m in reversed(cards):
+                  card=m.group(0)
+                  if slug not in card: continue
+                  mm=re.search(r'<img class="directory-photo"[^>]*src="([^"]+)"[^>]*>',card)
+                  if not mm: continue
+                  src=mm.group(1)
+                  if slug in pending and slug not in src and 'doctor-placeholder.svg' not in src:
+                      new=re.sub(r'<img class="directory-photo"[^>]*>',f'<img class="directory-photo" loading="lazy" src="{placeholder}" alt="{name}" decoding="async">',card,count=1)
+                      text=text[:m.start()]+new+text[m.end():]
+                      print('cleaned mismatched AR directory portrait',slug,src)
+              if text!=old: path.write_text(text,encoding='utf-8')
+
+          def clean_profile(slug,name,arabic=False):
+              path=(root/'ar/doctors'/slug/'index.html') if arabic else (root/'doctors'/slug/'index.html')
+              if not path.exists(): return
+              text=path.read_text(encoding='utf-8'); old=text
+              m=re.search(r'<div class="profile-photo"><img[^>]*src="([^"]+)"[^>]*></div>',text,re.S)
+              if m and slug in pending and slug not in m.group(1):
+                  initials=''.join(x[0] for x in re.sub(r'^(Prof\.?|Dr\.?)\s*','',name).split()[:2]).upper() or 'DR'
+                  fallback=f'<div class="profile-photo profile-photo-fallback" role="img" aria-label="{name} profile image pending verified local publication">{initials}</div>'
+                  text=text[:m.start()]+fallback+text[m.end():]
+                  print('cleaned mismatched profile portrait',path,m.group(1))
+              if text!=old: path.write_text(text,encoding='utf-8')
+
+          # Remove the known false Sanjay Gogoi asset created from an ambiguous Max listing.
+          for bad in (root/'assets/images/doctors').glob('dr-sanjay-gogoi.*'):
+              bad.unlink(); print('removed false Sanjay Gogoi asset',bad)
+
+          for slug,name in pending.items():
+              clean_en_directory(slug,name); clean_ar_directory(slug,name)
+              clean_profile(slug,name,False); clean_profile(slug,name,True)
+
           targets={
             'dr-aditya-gupta':('Dr. Aditya Gupta','https://www.artemishospitals.com/doctor/profile/aditya-gupta',('artemishospitals.com',)),
             'dr-harsh-dua':('Dr. Harsh Dua','https://www.apollohospitals.com/doctors/medical-oncologist/delhi/dr-harsh-dua',('apollohospitals.com','mediacdn.apollohospitals.com')),
@@ -39,142 +108,77 @@ jobs:
             'dr-anil-mandhani':('Dr. Anil Mandhani','https://www.fortishealthcare.com/centres-of-excellence/doctors/12926',('fortishealthcare.com',)),
             'dr-arvind-kumar-khurana':('Dr. Arvind Kumar Khurana','https://www.fortishealthcare.com/doctors/dr-arvind-kumar-khurana-5313',('fortishealthcare.com',)),
           }
-          exact_images={
-            'dr-ramneek-mahajan':'https://max-website20-images.s3.ap-south-1.amazonaws.com/Dr_Ramneek_Mahajan_f8682aed23.JPG',
-          }
-          UA={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageVerifier/1.4)'}
-
-          def host_ok(url,hosts):
-              h=(urlparse(url).hostname or '').lower()
-              return any(h==x or h.endswith('.'+x) for x in hosts)
-
-          def keys(name):
-              return [x for x in re.sub(r'[^a-z0-9 ]',' ',name.lower()).split() if len(x)>2 and x not in {'prof','doctor'}]
-
-          def fetch(url):
-              r=requests.get(url,headers=UA,timeout=35); r.raise_for_status(); return r
-
-          def validate_and_save(slug,name,u,hosts):
-              if not host_ok(u,hosts): raise ValueError('image host is not an approved first-party provider host')
-              r=fetch(u); ctype=r.headers.get('content-type','').lower()
-              if 'image' not in ctype and not re.search(r'\.(jpe?g|png|webp|avif)(?:\?|$)',u,re.I): raise ValueError('not an image')
-              im=Image.open(io.BytesIO(r.content)); w,h=im.size
-              if w<180 or h<180 or w/h>1.65: raise ValueError(f'portrait validation failed: {w}x{h}')
-              ext={'JPEG':'.jpg','PNG':'.png','WEBP':'.webp','AVIF':'.avif'}.get((im.format or '').upper(),'.jpg')
-              for old in (root/'assets/images/doctors').glob(slug+'.*'):
-                  if old.name!='doctor-placeholder.svg': old.unlink()
-              dest=root/'assets/images/doctors'/f'{slug}{ext}'; dest.write_bytes(r.content)
-              print('localized exact official portrait',name,u,'->',dest,w,h)
-              return dest
-
-          def image_candidates(page,name,hosts):
-              r=fetch(page); soup=BeautifulSoup(r.text,'html.parser'); out=[]; nk=keys(name)
+          exact={'dr-ramneek-mahajan':'https://max-website20-images.s3.ap-south-1.amazonaws.com/Dr_Ramneek_Mahajan_f8682aed23.JPG'}
+          UA={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageVerifier/1.5)'}
+          def host_ok(u,hosts):
+              h=(urlparse(u).hostname or '').lower(); return any(h==x or h.endswith('.'+x) for x in hosts)
+          def get(u):
+              r=requests.get(u,headers=UA,timeout=35); r.raise_for_status(); return r
+          def namekeys(name): return [x for x in re.sub(r'[^a-z0-9 ]',' ',name.lower()).split() if len(x)>2 and x not in {'prof','doctor'}]
+          def candidates(page,name,hosts):
+              r=get(page); soup=BeautifulSoup(r.text,'html.parser'); out=[]; nk=namekeys(name)
               for tag in soup.find_all(['img','meta']):
                   src=''; label=''
-                  if tag.name=='meta' and (tag.get('property') in ('og:image','twitter:image') or tag.get('name') in ('twitter:image',)):
+                  if tag.name=='meta' and (tag.get('property') in ('og:image','twitter:image') or tag.get('name')=='twitter:image'):
                       src=tag.get('content') or ''; label=' '.join([tag.get('property',''),tag.get('name',''),src])
                   elif tag.name=='img':
-                      src=tag.get('src') or tag.get('data-src') or tag.get('data-lazy-src') or ''
-                      label=' '.join([tag.get('alt',''),tag.get('title',''),src])
+                      src=tag.get('src') or tag.get('data-src') or tag.get('data-lazy-src') or ''; label=' '.join([tag.get('alt',''),tag.get('title',''),src])
                   if not src: continue
                   u=urljoin(page,src)
                   if not host_ok(u,hosts): continue
                   low=unquote(label+' '+u).lower()
                   if any(x in low for x in ('logo','icon','banner','hospital-building','hospital_building','award','trophy')): continue
                   matched=[k for k in nk if k in low]
-                  # Generic doctor-list pages can contain many people. Require at least two
-                  # name tokens in the candidate label/URL before it is eligible.
                   if len(nk)>=2 and len(matched)<2: continue
-                  score=sum(35 for k in matched)
-                  if 'doctor' in low or 'consultant' in low: score+=10
-                  if 'og:image' in low: score+=4
-                  if score>0: out.append((score,u,label))
+                  score=35*len(matched)+(10 if 'doctor' in low or 'consultant' in low else 0)
+                  if score: out.append((score,u,label))
               return sorted(out,reverse=True)
-
-          def save_portrait(slug,name,page,hosts):
-              if slug in exact_images:
-                  try: return validate_and_save(slug,name,exact_images[slug],hosts)
-                  except Exception as e: print('exact official portrait rejected',name,e)
+          def save(slug,name,page,hosts):
+              urls=[]
+              if slug in exact: urls=[(999,exact[slug],'exact')]
+              try: urls+=candidates(page,name,hosts)[:25]
+              except Exception as e: print('page unavailable',name,e)
               best=None
-              for score,u,label in image_candidates(page,name,hosts)[:30]:
+              for score,u,label in urls:
                   try:
-                      r=fetch(u); ctype=r.headers.get('content-type','').lower()
-                      if 'image' not in ctype and not re.search(r'\.(jpe?g|png|webp|avif)(?:\?|$)',u,re.I): continue
-                      im=Image.open(io.BytesIO(r.content)); w,h=im.size
+                      if not host_ok(u,hosts): continue
+                      r=get(u); im=Image.open(io.BytesIO(r.content)); w,h=im.size
                       if w<180 or h<180 or w/h>1.65: continue
-                      score2=score+(w*h/100000)+(12 if h>=w else 0)
-                      if best is None or score2>best[0]: best=(score2,u,r.content,im.format,w,h,label)
+                      score2=score+w*h/100000+(12 if h>=w else 0)
+                      if best is None or score2>best[0]: best=(score2,u,r.content,im.format,w,h)
                   except Exception as e: print('candidate rejected',name,u,e)
               if not best: return None
-              _,u,data,fmt,w,h,label=best
+              _,u,data,fmt,w,h=best
               ext={'JPEG':'.jpg','PNG':'.png','WEBP':'.webp','AVIF':'.avif'}.get((fmt or '').upper(),'.jpg')
-              for old in (root/'assets/images/doctors').glob(slug+'.*'):
-                  if old.name!='doctor-placeholder.svg': old.unlink()
+              for p in (root/'assets/images/doctors').glob(slug+'.*'): p.unlink()
               dest=root/'assets/images/doctors'/f'{slug}{ext}'; dest.write_bytes(data)
-              print('localized',name,u,'->',dest,w,h,label)
-              return dest
-
+              print('localized verified portrait',name,u,w,h); return dest
           def wire_profile(path,src,name):
-              if not path.exists(): return False
+              if not path.exists(): return
               text=path.read_text(encoding='utf-8'); old=text
               hero=f'<div class="profile-photo"><img src="{src}" alt="{name}" loading="eager" decoding="async"></div>'
               text,n=re.subn(r'<div class="profile-photo profile-photo-fallback"[^>]*>.*?</div>',hero,text,count=1,flags=re.S)
               if not n: text=re.sub(r'<div class="profile-photo"><img[^>]*></div>',hero,text,count=1,flags=re.S)
-              if text!=old: path.write_text(text,encoding='utf-8'); return True
-              return False
-
-          def wire_directory(path,slug,src,name):
-              if not path.exists(): return False
-              text=path.read_text(encoding='utf-8'); old=text
-              for pat in (r'<article class="card".*?</article>',r'<article[^>]*>.*?</article>'):
-                  cards=list(re.finditer(pat,text,re.S)); changed=False
-                  for m in reversed(cards):
-                      card=m.group(0)
-                      if slug not in card: continue
-                      new=re.sub(r'<img class="photo"[^>]*>',f'<img class="photo" onerror="this.onerror=null;this.src=\'/assets/images/doctors/doctor-placeholder.svg\'" loading="lazy" src="{src}" alt="{name}" decoding="async">',card,count=1)
-                      if new!=card: text=text[:m.start()]+new+text[m.end():]; changed=True
-                  if changed: break
-              if text!=old: path.write_text(text,encoding='utf-8'); return True
-              return False
-
-          def remove_bad_portrait(slug,name):
-              for bad in (root/'assets/images/doctors').glob(slug+'.*'):
-                  if bad.name!='doctor-placeholder.svg':
-                      bad.unlink(); print('removed misidentified portrait',bad)
-              fallback=f'<div class="profile-photo profile-photo-fallback" role="img" aria-label="{name} profile image pending verified local publication">SG</div>'
-              for path in (root/'doctors'/slug/'index.html',root/'ar/doctors'/slug/'index.html'):
-                  if not path.exists(): continue
-                  text=path.read_text(encoding='utf-8'); old=text
-                  text=re.sub(r'<div class="profile-photo"><img[^>]*src="/assets/images/doctors/'+re.escape(slug)+r'\.[^\"]+"[^>]*></div>',fallback,text,count=1,flags=re.S)
-                  if text!=old: path.write_text(text,encoding='utf-8')
-              for path in (root/'doctors/index.html',root/'ar/doctors/index.html'):
-                  if not path.exists(): continue
-                  text=path.read_text(encoding='utf-8'); old=text
-                  cards=list(re.finditer(r'<article[^>]*>.*?</article>',text,re.S))
-                  for m in reversed(cards):
-                      card=m.group(0)
-                      if slug not in card: continue
-                      new=re.sub(r'<img class="photo"[^>]*>',f'<img class="photo" onerror="this.onerror=null;this.src=\'/assets/images/doctors/doctor-placeholder.svg\'" loading="lazy" src="/assets/images/doctors/doctor-placeholder.svg" alt="{name}" decoding="async">',card,count=1)
-                      text=text[:m.start()]+new+text[m.end():]
-                  if text!=old: path.write_text(text,encoding='utf-8')
-
-          # Run #13 matched Dr Sanjay Sachdeva to Dr Sanjay Gogoi from a generic search page.
-          # Remove that image and never auto-source Dr Gogoi from a generic doctor listing.
-          remove_bad_portrait('dr-sanjay-gogoi','Dr. Sanjay Gogoi')
-
+              if text!=old: path.write_text(text,encoding='utf-8')
+          def wire_en_dir(slug,src,name):
+              path=root/'doctors/index.html'; text=path.read_text(encoding='utf-8'); old=text
+              cards=list(re.finditer(r'<article class="card".*?</article>',text,re.S))
+              for m in reversed(cards):
+                  card=m.group(0)
+                  if slug not in card: continue
+                  new=re.sub(r'<img class="photo"[^>]*>',f'<img class="photo" onerror="this.onerror=null;this.src=\'{placeholder}\'" loading="lazy" src="{src}" alt="{name}" decoding="async">',card,count=1)
+                  text=text[:m.start()]+new+text[m.end():]
+              if text!=old: path.write_text(text,encoding='utf-8')
           for slug,(name,page,hosts) in targets.items():
               try:
-                  saved=save_portrait(slug,name,page,hosts)
-                  if not saved:
-                      print('No verified portrait localized for',name); continue
-                  websrc='/'+saved.as_posix()
-                  wire_directory(root/'doctors/index.html',slug,websrc,name)
-                  wire_directory(root/'ar/doctors/index.html',slug,websrc,name)
-                  wire_profile(root/'doctors'/slug/'index.html',websrc,name)
-                  wire_profile(root/'ar/doctors'/slug/'index.html',websrc,name)
-              except Exception as e: print('Skipped',name,':',e)
+                  dest=save(slug,name,page,hosts)
+                  if not dest: print('no verified portrait',name); continue
+                  src='/'+dest.as_posix(); wire_en_dir(slug,src,name)
+                  wire_profile(root/'doctors'/slug/'index.html',src,name)
+                  wire_profile(root/'ar/doctors'/slug/'index.html',src,name)
+              except Exception as e: print('skipped',name,e)
           PY
-      - name: Commit localized portraits
+      - name: Commit portrait QA changes
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
@@ -183,5 +187,5 @@ jobs:
             echo 'No portrait changes were available.'
             exit 0
           fi
-          git commit -m 'Localize verified hospital doctor portraits'
+          git commit -m 'Clean mismatched doctor portraits and localize verified images'
           git push
