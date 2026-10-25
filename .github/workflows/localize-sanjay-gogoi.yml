@@ -1,0 +1,57 @@
+name: Localize Sanjay Gogoi portrait
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/localize-sanjay-gogoi.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  localize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: python3 -m pip install --quiet requests pillow
+      - name: Download verified Medanta portrait and wire profiles
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import io,re,requests
+          url='https://medanta.s3.ap-south-1.amazonaws.com/doctors/December2024/ROsNPkbSrlPOetkHWJx9OzJzP7hZMM-metaU2FuamF5IGdvZ29pICgxKS5wbmc%3D-.png'
+          r=requests.get(url,timeout=35,headers={'User-Agent':'Mozilla/5.0'}); r.raise_for_status()
+          im=Image.open(io.BytesIO(r.content)); w,h=im.size
+          if w < 180 or h < 180 or w/h > 1.65: raise SystemExit('Portrait dimensions failed QA')
+          dest=Path('assets/images/doctors/dr-sanjay-gogoi.png'); dest.parent.mkdir(parents=True,exist_ok=True); dest.write_bytes(r.content)
+          src='/assets/images/doctors/dr-sanjay-gogoi.png'; name='Dr. Sanjay Gogoi'
+          for f,cls in [('doctors/index.html','photo'),('ar/doctors/index.html','directory-photo')]:
+              p=Path(f)
+              if not p.exists(): continue
+              t=p.read_text(encoding='utf-8')
+              cards=list(re.finditer(r'<article class="card".*?</article>',t,re.S))
+              for m in reversed(cards):
+                  card=m.group(0)
+                  if 'dr-sanjay-gogoi' not in card: continue
+                  new=re.sub(rf'<img class="{cls}"[^>]*>',f'<img class="{cls}" loading="lazy" src="{src}" alt="{name}" decoding="async">',card,count=1)
+                  t=t[:m.start()]+new+t[m.end():]
+              p.write_text(t,encoding='utf-8')
+          for f in ['doctors/dr-sanjay-gogoi/index.html','ar/doctors/dr-sanjay-gogoi/index.html']:
+              p=Path(f)
+              if not p.exists(): continue
+              t=p.read_text(encoding='utf-8')
+              hero=f'<div class="profile-photo"><img src="{src}" alt="{name}" loading="eager" decoding="async"></div>'
+              t,n=re.subn(r'<div class="profile-photo profile-photo-fallback"[^>]*>.*?</div>',hero,t,count=1,flags=re.S)
+              if not n: t=re.sub(r'<div class="profile-photo"><img[^>]*></div>',hero,t,count=1,flags=re.S)
+              p.write_text(t,encoding='utf-8')
+          print('Verified Medanta portrait localized',w,h)
+          PY
+      - name: Commit localized portrait
+        run: |
+          git config user.name 'Elajme India Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add assets/images/doctors/dr-sanjay-gogoi.png doctors ar/doctors
+          git diff --cached --quiet && exit 0
+          git commit -m 'Localize verified Sanjay Gogoi portrait'
+          git push
