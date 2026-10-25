@@ -1,6 +1,8 @@
-name: Localize verified Kokilaben hospital images
+name: Localize verified hospital images
 
-# Only exact-facility image packs published by Kokilaben Hospital's official press kits.
+# Exact-facility images are discovered only from official hospital/provider pages.
+# The workflow rejects logos/icons and keeps existing local assets when it cannot
+# verify a suitable facility photograph.
 on:
   workflow_dispatch:
 
@@ -15,110 +17,160 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download official hospital image packs and choose facility images
+      - name: Install image dependencies
+        run: python3 -m pip install --quiet pillow beautifulsoup4 requests
+
+      - name: Localize verified official hospital images
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p assets/images/hospitals /tmp/kokilaben-mumbai /tmp/kokilaben-navi
-
-          curl -fL --retry 2 -A 'Mozilla/5.0' \
-            'https://kdahweb-static.kokilabenhospital.com/downloads/KDAH_Hospital.zip' \
-            -o /tmp/kokilaben-mumbai.zip
-          curl -fL --retry 2 -A 'Mozilla/5.0' \
-            'https://s3.us-west-2.amazonaws.com/kdahweb-static.kokilabenhospital.com/kdah-2019/navimumbai/hospital-building.zip' \
-            -o /tmp/kokilaben-navi.zip
-
-          unzip -oq /tmp/kokilaben-mumbai.zip -d /tmp/kokilaben-mumbai
-          unzip -oq /tmp/kokilaben-navi.zip -d /tmp/kokilaben-navi
-
+          mkdir -p assets/images/hospitals
           python3 - <<'PY'
           from pathlib import Path
+          from urllib.parse import urljoin, urlparse
+          from bs4 import BeautifulSoup
           from PIL import Image
-          import shutil
+          import io, re, requests
 
-          def choose(src, dest):
-              candidates=[]
-              for p in Path(src).rglob('*'):
-                  if p.suffix.lower() not in {'.jpg','.jpeg','.png','.webp'}:
-                      continue
+          UA={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageVerifier/1.0)'}
+          targets=[
+            {
+              'slug':'gleneagles-hospital-parel-mumbai',
+              'asset':'gleneagles-parel',
+              'name':'Gleneagles Hospital, Parel, Mumbai',
+              'pages':['https://www.gleneagleshospitals.co.in/mumbai/parel/about-us','https://www.gleneagleshospitals.co.in/mumbai/parel'],
+              'hosts':('gleneagleshospitals.co.in',),
+              'keywords':('mumbai hospital','gleneagles','parel','hospital'),
+            },
+            {
+              'slug':'nanavati-max-super-speciality-hospital-mumbai',
+              'asset':'nanavati-max-mumbai',
+              'name':'Nanavati Max Super Speciality Hospital, Mumbai',
+              'pages':['https://www.maxhealthcare.in/hospital-network/nanavati-max-super-speciality-hospital-mumbai'],
+              'hosts':('maxhealthcare.in','maxhealthcare-imgs.s3.ap-south-1.amazonaws.com'),
+              'keywords':('nanavati','hospital','mumbai'),
+            },
+            {
+              'slug':'sir-hn-reliance-foundation-hospital-mumbai',
+              'asset':'sir-hn-reliance-mumbai',
+              'name':'Sir H. N. Reliance Foundation Hospital and Research Centre, Mumbai',
+              'pages':['https://www.rfhospital.org/about-us/our-hospital'],
+              'hosts':('rfhospital.org',),
+              'keywords':('tower','hospital','heritage'),
+            },
+          ]
+
+          def host_ok(url, hosts):
+              h=urlparse(url).hostname or ''
+              return any(h==x or h.endswith('.'+x) for x in hosts)
+
+          def candidates(page, t):
+              r=requests.get(page,headers=UA,timeout=30); r.raise_for_status()
+              soup=BeautifulSoup(r.text,'html.parser')
+              out=[]
+              for tag in soup.find_all(['img','meta']):
+                  if tag.name=='meta' and tag.get('property') in ('og:image','twitter:image'):
+                      src=tag.get('content'); label=' '.join([tag.get('property',''),src or ''])
+                  elif tag.name=='img':
+                      src=tag.get('src') or tag.get('data-src') or tag.get('data-lazy-src')
+                      label=' '.join([tag.get('alt',''),tag.get('title',''),src or ''])
+                  else: continue
+                  if not src: continue
+                  u=urljoin(page,src)
+                  if not host_ok(u,t['hosts']): continue
+                  low=label.lower()
+                  if any(x in low for x in ('logo','icon','sprite','doctor','physician','award','trophy','health check')): continue
+                  score=sum(30 for k in t['keywords'] if k in low)
+                  if 'og:image' in low: score+=5
+                  out.append((score,u,label))
+              return sorted(out,reverse=True)
+
+          for t in targets:
+              chosen=None
+              for page in t['pages']:
                   try:
-                      with Image.open(p) as im:
-                          w,h=im.size
-                      if w < 700 or h < 350:
-                          continue
-                      name=p.name.lower()
-                      score=w*h
-                      for word in ('hospital','building','exterior','front','facade'):
-                          if word in name: score += 10**9
-                      candidates.append((score,p))
-                  except Exception:
-                      pass
-              if not candidates:
-                  raise SystemExit(f'No suitable official image in {src}')
-              p=max(candidates)[1]
-              ext=p.suffix.lower()
-              if ext == '.jpeg': ext='.jpg'
-              out=Path(dest + ext)
-              for old in out.parent.glob(out.stem + '.*'):
-                  old.unlink()
-              shutil.copy2(p,out)
-              print(f'{p} -> {out}')
-
-          choose('/tmp/kokilaben-mumbai','assets/images/hospitals/kokilaben-mumbai')
-          choose('/tmp/kokilaben-navi','assets/images/hospitals/kokilaben-navi-mumbai')
+                      for score,u,label in candidates(page,t):
+                          try:
+                              rr=requests.get(u,headers=UA,timeout=30); rr.raise_for_status()
+                              ctype=rr.headers.get('content-type','').lower()
+                              if 'image' not in ctype and not re.search(r'\.(jpe?g|png|webp)(?:\?|$)',u,re.I): continue
+                              im=Image.open(io.BytesIO(rr.content)); w,h=im.size
+                              if w<600 or h<250: continue
+                              # Prefer landscape or near-landscape facility imagery.
+                              score2=score+(w*h/100000)+(20 if w>=h else 0)
+                              if chosen is None or score2>chosen[0]: chosen=(score2,u,rr.content,im.format,w,h,label)
+                          except Exception as e:
+                              print('candidate rejected',u,e)
+                  except Exception as e:
+                      print('page failed',page,e)
+              if not chosen:
+                  print('No verified facility image found for',t['name']); continue
+              _,u,data,fmt,w,h,label=chosen
+              ext={ 'JPEG':'.jpg','PNG':'.png','WEBP':'.webp' }.get((fmt or '').upper(),'.jpg')
+              for old in Path('assets/images/hospitals').glob(t['asset']+'.*'): old.unlink()
+              dest=Path('assets/images/hospitals')/(t['asset']+ext)
+              dest.write_bytes(data)
+              print('localized',t['name'],u,'->',dest,w,h,label)
           PY
 
-      - name: Wire localized images into English and Arabic pages
+      - name: Wire verified local images into English and Arabic profiles and directories
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
-
-          targets = {
-            'kokilaben-dhirubhai-ambani-hospital-mumbai': 'kokilaben-mumbai',
-            'kokilaben-dhirubhai-ambani-hospital-navi-mumbai': 'kokilaben-navi-mumbai',
+          targets={
+            'gleneagles-hospital-parel-mumbai':('gleneagles-parel','Gleneagles Hospital, Parel, Mumbai'),
+            'nanavati-max-super-speciality-hospital-mumbai':('nanavati-max-mumbai','Nanavati Max Super Speciality Hospital, Mumbai'),
+            'sir-hn-reliance-foundation-hospital-mumbai':('sir-hn-reliance-mumbai','Sir H. N. Reliance Foundation Hospital and Research Centre, Mumbai'),
           }
-          for slug, asset in targets.items():
+          for slug,(asset,alt) in targets.items():
               matches=list(Path('assets/images/hospitals').glob(asset+'.*'))
-              if len(matches) != 1:
-                  raise SystemExit(f'Expected one localized asset for {asset}, got {matches}')
-              src='/' + matches[0].as_posix()
-              for page in [Path('hospitals')/slug/'index.html', Path('ar/hospitals')/slug/'index.html']:
-                  if not page.exists():
-                      continue
+              if len(matches)!=1:
+                  print('Skipping page wiring; no unique asset for',slug); continue
+              src='/'+matches[0].as_posix()
+              img=f'<img class="hospital-profile-image" src="{src}" alt="{alt}" loading="eager" decoding="async" style="width:100%;height:100%;min-height:240px;max-height:380px;object-fit:cover;border-radius:18px">'
+              for page in (Path('hospitals')/slug/'index.html',Path('ar/hospitals')/slug/'index.html'):
+                  if not page.exists(): continue
                   text=page.read_text(encoding='utf-8')
-                  alt = 'Kokilaben Dhirubhai Ambani Hospital, Navi Mumbai' if 'navi-mumbai' in slug else 'Kokilaben Dhirubhai Ambani Hospital, Mumbai'
-                  img=f'<img src="{src}" alt="{alt}" loading="eager" decoding="async" style="width:100%;height:100%;min-height:240px;max-height:380px;object-fit:cover;border-radius:18px">'
-                  text=re.sub(r'<div[^>]+(?:hospital-image-pending|hospital-visual|box note)[^>]*role="img"[^>]*>.*?</div>', img, text, count=1, flags=re.S)
-                  page.write_text(text,encoding='utf-8')
+                  # Replace known verification/placeholder visual containers only.
+                  patterns=[
+                    r'<div[^>]+class="[^"]*hospital-image-pending[^"]*"[^>]*>.*?</div>',
+                    r'<div[^>]+class="[^"]*hospital-visual[^"]*"[^>]*>.*?</div>',
+                    r'<div[^>]+class="[^"]*box note[^"]*"[^>]+role="img"[^>]*>.*?</div>',
+                  ]
+                  new=text
+                  for pat in patterns:
+                      new,n=re.subn(pat,img,new,count=1,flags=re.S)
+                      if n: break
+                  if new!=text: page.write_text(new,encoding='utf-8')
 
-          for page in [Path('hospitals/index.html'),Path('ar/hospitals/index.html')]:
-              if not page.exists(): continue
-              text=page.read_text(encoding='utf-8')
-              for slug,asset in targets.items():
-                  matches=list(Path('assets/images/hospitals').glob(asset+'.*'))
-                  if not matches: continue
-                  src='/' + matches[0].as_posix()
-                  # Replace a placeholder image only inside the matching card when present.
-                  pat=rf'(<a[^>]+href="[^"]*{re.escape(slug)}/?"[^>]*>.*?</a>)'
-                  m=re.search(pat,text,re.S)
-                  if m:
-                      card=m.group(1)
-                      card=re.sub(r'src="[^"]*hospital-placeholder\.svg"',f'src="{src}"',card)
-                      text=text[:m.start()]+card+text[m.end():]
-              page.write_text(text,encoding='utf-8')
+              for page in (Path('hospitals/index.html'),Path('ar/hospitals/index.html')):
+                  if not page.exists(): continue
+                  text=page.read_text(encoding='utf-8')
+                  # Limit replacement to the card segment surrounding this slug.
+                  pos=text.find(slug)
+                  if pos<0: continue
+                  start=max(0,text.rfind('<article',0,pos))
+                  if start==0 and '<article' not in text[:pos]: start=max(0,text.rfind('<div',0,pos))
+                  end=text.find('</article>',pos)
+                  end=end+10 if end>=0 else min(len(text),pos+2500)
+                  seg=text[start:end]
+                  seg2=re.sub(r'src="[^"]*hospital-placeholder\.svg"',f'src="{src}"',seg,count=1)
+                  if seg2!=seg:
+                      text=text[:start]+seg2+text[end:]
+                      page.write_text(text,encoding='utf-8')
           PY
 
       - name: Commit verified local assets
         shell: bash
         run: |
-          if git diff --quiet && [ -z "$(git status --porcelain assets/images/hospitals)" ]; then
+          if [ -z "$(git status --porcelain)" ]; then
             echo 'No changes.'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/images/hospitals hospitals ar/hospitals
-          git commit -m 'Localize official Kokilaben hospital images'
+          git commit -m 'Localize verified official hospital images'
           git push
