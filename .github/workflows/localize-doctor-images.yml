@@ -30,6 +30,7 @@ jobs:
             'prof-dr-subhash-gupta':('Prof. Dr. Subhash Gupta','https://www.maxhealthcare.in/international/en/doctor/prof-dr-subhash-gupta'),
             'dr-anil-mandhani':('Dr. Anil Mandhani','https://www.fortishealthcare.com/centres-of-excellence/doctors/12926'),
             'dr-arvind-kumar-khurana':('Dr. Arvind Kumar Khurana','https://www.fortishealthcare.com/specialities/hospital/psychodynamic-psychotherapy-130-0/fortis-memorial-research-institute-gurgaon'),
+            'dr-sanjay-gogoi':('Dr. Sanjay Gogoi','https://www.maxhealthcare.in/international/en/speciality/urology'),
           }
           headers={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageLocalizer/1.0)'}
           changed=[]
