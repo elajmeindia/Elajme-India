@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install image dependencies
-        run: python3 -m pip install --quiet pillow requests
+        run: python3 -m pip install --quiet pillow requests beautifulsoup4
 
       - name: Localize exact verified facility images
         shell: bash
@@ -29,44 +29,72 @@ jobs:
           mkdir -p assets/images/hospitals /tmp/elajme-hospitals
           python3 - <<'PY'
           from pathlib import Path
+          from urllib.parse import urljoin,urlparse
+          from bs4 import BeautifulSoup
           from PIL import Image
           import io, zipfile, requests, re
 
-          UA={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageVerifier/1.1)'}
+          UA={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageVerifier/1.3)'}
           OUT=Path('assets/images/hospitals')
 
-          def save_image(asset, data, source):
+          def get(url,timeout=45):
+              r=requests.get(url,headers=UA,timeout=timeout); r.raise_for_status(); return r
+
+          def save_image(asset,data,source):
               im=Image.open(io.BytesIO(data)); im.verify()
               im=Image.open(io.BytesIO(data)); w,h=im.size
-              if w < 350 or h < 220:
-                  raise ValueError(f'image too small: {w}x{h}')
+              if w < 350 or h < 220: raise ValueError(f'image too small: {w}x{h}')
               ext={'JPEG':'.jpg','PNG':'.png','WEBP':'.webp'}.get((im.format or '').upper())
               if not ext: raise ValueError(f'unsupported format {im.format}')
               for old in OUT.glob(asset+'.*'): old.unlink()
               dest=OUT/(asset+ext); dest.write_bytes(data)
-              print('localized',asset,source,'->',dest,w,h)
-              return dest
+              print('localized',asset,source,'->',dest,w,h); return dest
 
-          # Exact image exposed by the official Gleneagles Parel About page as
-          # “Mumbai Hospitals Image 370x326px”. The CDN is the hospital site's
-          # own managed Frontify media source referenced by that page.
+          def first_party_page_image(asset,page,allowed_hosts,positive,negative=()):
+              try:
+                  r=get(page); soup=BeautifulSoup(r.text,'html.parser'); candidates=[]
+                  for tag in soup.find_all(['img','meta']):
+                      src=''; label=''
+                      if tag.name=='meta' and (tag.get('property') in ('og:image','twitter:image') or tag.get('name')=='twitter:image'):
+                          src=tag.get('content') or ''; label=' '.join([tag.get('property',''),src])
+                      elif tag.name=='img':
+                          src=tag.get('src') or tag.get('data-src') or tag.get('data-lazy-src') or ''; label=' '.join([tag.get('alt',''),tag.get('title',''),src])
+                      if not src: continue
+                      u=urljoin(page,src); host=(urlparse(u).hostname or '').lower()
+                      if not any(host==h or host.endswith('.'+h) for h in allowed_hosts): continue
+                      low=(label+' '+u).lower()
+                      if any(x in low for x in negative): continue
+                      hits=sum(1 for x in positive if x in low)
+                      if hits<1: continue
+                      try:
+                          ir=get(u); im=Image.open(io.BytesIO(ir.content)); w,h=im.size
+                          if w<350 or h<220: continue
+                          ratio=w/h
+                          score=hits*100+w*h/100000+(25 if ratio>=1 else 0)-(35 if ratio>2.8 else 0)
+                          candidates.append((score,u,ir.content,w,h,label))
+                      except Exception as e: print('candidate failed',asset,u,e)
+                  if not candidates:
+                      print('No verified first-party page image for',asset); return
+                  candidates.sort(reverse=True); _,u,data,w,h,label=candidates[0]
+                  save_image(asset,data,u+' :: '+label)
+              except Exception as e: print(asset,'page extraction failed:',e)
+
+          # Official Gleneagles Parel page. Try the exact About-page image first,
+          # then first-party Parel/Mumbai facility-labelled images exposed in HTML.
           gleneagles='https://cdn-assets-eu.frontify.com/s3/frontify-enterprise-files-eu/eyJvYXV0aCI6eyJjbGllbnRfaWQiOiJjbGllbnQtY2hkcnR4NWphaHV0Y2hsdiJ9LCJwYXRoIjoiaWhoLWhlYWx0aGNhcmUtYmVyaGFkXC9maWxlXC9MejNreFloVnZ0V1JWTWJYNGI5Ti5qcGcifQ%3Aihh-healthcare-berhad%3AbdsF7grt2weDNfX-CTG3F7j3cTl58Rmy0YIz8nJ5HAw?crop=fp&fp=0.5%2C0.5&fp_zoom=1&height=326&width=370'
-          try:
-              r=requests.get(gleneagles,headers=UA,timeout=45); r.raise_for_status()
-              save_image('gleneagles-parel',r.content,gleneagles)
-          except Exception as e: print('Gleneagles exact image failed:',e)
+          try: save_image('gleneagles-parel',get(gleneagles).content,gleneagles)
+          except Exception as e:
+              print('Gleneagles exact image failed:',e)
+              first_party_page_image('gleneagles-parel','https://www.gleneagleshospitals.co.in/mumbai/parel/about-us',('gleneagleshospitals.co.in','frontify.com'),('mumbai hospitals','mum-i','parel','hospital'),('logo','trophy','award','doctor','patient','blog','media'))
 
-          # Official Kokilaben press-kit archives. Choose a landscape/near-landscape
-          # building/exterior candidate from each facility-specific archive; reject
-          # logos, people, interiors and small assets.
+          # Official Kokilaben press-kit archives.
           zips=[
             ('kokilaben-mumbai','https://kdahweb-static.kokilabenhospital.com/downloads/KDAH_Hospital.zip'),
             ('kokilaben-navi-mumbai','https://s3.us-west-2.amazonaws.com/kdahweb-static.kokilabenhospital.com/kdah-2019/navimumbai/hospital-building.zip'),
           ]
           for asset,url in zips:
               try:
-                  r=requests.get(url,headers=UA,timeout=60); r.raise_for_status()
-                  z=zipfile.ZipFile(io.BytesIO(r.content)); candidates=[]
+                  r=get(url,60); z=zipfile.ZipFile(io.BytesIO(r.content)); candidates=[]
                   for name in z.namelist():
                       low=name.lower()
                       if not re.search(r'\.(jpe?g|png|webp)$',low): continue
@@ -78,14 +106,21 @@ jobs:
                           if any(x in low for x in ('hospital','building','exterior','outdoor','front','main','entrance','kdah')): score+=80
                           candidates.append((score,name,data,w,h))
                       except Exception: pass
-                  if not candidates:
-                      print('No safe press-kit building image for',asset); continue
-                  candidates.sort(reverse=True)
-                  score,name,data,w,h=candidates[0]
-                  save_image(asset,data,url+' :: '+name)
+                  if not candidates: print('No safe press-kit building image for',asset); continue
+                  candidates.sort(reverse=True); _,name,data,w,h=candidates[0]; save_image(asset,data,url+' :: '+name)
               except Exception as e: print(asset,'archive failed:',e)
 
-          # Keep the already verified official Reliance Tower asset untouched.
+          # If Mumbai press-kit archive is temporarily unavailable, use only a
+          # facility-labelled first-party image from Kokilaben's own site/CDN.
+          if not list(OUT.glob('kokilaben-mumbai.*')):
+              first_party_page_image('kokilaben-mumbai','https://www.kokilabenhospital.com/contacts/mapsanddirection.html',('kokilabenhospital.com',),('kokilaben','maps and directions','hospital'),('logo','airport','doctor','patient'))
+
+          # Nanavati Max: official facility page contains hospital/tower imagery.
+          first_party_page_image('nanavati-max-mumbai','https://www.nanavatimaxhospital.org/nanavati-max',('nanavatimaxhospital.org','maxhealthcare.in','amazonaws.com'),('nanavati','hospital','tower'),('doctor','patient','room','icu','lobby','opd','emergency','da vinci','ot'))
+
+          # Jaslok: use only a first-party hospital/facility image; room-only
+          # gallery images are intentionally rejected.
+          first_party_page_image('jaslok-mumbai','https://jaslokhospital.net/',('jaslokhospital.net',),('jaslok','hospital'),('doctor','patient','room','slide','logo','app','qr'))
           PY
 
       - name: Wire local images into English and Arabic profiles and directories
@@ -98,27 +133,23 @@ jobs:
             'gleneagles-hospital-parel-mumbai':('gleneagles-parel','Gleneagles Hospital, Parel, Mumbai'),
             'kokilaben-dhirubhai-ambani-hospital-mumbai':('kokilaben-mumbai','Kokilaben Dhirubhai Ambani Hospital, Mumbai'),
             'kokilaben-dhirubhai-ambani-hospital-navi-mumbai':('kokilaben-navi-mumbai','Kokilaben Dhirubhai Ambani Hospital, Navi Mumbai'),
+            'nanavati-max-super-speciality-hospital-mumbai':('nanavati-max-mumbai','Nanavati Max Super Speciality Hospital, Mumbai'),
+            'jaslok-hospital-research-centre-mumbai':('jaslok-mumbai','Jaslok Hospital and Research Centre, Mumbai'),
             'sir-hn-reliance-foundation-hospital-mumbai':('sir-hn-reliance-mumbai','Sir H. N. Reliance Foundation Hospital and Research Centre, Mumbai'),
           }
           for slug,(asset,alt) in targets.items():
               matches=list(Path('assets/images/hospitals').glob(asset+'.*'))
-              if len(matches)!=1:
-                  print('Skipping; no unique verified asset for',slug); continue
+              if len(matches)!=1: print('Skipping; no unique verified asset for',slug); continue
               src='/'+matches[0].as_posix()
               img=f'<img class="hospital-profile-image" src="{src}" alt="{alt}" loading="eager" decoding="async" style="width:100%;height:100%;min-height:240px;max-height:380px;object-fit:cover;border-radius:18px">'
               for page in (Path('hospitals')/slug/'index.html',Path('ar/hospitals')/slug/'index.html'):
                   if not page.exists(): continue
                   text=page.read_text(encoding='utf-8'); new=text
-                  patterns=[
-                    r'<div[^>]+class="[^"]*hospital-image-pending[^"]*"[^>]*>.*?</div>',
-                    r'<div[^>]+class="[^"]*hospital-visual[^"]*"[^>]*>.*?</div>',
-                    r'<div[^>]+class="[^"]*box note[^"]*"[^>]+role="img"[^>]*>.*?</div>',
-                  ]
+                  patterns=[r'<div[^>]+class="[^"]*hospital-image-pending[^"]*"[^>]*>.*?</div>',r'<div[^>]+class="[^"]*hospital-visual[^"]*"[^>]*>.*?</div>',r'<div[^>]+class="[^"]*box note[^"]*"[^>]+role="img"[^>]*>.*?</div>']
                   for pat in patterns:
                       new,n=re.subn(pat,img,new,count=1,flags=re.S)
                       if n: break
                   if new!=text: page.write_text(new,encoding='utf-8')
-
               for page in (Path('hospitals/index.html'),Path('ar/hospitals/index.html')):
                   if not page.exists(): continue
                   text=page.read_text(encoding='utf-8'); pos=text.find(slug)
@@ -127,8 +158,7 @@ jobs:
                   if start<0: start=text.rfind('<div',0,pos)
                   if start<0: continue
                   end=text.find('</article>',pos); end=end+10 if end>=0 else min(len(text),pos+2500)
-                  seg=text[start:end]
-                  seg2=re.sub(r'src="[^"]*hospital-placeholder\.svg"',f'src="{src}"',seg,count=1)
+                  seg=text[start:end]; seg2=re.sub(r'src="[^"]*hospital-placeholder\.svg"',f'src="{src}"',seg,count=1)
                   if seg2!=seg: page.write_text(text[:start]+seg2+text[end:],encoding='utf-8')
           PY
 
