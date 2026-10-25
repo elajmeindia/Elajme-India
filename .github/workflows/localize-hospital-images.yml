@@ -1,48 +1,24 @@
 name: Localize hospital images
+
+# Safety note:
+# Hospital facility photos must come from the hospital/provider's official web properties
+# or another source that has been manually verified for the exact facility. The previous
+# version downloaded FMRI, Fortis Noida and Apollo Navi Mumbai images from third-party
+# websites. That behavior is intentionally disabled so a manual workflow run cannot
+# overwrite verified/local assets with an uncertain facility image.
 on:
-  push:
-    paths:
-      - '.github/workflows/localize-hospital-images.yml'
   workflow_dispatch:
+
 permissions:
-  contents: write
+  contents: read
+
 jobs:
-  localize:
+  verify-only:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Localize the three remaining hospital images
-        shell: bash
+      - uses: actions/checkout@v5
+      - name: Explain hospital image policy
         run: |
-          set -e
-          mkdir -p assets/images/hospitals
-          curl -L --fail --retry 3 -A 'Mozilla/5.0' 'https://www.livontaglobal.com/wp-content/uploads/2025/09/fe-img2.jpg' -o assets/images/hospitals/fmri.jpg
-          curl -L --fail --retry 3 -A 'Mozilla/5.0' 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Fortis_Hospital_Noida_-_panoramio.jpg' -o assets/images/hospitals/fortis-noida.jpg
-          curl -L --fail --retry 3 -A 'Mozilla/5.0' 'https://www.devdiscourse.com/img?format=jpeg&imageUrl=https%3A%2F%2Fdevdiscourse.blob.core.windows.net%2Fdevnews%2F26_04_2025_16_41_00_649645.jpg&width=920' -o assets/images/hospitals/apollo-navi.jpg
-          file assets/images/hospitals/fmri.jpg | grep -qiE 'jpeg|image'
-          file assets/images/hospitals/fortis-noida.jpg | grep -qiE 'jpeg|image'
-          file assets/images/hospitals/apollo-navi.jpg | grep -qiE 'jpeg|image'
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('hospitals/index.html')
-          s=p.read_text()
-          mapping={
-            'Fortis Memorial Research Institute, Gurugram':'fmri.jpg',
-            'Fortis Hospital, Noida':'fortis-noida.jpg',
-            'Apollo Hospitals, Navi Mumbai':'apollo-navi.jpg'
-          }
-          for alt,f in mapping.items():
-              pat=r'<img class="photo"[^>]*alt="'+re.escape(alt)+r'"[^>]*>'
-              rep=f'<img class="photo" loading="lazy" src="../assets/images/hospitals/{f}?v=3" alt="{alt}">'
-              s,n=re.subn(pat,rep,s)
-              if n != 1: raise SystemExit(f'Expected one card for {alt}, found {n}')
-          p.write_text(s)
-          PY
-      - name: Commit localized images
-        run: |
-          git config user.name 'Elajme India Bot'
-          git config user.email 'actions@users.noreply.github.com'
-          git add assets/images/hospitals/fmri.jpg assets/images/hospitals/fortis-noida.jpg assets/images/hospitals/apollo-navi.jpg hospitals/index.html
-          git commit -m 'Fix FMRI Fortis Noida and Apollo Navi Mumbai images'
-          git push
+          echo 'No images are downloaded by this workflow.'
+          echo 'Use only exact-facility images verified against official hospital/provider sources.'
+          echo 'Existing local images are preserved until individually re-verified or replaced.'
