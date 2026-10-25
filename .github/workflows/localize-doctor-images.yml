@@ -1,6 +1,7 @@
 name: Localize doctor images
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/localize-doctor-images.yml'
   workflow_dispatch:
@@ -11,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Install image dependencies
+        run: python3 -m pip install --quiet pillow beautifulsoup4 requests
       - name: Localize portraits from verified official hospital pages
         shell: bash
         run: |
@@ -18,88 +23,123 @@ jobs:
           mkdir -p assets/images/doctors
           python3 - <<'PY'
           from pathlib import Path
-          import re, urllib.request, urllib.parse
+          from urllib.parse import urljoin, urlparse, unquote
+          from bs4 import BeautifulSoup
+          from PIL import Image
+          import io, re, requests
 
           root=Path('.')
           targets={
-            'dr-aditya-gupta':('Dr. Aditya Gupta','https://www.artemishospitals.com/doctor/profile/aditya-gupta'),
-            'dr-harsh-dua':('Dr. Harsh Dua','https://mediacdn.apollohospitals.com/doctors/medical-oncologist/delhi/dr-harsh-dua'),
-            'dr-rajneesh-malhotra':('Dr. Rajneesh Malhotra','https://www.maxhealthcare.in/international/en/doctor/dr-rajneesh-malhotra'),
-            'dr-ramneek-mahajan':('Dr. Ramneek Mahajan','https://www.maxhealthcare.in/doctor/dr-ramneek-mahajan'),
-            'dr-abhideep-chaudhary':('Dr. Abhideep Chaudhary','https://www.maxhealthcare.in/doctor/abhideep-chaudhary'),
-            'prof-dr-subhash-gupta':('Prof. Dr. Subhash Gupta','https://www.maxhealthcare.in/international/en/doctor/prof-dr-subhash-gupta'),
-            'dr-anil-mandhani':('Dr. Anil Mandhani','https://www.fortishealthcare.com/centres-of-excellence/doctors/12926'),
-            'dr-arvind-kumar-khurana':('Dr. Arvind Kumar Khurana','https://www.fortishealthcare.com/doctors/dr-arvind-kumar-khurana-5313'),
-            'dr-sanjay-gogoi':('Dr. Sanjay Gogoi','https://www.maxhealthcare.in/international/en/speciality/urology'),
+            'dr-aditya-gupta':('Dr. Aditya Gupta','https://www.artemishospitals.com/doctor/profile/aditya-gupta',('artemishospitals.com',)),
+            'dr-harsh-dua':('Dr. Harsh Dua','https://www.apollohospitals.com/doctors/medical-oncologist/delhi/dr-harsh-dua',('apollohospitals.com','mediacdn.apollohospitals.com')),
+            'dr-rajneesh-malhotra':('Dr. Rajneesh Malhotra','https://www.maxhealthcare.in/international/en/doctor/dr-rajneesh-malhotra',('maxhealthcare.in','maxhealthcare-imgs.s3.ap-south-1.amazonaws.com')),
+            'dr-ramneek-mahajan':('Dr. Ramneek Mahajan','https://www.maxhealthcare.in/doctor/dr-ramneek-mahajan',('maxhealthcare.in','maxhealthcare-imgs.s3.ap-south-1.amazonaws.com')),
+            'dr-abhideep-chaudhary':('Dr. Abhideep Chaudhary','https://www.maxhealthcare.in/doctor/abhideep-chaudhary',('maxhealthcare.in','maxhealthcare-imgs.s3.ap-south-1.amazonaws.com')),
+            'prof-dr-subhash-gupta':('Prof. Dr. Subhash Gupta','https://www.maxhealthcare.in/international/en/doctor/prof-dr-subhash-gupta',('maxhealthcare.in','maxhealthcare-imgs.s3.ap-south-1.amazonaws.com')),
+            'dr-anil-mandhani':('Dr. Anil Mandhani','https://www.fortishealthcare.com/centres-of-excellence/doctors/12926',('fortishealthcare.com',)),
+            'dr-arvind-kumar-khurana':('Dr. Arvind Kumar Khurana','https://www.fortishealthcare.com/doctors/dr-arvind-kumar-khurana-5313',('fortishealthcare.com',)),
+            'dr-sanjay-gogoi':('Dr. Sanjay Gogoi','https://www.maxhealthcare.in/doctor/dr-sanjay-gogoi',('maxhealthcare.in','maxhealthcare-imgs.s3.ap-south-1.amazonaws.com')),
           }
-          headers={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageLocalizer/1.0)'}
-          changed=[]
+          UA={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageVerifier/1.2)'}
+
+          def host_ok(url,hosts):
+              h=(urlparse(url).hostname or '').lower()
+              return any(h==x or h.endswith('.'+x) for x in hosts)
+
+          def keys(name):
+              return [x for x in re.sub(r'[^a-z0-9 ]',' ',name.lower()).split() if len(x)>2 and x not in {'prof','doctor'}]
 
           def fetch(url):
-            req=urllib.request.Request(url,headers=headers)
-            with urllib.request.urlopen(req,timeout=30) as r: return r.read(), r.headers.get_content_type()
+              r=requests.get(url,headers=UA,timeout=35); r.raise_for_status(); return r
 
-          def candidates(html,base,slug,name):
-            text=html.decode('utf-8','ignore')
-            vals=[]
-            for pat in [r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)',r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',r'<img[^>]+(?:src|data-src)=["\']([^"\']+)["\'][^>]*>']:
-              vals += re.findall(pat,text,re.I)
-            keys=[x for x in re.sub(r'[^a-z0-9 ]',' ',name.lower()).split() if len(x)>2 and x not in {'prof'}]
-            slugkey=slug.replace('prof-','').replace('dr-','').replace('-',' ')
-            def score(u):
-              low=urllib.parse.unquote(u).lower()
-              s=sum(4 for k in keys if k in low)
-              if slugkey in low: s+=8
-              if any(x in low for x in ['logo','icon','banner','hospital-building']): s-=10
-              return s
-            out=[]
-            for u in sorted(set(vals),key=score,reverse=True):
-              u=urllib.parse.urljoin(base,u)
-              if u.startswith('http') and score(u)>0: out.append(u)
-            return out
+          def image_candidates(page,name,hosts):
+              r=fetch(page); soup=BeautifulSoup(r.text,'html.parser'); out=[]; nk=keys(name)
+              for tag in soup.find_all(['img','meta']):
+                  src=''; label=''
+                  if tag.name=='meta' and (tag.get('property') in ('og:image','twitter:image') or tag.get('name') in ('twitter:image',)):
+                      src=tag.get('content') or ''; label=' '.join([tag.get('property',''),tag.get('name',''),src])
+                  elif tag.name=='img':
+                      src=tag.get('src') or tag.get('data-src') or tag.get('data-lazy-src') or ''
+                      label=' '.join([tag.get('alt',''),tag.get('title',''),src])
+                  if not src: continue
+                  u=urljoin(page,src)
+                  if not host_ok(u,hosts): continue
+                  low=unquote(label+' '+u).lower()
+                  if any(x in low for x in ('logo','icon','banner','hospital-building','hospital_building','award','trophy')): continue
+                  score=sum(35 for k in nk if k in low)
+                  if 'doctor' in low or 'consultant' in low: score+=10
+                  if 'og:image' in low: score+=4
+                  if score>0: out.append((score,u,label))
+              return sorted(out,reverse=True)
 
-          for slug,(name,page) in targets.items():
-            try:
-              html,_=fetch(page)
-              saved=None
-              for u in candidates(html,page,slug,name)[:16]:
-                try:
-                  data,ctype=fetch(u)
-                  if not ctype.startswith('image/') or len(data)<4000: continue
-                  ext={'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp','image/avif':'.avif'}.get(ctype,'.jpg')
-                  dest=root/'assets/images/doctors'/f'{slug}{ext}'
-                  dest.write_bytes(data); saved=dest; changed.append(str(dest)); break
-                except Exception: pass
-              if not saved:
-                print('No verified portrait localized for',name); continue
+          def save_portrait(slug,name,page,hosts):
+              best=None
+              for score,u,label in image_candidates(page,name,hosts)[:30]:
+                  try:
+                      r=fetch(u); ctype=r.headers.get('content-type','').lower()
+                      if 'image' not in ctype and not re.search(r'\.(jpe?g|png|webp|avif)(?:\?|$)',u,re.I): continue
+                      im=Image.open(io.BytesIO(r.content)); w,h=im.size
+                      if w<180 or h<180: continue
+                      # Portraits are normally square/vertical. Very wide assets are likely banners.
+                      ratio=w/h
+                      if ratio>1.65: continue
+                      score2=score+(w*h/100000)+(12 if h>=w else 0)
+                      if best is None or score2>best[0]: best=(score2,u,r.content,im.format,w,h,label)
+                  except Exception as e: print('candidate rejected',name,u,e)
+              if not best: return None
+              _,u,data,fmt,w,h,label=best
+              ext={'JPEG':'.jpg','PNG':'.png','WEBP':'.webp','AVIF':'.avif'}.get((fmt or '').upper(),'.jpg')
+              for old in (root/'assets/images/doctors').glob(slug+'.*'):
+                  if old.name!='doctor-placeholder.svg': old.unlink()
+              dest=root/'assets/images/doctors'/f'{slug}{ext}'; dest.write_bytes(data)
+              print('localized',name,u,'->',dest,w,h,label)
+              return dest
 
-              directory=root/'doctors/index.html'
-              text=directory.read_text(encoding='utf-8'); old=text
-              cards=list(re.finditer(r'<article class="card".*?</article>',text,re.S))
-              for m in reversed(cards):
-                card=m.group(0)
-                if f'href="{slug}/"' not in card: continue
-                src='../assets/images/doctors/'+saved.name
-                new=re.sub(r'<img class="photo"[^>]*>',f'<img class="photo" onerror="this.onerror=null;this.src=\'../assets/images/doctors/doctor-placeholder.svg\'" loading="lazy" src="{src}" alt="{name}" decoding="async">',card,count=1)
-                text=text[:m.start()]+new+text[m.end():]
-              if text!=old: directory.write_text(text,encoding='utf-8'); changed.append(str(directory))
+          def wire_profile(path,src,name):
+              if not path.exists(): return False
+              text=path.read_text(encoding='utf-8'); old=text
+              hero=f'<div class="profile-photo"><img src="{src}" alt="{name}" loading="eager" decoding="async"></div>'
+              text,n=re.subn(r'<div class="profile-photo profile-photo-fallback"[^>]*>.*?</div>',hero,text,count=1,flags=re.S)
+              if not n:
+                  text=re.sub(r'<div class="profile-photo"><img[^>]*></div>',hero,text,count=1,flags=re.S)
+              if text!=old: path.write_text(text,encoding='utf-8'); return True
+              return False
 
-              profile=root/'doctors'/slug/'index.html'
-              if profile.exists():
-                text=profile.read_text(encoding='utf-8'); old=text
-                src='../../assets/images/doctors/'+saved.name
-                hero=f'<div class="profile-photo"><img src="{src}" alt="{name}" loading="eager" decoding="async"></div>'
-                text=re.sub(r'<div class="profile-photo profile-photo-fallback"[^>]*>.*?</div>',hero,text,count=1,flags=re.S)
-                if text!=old: profile.write_text(text,encoding='utf-8'); changed.append(str(profile))
-            except Exception as e:
-              print('Skipped',name,':',e)
-          print('Changed:',*sorted(set(changed)),sep='\n - ')
+          def wire_directory(path,slug,src,name):
+              if not path.exists(): return False
+              text=path.read_text(encoding='utf-8'); old=text
+              # Support both relative and Arabic-directory href forms by finding the card containing the slug.
+              for pat in (r'<article class="card".*?</article>',r'<article[^>]*>.*?</article>'):
+                  cards=list(re.finditer(pat,text,re.S))
+                  changed=False
+                  for m in reversed(cards):
+                      card=m.group(0)
+                      if slug not in card: continue
+                      new=re.sub(r'<img class="photo"[^>]*>',f'<img class="photo" onerror="this.onerror=null;this.src=\'/assets/images/doctors/doctor-placeholder.svg\'" loading="lazy" src="{src}" alt="{name}" decoding="async">',card,count=1)
+                      if new!=card:
+                          text=text[:m.start()]+new+text[m.end():]; changed=True
+                  if changed: break
+              if text!=old: path.write_text(text,encoding='utf-8'); return True
+              return False
+
+          for slug,(name,page,hosts) in targets.items():
+              try:
+                  saved=save_portrait(slug,name,page,hosts)
+                  if not saved:
+                      print('No verified portrait localized for',name); continue
+                  websrc='/'+saved.as_posix()
+                  wire_directory(root/'doctors/index.html',slug,websrc,name)
+                  wire_directory(root/'ar/doctors/index.html',slug,websrc,name)
+                  wire_profile(root/'doctors'/slug/'index.html',websrc,name)
+                  wire_profile(root/'ar/doctors'/slug/'index.html',websrc,name)
+              except Exception as e:
+                  print('Skipped',name,':',e)
           PY
       - name: Commit localized portraits
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add assets/images/doctors doctors
+          git add assets/images/doctors doctors ar/doctors
           if git diff --cached --quiet; then
             echo 'No new verified portraits were available.'
             exit 0
