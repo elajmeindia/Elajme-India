@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Localize portraits from verified hospital profile pages
+      - name: Localize portraits from verified official hospital pages
         shell: bash
         run: |
           set -euo pipefail
@@ -26,6 +26,10 @@ jobs:
             'dr-harsh-dua':('Dr. Harsh Dua','https://mediacdn.apollohospitals.com/doctors/medical-oncologist/delhi/dr-harsh-dua'),
             'dr-rajneesh-malhotra':('Dr. Rajneesh Malhotra','https://www.maxhealthcare.in/international/en/doctor/dr-rajneesh-malhotra'),
             'dr-ramneek-mahajan':('Dr. Ramneek Mahajan','https://www.maxhealthcare.in/doctor/dr-ramneek-mahajan'),
+            'dr-abhideep-chaudhary':('Dr. Abhideep Chaudhary','https://www.maxhealthcare.in/doctor/abhideep-chaudhary'),
+            'prof-dr-subhash-gupta':('Prof. Dr. Subhash Gupta','https://www.maxhealthcare.in/international/en/doctor/prof-dr-subhash-gupta'),
+            'dr-anil-mandhani':('Dr. Anil Mandhani','https://www.fortishealthcare.com/centres-of-excellence/doctors/12926'),
+            'dr-arvind-kumar-khurana':('Dr. Arvind Kumar Khurana','https://www.fortishealthcare.com/specialities/hospital/psychodynamic-psychotherapy-130-0/fortis-memorial-research-institute-gurgaon'),
           }
           headers={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageLocalizer/1.0)'}
           changed=[]
@@ -39,11 +43,12 @@ jobs:
             vals=[]
             for pat in [r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)',r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',r'<img[^>]+(?:src|data-src)=["\']([^"\']+)["\'][^>]*>']:
               vals += re.findall(pat,text,re.I)
-            keys=[x for x in re.sub(r'[^a-z0-9 ]',' ',name.lower()).split() if len(x)>2]
+            keys=[x for x in re.sub(r'[^a-z0-9 ]',' ',name.lower()).split() if len(x)>2 and x not in {'prof'}]
+            slugkey=slug.replace('prof-','').replace('dr-','').replace('-',' ')
             def score(u):
               low=urllib.parse.unquote(u).lower()
               s=sum(4 for k in keys if k in low)
-              if slug.replace('dr-','').replace('-',' ') in low: s+=8
+              if slugkey in low: s+=8
               if any(x in low for x in ['logo','icon','banner','hospital-building']): s-=10
               return s
             out=[]
@@ -56,7 +61,7 @@ jobs:
             try:
               html,_=fetch(page)
               saved=None
-              for u in candidates(html,page,slug,name)[:12]:
+              for u in candidates(html,page,slug,name)[:16]:
                 try:
                   data,ctype=fetch(u)
                   if not ctype.startswith('image/') or len(data)<4000: continue
