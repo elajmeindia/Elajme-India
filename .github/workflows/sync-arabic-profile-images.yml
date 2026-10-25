@@ -1,0 +1,89 @@
+name: Sync Arabic profile images
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-arabic-profile-images.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Sync verified local doctor images
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+          placeholder = 'doctor-placeholder.svg'
+          exts = ['.jpg','.jpeg','.png','.webp','.avif']
+
+          # Arabic directory: map a placeholder only when the linked English profile
+          # has an exact same-slug local image.
+          p = root/'ar/doctors/index.html'
+          text = p.read_text(encoding='utf-8')
+          cards = re.findall(r'<article class="card">.*?</article>', text, re.S)
+          mapped = []
+          for card in cards:
+              if placeholder not in card:
+                  continue
+              m = re.search(r'href="/doctors/([^/]+)/"', card)
+              if not m:
+                  # Arabic Aditya card links to Arabic profile first, so recover slug there.
+                  m = re.search(r'href="/ar/doctors/([^/]+)/"', card)
+              if not m:
+                  continue
+              slug = m.group(1)
+              local = None
+              for ext in exts:
+                  candidate = root/'assets/images/doctors'/f'{slug}{ext}'
+                  if candidate.exists():
+                      local = candidate
+                      break
+              if not local:
+                  continue
+              new = card.replace('../../assets/images/doctors/doctor-placeholder.svg', f'../../assets/images/doctors/{local.name}', 1)
+              new = re.sub(r'alt="صورة تعريفية مؤقتة ([^"]+)"', r'alt="\1"', new, count=1)
+              if new != card:
+                  text = text.replace(card, new, 1)
+                  mapped.append(slug)
+          p.write_text(text, encoding='utf-8')
+
+          # Arabic individual profiles: replace a verified/fallback initials panel when
+          # an exact local portrait exists. Currently this also protects future profiles.
+          ar_profiles = root/'ar/doctors'
+          for profile in ar_profiles.glob('*/index.html'):
+              slug = profile.parent.name
+              local = next((root/'assets/images/doctors'/f'{slug}{ext}' for ext in exts if (root/'assets/images/doctors'/f'{slug}{ext}').exists()), None)
+              if not local:
+                  continue
+              t = profile.read_text(encoding='utf-8')
+              if 'profile-photo' in t and '<img' in t:
+                  continue
+              name_m = re.search(r'<h1>(.*?)</h1>', t, re.S)
+              name = re.sub('<.*?>','',name_m.group(1)).strip() if name_m else slug
+              hero = f'<div class="profile-photo"><img src="../../../assets/images/doctors/{local.name}" alt="{name}" loading="eager" decoding="async"></div>'
+              nt = re.sub(r'<div class="(?:verified-profile-panel|profile-photo profile-photo-fallback)"[^>]*>.*?</div>', hero, t, count=1, flags=re.S)
+              if nt != t:
+                  profile.write_text(nt, encoding='utf-8')
+                  mapped.append('profile:'+slug)
+
+          print('Mapped Arabic images:', ', '.join(mapped) if mapped else 'none')
+          PY
+      - name: Commit Arabic image parity
+        shell: bash
+        run: |
+          git config user.name 'Elajme India Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add ar/doctors
+          if git diff --cached --quiet; then
+            echo 'Arabic doctor images already synchronized.'
+            exit 0
+          fi
+          git commit -m 'Sync verified doctor images to Arabic directory'
+          git push
