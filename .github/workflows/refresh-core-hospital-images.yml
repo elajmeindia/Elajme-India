@@ -1,0 +1,91 @@
+name: Refresh first-party core hospital images
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refresh-core-hospital-images.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Install dependencies
+        run: python3 -m pip install --quiet pillow requests beautifulsoup4
+      - name: Localize exact first-party hospital imagery
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urljoin,urlparse
+          from bs4 import BeautifulSoup
+          from PIL import Image
+          import io,requests,re
+
+          OUT=Path('assets/images/hospitals'); OUT.mkdir(parents=True,exist_ok=True)
+          UA={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageVerifier/2.0)'}
+
+          def get(url):
+              r=requests.get(url,headers=UA,timeout=45); r.raise_for_status(); return r
+
+          def choose(asset,page,hosts,required,positive,negative):
+              try:
+                  soup=BeautifulSoup(get(page).text,'html.parser'); cand=[]
+                  for t in soup.find_all(['img','meta']):
+                      if t.name=='meta':
+                          if t.get('property') not in ('og:image','twitter:image') and t.get('name')!='twitter:image': continue
+                          src=t.get('content') or ''; label=src
+                      else:
+                          src=t.get('src') or t.get('data-src') or t.get('data-lazy-src') or ''; label=' '.join((t.get('alt',''),t.get('title',''),src))
+                      if not src: continue
+                      u=urljoin(page,src); host=(urlparse(u).hostname or '').lower(); low=(label+' '+u).lower()
+                      if not any(host==h or host.endswith('.'+h) for h in hosts): continue
+                      if any(x in low for x in negative): continue
+                      if not all(x in low for x in required): continue
+                      hits=sum(x in low for x in positive)
+                      try:
+                          r=get(u); im=Image.open(io.BytesIO(r.content)); w,h=im.size
+                          if w<600 or h<300: continue
+                          score=hits*100+w*h/100000+(30 if w>=h else 0)
+                          cand.append((score,u,r.content,im.format,w,h,label))
+                      except Exception: pass
+                  if not cand:
+                      print('NO_STRICT_MATCH',asset); return None
+                  cand.sort(reverse=True); _,u,data,fmt,w,h,label=cand[0]
+                  ext={'JPEG':'.jpg','PNG':'.png','WEBP':'.webp'}.get((fmt or '').upper())
+                  if not ext: return None
+                  for old in OUT.glob(asset+'.*'): old.unlink()
+                  dest=OUT/(asset+ext); dest.write_bytes(data)
+                  print('LOCALIZED',asset,u,w,h,label); return dest
+              except Exception as e:
+                  print('FAILED',asset,e); return None
+
+          # Exact provider location pages only. Strict facility-name tokens prevent
+          # doctor/news/event imagery from replacing hospital building assets.
+          choose('fmri','https://www.fortishealthcare.com/location/fortis-memorial-research-institute-gurgaon',
+                 ('fortishealthcare.com',),('fortis',),('memorial','research','institute','gurgaon','gurugram','hospital'),
+                 ('doctor','patient','news','event','logo','icon','award','team','health check','package'))
+          choose('fortis-noida','https://www.fortishealthcare.com/location/fortis-hospital-noida',
+                 ('fortishealthcare.com',),('fortis',),('noida','hospital','building'),
+                 ('doctor','patient','news','event','logo','icon','award','team','health check','package'))
+          choose('apollo-navi','https://www.apollohospitals.com/hospitals/apollo-hospitals-mumbai',
+                 ('apollohospitals.com',),('apollo',),('navi','mumbai','hospital','building'),
+                 ('doctor','patient','news','event','logo','icon','speciality','health check','package'))
+          PY
+      - name: Commit only verified replacements
+        shell: bash
+        run: |
+          if [ -z "$(git status --porcelain assets/images/hospitals)" ]; then echo 'No verified replacements found.'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/images/hospitals
+          git commit -m 'Refresh hospital images from exact first-party pages'
+          git push
