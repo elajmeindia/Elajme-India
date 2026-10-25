@@ -7,45 +7,96 @@ on:
 permissions:
   contents: write
 jobs:
-  recover-anant-kumar:
+  localize-verified-doctor-images:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Localize Dr Anant Kumar portrait
+      - uses: actions/checkout@v5
+      - name: Localize portraits from verified hospital profile pages
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p assets/images/doctors
-          URL='https://medglobe.health/images/UrologyTreatment/AnantKumar.png'
-          DEST='assets/images/doctors/dr-anant-kumar.png'
-          curl -L --fail --retry 3 --connect-timeout 20 --max-time 90 -A 'Mozilla/5.0' "$URL" -o "$DEST"
-          test -s "$DEST"
-          test $(stat -c%s "$DEST") -gt 4000
-          file "$DEST" | grep -Eqi 'image|png|jpeg|webp'
           python3 - <<'PY'
           from pathlib import Path
-          import re
-          p=Path('doctors/index.html')
-          text=p.read_text()
-          cards=re.findall(r'<article class="card".*?</article>',text,re.S)
-          done=False
-          for card in cards:
-              if 'Dr. Anant Kumar' in card:
-                  new=re.sub(r'<img class="photo"[^>]*>', '<img class="photo" loading="lazy" src="../assets/images/doctors/dr-anant-kumar.png?v=7" alt="Dr. Anant Kumar">', card, count=1)
-                  if new == card:
-                      raise SystemExit('Dr Anant Kumar image tag not found')
-                  text=text.replace(card,new,1)
-                  done=True
-                  break
-          if not done:
-              raise SystemExit('Dr Anant Kumar card not found')
-          p.write_text(text)
+          import re, urllib.request, urllib.parse
+
+          root=Path('.')
+          targets={
+            'dr-aditya-gupta':('Dr. Aditya Gupta','https://www.artemishospitals.com/doctor/profile/aditya-gupta'),
+            'dr-harsh-dua':('Dr. Harsh Dua','https://mediacdn.apollohospitals.com/doctors/medical-oncologist/delhi/dr-harsh-dua'),
+            'dr-rajneesh-malhotra':('Dr. Rajneesh Malhotra','https://www.maxhealthcare.in/international/en/doctor/dr-rajneesh-malhotra'),
+            'dr-ramneek-mahajan':('Dr. Ramneek Mahajan','https://www.maxhealthcare.in/doctor/dr-ramneek-mahajan'),
+          }
+          headers={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageLocalizer/1.0)'}
+          changed=[]
+
+          def fetch(url):
+            req=urllib.request.Request(url,headers=headers)
+            with urllib.request.urlopen(req,timeout=30) as r: return r.read(), r.headers.get_content_type()
+
+          def candidates(html,base,slug,name):
+            text=html.decode('utf-8','ignore')
+            vals=[]
+            for pat in [r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)',r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']',r'<img[^>]+(?:src|data-src)=["\']([^"\']+)["\'][^>]*>']:
+              vals += re.findall(pat,text,re.I)
+            keys=[x for x in re.sub(r'[^a-z0-9 ]',' ',name.lower()).split() if len(x)>2]
+            def score(u):
+              low=urllib.parse.unquote(u).lower()
+              s=sum(4 for k in keys if k in low)
+              if slug.replace('dr-','').replace('-',' ') in low: s+=8
+              if any(x in low for x in ['logo','icon','banner','hospital-building']): s-=10
+              return s
+            out=[]
+            for u in sorted(set(vals),key=score,reverse=True):
+              u=urllib.parse.urljoin(base,u)
+              if u.startswith('http') and score(u)>0: out.append(u)
+            return out
+
+          for slug,(name,page) in targets.items():
+            try:
+              html,_=fetch(page)
+              saved=None
+              for u in candidates(html,page,slug,name)[:12]:
+                try:
+                  data,ctype=fetch(u)
+                  if not ctype.startswith('image/') or len(data)<4000: continue
+                  ext={'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp','image/avif':'.avif'}.get(ctype,'.jpg')
+                  dest=root/'assets/images/doctors'/f'{slug}{ext}'
+                  dest.write_bytes(data); saved=dest; changed.append(str(dest)); break
+                except Exception: pass
+              if not saved:
+                print('No verified portrait localized for',name); continue
+
+              directory=root/'doctors/index.html'
+              text=directory.read_text(encoding='utf-8'); old=text
+              cards=list(re.finditer(r'<article class="card".*?</article>',text,re.S))
+              for m in reversed(cards):
+                card=m.group(0)
+                if f'href="{slug}/"' not in card: continue
+                src='../assets/images/doctors/'+saved.name
+                new=re.sub(r'<img class="photo"[^>]*>',f'<img class="photo" onerror="this.onerror=null;this.src=\'../assets/images/doctors/doctor-placeholder.svg\'" loading="lazy" src="{src}" alt="{name}" decoding="async">',card,count=1)
+                text=text[:m.start()]+new+text[m.end():]
+              if text!=old: directory.write_text(text,encoding='utf-8'); changed.append(str(directory))
+
+              profile=root/'doctors'/slug/'index.html'
+              if profile.exists():
+                text=profile.read_text(encoding='utf-8'); old=text
+                src='../../assets/images/doctors/'+saved.name
+                hero=f'<div class="profile-photo"><img src="{src}" alt="{name}" loading="eager" decoding="async"></div>'
+                text=re.sub(r'<div class="profile-photo profile-photo-fallback"[^>]*>.*?</div>',hero,text,count=1,flags=re.S)
+                if text!=old: profile.write_text(text,encoding='utf-8'); changed.append(str(profile))
+            except Exception as e:
+              print('Skipped',name,':',e)
+          print('Changed:',*sorted(set(changed)),sep='\n - ')
           PY
-      - name: Commit localized portrait
+      - name: Commit localized portraits
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add assets/images/doctors/dr-anant-kumar.png doctors/index.html
-          git diff --cached --quiet && { echo 'No changes produced'; exit 1; }
-          git commit -m 'Localize Dr Anant Kumar portrait'
+          git add assets/images/doctors doctors
+          if git diff --cached --quiet; then
+            echo 'No new verified portraits were available.'
+            exit 0
+          fi
+          git commit -m 'Localize verified hospital doctor portraits'
           git push
