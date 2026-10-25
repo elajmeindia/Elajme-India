@@ -38,13 +38,11 @@ jobs:
             'prof-dr-subhash-gupta':('Prof. Dr. Subhash Gupta','https://www.maxhealthcare.in/international/en/doctor/prof-dr-subhash-gupta',('maxhealthcare.in','maxhealthcare-imgs.s3.ap-south-1.amazonaws.com','max-website20-images.s3.ap-south-1.amazonaws.com')),
             'dr-anil-mandhani':('Dr. Anil Mandhani','https://www.fortishealthcare.com/centres-of-excellence/doctors/12926',('fortishealthcare.com',)),
             'dr-arvind-kumar-khurana':('Dr. Arvind Kumar Khurana','https://www.fortishealthcare.com/doctors/dr-arvind-kumar-khurana-5313',('fortishealthcare.com',)),
-            'dr-sanjay-gogoi':('Dr. Sanjay Gogoi','https://www.maxhealthcare.in/find-a-doctor',('maxhealthcare.in','maxhealthcare-imgs.s3.ap-south-1.amazonaws.com','max-website20-images.s3.ap-south-1.amazonaws.com')),
           }
-          # Exact first-party Max Healthcare portrait surfaced by the official Dr Ramneek Mahajan profile.
           exact_images={
             'dr-ramneek-mahajan':'https://max-website20-images.s3.ap-south-1.amazonaws.com/Dr_Ramneek_Mahajan_f8682aed23.JPG',
           }
-          UA={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageVerifier/1.3)'}
+          UA={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageVerifier/1.4)'}
 
           def host_ok(url,hosts):
               h=(urlparse(url).hostname or '').lower()
@@ -83,7 +81,11 @@ jobs:
                   if not host_ok(u,hosts): continue
                   low=unquote(label+' '+u).lower()
                   if any(x in low for x in ('logo','icon','banner','hospital-building','hospital_building','award','trophy')): continue
-                  score=sum(35 for k in nk if k in low)
+                  matched=[k for k in nk if k in low]
+                  # Generic doctor-list pages can contain many people. Require at least two
+                  # name tokens in the candidate label/URL before it is eligible.
+                  if len(nk)>=2 and len(matched)<2: continue
+                  score=sum(35 for k in matched)
                   if 'doctor' in low or 'consultant' in low: score+=10
                   if 'og:image' in low: score+=4
                   if score>0: out.append((score,u,label))
@@ -135,6 +137,31 @@ jobs:
               if text!=old: path.write_text(text,encoding='utf-8'); return True
               return False
 
+          def remove_bad_portrait(slug,name):
+              for bad in (root/'assets/images/doctors').glob(slug+'.*'):
+                  if bad.name!='doctor-placeholder.svg':
+                      bad.unlink(); print('removed misidentified portrait',bad)
+              fallback=f'<div class="profile-photo profile-photo-fallback" role="img" aria-label="{name} profile image pending verified local publication">SG</div>'
+              for path in (root/'doctors'/slug/'index.html',root/'ar/doctors'/slug/'index.html'):
+                  if not path.exists(): continue
+                  text=path.read_text(encoding='utf-8'); old=text
+                  text=re.sub(r'<div class="profile-photo"><img[^>]*src="/assets/images/doctors/'+re.escape(slug)+r'\.[^\"]+"[^>]*></div>',fallback,text,count=1,flags=re.S)
+                  if text!=old: path.write_text(text,encoding='utf-8')
+              for path in (root/'doctors/index.html',root/'ar/doctors/index.html'):
+                  if not path.exists(): continue
+                  text=path.read_text(encoding='utf-8'); old=text
+                  cards=list(re.finditer(r'<article[^>]*>.*?</article>',text,re.S))
+                  for m in reversed(cards):
+                      card=m.group(0)
+                      if slug not in card: continue
+                      new=re.sub(r'<img class="photo"[^>]*>',f'<img class="photo" onerror="this.onerror=null;this.src=\'/assets/images/doctors/doctor-placeholder.svg\'" loading="lazy" src="/assets/images/doctors/doctor-placeholder.svg" alt="{name}" decoding="async">',card,count=1)
+                      text=text[:m.start()]+new+text[m.end():]
+                  if text!=old: path.write_text(text,encoding='utf-8')
+
+          # Run #13 matched Dr Sanjay Sachdeva to Dr Sanjay Gogoi from a generic search page.
+          # Remove that image and never auto-source Dr Gogoi from a generic doctor listing.
+          remove_bad_portrait('dr-sanjay-gogoi','Dr. Sanjay Gogoi')
+
           for slug,(name,page,hosts) in targets.items():
               try:
                   saved=save_portrait(slug,name,page,hosts)
@@ -151,9 +178,9 @@ jobs:
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add assets/images/doctors doctors ar/doctors
+          git add -A assets/images/doctors doctors ar/doctors
           if git diff --cached --quiet; then
-            echo 'No new verified portraits were available.'
+            echo 'No portrait changes were available.'
             exit 0
           fi
           git commit -m 'Localize verified hospital doctor portraits'
