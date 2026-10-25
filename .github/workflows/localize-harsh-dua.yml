@@ -1,0 +1,83 @@
+name: Localize Harsh Dua portrait
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/localize-harsh-dua.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  localize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install dependencies
+        run: python3 -m pip install --quiet requests pillow beautifulsoup4
+      - name: Discover exact Apollo portrait and wire profiles
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urljoin,urlparse
+          from bs4 import BeautifulSoup
+          from PIL import Image
+          import io,re,requests
+          page='https://mediacdn.apollohospitals.com/doctors/medical-oncologist/delhi/dr-harsh-dua'
+          headers={'User-Agent':'Mozilla/5.0 (compatible; ElajmeIndiaImageVerifier/1.0)'}
+          r=requests.get(page,headers=headers,timeout=35); r.raise_for_status()
+          soup=BeautifulSoup(r.text,'html.parser')
+          candidates=[]
+          for img in soup.find_all('img'):
+              src=img.get('src') or img.get('data-src') or img.get('data-lazy-src') or ''
+              if not src: continue
+              u=urljoin(page,src); host=(urlparse(u).hostname or '').lower()
+              if host!='mediacdn.apollohospitals.com' and not host.endswith('.apollohospitals.com'): continue
+              label=' '.join([img.get('alt',''),img.get('title',''),u]).lower()
+              if 'harsh' not in label or 'dua' not in label: continue
+              if any(x in label for x in ('logo','icon','banner','hospital')): continue
+              candidates.append(u)
+          if not candidates: raise SystemExit('No identity-labelled Apollo portrait found; no site changes made')
+          chosen=None
+          for u in candidates:
+              try:
+                  q=requests.get(u,headers=headers,timeout=35); q.raise_for_status()
+                  im=Image.open(io.BytesIO(q.content)); w,h=im.size
+                  if w>=180 and h>=180 and w/h<=1.65:
+                      chosen=(u,q.content,im.format,w,h); break
+              except Exception as e: print('Rejected',u,e)
+          if not chosen: raise SystemExit('No Apollo portrait passed image QA')
+          u,data,fmt,w,h=chosen
+          ext={'JPEG':'.jpg','PNG':'.png','WEBP':'.webp'}.get((fmt or '').upper(),'.jpg')
+          base=Path('assets/images/doctors')
+          for old in base.glob('dr-harsh-dua.*'): old.unlink()
+          dest=base/f'dr-harsh-dua{ext}'; dest.write_bytes(data)
+          src='/'+dest.as_posix(); name='Dr. Harsh Dua'
+          for f,cls in [('doctors/index.html','photo'),('ar/doctors/index.html','directory-photo')]:
+              p=Path(f)
+              if not p.exists(): continue
+              t=p.read_text(encoding='utf-8')
+              for m in reversed(list(re.finditer(r'<article class="card".*?</article>',t,re.S))):
+                  card=m.group(0)
+                  if 'dr-harsh-dua' not in card: continue
+                  new=re.sub(rf'<img class="{cls}"[^>]*>',f'<img class="{cls}" loading="lazy" src="{src}" alt="{name}" decoding="async">',card,count=1)
+                  t=t[:m.start()]+new+t[m.end():]
+              p.write_text(t,encoding='utf-8')
+          for f in ['doctors/dr-harsh-dua/index.html','ar/doctors/dr-harsh-dua/index.html']:
+              p=Path(f)
+              if not p.exists(): continue
+              t=p.read_text(encoding='utf-8')
+              hero=f'<div class="profile-photo"><img src="{src}" alt="{name}" loading="eager" decoding="async"></div>'
+              t,n=re.subn(r'<div class="profile-photo profile-photo-fallback"[^>]*>.*?</div>',hero,t,count=1,flags=re.S)
+              if not n: t=re.sub(r'<div class="profile-photo"><img[^>]*></div>',hero,t,count=1,flags=re.S)
+              t=re.sub(r'<p[^>]*>[^<]*(?:verified doctor image|verified portrait|profile image)[^<]*(?:pending|added only after)[^<]*</p>','',t,flags=re.I)
+              p.write_text(t,encoding='utf-8')
+          print('Verified Apollo portrait localized',u,w,h)
+          PY
+      - name: Commit localized portrait
+        run: |
+          git config user.name 'Elajme India Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add assets/images/doctors doctors ar/doctors
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Localize verified Harsh Dua portrait'
+          git push
