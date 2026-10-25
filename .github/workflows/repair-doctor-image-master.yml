@@ -1,0 +1,38 @@
+name: Repair doctor image master
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repair-doctor-image-master.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Protect verified portraits and improve official sources
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/localize-doctor-images.yml')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("            'dr-sanjay-gogoi':'Dr. Sanjay Gogoi',\n","")
+          s=s.replace("{'dr-aditya-gupta','dr-arvind-kumar-khurana','dr-rajneesh-malhotra','dr-ramneek-mahajan'}","{'dr-aditya-gupta','dr-arvind-kumar-khurana','dr-rajneesh-malhotra','dr-ramneek-mahajan','dr-sanjay-gogoi'}")
+          start="          # Remove the previously identified false Sanjay Gogoi asset before every run.\n          for bad in (root/'assets/images/doctors').glob('dr-sanjay-gogoi.*'):\n              bad.unlink(); print('removed false Sanjay Gogoi asset',bad)\n"
+          s=s.replace(start,"")
+          s=s.replace("https://www.maxhealthcare.in/our-specialities/liver-transplant-and-biliary-sciences","https://www.maxhealthcare.in/international/en/doctor/prof-dr-subhash-gupta")
+          s=s.replace("https://www.fortishealthcare.com/specialities/hospital/ent-73/fortis-memorial-research-institute-gurgaon","https://www.fortishealthcare.com/centres-of-excellence/doctors/12926",1)
+          s=s.replace("https://www.medanta.org/doctor-listing/urology-nephrology-doctors-in-gurugram","https://www.medanta.org/doctor-listing/urology-doctors?page=1")
+          s=s.replace('ElajmeIndiaImageVerifier/1.6','ElajmeIndiaImageVerifier/1.7')
+          p.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+          git config user.name 'Elajme India Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add .github/workflows/localize-doctor-images.yml
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Protect verified doctor portraits and improve first-party discovery'
+          git push
