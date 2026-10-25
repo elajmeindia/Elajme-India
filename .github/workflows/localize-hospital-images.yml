@@ -1,24 +1,124 @@
-name: Localize hospital images
+name: Localize verified Kokilaben hospital images
 
-# Safety note:
-# Hospital facility photos must come from the hospital/provider's official web properties
-# or another source that has been manually verified for the exact facility. The previous
-# version downloaded FMRI, Fortis Noida and Apollo Navi Mumbai images from third-party
-# websites. That behavior is intentionally disabled so a manual workflow run cannot
-# overwrite verified/local assets with an uncertain facility image.
+# Only exact-facility image packs published by Kokilaben Hospital's official press kits.
 on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  verify-only:
+  localize:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Explain hospital image policy
+        with:
+          fetch-depth: 0
+
+      - name: Download official hospital image packs and choose facility images
+        shell: bash
         run: |
-          echo 'No images are downloaded by this workflow.'
-          echo 'Use only exact-facility images verified against official hospital/provider sources.'
-          echo 'Existing local images are preserved until individually re-verified or replaced.'
+          set -euo pipefail
+          mkdir -p assets/images/hospitals /tmp/kokilaben-mumbai /tmp/kokilaben-navi
+
+          curl -fL --retry 2 -A 'Mozilla/5.0' \
+            'https://kdahweb-static.kokilabenhospital.com/downloads/KDAH_Hospital.zip' \
+            -o /tmp/kokilaben-mumbai.zip
+          curl -fL --retry 2 -A 'Mozilla/5.0' \
+            'https://s3.us-west-2.amazonaws.com/kdahweb-static.kokilabenhospital.com/kdah-2019/navimumbai/hospital-building.zip' \
+            -o /tmp/kokilaben-navi.zip
+
+          unzip -oq /tmp/kokilaben-mumbai.zip -d /tmp/kokilaben-mumbai
+          unzip -oq /tmp/kokilaben-navi.zip -d /tmp/kokilaben-navi
+
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import shutil
+
+          def choose(src, dest):
+              candidates=[]
+              for p in Path(src).rglob('*'):
+                  if p.suffix.lower() not in {'.jpg','.jpeg','.png','.webp'}:
+                      continue
+                  try:
+                      with Image.open(p) as im:
+                          w,h=im.size
+                      if w < 700 or h < 350:
+                          continue
+                      name=p.name.lower()
+                      score=w*h
+                      for word in ('hospital','building','exterior','front','facade'):
+                          if word in name: score += 10**9
+                      candidates.append((score,p))
+                  except Exception:
+                      pass
+              if not candidates:
+                  raise SystemExit(f'No suitable official image in {src}')
+              p=max(candidates)[1]
+              ext=p.suffix.lower()
+              if ext == '.jpeg': ext='.jpg'
+              out=Path(dest + ext)
+              for old in out.parent.glob(out.stem + '.*'):
+                  old.unlink()
+              shutil.copy2(p,out)
+              print(f'{p} -> {out}')
+
+          choose('/tmp/kokilaben-mumbai','assets/images/hospitals/kokilaben-mumbai')
+          choose('/tmp/kokilaben-navi','assets/images/hospitals/kokilaben-navi-mumbai')
+          PY
+
+      - name: Wire localized images into English and Arabic pages
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          targets = {
+            'kokilaben-dhirubhai-ambani-hospital-mumbai': 'kokilaben-mumbai',
+            'kokilaben-dhirubhai-ambani-hospital-navi-mumbai': 'kokilaben-navi-mumbai',
+          }
+          for slug, asset in targets.items():
+              matches=list(Path('assets/images/hospitals').glob(asset+'.*'))
+              if len(matches) != 1:
+                  raise SystemExit(f'Expected one localized asset for {asset}, got {matches}')
+              src='/' + matches[0].as_posix()
+              for page in [Path('hospitals')/slug/'index.html', Path('ar/hospitals')/slug/'index.html']:
+                  if not page.exists():
+                      continue
+                  text=page.read_text(encoding='utf-8')
+                  alt = 'Kokilaben Dhirubhai Ambani Hospital, Navi Mumbai' if 'navi-mumbai' in slug else 'Kokilaben Dhirubhai Ambani Hospital, Mumbai'
+                  img=f'<img src="{src}" alt="{alt}" loading="eager" decoding="async" style="width:100%;height:100%;min-height:240px;max-height:380px;object-fit:cover;border-radius:18px">'
+                  text=re.sub(r'<div[^>]+(?:hospital-image-pending|hospital-visual|box note)[^>]*role="img"[^>]*>.*?</div>', img, text, count=1, flags=re.S)
+                  page.write_text(text,encoding='utf-8')
+
+          for page in [Path('hospitals/index.html'),Path('ar/hospitals/index.html')]:
+              if not page.exists(): continue
+              text=page.read_text(encoding='utf-8')
+              for slug,asset in targets.items():
+                  matches=list(Path('assets/images/hospitals').glob(asset+'.*'))
+                  if not matches: continue
+                  src='/' + matches[0].as_posix()
+                  # Replace a placeholder image only inside the matching card when present.
+                  pat=rf'(<a[^>]+href="[^"]*{re.escape(slug)}/?"[^>]*>.*?</a>)'
+                  m=re.search(pat,text,re.S)
+                  if m:
+                      card=m.group(1)
+                      card=re.sub(r'src="[^"]*hospital-placeholder\.svg"',f'src="{src}"',card)
+                      text=text[:m.start()]+card+text[m.end():]
+              page.write_text(text,encoding='utf-8')
+          PY
+
+      - name: Commit verified local assets
+        shell: bash
+        run: |
+          if git diff --quiet && [ -z "$(git status --porcelain assets/images/hospitals)" ]; then
+            echo 'No changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/images/hospitals hospitals ar/hospitals
+          git commit -m 'Localize official Kokilaben hospital images'
+          git push
