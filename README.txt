@@ -1,22 +1,46 @@
-# Elajme India — Bilingual GCC Patient Coordination Website
+# Elajme India — Bilingual International Patient Coordination Website
 
-This is a responsive English/Arabic (RTL) static website starter.
+Elajme India is a responsive English/Arabic (RTL) static website for international patients considering treatment in India, with a focus on Arabic-speaking and GCC/MEA patients.
 
-## Files
-- index.html: homepage, services, treatment categories, process, FAQs and disclaimers
-- styles.css: responsive layout and Arabic RTL styling
-- script.js: language switch and WhatsApp links
+## Current website structure
+- English and Arabic homepages
+- Treatment pages
+- Hospital directory and hospital profiles
+- Doctor directory and doctor profiles
+- International patient and country landing pages
+- Patient Guide and Medical Visa guidance
+- About and Contact pages
+- Privacy Policy
+- Terms & Medical Disclaimer
+- Sitemap, robots.txt and custom 404 page
 
-## Before publishing
-1. Open `script.js` and replace `REPLACE_WITH_BUSINESS_WHATSAPP_NUMBER` with your business WhatsApp number in international format, digits only (example: `919876543210`).
-2. Review all copy and only list hospital names, accreditations, prices, testimonials or services that you can verify and are authorised to advertise.
-3. Add a privacy policy and terms page before collecting personal information.
-4. Do not use this static site to collect/upload medical reports. Set up a secure, consent-based process first. Current CTAs open WhatsApp with a prefilled enquiry message and do not collect reports on the website.
-5. Check brand name, domain and trademark availability before investing in branding.
+## Enquiry and communication flow
+- Business phone / WhatsApp: +91 74889 55154
+- Website enquiry forms prepare a case summary and continue the conversation through Elajme India.
+- Consultation and coordination enquiries should remain routed through Elajme India rather than directly through doctor or hospital enquiry channels.
+- Medical reports may be shared after contact through an agreed communication channel; the public static website does not provide a medical-report upload system.
 
-## Free publishing options
-- GitHub Pages: https://pages.github.com/
-- Cloudflare Pages: https://pages.cloudflare.com/
-- Netlify: https://www.netlify.com/
+## Medical and patient-safety positioning
+- Elajme India provides healthcare facilitation and international patient coordination; it is not a hospital, clinic or medical provider.
+- Diagnosis, treatment recommendations, clinical suitability and medical decisions remain with qualified healthcare professionals.
+- Treatment costs and estimates can change after examination, investigations or changes in the treatment plan.
+- Treatment outcomes, hospital acceptance and visa approval are not guaranteed.
+- Website and WhatsApp coordination channels are not emergency medical services.
 
-You can host the static files free under each provider's current free-plan limits. A custom domain usually costs extra. This starter does not include a backend, CRM, secure file upload, patient login or appointment system.
+## Publishing / migration checklist
+1. Preserve the canonical production domain: https://elajmeindia.com/
+2. Preserve English and Arabic URL paths during migration.
+3. Preserve sitemap.xml, robots.txt, 404.html, privacy.html and terms.html.
+4. Preserve redirects/routing for directory-style URLs ending in `/`.
+5. Confirm the business phone/WhatsApp number remains +91 74889 55154.
+6. Test the enquiry form and WhatsApp continuation on desktop and mobile.
+7. Test EN↔AR language switches and RTL presentation.
+8. Verify internal links, images, CSS and JavaScript after deployment.
+9. Keep HTTPS enabled and submit the production sitemap to search engines after launch.
+10. Re-check hospital/doctor information periodically and avoid unsupported rankings, guarantees or claims.
+
+## Hosting
+The site is currently maintained in this GitHub repository. The planned production migration is to GoDaddy hosting after final QA. The site is static and does not require a backend for its current public pages.
+
+## Important limitation
+This repository does not include a CRM, patient login, secure medical-record portal or appointment-management backend. Any future collection or storage of sensitive medical documents should use an appropriately secured, consent-based system rather than a simple public web form.
