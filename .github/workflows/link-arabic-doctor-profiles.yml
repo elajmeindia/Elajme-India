@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'ar/doctors/*/index.html'
       - '.github/workflows/link-arabic-doctor-profiles.yml'
 
 permissions:
