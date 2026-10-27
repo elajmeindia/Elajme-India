@@ -12,7 +12,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Propagate verified doctor portraits to English and Arabic directories
+      - name: Localize verified first-party doctor portraits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/images/doctors
+          fetch_image() {
+            local url="$1" out="$2"
+            if [ -s "$out" ]; then
+              echo "Already local: $out"
+              return 0
+            fi
+            tmp="${out}.tmp"
+            curl -fL --retry 3 --connect-timeout 20 -A 'Mozilla/5.0' "$url" -o "$tmp"
+            test -s "$tmp"
+            mv "$tmp" "$out"
+            echo "Localized: $out"
+          }
+          fetch_image 'https://d35oenyzp35321.cloudfront.net/Dr_Abhideep_Chaudhary_9f61965dec.jpg' 'assets/images/doctors/dr-abhideep-chaudhary.jpg'
+          fetch_image 'https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ' 'assets/images/doctors/dr-anil-mandhani.jpg'
+          fetch_image 'https://d35oenyzp35321.cloudfront.net/Dr_SG_da91d515bc.jpg' 'assets/images/doctors/prof-dr-subhash-gupta.jpg'
+      - name: Propagate verified local doctor portraits to English and Arabic directories
         shell: bash
         run: |
           set -euo pipefail
@@ -20,16 +40,16 @@ jobs:
           from pathlib import Path
           import re
 
-          # Sources already verified on the corresponding Elajme India doctor profiles.
+          # Only local assets are used in Elajme directory cards. The files above are downloaded
+          # from the already verified first-party hospital/CDN sources before this mapping runs.
           verified = {
-              'dr-abhideep-chaudhary': 'https://d35oenyzp35321.cloudfront.net/Dr_Abhideep_Chaudhary_9f61965dec.jpg',
-              'dr-anil-mandhani': 'https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ',
-              'prof-dr-subhash-gupta': 'https://d35oenyzp35321.cloudfront.net/Dr_SG_da91d515bc.jpg',
+              'dr-abhideep-chaudhary': '/assets/images/doctors/dr-abhideep-chaudhary.jpg',
+              'dr-anil-mandhani': '/assets/images/doctors/dr-anil-mandhani.jpg',
+              'prof-dr-subhash-gupta': '/assets/images/doctors/prof-dr-subhash-gupta.jpg',
               'dr-sanjay-gogoi': '/assets/images/doctors/dr-sanjay-gogoi.png',
           }
 
           def replace_card_image(text, slug, src, css_class):
-              # Match a directory card by its profile href, then replace only that card's image.
               href_slugs = [slug]
               if slug.startswith('prof-dr-'):
                   href_slugs.append(slug.replace('prof-dr-', 'dr-', 1))
@@ -54,15 +74,14 @@ jobs:
           for p, cls in targets:
               if not p.exists():
                   continue
-              text=p.read_text(encoding='utf-8')
-              old=text
+              text=p.read_text(encoding='utf-8'); old=text
               for slug, src in verified.items():
                   text=replace_card_image(text, slug, src, cls)
               if text != old:
                   p.write_text(text, encoding='utf-8')
                   changed.append(str(p))
 
-          # Also map every exact same-slug local portrait onto any remaining placeholder cards.
+          # Map every exact same-slug local portrait onto matching directory cards.
           assets=Path('assets/images/doctors')
           image_exts={'.jpg','.jpeg','.png','.webp','.avif'}
           local={p.stem.lower(): '/assets/images/doctors/'+p.name for p in assets.iterdir() if p.is_file() and p.suffix.lower() in image_exts}
@@ -80,15 +99,15 @@ jobs:
           for p in sorted(set(changed)):
               print(' -',p)
           PY
-      - name: Commit directory portrait propagation
+      - name: Commit localized portraits and directory mappings
         shell: bash
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add doctors/index.html ar/doctors/index.html
+          git add assets/images/doctors doctors/index.html ar/doctors/index.html
           if git diff --cached --quiet; then
-            echo 'No directory portrait changes were needed.'
+            echo 'No portrait or directory changes were needed.'
             exit 0
           fi
-          git commit -m 'Propagate verified doctor portraits to directories'
+          git commit -m 'Localize verified doctor portraits and update directories'
           git push
