@@ -1,6 +1,7 @@
-name: Map local profile images
+name: Map verified profile images
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/map-local-profile-images.yml'
   workflow_dispatch:
@@ -11,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Map existing local doctor and hospital images
+      - name: Propagate verified doctor portraits to English and Arabic directories
         shell: bash
         run: |
           set -euo pipefail
@@ -19,102 +20,75 @@ jobs:
           from pathlib import Path
           import re
 
-          root = Path('.')
-          doctor_assets = root / 'assets/images/doctors'
-          hospital_assets = root / 'assets/images/hospitals'
-          image_exts = {'.jpg','.jpeg','.png','.webp','.avif'}
+          # Sources already verified on the corresponding Elajme India doctor profiles.
+          verified = {
+              'dr-abhideep-chaudhary': 'https://d35oenyzp35321.cloudfront.net/Dr_Abhideep_Chaudhary_9f61965dec.jpg',
+              'dr-anil-mandhani': 'https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ',
+              'prof-dr-subhash-gupta': 'https://d35oenyzp35321.cloudfront.net/Dr_SG_da91d515bc.jpg',
+              'dr-sanjay-gogoi': '/assets/images/doctors/dr-sanjay-gogoi.png',
+          }
 
-          def assets_by_stem(folder):
-              return {p.stem.lower(): p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in image_exts}
-
-          doctors = assets_by_stem(doctor_assets)
-          hospitals = assets_by_stem(hospital_assets)
-          changed = []
-
-          # Doctor directory: replace placeholders only when a same-slug local portrait exists.
-          p = root / 'doctors/index.html'
-          text = p.read_text(encoding='utf-8')
-          old = text
-          for slug, asset in doctors.items():
-              if not slug.startswith('dr-') and not slug.startswith('prof-dr-'):
-                  continue
-              profile_slug = slug.replace('prof-dr-','dr-',1)
-              pattern = re.compile(r'(<article class="card".*?<a class="outline" href="'+re.escape(profile_slug)+r'/">.*?</article>)', re.S)
-              m = pattern.search(text)
-              if not m:
-                  continue
-              card = m.group(1)
-              if 'doctor-placeholder.svg' not in card:
-                  continue
-              altm = re.search(r'<h2>(.*?)</h2>', card, re.S)
-              alt = re.sub('<[^>]+>','',altm.group(1)).strip() if altm else profile_slug.replace('-',' ').title()
-              src = '../assets/images/doctors/' + asset.name
-              newcard = re.sub(r'<img class="photo"[^>]*src="[^"]*doctor-placeholder\.svg"[^>]*>', f'<img class="photo" loading="lazy" src="{src}" alt="{alt}" decoding="async">', card, count=1)
-              text = text[:m.start(1)] + newcard + text[m.end(1):]
-          if text != old:
-              p.write_text(text, encoding='utf-8'); changed.append(str(p))
-
-          # Doctor profile pages: replace letter/fallback hero only when exact local portrait exists.
-          for profile in (root/'doctors').glob('*/index.html'):
-              slug = profile.parent.name.lower()
-              asset = doctors.get(slug) or doctors.get('prof-'+slug)
-              if not asset:
-                  continue
-              text = profile.read_text(encoding='utf-8'); old = text
-              src = '../../assets/images/doctors/' + asset.name
-              h1 = re.search(r'<h1>(.*?)</h1>', text, re.S)
-              alt = re.sub('<[^>]+>','',h1.group(1)).strip() if h1 else slug.replace('-',' ').title()
-              text = re.sub(r'<div class="profile-photo profile-photo-fallback"[^>]*>.*?</div>', f'<div class="profile-photo"><img src="{src}" alt="{alt}" loading="eager" decoding="async"></div>', text, count=1, flags=re.S)
-              if text != old:
-                  profile.write_text(text, encoding='utf-8'); changed.append(str(profile))
-
-          # Hospital directory: replace placeholder only when a matching local hospital image exists.
-          p = root / 'hospitals/index.html'
-          if p.exists():
-              text = p.read_text(encoding='utf-8'); old = text
+          def replace_card_image(text, slug, src, css_class):
+              # Match a directory card by its profile href, then replace only that card's image.
+              href_slugs = [slug]
+              if slug.startswith('prof-dr-'):
+                  href_slugs.append(slug.replace('prof-dr-', 'dr-', 1))
               cards = list(re.finditer(r'<article class="card".*?</article>', text, re.S))
-              # Work backwards so offsets remain valid.
               for m in reversed(cards):
                   card = m.group(0)
-                  if 'hospital-placeholder.svg' not in card:
-                      continue
-                  href = re.search(r'href="([a-z0-9-]+)/">View Hospital Profile', card)
-                  if not href:
-                      continue
-                  slug = href.group(1)
-                  # Conservative aliases for filenames already used in this repository.
-                  candidates = [slug, slug.replace('-hospital',''), slug.replace('-super-speciality-hospital',''), slug.replace('-hospitals','')]
-                  asset = next((hospitals.get(x) for x in candidates if hospitals.get(x)), None)
-                  if not asset:
+                  if not any((s + '/') in card for s in href_slugs):
                       continue
                   h2 = re.search(r'<h2>(.*?)</h2>', card, re.S)
-                  alt = re.sub('<[^>]+>','',h2.group(1)).strip() if h2 else slug.replace('-',' ').title()
-                  src = '../assets/images/hospitals/' + asset.name
-                  newcard = re.sub(r'<img class="photo"[^>]*src="[^"]*hospital-placeholder\.svg"[^>]*>', f'<img class="photo" loading="lazy" src="{src}" alt="{alt}" decoding="async">', card, count=1)
-                  text = text[:m.start()] + newcard + text[m.end():]
-              if text != old:
-                  p.write_text(text, encoding='utf-8'); changed.append(str(p))
+                  alt = re.sub(r'<[^>]+>', '', h2.group(1)).strip() if h2 else slug.replace('-', ' ').title()
+                  img = f'<img class="{css_class}" loading="lazy" src="{src}" alt="{alt}" decoding="async">'
+                  newcard, n = re.subn(rf'<img class="{re.escape(css_class)}"[^>]*>', img, card, count=1)
+                  if n:
+                      text = text[:m.start()] + newcard + text[m.end():]
+              return text
 
-          # Add resilient local fallbacks to both directories so a bad asset never renders broken UI.
-          for p, fallback in [(root/'doctors/index.html','../assets/images/doctors/doctor-placeholder.svg'),(root/'hospitals/index.html','../assets/images/hospitals/hospital-placeholder.svg')]:
-              if not p.exists(): continue
-              text = p.read_text(encoding='utf-8'); old = text
-              text = re.sub(r'<img class="photo"(?![^>]*onerror=)', lambda m: '<img class="photo" onerror="this.onerror=null;this.src=\''+fallback+'\'"', text)
+          changed=[]
+          targets=[
+              (Path('doctors/index.html'), 'photo'),
+              (Path('ar/doctors/index.html'), 'directory-photo'),
+          ]
+          for p, cls in targets:
+              if not p.exists():
+                  continue
+              text=p.read_text(encoding='utf-8')
+              old=text
+              for slug, src in verified.items():
+                  text=replace_card_image(text, slug, src, cls)
               if text != old:
-                  p.write_text(text, encoding='utf-8'); changed.append(str(p))
+                  p.write_text(text, encoding='utf-8')
+                  changed.append(str(p))
 
-          print('Updated files:')
-          for x in sorted(set(changed)): print(' -', x)
+          # Also map every exact same-slug local portrait onto any remaining placeholder cards.
+          assets=Path('assets/images/doctors')
+          image_exts={'.jpg','.jpeg','.png','.webp','.avif'}
+          local={p.stem.lower(): '/assets/images/doctors/'+p.name for p in assets.iterdir() if p.is_file() and p.suffix.lower() in image_exts}
+          for p, cls in targets:
+              if not p.exists():
+                  continue
+              text=p.read_text(encoding='utf-8'); old=text
+              for slug, src in local.items():
+                  text=replace_card_image(text, slug, src, cls)
+              if text != old:
+                  p.write_text(text, encoding='utf-8')
+                  changed.append(str(p))
+
+          print('Updated:')
+          for p in sorted(set(changed)):
+              print(' -',p)
           PY
-      - name: Commit image mapping updates
+      - name: Commit directory portrait propagation
         shell: bash
         run: |
           git config user.name 'Elajme India Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add doctors hospitals
+          git add doctors/index.html ar/doctors/index.html
           if git diff --cached --quiet; then
-            echo 'No additional local image mappings were available.'
+            echo 'No directory portrait changes were needed.'
             exit 0
           fi
-          git commit -m 'Map available local images to profiles and directories'
+          git commit -m 'Propagate verified doctor portraits to directories'
           git push
