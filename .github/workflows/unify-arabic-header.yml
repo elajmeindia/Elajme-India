@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Standardize Arabic header structure
+      - name: Standardize and QA Arabic header structure
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -23,6 +23,7 @@ jobs:
 
           root = Path('ar')
           pages = list(root.rglob('*.html'))
+          wa_url = 'https://wa.me/917488955154?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20%D8%B9%D9%84%D8%A7%D8%AC%20%D9%85%D9%8A%20%D8%A5%D9%86%D8%AF%D9%8A%D8%A7%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AA%D9%86%D8%B3%D9%8A%D9%82%20%D8%A7%D9%84%D8%B9%D9%84%D8%A7%D8%AC%20%D9%81%D9%8A%20%D8%A7%D9%84%D9%87%D9%86%D8%AF.'
 
           def active(path, key):
               p='/' + str(path).replace('\\','/')
@@ -46,23 +47,49 @@ jobs:
               if p == '/ar/contact/index.html': return '/contact/'
               return '/'
 
+          changed=0
           for path in pages:
               text=path.read_text(encoding='utf-8')
               if '<header' not in text:
                   continue
-              # Keep the same primary information architecture as English:
-              # Home, Treatments, Hospitals, Doctors, International Patients, About, Contact.
-              header=f'''<header class="shell-header"><div class="shell-container shell-nav"><a class="shell-brand" href="/?lang=ar"><img src="/Healthcare%20Travel%20Swoosh%20Emblem.png" alt="شعار علاج مي إنديا" decoding="async"><span class="shell-wordmark"><span class="shell-name">Elajme <b>India</b></span><span class="shell-ar">علاج مي إنديا</span></span></a><nav class="shell-links" aria-label="التنقل الرئيسي"><a href="/?lang=ar">الرئيسية</a><a href="/ar/treatments/"{active(path,'treatments')}>العلاجات</a><a href="/ar/hospitals/"{active(path,'hospitals')}>المستشفيات</a><a href="/ar/doctors/"{active(path,'doctors')}>الأطباء</a><a href="/ar/international-patients/mea/"{active(path,'international')}>المرضى الدوليون</a><a href="/ar/about/"{active(path,'about')}>من نحن</a><a href="/ar/contact/"{active(path,'contact')}>اتصل بنا</a></nav><div class="shell-actions"><a class="shell-phone" href="tel:+917488955154">+91 74889 55154</a><a class="shell-lang" href="{english_url(path)}">English</a><a class="shell-cta" href="/#enquiry">ابدأ استفسارك</a></div></div></header>'''
+              header=f'''<header class="shell-header"><div class="shell-container shell-nav"><a class="shell-brand" href="/ar/"><img src="/Healthcare%20Travel%20Swoosh%20Emblem.png" alt="شعار علاج مي إنديا" decoding="async"><span class="shell-wordmark"><span class="shell-name">Elajme <b>India</b></span><span class="shell-ar">علاج مي إنديا</span></span></a><nav class="shell-links" aria-label="التنقل الرئيسي"><a href="/ar/">الرئيسية</a><a href="/ar/treatments/"{active(path,'treatments')}>العلاجات</a><a href="/ar/hospitals/"{active(path,'hospitals')}>المستشفيات</a><a href="/ar/doctors/"{active(path,'doctors')}>الأطباء</a><a href="/ar/international-patients/mea/"{active(path,'international')}>المرضى الدوليون</a><a href="/ar/about/"{active(path,'about')}>من نحن</a><a href="/ar/contact/"{active(path,'contact')}>تواصل معنا</a></nav><div class="shell-actions"><a class="shell-phone" href="tel:+917488955154" aria-label="+91 74889 55154"><bdi>+91 74889 55154</bdi></a><a class="shell-whatsapp" href="{wa_url}" target="_blank" rel="noopener noreferrer" aria-label="تواصل عبر واتساب">واتساب</a><a class="shell-lang" href="{english_url(path)}">English</a><a class="shell-cta" href="/ar/#enquiry">ابدأ استفسارك</a></div></div></header>'''
               text2=re.sub(r'<header\b[^>]*>.*?</header>', header, text, count=1, flags=re.S)
-              if text2 == text:
-                  continue
               if '/assets/css/site-shell.css' not in text2:
                   text2=text2.replace('</head>','<link rel="stylesheet" href="/assets/css/site-shell.css"></head>',1)
-              # shell header works independently, while this class makes shared typography consistent.
               text2=re.sub(r'<body(?![^>]*class=)([^>]*)>', r'<body class="site-shell"\1>', text2, count=1)
-              path.write_text(text2,encoding='utf-8')
+              if text2 != text:
+                  path.write_text(text2,encoding='utf-8')
+                  changed += 1
+
+          css_path=Path('assets/css/site-shell.css')
+          css=css_path.read_text(encoding='utf-8')
+          # Remove the old visual-only pseudo WhatsApp control.
+          css=re.sub(r'\.shell-actions:before\{.*?\}\.shell-actions:hover:before\{.*?\}\[dir="rtl"\] \.shell-actions:before\{.*?\}', '', css, count=1)
+          # Remove old responsive pseudo-element rules if present.
+          css=re.sub(r'\.shell-actions:before\{font-size:0;width:36px;min-width:36px;padding:0\}\.shell-actions:before\{content:"WA"\}\[dir="rtl"\] \.shell-actions:before\{content:"WA"\}', '', css)
+          css=re.sub(r'\.shell-actions:before\{content:"WA";font-size:11px;width:40px;min-width:40px;height:40px;padding:0\}', '', css)
+          if '.shell-whatsapp{' not in css:
+              anchor='.shell-lang{'
+              rule='.shell-whatsapp{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 10px;border:1px solid #bfe7d1;border-radius:10px;background:#effbf4;color:#147a4c!important;font-size:11px;font-weight:800;white-space:nowrap;flex:0 0 auto}.shell-whatsapp:hover{background:#e6f8ee;color:#10683f!important}.shell-whatsapp:focus-visible{outline:3px solid rgba(32,168,107,.25);outline-offset:3px}'
+              css=css.replace(anchor,rule+anchor,1)
+          # Compact the real WhatsApp link at narrower desktop/tablet widths.
+          css=css.replace('@media(max-width:1160px) and (min-width:1041px){','@media(max-width:1160px) and (min-width:1041px){.shell-whatsapp{font-size:0;width:36px;min-width:36px;padding:0}.shell-whatsapp:after{content:"WA";font-size:10px}',1)
+          css=css.replace('@media(max-width:1040px){','@media(max-width:1040px){.shell-whatsapp{font-size:0;width:40px;min-width:40px;height:40px;padding:0}.shell-whatsapp:after{content:"WA";font-size:11px}',1)
+          css_path.write_text(css,encoding='utf-8')
+
+          # QA assertions: fail the workflow rather than silently shipping a broken header.
+          for path in pages:
+              text=path.read_text(encoding='utf-8')
+              if '<header' not in text: continue
+              assert 'تواصل معنا' in text, f'Missing contact label: {path}'
+              assert 'class="shell-whatsapp"' in text, f'Missing WhatsApp link: {path}'
+              assert 'https://wa.me/917488955154' in text, f'Broken WhatsApp target: {path}'
+              assert 'class="shell-phone"' in text and '+91 74889 55154' in text, f'Missing phone: {path}'
+              header=text.split('</header>',1)[0]
+              assert 'اتصل بنا' not in header, f'Old call label remains in header: {path}'
+          print(f'QA passed for {len(pages)} Arabic HTML files; updated {changed} headers.')
           PY
-      - name: Commit Arabic header standardization
+      - name: Commit Arabic header QA fixes
         run: |
           if git diff --quiet; then
             echo "No changes needed"
@@ -70,6 +97,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ar
-          git commit -m "Unify Arabic portal header with English structure"
+          git add ar assets/css/site-shell.css
+          git commit -m "QA Arabic headers and enable WhatsApp action"
           git push
