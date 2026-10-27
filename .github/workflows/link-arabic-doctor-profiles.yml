@@ -1,0 +1,58 @@
+name: Link Arabic doctor profiles
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/link-arabic-doctor-profiles.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  link-profiles:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Link available Arabic doctor profiles
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('ar/doctors/index.html')
+          s = p.read_text(encoding='utf-8')
+
+          slugs = [
+              'dr-abhideep-chaudhary',
+              'dr-aditya-gupta',
+              'dr-anil-mandhani',
+              'dr-harsh-dua',
+              'prof-dr-subhash-gupta',
+              'dr-anurag-shrimal',
+              'dr-amit-gharat',
+              'dr-pushpak-chirmade',
+          ]
+
+          for slug in slugs:
+              ar_profile = Path('ar/doctors') / slug / 'index.html'
+              if not ar_profile.exists():
+                  continue
+              english = f'<a href="/doctors/{slug}/">عرض الملف التعريفي بالإنجليزية</a>'
+              bilingual = (f'<a href="/ar/doctors/{slug}/">عرض الملف التعريفي بالعربية</a> · '
+                           f'<a href="/doctors/{slug}/" lang="en" dir="ltr">English profile</a>')
+              s = s.replace(english, bilingual)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then
+            echo 'No directory links needed updating.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ar/doctors/index.html
+          git commit -m 'Link Arabic doctor cards to Arabic profiles'
+          git push
