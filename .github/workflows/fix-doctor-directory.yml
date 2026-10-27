@@ -1,4 +1,4 @@
-name: Fix doctor directory consistency
+name: Fix directory consistency
 
 on:
   push:
@@ -14,41 +14,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply verified doctor directory fixes
+      - name: Add missing Jaslok hospital directory cards
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          p = Path('doctors/index.html')
+          p = Path('hospitals/index.html')
           s = p.read_text(encoding='utf-8')
-          replacements = {
-            '<p class="muted">BLK-Max, Delhi · Max Dwarka</p>': '<p class="muted">BLK-Max Super Speciality Hospital, New Delhi</p>',
-            '<img class="photo" loading="lazy" src="https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ" alt="Dr. Anil Mandhani" decoding="async">': '<img class="photo" loading="lazy" src="https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ" alt="Dr. Anil Mandhani" decoding="async" onerror="this.onerror=null;this.src=\'/assets/images/doctors/doctor-placeholder.svg\';this.alt=\'Doctor image unavailable\';">',
-            '<p class="spec">Urology</p><p class="muted">Fortis Healthcare · Delhi NCR</p>': '<p class="spec">Urology · Uro-Oncology · Robotic Surgery · Kidney Transplant</p><p class="muted">Fortis Memorial Research Institute, Gurugram</p>',
-          }
-          for old, new in replacements.items():
-              if old not in s:
-                  raise SystemExit(f'Expected English directory text not found: {old}')
-              s = s.replace(old, new, 1)
-          p.write_text(s, encoding='utf-8')
+          slug = '/hospitals/jaslok-hospital-mumbai/'
+          if slug not in s:
+              marker = '</div><div class="notice">'
+              card = '''<article class="card" data-city="Mumbai" data-search="jaslok hospital pedder road mumbai oncology cardiac neuro transplant"><div class="media"><img class="photo" onerror="this.onerror=null;this.src='/assets/images/hospitals/hospital-placeholder.svg'" loading="lazy" src="/assets/images/hospitals/jaslok-mumbai.png" alt="Jaslok Hospital and Research Centre, Mumbai" decoding="async"></div><div class="body"><h2>Jaslok Hospital and Research Centre</h2><p class="muted">Pedder Road, Mumbai</p><p><span class="tag">Oncology</span><span class="tag">Cardiac Sciences</span><span class="tag">Neurosciences</span><span class="tag">Transplants</span></p><div class="actions"><a class="btn secondary" href="/hospitals/jaslok-hospital-mumbai/">View Hospital Profile</a><a class="btn" href="/#enquiry">Enquire through Elajme India</a></div></div></article>\n'''
+              if marker not in s:
+                  raise SystemExit('English directory insertion marker not found')
+              s = s.replace(marker, card + marker, 1)
+              p.write_text(s, encoding='utf-8')
 
-          p = Path('ar/doctors/index.html')
+          p = Path('ar/hospitals/index.html')
           s = p.read_text(encoding='utf-8')
-          # Normalize Harsh Dua placeholder paths and remove wording that implies a portrait is pending.
-          s = s.replace('../../assets/images/doctors/doctor-placeholder.svg', '/assets/images/doctors/doctor-placeholder.svg')
-          s = s.replace('../assets/images/doctors/doctor-placeholder.svg', '/assets/images/doctors/doctor-placeholder.svg')
-          s = s.replace('صورة مؤقتة للطبيب', 'صورة تعريفية محايدة')
-          s = s.replace('صورة مؤقتة', 'صورة تعريفية محايدة')
-          p.write_text(s, encoding='utf-8')
+          slug = '/ar/hospitals/jaslok-hospital-mumbai/'
+          if slug not in s:
+              marker = '</div><div class="notice">'
+              card = '''<article class="card"><img class="directory-photo hospital" loading="lazy" decoding="async" src="/assets/images/hospitals/jaslok-mumbai.png" alt="مستشفى جاسلوك ومركز الأبحاث، مومباي"><h2><a href="/ar/hospitals/jaslok-hospital-mumbai/">مستشفى جاسلوك ومركز الأبحاث</a></h2><p>بيدر رود، مومباي</p><p>الأورام · القلب · الأعصاب · زراعة الأعضاء</p><p><a href="/hospitals/jaslok-hospital-mumbai/" hreflang="en">عرض ملف المستشفى بالإنجليزية</a></p><a class="btn" href="/ar/#enquiry">استفسر عبر علاج مي إنديا</a></article>\n'''
+              if marker not in s:
+                  raise SystemExit('Arabic directory insertion marker not found')
+              s = s.replace(marker, card + marker, 1)
+              p.write_text(s, encoding='utf-8')
           PY
       - name: Commit fixes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add doctors/index.html ar/doctors/index.html
+          git add hospitals/index.html ar/hospitals/index.html
           if git diff --cached --quiet; then
             echo "No changes required"
           else
-            git commit -m "Fix doctor directory associations and image fallbacks"
+            git commit -m "Add Jaslok to hospital directories"
             git push
           fi
