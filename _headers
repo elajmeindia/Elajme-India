@@ -6,31 +6,10 @@
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Cross-Origin-Opener-Policy: same-origin-allow-popups
   X-Permitted-Cross-Domain-Policies: none
-  Cache-Control: public, max-age=0, must-revalidate
 
-/assets/*
-  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
-
-/*.css
-  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
-
-/*.js
-  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
-
-/*.html
-  Cache-Control: public, max-age=0, must-revalidate
-
-/*.png
-  Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
-
-/*.jpg
-  Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
-
-/*.jpeg
-  Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
-
-/*.webp
-  Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+# Cloudflare Pages manages static-asset caching and invalidates assets on deployment.
+# Keep application assets on Pages defaults because current CSS/JS/image filenames
+# are not content-hashed; long browser max-age values could otherwise serve stale files.
 
 /robots.txt
   Cache-Control: public, max-age=3600
