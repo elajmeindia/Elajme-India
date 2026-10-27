@@ -1,9 +1,8 @@
 # Elajme India — Cloudflare Pages redirects
-# Keep legacy language-query URLs and direct index.html requests on canonical paths.
+# Canonicalize direct index.html requests to clean public paths.
 
 /index.html / 301
 /ar/index.html /ar/ 301
 
-# Legacy Arabic homepage/enquiry links previously used ?lang=ar.
-/?lang=ar /ar/ 301
-/index.html?lang=ar /ar/ 301
+# Note: Cloudflare Pages _redirects does not support matching query parameters.
+# Legacy ?lang=ar handling remains in the homepage JavaScript where required.
