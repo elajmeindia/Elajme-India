@@ -1,0 +1,54 @@
+name: Fix doctor directory consistency
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-doctor-directory.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix-directory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply verified doctor directory fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('doctors/index.html')
+          s = p.read_text(encoding='utf-8')
+          replacements = {
+            '<p class="muted">BLK-Max, Delhi · Max Dwarka</p>': '<p class="muted">BLK-Max Super Speciality Hospital, New Delhi</p>',
+            '<img class="photo" loading="lazy" src="https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ" alt="Dr. Anil Mandhani" decoding="async">': '<img class="photo" loading="lazy" src="https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ" alt="Dr. Anil Mandhani" decoding="async" onerror="this.onerror=null;this.src=\'/assets/images/doctors/doctor-placeholder.svg\';this.alt=\'Doctor image unavailable\';">',
+            '<p class="spec">Urology</p><p class="muted">Fortis Healthcare · Delhi NCR</p>': '<p class="spec">Urology · Uro-Oncology · Robotic Surgery · Kidney Transplant</p><p class="muted">Fortis Memorial Research Institute, Gurugram</p>',
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'Expected English directory text not found: {old}')
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('ar/doctors/index.html')
+          s = p.read_text(encoding='utf-8')
+          # Normalize Harsh Dua placeholder paths and remove wording that implies a portrait is pending.
+          s = s.replace('../../assets/images/doctors/doctor-placeholder.svg', '/assets/images/doctors/doctor-placeholder.svg')
+          s = s.replace('../assets/images/doctors/doctor-placeholder.svg', '/assets/images/doctors/doctor-placeholder.svg')
+          s = s.replace('صورة مؤقتة للطبيب', 'صورة تعريفية محايدة')
+          s = s.replace('صورة مؤقتة', 'صورة تعريفية محايدة')
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add doctors/index.html ar/doctors/index.html
+          if git diff --cached --quiet; then
+            echo "No changes required"
+          else
+            git commit -m "Fix doctor directory associations and image fallbacks"
+            git push
+          fi
