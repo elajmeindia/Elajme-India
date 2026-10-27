@@ -79,15 +79,12 @@ jobs:
                   save_image(asset,data,u+' :: '+label)
               except Exception as e: print(asset,'page extraction failed:',e)
 
-          # Official Gleneagles Parel page. Try the exact About-page image first,
-          # then first-party Parel/Mumbai facility-labelled images exposed in HTML.
           gleneagles='https://cdn-assets-eu.frontify.com/s3/frontify-enterprise-files-eu/eyJvYXV0aCI6eyJjbGllbnRfaWQiOiJjbGllbnQtY2hkcnR4NWphaHV0Y2hsdiJ9LCJwYXRoIjoiaWhoLWhlYWx0aGNhcmUtYmVyaGFkXC9maWxlXC9MejNreFloVnZ0V1JWTWJYNGI5Ti5qcGcifQ%3Aihh-healthcare-berhad%3AbdsF7grt2weDNfX-CTG3F7j3cTl58Rmy0YIz8nJ5HAw?crop=fp&fp=0.5%2C0.5&fp_zoom=1&height=326&width=370'
           try: save_image('gleneagles-parel',get(gleneagles).content,gleneagles)
           except Exception as e:
               print('Gleneagles exact image failed:',e)
               first_party_page_image('gleneagles-parel','https://www.gleneagleshospitals.co.in/mumbai/parel/about-us',('gleneagleshospitals.co.in','frontify.com'),('mumbai hospitals','mum-i','parel','hospital'),('logo','trophy','award','doctor','patient','blog','media'))
 
-          # Official Kokilaben press-kit archives.
           zips=[
             ('kokilaben-mumbai','https://kdahweb-static.kokilabenhospital.com/downloads/KDAH_Hospital.zip'),
             ('kokilaben-navi-mumbai','https://s3.us-west-2.amazonaws.com/kdahweb-static.kokilabenhospital.com/kdah-2019/navimumbai/hospital-building.zip'),
@@ -110,16 +107,10 @@ jobs:
                   candidates.sort(reverse=True); _,name,data,w,h=candidates[0]; save_image(asset,data,url+' :: '+name)
               except Exception as e: print(asset,'archive failed:',e)
 
-          # If Mumbai press-kit archive is temporarily unavailable, use only a
-          # facility-labelled first-party image from Kokilaben's own site/CDN.
           if not list(OUT.glob('kokilaben-mumbai.*')):
               first_party_page_image('kokilaben-mumbai','https://www.kokilabenhospital.com/contacts/mapsanddirection.html',('kokilabenhospital.com',),('kokilaben','maps and directions','hospital'),('logo','airport','doctor','patient'))
 
-          # Nanavati Max: official facility page contains hospital/tower imagery.
           first_party_page_image('nanavati-max-mumbai','https://www.nanavatimaxhospital.org/nanavati-max',('nanavatimaxhospital.org','maxhealthcare.in','amazonaws.com'),('nanavati','hospital','tower'),('doctor','patient','room','icu','lobby','opd','emergency','da vinci','ot'))
-
-          # Jaslok: use only a first-party hospital/facility image; room-only
-          # gallery images are intentionally rejected.
           first_party_page_image('jaslok-mumbai','https://jaslokhospital.net/',('jaslokhospital.net',),('jaslok','hospital'),('doctor','patient','room','slide','logo','app','qr'))
           PY
 
@@ -134,7 +125,7 @@ jobs:
             'kokilaben-dhirubhai-ambani-hospital-mumbai':('kokilaben-mumbai','Kokilaben Dhirubhai Ambani Hospital, Mumbai'),
             'kokilaben-dhirubhai-ambani-hospital-navi-mumbai':('kokilaben-navi-mumbai','Kokilaben Dhirubhai Ambani Hospital, Navi Mumbai'),
             'nanavati-max-super-speciality-hospital-mumbai':('nanavati-max-mumbai','Nanavati Max Super Speciality Hospital, Mumbai'),
-            'jaslok-hospital-research-centre-mumbai':('jaslok-mumbai','Jaslok Hospital and Research Centre, Mumbai'),
+            'jaslok-hospital-mumbai':('jaslok-mumbai','Jaslok Hospital and Research Centre, Mumbai'),
             'sir-hn-reliance-foundation-hospital-mumbai':('sir-hn-reliance-mumbai','Sir H. N. Reliance Foundation Hospital and Research Centre, Mumbai'),
           }
           for slug,(asset,alt) in targets.items():
