@@ -27,11 +27,11 @@ Elajme India is a responsive English/Arabic (RTL) static website for internation
 - Treatment outcomes, hospital acceptance and visa approval are not guaranteed.
 - Website and WhatsApp coordination channels are not emergency medical services.
 
-## Publishing / migration checklist
+## Cloudflare deployment checklist
 1. Preserve the canonical production domain: https://elajmeindia.com/
-2. Preserve English and Arabic URL paths during migration.
+2. Preserve English and Arabic URL paths during deployment.
 3. Preserve sitemap.xml, robots.txt, 404.html, privacy.html and terms.html.
-4. Preserve redirects/routing for directory-style URLs ending in `/`.
+4. Preserve directory-style URLs ending in `/`.
 5. Confirm the business phone/WhatsApp number remains +91 74889 55154.
 6. Test the enquiry form and WhatsApp continuation on desktop and mobile.
 7. Test EN↔AR language switches and RTL presentation.
@@ -40,7 +40,7 @@ Elajme India is a responsive English/Arabic (RTL) static website for internation
 10. Re-check hospital/doctor information periodically and avoid unsupported rankings, guarantees or claims.
 
 ## Hosting
-The site is currently maintained in this GitHub repository. The planned production migration is to GoDaddy hosting after final QA. The site is static and does not require a backend for its current public pages.
+The site is maintained in this GitHub repository and is intended for Cloudflare-based production deployment. The existing `_headers` file contains Cloudflare-compatible security and caching directives for the static site. The site does not require a backend for its current public pages.
 
 ## Important limitation
 This repository does not include a CRM, patient login, secure medical-record portal or appointment-management backend. Any future collection or storage of sensitive medical documents should use an appropriately secured, consent-based system rather than a simple public web form.
