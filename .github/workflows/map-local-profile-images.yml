@@ -18,16 +18,21 @@ jobs:
           set -euo pipefail
           mkdir -p assets/images/doctors
           fetch_image() {
-            local url="$1" out="$2"
+            local url="$1" out="$2" tmp
             if [ -s "$out" ]; then
               echo "Already local: $out"
               return 0
             fi
             tmp="${out}.tmp"
-            curl -fL --retry 3 --connect-timeout 20 -A 'Mozilla/5.0' "$url" -o "$tmp"
-            test -s "$tmp"
-            mv "$tmp" "$out"
-            echo "Localized: $out"
+            rm -f "$tmp"
+            if curl -fL --retry 3 --connect-timeout 20 -A 'Mozilla/5.0' "$url" -o "$tmp" && [ -s "$tmp" ]; then
+              mv "$tmp" "$out"
+              echo "Localized: $out"
+            else
+              rm -f "$tmp"
+              echo "Warning: portrait source unavailable; preserving the existing directory image for $out"
+            fi
+            return 0
           }
           fetch_image 'https://d35oenyzp35321.cloudfront.net/Dr_Abhideep_Chaudhary_9f61965dec.jpg' 'assets/images/doctors/dr-abhideep-chaudhary.jpg'
           fetch_image 'https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ' 'assets/images/doctors/dr-anil-mandhani.jpg'
@@ -39,15 +44,6 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
-
-          # Only local assets are used in Elajme directory cards. The files above are downloaded
-          # from the already verified first-party hospital/CDN sources before this mapping runs.
-          verified = {
-              'dr-abhideep-chaudhary': '/assets/images/doctors/dr-abhideep-chaudhary.jpg',
-              'dr-anil-mandhani': '/assets/images/doctors/dr-anil-mandhani.jpg',
-              'prof-dr-subhash-gupta': '/assets/images/doctors/prof-dr-subhash-gupta.jpg',
-              'dr-sanjay-gogoi': '/assets/images/doctors/dr-sanjay-gogoi.png',
-          }
 
           def replace_card_image(text, slug, src, css_class):
               href_slugs = [slug]
@@ -71,20 +67,18 @@ jobs:
               (Path('doctors/index.html'), 'photo'),
               (Path('ar/doctors/index.html'), 'directory-photo'),
           ]
-          for p, cls in targets:
-              if not p.exists():
-                  continue
-              text=p.read_text(encoding='utf-8'); old=text
-              for slug, src in verified.items():
-                  text=replace_card_image(text, slug, src, cls)
-              if text != old:
-                  p.write_text(text, encoding='utf-8')
-                  changed.append(str(p))
 
-          # Map every exact same-slug local portrait onto matching directory cards.
+          # Only map portraits that actually exist locally. If a verified first-party source
+          # blocks automated download, its existing directory image is deliberately preserved.
           assets=Path('assets/images/doctors')
           image_exts={'.jpg','.jpeg','.png','.webp','.avif'}
           local={p.stem.lower(): '/assets/images/doctors/'+p.name for p in assets.iterdir() if p.is_file() and p.suffix.lower() in image_exts}
+
+          # Preserve the established local Sanjay Gogoi portrait even though the slug mapping
+          # already handles it. This makes the protected portrait rule explicit.
+          if (assets / 'dr-sanjay-gogoi.png').is_file():
+              local['dr-sanjay-gogoi']='/assets/images/doctors/dr-sanjay-gogoi.png'
+
           for p, cls in targets:
               if not p.exists():
                   continue
