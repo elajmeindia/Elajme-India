@@ -15,44 +15,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Link available Arabic doctor profiles
+      - name: Link available Arabic doctor profiles and sync sitemap
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          p = Path('ar/doctors/index.html')
-          s = p.read_text(encoding='utf-8')
+          directory = Path('ar/doctors/index.html')
+          s = directory.read_text(encoding='utf-8')
 
-          slugs = [
-              'dr-abhideep-chaudhary',
-              'dr-aditya-gupta',
-              'dr-anil-mandhani',
-              'dr-harsh-dua',
-              'prof-dr-subhash-gupta',
-              'dr-anurag-shrimal',
-              'dr-amit-gharat',
-              'dr-pushpak-chirmade',
-          ]
+          profile_root = Path('ar/doctors')
+          slugs = sorted(
+              p.parent.name
+              for p in profile_root.glob('*/index.html')
+              if p.parent.name != 'index'
+          )
 
           for slug in slugs:
-              ar_profile = Path('ar/doctors') / slug / 'index.html'
-              if not ar_profile.exists():
-                  continue
               english = f'<a href="/doctors/{slug}/">عرض الملف التعريفي بالإنجليزية</a>'
               bilingual = (f'<a href="/ar/doctors/{slug}/">عرض الملف التعريفي بالعربية</a> · '
                            f'<a href="/doctors/{slug}/" lang="en" dir="ltr">English profile</a>')
               s = s.replace(english, bilingual)
 
-          p.write_text(s, encoding='utf-8')
+          directory.write_text(s, encoding='utf-8')
+
+          sitemap = Path('sitemap.xml')
+          xml = sitemap.read_text(encoding='utf-8')
+          urls = [f'https://elajmeindia.com/ar/doctors/{slug}/' for slug in slugs]
+          missing = [u for u in urls if f'<loc>{u}</loc>' not in xml]
+          if missing:
+              marker = '  <url><loc>https://elajmeindia.com/ar/hospitals/</loc></url>'
+              additions = ''.join(f'  <url><loc>{u}</loc></url>\n' for u in missing)
+              if marker not in xml:
+                  raise SystemExit('Arabic hospital sitemap marker not found')
+              xml = xml.replace(marker, additions + marker, 1)
+              sitemap.write_text(xml, encoding='utf-8')
+
+          print(f'Arabic doctor profiles discovered: {len(slugs)}')
+          print(f'New sitemap URLs added: {len(missing)}')
           PY
       - name: Commit changes
         run: |
           if git diff --quiet; then
-            echo 'No directory links needed updating.'
+            echo 'Directory and sitemap already synchronized.'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add ar/doctors/index.html
-          git commit -m 'Link Arabic doctor cards to Arabic profiles'
+          git add ar/doctors/index.html sitemap.xml
+          git commit -m 'Synchronize Arabic doctor directory and sitemap'
           git push
