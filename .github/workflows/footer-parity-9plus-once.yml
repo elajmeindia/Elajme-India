@@ -1,0 +1,57 @@
+name: Footer parity 9 plus once
+on:
+  push:
+    paths:
+      - '.github/workflows/footer-parity-9plus-once.yml'
+permissions:
+  contents: write
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Polish English and Arabic homepage footers
+        shell: bash
+        run: |
+          cat >> styles.css <<'CSS'
+
+/* 9+ homepage footer system: shared visual language for EN + AR */
+.site-footer{background:#092f3b!important;color:#dce9ec!important;padding:46px 0 24px!important;border-top:4px solid #1c827e!important}
+.site-footer .footer-grid{display:grid!important;grid-template-columns:minmax(210px,.8fr) minmax(0,2.2fr)!important;gap:72px!important;align-items:start!important;padding-bottom:34px!important}
+.site-footer .brand{align-items:center!important;gap:11px!important}
+.site-footer .brand-icon{width:60px!important;height:60px!important;flex:0 0 60px!important}
+.site-footer .brand-main{font-size:16px!important;color:#fff!important}
+.site-footer .brand-ar{font-size:12px!important;color:#fff!important;margin-top:4px!important}
+.site-footer .footer-links{display:grid!important;grid-template-columns:repeat(3,minmax(150px,1fr))!important;gap:14px 42px!important;align-content:start!important}
+.site-footer .footer-links a{font-size:13px!important;font-weight:600!important;line-height:1.55!important;color:#d6e5e8!important;opacity:1!important}
+.site-footer .footer-links a:hover{color:#8fd8cf!important}
+.site-footer .footer-bottom{border-top:1px solid rgba(255,255,255,.16)!important;padding-top:20px!important;display:flex!important;justify-content:space-between!important;align-items:flex-start!important;gap:28px!important;color:#d6e5e8!important;font-size:12.5px!important;line-height:1.7!important}
+.site-footer .footer-bottom p{color:#d6e5e8!important;margin:0!important}
+@media(max-width:820px){.site-footer .footer-grid{grid-template-columns:1fr!important;gap:28px!important}.site-footer .footer-links{grid-template-columns:repeat(2,minmax(0,1fr))!important}.site-footer .footer-bottom{display:block!important}}
+@media(max-width:520px){.site-footer{padding:34px 0 20px!important}.site-footer .footer-links{grid-template-columns:1fr!important}.site-footer .footer-links a{font-size:13px!important}}
+CSS
+          cat >> assets/css/site-shell.css <<'CSS'
+
+/* 9+ Arabic homepage footer: exact RTL counterpart of English footer */
+body.site-shell[dir="rtl"] .site-footer{background:#092f3b!important;color:#dce9ec!important;padding:46px 0 24px!important;border-top:4px solid #1c827e!important}
+body.site-shell[dir="rtl"] .site-footer .footer-wrap{width:min(1160px,calc(100% - 40px))!important;margin-inline:auto!important;display:grid!important;grid-template-columns:minmax(0,2.2fr) minmax(210px,.8fr)!important;grid-template-areas:"links brand" "copy copy"!important;gap:34px 72px!important;align-items:start!important;direction:ltr!important}
+body.site-shell[dir="rtl"] .site-footer .footer-brand{grid-area:brand!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:11px!important;direction:ltr!important}
+body.site-shell[dir="rtl"] .site-footer .footer-brand .brand-icon{display:block!important;width:60px!important;height:60px!important;flex:0 0 60px!important;object-fit:contain!important}
+body.site-shell[dir="rtl"] .site-footer .footer-brand .brand-text{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;text-align:left!important;line-height:1.08!important;color:#fff!important}
+body.site-shell[dir="rtl"] .site-footer .footer-brand .brand-text strong{font-size:16px!important;font-weight:800!important;color:#fff!important;white-space:nowrap!important}
+body.site-shell[dir="rtl"] .site-footer .footer-brand .brand-text span{font-size:12px!important;font-weight:650!important;color:#fff!important;margin-top:4px!important;direction:rtl!important;white-space:nowrap!important}
+body.site-shell[dir="rtl"] .site-footer .footer-links{grid-area:links!important;display:grid!important;grid-template-columns:repeat(3,minmax(150px,1fr))!important;gap:14px 42px!important;align-content:start!important;direction:rtl!important;text-align:right!important}
+body.site-shell[dir="rtl"] .site-footer .footer-links a{display:block!important;padding:0!important;margin:0!important;font-size:13px!important;font-weight:600!important;line-height:1.55!important;color:#d6e5e8!important;opacity:1!important}
+body.site-shell[dir="rtl"] .site-footer .footer-links a:hover{color:#8fd8cf!important}
+body.site-shell[dir="rtl"] .site-footer .footer-wrap>p{grid-area:copy!important;margin:0!important;padding-top:20px!important;border-top:1px solid rgba(255,255,255,.16)!important;color:#d6e5e8!important;font-size:12.5px!important;line-height:1.7!important;direction:rtl!important;text-align:right!important}
+@media(max-width:820px){body.site-shell[dir="rtl"] .site-footer .footer-wrap{grid-template-columns:1fr!important;grid-template-areas:"brand" "links" "copy"!important;gap:28px!important;direction:rtl!important}body.site-shell[dir="rtl"] .site-footer .footer-links{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:520px){body.site-shell[dir="rtl"] .site-footer{padding:34px 0 20px!important}body.site-shell[dir="rtl"] .site-footer .footer-wrap{width:min(100% - 40px,1160px)!important}body.site-shell[dir="rtl"] .site-footer .footer-links{grid-template-columns:1fr!important}body.site-shell[dir="rtl"] .site-footer .footer-links a{font-size:13px!important}}
+CSS
+      - name: Commit polished footer system
+        shell: bash
+        run: |
+          git config user.name 'Elajme India QA'
+          git config user.email 'actions@users.noreply.github.com'
+          git add styles.css assets/css/site-shell.css
+          git commit -m 'Polish English and Arabic footers to matching 9+ design'
+          git push
