@@ -1,0 +1,47 @@
+name: English inner footer bottom parity
+on:
+  push:
+    paths:
+      - '.github/workflows/english-inner-footer-bottom-parity.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Match English bottom row to Arabic footer
+        shell: bash
+        run: |
+          cat >> assets/css/site-shell.css <<'CSS'
+
+          /* English inner footer: match the clean Arabic bottom-row geometry. */
+          html:not([dir="rtl"]) .shell-footer-bottom{
+            display:grid!important;
+            grid-template-columns:max-content minmax(0,1fr)!important;
+            align-items:start!important;
+            gap:36px!important;
+            width:100%!important;
+          }
+          html:not([dir="rtl"]) .shell-footer-bottom>span:first-child{
+            white-space:nowrap!important;
+            width:max-content!important;
+          }
+          html:not([dir="rtl"]) .shell-footer-bottom .shell-disclaimer{
+            min-width:0!important;
+            max-width:none!important;
+            text-align:right!important;
+          }
+          @media(max-width:900px){
+            html:not([dir="rtl"]) .shell-footer-bottom{
+              grid-template-columns:1fr!important;
+              gap:10px!important;
+            }
+            html:not([dir="rtl"]) .shell-footer-bottom .shell-disclaimer{text-align:left!important}
+          }
+          CSS
+          git config user.name 'Elajme India QA'
+          git config user.email 'actions@users.noreply.github.com'
+          git add assets/css/site-shell.css
+          git commit -m 'Match English inner footer bottom row to Arabic design'
+          git push
