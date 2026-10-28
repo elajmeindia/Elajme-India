@@ -1,4 +1,4 @@
-name: Fix English homepage footer only
+name: Refresh English homepage approved footer only
 
 on:
   push:
@@ -13,29 +13,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix only English homepage footer
+      - name: Refresh only English homepage footer stylesheet
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
-          home=Path('index.html')
-          source=Path('treatments/index.html')
-          footer_re=re.compile(r'<footer\b[^>]*>.*?</footer>',re.I|re.S)
-          html=home.read_text(encoding='utf-8')
-          approved=source.read_text(encoding='utf-8')
-          master=footer_re.search(approved).group(0)
-          html=footer_re.sub(lambda _:master,html,count=1)
-          html=re.sub(r'<link[^>]+footer-approved\.css[^>]*>', '<link rel="stylesheet" href="/assets/css/footer-approved.css?v=3">', html, count=1, flags=re.I)
-          home.write_text(html,encoding='utf-8')
-          print('Fixed index.html only; all other pages untouched')
+          p=Path('index.html')
+          html=p.read_text(encoding='utf-8')
+          html=re.sub(r'<link[^>]+footer-approved\.css[^>]*>', '<link rel="stylesheet" href="/assets/css/footer-approved.css?v=4">', html, count=1, flags=re.I)
+          p.write_text(html,encoding='utf-8')
+          print('Updated index.html only; no other page touched')
           PY
-      - name: Commit English homepage footer fix
+      - name: Commit homepage-only refresh
         shell: bash
         run: |
           git config user.name "Elajme India QA"
           git config user.email "actions@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Fix English homepage footer only"
+          git commit -m "Refresh approved footer CSS on English homepage only"
           git push
