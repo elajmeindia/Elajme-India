@@ -1,5 +1,5 @@
-name: Unify inner footers and Arabic CTA contrast
-'on':
+name: Unify inner footers and dark CTA
+on:
   push:
     paths:
       - '.github/workflows/unify-inner-footer-and-dark-cta-once.yml'
@@ -10,42 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add shared inner-page footer parity and dark CTA contrast
-        shell: bash
+      - name: Apply shared footer and CTA CSS
+        env:
+          FIX_CSS_B64: LnNoZWxsLWZvb3RlcntiYWNrZ3JvdW5kOiMwOTJmM2IhaW1wb3J0YW50O2NvbG9yOiNkY2U5ZWMhaW1wb3J0YW50O3BhZGRpbmc6NDZweCAwIDI0cHghaW1wb3J0YW50O2JvcmRlci10b3A6NHB4IHNvbGlkICMxYzgyN2UhaW1wb3J0YW50fS5zaGVsbC1mb290ZXIgLnNoZWxsLWNvbnRhaW5lcnt3aWR0aDptaW4oMTE2MHB4LGNhbGMoMTAwJSAtIDQwcHgpKSFpbXBvcnRhbnR9LnNoZWxsLWZvb3Rlci1ncmlke2Rpc3BsYXk6Z3JpZCFpbXBvcnRhbnQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOm1pbm1heCgyMTBweCwuOGZyKSBtaW5tYXgoMCwxLjU1ZnIpIG1pbm1heCgyNDBweCwuODVmcikhaW1wb3J0YW50O2dhcDo0OHB4IWltcG9ydGFudDthbGlnbi1pdGVtczpzdGFydCFpbXBvcnRhbnQ7ZGlyZWN0aW9uOmx0ciFpbXBvcnRhbnR9LnNoZWxsLWZvb3Rlci1ncmlkPmRpdnttaW4td2lkdGg6MCFpbXBvcnRhbnR9LnNoZWxsLWZvb3RlciAuc2hlbGwtYnJhbmR7bWFyZ2luOjAgMCAxNHB4IWltcG9ydGFudDtnYXA6MTFweCFpbXBvcnRhbnR9LnNoZWxsLWZvb3RlciAuc2hlbGwtYnJhbmQgaW1ne3dpZHRoOjYwcHghaW1wb3J0YW50O2hlaWdodDo2MHB4IWltcG9ydGFudDtmbGV4OjAgMCA2MHB4IWltcG9ydGFudH0uc2hlbGwtZm9vdGVyIC5zaGVsbC1uYW1le2ZvbnQtc2l6ZToxNnB4IWltcG9ydGFudDtjb2xvcjojZmZmIWltcG9ydGFudH0uc2hlbGwtZm9vdGVyIC5zaGVsbC1hcntmb250LXNpemU6MTJweCFpbXBvcnRhbnQ7Y29sb3I6I2ZmZiFpbXBvcnRhbnQ7bWFyZ2luLXRvcDo0cHghaW1wb3J0YW50fS5zaGVsbC1mb290ZXIgcHtjb2xvcjojZDZlNWU4IWltcG9ydGFudDtmb250LXNpemU6MTIuNXB4IWltcG9ydGFudDtsaW5lLWhlaWdodDoxLjchaW1wb3J0YW50fS5zaGVsbC1mb290ZXIgaDN7Y29sb3I6I2ZmZiFpbXBvcnRhbnQ7Zm9udC1zaXplOjEzcHghaW1wb3J0YW50O21hcmdpbjowIDAgMTJweCFpbXBvcnRhbnQ7Zm9udC13ZWlnaHQ6ODAwIWltcG9ydGFudH0uc2hlbGwtZm9vdGVyLWxpbmtze2Rpc3BsYXk6Z3JpZCFpbXBvcnRhbnQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdCgzLG1pbm1heCgxMTBweCwxZnIpKSFpbXBvcnRhbnQ7Z2FwOjEycHggMjJweCFpbXBvcnRhbnQ7YWxpZ24tY29udGVudDpzdGFydCFpbXBvcnRhbnR9LnNoZWxsLWZvb3RlciAuc2hlbGwtZm9vdGVyLWxpbmtzIGF7Y29sb3I6I2Q2ZTVlOCFpbXBvcnRhbnQ7Zm9udC1zaXplOjEzcHghaW1wb3J0YW50O2ZvbnQtd2VpZ2h0OjYwMCFpbXBvcnRhbnQ7bGluZS1oZWlnaHQ6MS41NSFpbXBvcnRhbnQ7b3BhY2l0eToxIWltcG9ydGFudDt3aGl0ZS1zcGFjZTpub3JtYWwhaW1wb3J0YW50fS5zaGVsbC1mb290ZXItYm90dG9te2JvcmRlci10b3A6MXB4IHNvbGlkIHJnYmEoMjU1LDI1NSwyNTUsLjE2KSFpbXBvcnRhbnQ7bWFyZ2luLXRvcDoyOHB4IWltcG9ydGFudDtwYWRkaW5nLXRvcDoxOHB4IWltcG9ydGFudDtkaXNwbGF5OmdyaWQhaW1wb3J0YW50O2dyaWQtdGVtcGxhdGUtY29sdW1uczptaW5tYXgoMTgwcHgsLjdmcikgbWlubWF4KDAsMi4zZnIpIWltcG9ydGFudDtnYXA6MzZweCFpbXBvcnRhbnQ7Y29sb3I6I2Q2ZTVlOCFpbXBvcnRhbnQ7Zm9udC1zaXplOjEyLjVweCFpbXBvcnRhbnQ7bGluZS1oZWlnaHQ6MS43IWltcG9ydGFudH0uc2hlbGwtZm9vdGVyLWJvdHRvbT4qe21hcmdpbjowIWltcG9ydGFudDtjb2xvcjojZDZlNWU4IWltcG9ydGFudH0uc2hlbGwtZGlzY2xhaW1lcnttYXgtd2lkdGg6bm9uZSFpbXBvcnRhbnQ7dGV4dC1hbGlnbjpyaWdodCFpbXBvcnRhbnR9W2Rpcj1ydGxdIC5zaGVsbC1mb290ZXItZ3JpZHtkaXJlY3Rpb246cnRsIWltcG9ydGFudDt0ZXh0LWFsaWduOnJpZ2h0IWltcG9ydGFudH1bZGlyPXJ0bF0gLnNoZWxsLWZvb3RlciAuc2hlbGwtYnJhbmR7ZGlyZWN0aW9uOmx0ciFpbXBvcnRhbnQ7anVzdGlmeS1jb250ZW50OmZsZXgtc3RhcnQhaW1wb3J0YW50fVtkaXI9cnRsXSAuc2hlbGwtZm9vdGVyLWxpbmtze2RpcmVjdGlvbjpydGwhaW1wb3J0YW50O3RleHQtYWxpZ246cmlnaHQhaW1wb3J0YW50fVtkaXI9cnRsXSAuc2hlbGwtZm9vdGVyLWJvdHRvbXtkaXJlY3Rpb246cnRsIWltcG9ydGFudDt0ZXh0LWFsaWduOnJpZ2h0IWltcG9ydGFudH1bZGlyPXJ0bF0gLnNoZWxsLWRpc2NsYWltZXJ7dGV4dC1hbGlnbjpsZWZ0IWltcG9ydGFudH1AbWVkaWEobWF4LXdpZHRoOjkwMHB4KXsuc2hlbGwtZm9vdGVyLWdyaWR7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmciAxZnIhaW1wb3J0YW50fS5zaGVsbC1mb290ZXItZ3JpZD5kaXY6Zmlyc3QtY2hpbGR7Z3JpZC1jb2x1bW46MS8tMSFpbXBvcnRhbnR9LnNoZWxsLWZvb3Rlci1saW5rc3tncmlkLXRlbXBsYXRlLWNvbHVtbnM6cmVwZWF0KDIsbWlubWF4KDAsMWZyKSkhaW1wb3J0YW50fS5zaGVsbC1mb290ZXItYm90dG9te2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnIhaW1wb3J0YW50O2dhcDoxMHB4IWltcG9ydGFudH19QG1lZGlhKG1heC13aWR0aDo1NjBweCl7LnNoZWxsLWZvb3Rlci1ncmlke2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnIhaW1wb3J0YW50fS5zaGVsbC1mb290ZXItbGlua3N7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmciFpbXBvcnRhbnR9fS5zaXRlLXNoZWxsIDppcyguZmluYWwtY3RhLC5jdGEsLmRhcmstY3RhLC5jdGEtc2VjdGlvbiwuY29udGFjdC1jdGEsLmVucXVpcnktY3RhKXtjb2xvcjojZmZmIWltcG9ydGFudH0uc2l0ZS1zaGVsbCA6aXMoLmZpbmFsLWN0YSwuY3RhLC5kYXJrLWN0YSwuY3RhLXNlY3Rpb24sLmNvbnRhY3QtY3RhLC5lbnF1aXJ5LWN0YSkgOmlzKGgxLGgyLGgzLHN0cm9uZyl7Y29sb3I6I2ZmZiFpbXBvcnRhbnQ7dGV4dC1zaGFkb3c6bm9uZSFpbXBvcnRhbnR9LnNpdGUtc2hlbGwgOmlzKC5maW5hbC1jdGEsLmN0YSwuZGFyay1jdGEsLmN0YS1zZWN0aW9uLC5jb250YWN0LWN0YSwuZW5xdWlyeS1jdGEpIHB7Y29sb3I6I2U1ZjRmMyFpbXBvcnRhbnR9LnNpdGUtc2hlbGwgOmlzKC5maW5hbC1jdGEsLmN0YSwuZGFyay1jdGEsLmN0YS1zZWN0aW9uLC5jb250YWN0LWN0YSwuZW5xdWlyeS1jdGEpIGE6bm90KC5idXR0b24tbGlnaHQpOm5vdCguYnRuLWxpZ2h0KXtjb2xvcjojZmZmIWltcG9ydGFudH0=
+        run: echo "$FIX_CSS_B64" | base64 -d >> assets/css/site-shell.css
+      - name: Commit fixes
         run: |
-          cat >> assets/css/site-shell.css <<'CSS'
-
-/* 9+ inner-page footer parity: same visual system as the homepage in EN and AR. */
-.shell-footer{background:#092f3b!important;color:#dce9ec!important;padding:46px 0 24px!important;border-top:4px solid #1c827e!important}
-.shell-footer .shell-container{width:min(1160px,calc(100% - 40px))!important}
-.shell-footer-grid{display:grid!important;grid-template-columns:minmax(210px,.8fr) minmax(0,1.55fr) minmax(240px,.85fr)!important;gap:48px!important;align-items:start!important;direction:ltr!important}
-.shell-footer-grid>div{min-width:0!important}
-.shell-footer .shell-brand{margin:0 0 14px!important;gap:11px!important}
-.shell-footer .shell-brand img{width:60px!important;height:60px!important;flex:0 0 60px!important}
-.shell-footer .shell-name{font-size:16px!important;color:#fff!important}.shell-footer .shell-ar{font-size:12px!important;color:#fff!important;margin-top:4px!important}
-.shell-footer p{color:#d6e5e8!important;font-size:12.5px!important;line-height:1.7!important}
-.shell-footer h3{color:#fff!important;font-size:13px!important;margin:0 0 12px!important;font-weight:800!important}
-.shell-footer-links{display:grid!important;grid-template-columns:repeat(3,minmax(110px,1fr))!important;gap:12px 22px!important;align-content:start!important}
-.shell-footer .shell-footer-links a{color:#d6e5e8!important;font-size:13px!important;font-weight:600!important;line-height:1.55!important;opacity:1!important;white-space:normal!important}
-.shell-footer .shell-footer-links a:hover{color:#8fd8cf!important}
-.shell-footer-bottom{border-top:1px solid rgba(255,255,255,.16)!important;margin-top:28px!important;padding-top:18px!important;display:grid!important;grid-template-columns:minmax(180px,.7fr) minmax(0,2.3fr)!important;gap:36px!important;color:#d6e5e8!important;font-size:12.5px!important;line-height:1.7!important;align-items:start!important}
-.shell-footer-bottom>*{margin:0!important;color:#d6e5e8!important}.shell-disclaimer{max-width:none!important;text-align:right!important}
-[dir="rtl"] .shell-footer-grid{direction:rtl!important;grid-template-columns:minmax(210px,.8fr) minmax(0,1.55fr) minmax(240px,.85fr)!important;text-align:right!important}
-[dir="rtl"] .shell-footer .shell-brand{direction:ltr!important;justify-content:flex-start!important}
-[dir="rtl"] .shell-footer-links{direction:rtl!important;text-align:right!important}
-[dir="rtl"] .shell-footer-bottom{direction:rtl!important;grid-template-columns:minmax(180px,.7fr) minmax(0,2.3fr)!important;text-align:right!important}
-[dir="rtl"] .shell-disclaimer{text-align:left!important}
-@media(max-width:900px){.shell-footer-grid{grid-template-columns:1fr 1fr!important}.shell-footer-grid>div:first-child{grid-column:1/-1!important}.shell-footer-links{grid-template-columns:repeat(2,minmax(0,1fr))!important}.shell-footer-bottom{grid-template-columns:1fr!important;gap:10px!important}.shell-disclaimer,[dir="rtl"] .shell-disclaimer{text-align:start!important}}
-@media(max-width:560px){.shell-footer{padding:34px 0 20px!important}.shell-footer-grid{grid-template-columns:1fr!important;gap:26px!important}.shell-footer-grid>div:first-child{grid-column:auto!important}.shell-footer-links{grid-template-columns:1fr!important}}
-
-/* Guarantee readable text/headings in every dark CTA/banner on shared-shell pages. */
-.site-shell :is(.final-cta,.cta,.dark-cta,.cta-section,.contact-cta,.enquiry-cta){color:#fff!important}
-.site-shell :is(.final-cta,.cta,.dark-cta,.cta-section,.contact-cta,.enquiry-cta) :is(h1,h2,h3,strong){color:#fff!important;text-shadow:none!important}
-.site-shell :is(.final-cta,.cta,.dark-cta,.cta-section,.contact-cta,.enquiry-cta) p{color:#e5f4f3!important}
-.site-shell :is(.final-cta,.cta,.dark-cta,.cta-section,.contact-cta,.enquiry-cta) a:not(.button-light):not(.btn-light){color:#fff!important}
-CSS
-          git config user.name 'Elajme India QA'
-          git config user.email 'actions@users.noreply.github.com'
+          git config user.name "Elajme India QA"
+          git config user.email "actions@users.noreply.github.com"
           git add assets/css/site-shell.css
-          git commit -m 'Unify inner-page footers and fix dark CTA contrast'
+          git commit -m "Unify inner-page footers and fix dark CTA contrast"
           git push
