@@ -9,23 +9,25 @@
 .site-footer .footer-brand .brand-text span{font-size:12px!important;font-weight:650!important;color:#fff!important;white-space:nowrap!important;margin:4px 0 0!important}
 .site-footer .footer-links{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:14px 42px!important;align-content:start!important;margin:0!important;padding:0!important}
 .site-footer .footer-links a{display:block!important;margin:0!important;padding:0!important;background:none!important;border:0!important;color:#d6e5e8!important;text-decoration:none!important;font-size:13px!important;font-weight:600!important;line-height:1.55!important;transform:none!important}
-.site-footer .footer-bottom{display:block!important;border-top:1px solid rgba(255,255,255,.16)!important;margin:0!important;padding:20px 0 0!important;color:#d6e5e8!important;font-size:12.5px!important;line-height:1.7!important}
+.site-footer .footer-bottom{display:block!important;clear:both!important;width:100%!important;border-top:1px solid rgba(255,255,255,.16)!important;margin:0!important;padding:20px 0 0!important;color:#d6e5e8!important;font-size:12.5px!important;line-height:1.7!important}
 .site-footer .footer-bottom p{display:block!important;margin:0!important;padding:0!important;width:100%!important;max-width:none!important;color:#d6e5e8!important;font-size:12.5px!important;line-height:1.7!important}
-/* English approved: brand LEFT, links across middle/right, copyright LEFT. */
+/* English approved: brand LEFT, links across middle/right, full divider, copyright LEFT. */
 html[lang="en"] .site-footer{direction:ltr!important}
 html[lang="en"] .site-footer .footer-top{direction:ltr!important;grid-template-columns:minmax(210px,.8fr) minmax(0,2.2fr)!important}
 html[lang="en"] .site-footer .footer-brand{grid-column:1!important;grid-row:1!important;direction:ltr!important;justify-content:flex-start!important}
 html[lang="en"] .site-footer .footer-links{grid-column:2!important;grid-row:1!important;direction:ltr!important;text-align:left!important}
 html[lang="en"] .site-footer .footer-links a{text-align:left!important}
 html[lang="en"] .site-footer .footer-bottom,html[lang="en"] .site-footer .footer-bottom p{direction:ltr!important;text-align:left!important}
-/* Arabic approved screenshot: links LEFT/MIDDLE, brand RIGHT, divider below, copyright bottom RIGHT. */
+/* Arabic approved: exact structural mirror of English — brand RIGHT, links LEFT/MIDDLE, full divider, copyright BOTTOM-RIGHT. */
 html[lang="ar"] .site-footer{direction:rtl!important}
+html[lang="ar"] .site-footer .footer-wrap{direction:rtl!important}
 html[lang="ar"] .site-footer .footer-top{direction:ltr!important;grid-template-columns:minmax(0,2.2fr) minmax(210px,.8fr)!important}
 html[lang="ar"] .site-footer .footer-brand{grid-column:2!important;grid-row:1!important;direction:ltr!important;justify-content:flex-start!important}
 html[lang="ar"] .site-footer .footer-brand .brand-text{direction:ltr!important;align-items:flex-start!important;text-align:left!important}
 html[lang="ar"] .site-footer .footer-brand .brand-text span{direction:rtl!important;unicode-bidi:isolate!important}
 html[lang="ar"] .site-footer .footer-links{grid-column:1!important;grid-row:1!important;direction:rtl!important;text-align:right!important}
 html[lang="ar"] .site-footer .footer-links a{direction:rtl!important;text-align:right!important}
-html[lang="ar"] .site-footer .footer-bottom,html[lang="ar"] .site-footer .footer-bottom p{direction:rtl!important;text-align:right!important}
+html[lang="ar"] .site-footer .footer-bottom{direction:rtl!important;text-align:right!important;width:100%!important;grid-column:1/-1!important}
+html[lang="ar"] .site-footer .footer-bottom p{direction:rtl!important;text-align:right!important;width:100%!important}
 @media(max-width:820px){.site-footer .footer-top{grid-template-columns:1fr!important;gap:28px!important}.site-footer .footer-brand,.site-footer .footer-links{grid-column:1!important}.site-footer .footer-brand{grid-row:1!important}.site-footer .footer-links{grid-row:2!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:520px){.site-footer{padding:34px 0 20px!important}.site-footer .footer-wrap{width:min(100% - 32px,1160px)!important}.site-footer .footer-links{grid-template-columns:1fr!important}}
