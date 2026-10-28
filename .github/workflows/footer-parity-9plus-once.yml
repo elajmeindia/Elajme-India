@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Replace every footer with the approved homepage footer
+      - name: Deploy exact approved homepage footers
         shell: bash
         run: |
           python3 - <<'PY'
@@ -21,10 +21,11 @@ jobs:
           import re
 
           footer_re = re.compile(r'<footer\b[^>]*>.*?</footer>', re.I | re.S)
+          lock_re = re.compile(r'<style id="approved-footer-lock">.*?</style>', re.I | re.S)
           parity_link = re.compile(r'<link[^>]+home-footer-parity\.css[^>]*>', re.I)
 
           def canonical(path):
-              text = Path(path).read_text(encoding='utf-8')
+              text = lock_re.sub('', Path(path).read_text(encoding='utf-8'))
               m = footer_re.search(text)
               if not m:
                   raise SystemExit(f'Canonical footer missing: {path}')
@@ -33,59 +34,80 @@ jobs:
           EN = canonical('index.html')
           AR = canonical('ar/index.html')
 
-          # One locked rendering for the two approved footers only.
-          # Same geometry as the approved screenshots: links left/middle, brand right,
-          # divider below, copyright left in EN and right in AR.
-          css = '''<style id="approved-footer-lock">
-          .site-footer{background:#092f3b!important;color:#dce9ec!important;border:0!important;padding:0!important;margin:0!important;direction:ltr!important;overflow:hidden!important}
-          .site-footer .footer-wrap{width:min(1160px,calc(100% - 40px))!important;margin:0 auto!important;padding:30px 0 20px!important;display:block!important}
-          .site-footer .footer-top{display:grid!important;grid-template-columns:minmax(0,3fr) minmax(220px,1fr)!important;grid-template-areas:"links brand"!important;gap:64px!important;align-items:start!important;padding:0 0 28px!important;direction:ltr!important}
-          .site-footer .footer-brand{grid-area:brand!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:11px!important;direction:ltr!important;margin:0!important;padding:0!important}
-          .site-footer .footer-brand .brand-icon{display:block!important;width:60px!important;height:60px!important;max-width:60px!important;max-height:60px!important;min-width:60px!important;flex:0 0 60px!important;object-fit:contain!important;margin:0!important;padding:0!important}
-          .site-footer .footer-brand .brand-text{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;text-align:left!important;line-height:1.08!important;color:#fff!important;direction:ltr!important}
+          base = '''
+          .site-footer{background:#092f3b!important;color:#dce9ec!important;border:0!important;padding:38px 0 24px!important;margin:0!important;overflow:hidden!important}
+          .site-footer .footer-wrap{display:block!important;width:min(1160px,calc(100% - 40px))!important;margin:0 auto!important;padding:0!important}
+          .site-footer .footer-top{display:grid!important;align-items:start!important;padding:0 0 30px!important}
+          .site-footer .footer-brand{display:flex!important;align-items:center!important;gap:11px!important;margin:0!important;padding:0!important;color:#fff!important}
+          .site-footer .footer-brand .brand-icon{display:block!important;width:60px!important;height:60px!important;max-width:60px!important;max-height:60px!important;flex:0 0 60px!important;object-fit:contain!important;margin:0!important;padding:0!important}
+          .site-footer .footer-brand .brand-text{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;line-height:1.08!important;color:#fff!important;text-align:left!important}
           .site-footer .footer-brand .brand-text strong{font-size:16px!important;font-weight:800!important;color:#fff!important;white-space:nowrap!important;margin:0!important}
-          .site-footer .footer-brand .brand-text span{font-size:12px!important;font-weight:650!important;color:#fff!important;white-space:nowrap!important;margin:4px 0 0!important;direction:rtl!important}
-          .site-footer .footer-links{grid-area:links!important;display:grid!important;grid-template-columns:repeat(3,minmax(150px,1fr))!important;gap:14px 42px!important;align-content:start!important;margin:0!important;padding:0!important;direction:ltr!important;text-align:left!important}
-          .site-footer .footer-links a{display:block!important;margin:0!important;padding:0!important;background:none!important;border:0!important;color:#d6e5e8!important;text-decoration:none!important;font-size:13px!important;font-weight:600!important;line-height:1.55!important;text-align:left!important;transform:none!important}
-          html[lang="ar"] .site-footer .footer-links{direction:rtl!important;text-align:right!important}
-          html[lang="ar"] .site-footer .footer-links a{text-align:right!important}
-          .site-footer .footer-bottom{display:block!important;border-top:1px solid rgba(255,255,255,.16)!important;margin:0!important;padding:18px 0 0!important;color:#d6e5e8!important;font-size:12.5px!important;line-height:1.7!important;direction:ltr!important;text-align:left!important}
-          .site-footer .footer-bottom p{margin:0!important;padding:0!important;color:#d6e5e8!important;font-size:12.5px!important;text-align:left!important;width:100%!important;max-width:none!important}
-          html[lang="ar"] .site-footer .footer-bottom,html[lang="ar"] .site-footer .footer-bottom p{direction:rtl!important;text-align:right!important}
-          @media(max-width:820px){.site-footer .footer-top{grid-template-columns:1fr!important;grid-template-areas:"brand" "links"!important;gap:26px!important}.site-footer .footer-links{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
-          @media(max-width:520px){.site-footer .footer-wrap{width:min(100% - 32px,1160px)!important;padding:26px 0 18px!important}.site-footer .footer-links{grid-template-columns:1fr!important}}
-          </style>'''
+          .site-footer .footer-brand .brand-text span{font-size:12px!important;font-weight:650!important;color:#fff!important;white-space:nowrap!important;margin:4px 0 0!important}
+          .site-footer .footer-links{display:grid!important;grid-template-columns:repeat(3,minmax(150px,1fr))!important;gap:14px 42px!important;align-content:start!important;margin:0!important;padding:0!important}
+          .site-footer .footer-links a{display:block!important;margin:0!important;padding:0!important;background:none!important;border:0!important;color:#d6e5e8!important;text-decoration:none!important;font-size:13px!important;font-weight:600!important;line-height:1.55!important;transform:none!important}
+          .site-footer .footer-bottom{display:block!important;border-top:1px solid rgba(255,255,255,.16)!important;margin:0!important;padding:20px 0 0!important;color:#d6e5e8!important;font-size:12.5px!important;line-height:1.7!important}
+          .site-footer .footer-bottom p{display:block!important;margin:0!important;padding:0!important;width:100%!important;max-width:none!important;color:#d6e5e8!important;font-size:12.5px!important;line-height:1.7!important}
+          @media(max-width:820px){.site-footer .footer-top{grid-template-columns:1fr!important;gap:28px!important}.site-footer .footer-links{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+          @media(max-width:520px){.site-footer{padding:34px 0 20px!important}.site-footer .footer-wrap{width:min(100% - 32px,1160px)!important}.site-footer .footer-links{grid-template-columns:1fr!important}}
+          '''
 
-          lock_re = re.compile(r'<style id="approved-footer-lock">.*?</style>', re.I | re.S)
+          # Approved English screenshot: links left/middle, brand right, copyright left.
+          en_css = base + '''
+          .site-footer{direction:ltr!important}
+          .site-footer .footer-top{grid-template-columns:minmax(0,2.2fr) minmax(210px,.8fr)!important;gap:72px!important;direction:ltr!important}
+          .site-footer .footer-brand{grid-column:2!important;grid-row:1!important;direction:ltr!important;justify-content:flex-start!important}
+          .site-footer .footer-links{grid-column:1!important;grid-row:1!important;direction:ltr!important;text-align:left!important}
+          .site-footer .footer-links a{text-align:left!important}
+          .site-footer .footer-bottom,.site-footer .footer-bottom p{direction:ltr!important;text-align:left!important}
+          '''
+
+          # Approved Arabic screenshot: exact mirror of approved EN footer.
+          # Links remain in the left/middle three-column block; brand is on the right;
+          # Arabic links and copyright are RTL/right aligned inside their blocks.
+          ar_css = base + '''
+          .site-footer{direction:rtl!important}
+          .site-footer .footer-top{grid-template-columns:minmax(0,2.2fr) minmax(210px,.8fr)!important;gap:72px!important;direction:ltr!important}
+          .site-footer .footer-brand{grid-column:2!important;grid-row:1!important;direction:ltr!important;justify-content:flex-start!important}
+          .site-footer .footer-brand .brand-text{direction:ltr!important;align-items:flex-start!important;text-align:left!important}
+          .site-footer .footer-brand .brand-text span{direction:rtl!important;unicode-bidi:isolate!important}
+          .site-footer .footer-links{grid-column:1!important;grid-row:1!important;direction:rtl!important;text-align:right!important}
+          .site-footer .footer-links a{direction:rtl!important;text-align:right!important}
+          .site-footer .footer-bottom{direction:rtl!important;text-align:right!important}
+          .site-footer .footer-bottom p{direction:rtl!important;text-align:right!important}
+          @media(max-width:820px){.site-footer .footer-brand,.site-footer .footer-links{grid-column:1!important}.site-footer .footer-brand{grid-row:1!important}.site-footer .footer-links{grid-row:2!important}}
+          '''
+
           changed = 0
           for p in Path('.').rglob('*.html'):
               if '.git' in p.parts:
                   continue
-              text = p.read_text(encoding='utf-8')
+              original = p.read_text(encoding='utf-8')
+              text = parity_link.sub('', original)
+              text = lock_re.sub('', text)
               is_ar = p.parts and p.parts[0] == 'ar'
               master = AR if is_ar else EN
-              text = parity_link.sub('', text)
-              text = lock_re.sub('', text)
+              css = ar_css if is_ar else en_css
               if footer_re.search(text):
-                  new = footer_re.sub(lambda _: master, text, count=1)
+                  text = footer_re.sub(lambda _: master, text, count=1)
               else:
-                  new = text.replace('</body>', master + '</body>', 1)
-              new = new.replace(master, css + master, 1)
-              if new != p.read_text(encoding='utf-8'):
-                  p.write_text(new, encoding='utf-8')
+                  text = text.replace('</body>', master + '</body>', 1)
+              lock = '<style id="approved-footer-lock">' + css + '</style>'
+              text = text.replace(master, lock + master, 1)
+              if text != original:
+                  p.write_text(text, encoding='utf-8')
                   changed += 1
-          print(f'Locked the two approved footers across {changed} HTML files')
+          print(f'Deployed exact approved EN/AR footer layouts to {changed} HTML files')
           PY
 
-      - name: Commit sitewide approved footer lock
+      - name: Commit exact approved footer deployment
         shell: bash
         run: |
           git config user.name "Elajme India QA"
           git config user.email "actions@users.noreply.github.com"
           git add -- '*.html'
           if git diff --cached --quiet; then
-            echo "All pages already use only the two approved footers"
+            echo "Approved footers already deployed everywhere"
             exit 0
           fi
-          git commit -m "Keep only approved English and Arabic footers sitewide"
+          git commit -m "Deploy exact approved Arabic footer sitewide"
           git push
