@@ -1,0 +1,42 @@
+name: Fix Arabic footer structure once
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-arabic-footer-structure-once.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace Arabic homepage footer with English-parity structure
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('ar/index.html')
+          s=p.read_text(encoding='utf-8')
+          start=s.index('<footer class="site-footer">')
+          end=s.index('</footer>', start)+len('</footer>')
+          footer='''<footer class="site-footer"><div class="container footer-wrap"><div class="footer-brand"><img src="/Healthcare%20Travel%20Swoosh%20Emblem.png" alt="" class="brand-icon" decoding="async"><span class="brand-text"><strong>Elajme India</strong><span lang="ar" dir="rtl">علاج مي إنديا</span></span></div><nav class="footer-links" aria-label="روابط التذييل"><a href="/ar/">الرئيسية</a><a href="/ar/treatments/">العلاجات</a><a href="/ar/hospitals/">المستشفيات</a><a href="/ar/doctors/">الأطباء</a><a href="/ar/international-patients/mea/">المرضى الدوليون</a><a href="/ar/privacy.html">سياسة الخصوصية</a><a href="/ar/terms.html">الشروط وإخلاء المسؤولية الطبية</a></nav><p>© 2026 علاج مي إنديا. تنسيق المرضى الدوليين.</p></div></footer>'''
+          p.write_text(s[:start]+footer+s[end:],encoding='utf-8')
+          PY
+      - name: Remove obsolete Arabic homepage footer overrides
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('assets/css/site-shell.css')
+          s=p.read_text(encoding='utf-8')
+          marker='/* Arabic homepage footer: mirror the English homepage footer geometry. */'
+          if marker in s:
+              s=s[:s.index(marker)].rstrip()+"\n"
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit final footer fix
+        run: |
+          rm .github/workflows/fix-arabic-footer-structure-once.yml
+          git config user.name "Elajme India QA"
+          git config user.email "actions@users.noreply.github.com"
+          git add ar/index.html assets/css/site-shell.css .github/workflows/fix-arabic-footer-structure-once.yml
+          git commit -m "Fix Arabic homepage footer structure"
+          git push
