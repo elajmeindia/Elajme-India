@@ -1,4 +1,4 @@
-name: Keep only approved EN and AR homepage footers sitewide
+name: Fix English homepage footer only
 
 on:
   push:
@@ -9,46 +9,33 @@ permissions:
   contents: write
 
 jobs:
-  unify-footer:
+  fix-home-footer:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy only approved EN and AR footers
+      - name: Fix only English homepage footer
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
+          home=Path('index.html')
+          source=Path('treatments/index.html')
           footer_re=re.compile(r'<footer\b[^>]*>.*?</footer>',re.I|re.S)
-          lock_re=re.compile(r'<style id="approved-footer-lock">.*?</style>',re.I|re.S)
-          old_parity=re.compile(r'<link[^>]+home-footer-parity\.css[^>]*>',re.I)
-          approved_link='<link rel="stylesheet" href="/assets/css/footer-approved.css?v=1">'
-          approved_re=re.compile(r'<link[^>]+footer-approved\.css[^>]*>',re.I)
-          def clean(s): return old_parity.sub('',lock_re.sub('',s))
-          en=clean(Path('index.html').read_text(encoding='utf-8'))
-          ar=clean(Path('ar/index.html').read_text(encoding='utf-8'))
-          EN=footer_re.search(en).group(0)
-          AR=footer_re.search(ar).group(0)
-          changed=0
-          for p in Path('.').rglob('*.html'):
-              if '.git' in p.parts: continue
-              old=p.read_text(encoding='utf-8')
-              new=clean(old)
-              master=AR if (p.parts and p.parts[0]=='ar') else EN
-              if footer_re.search(new): new=footer_re.sub(lambda _:master,new,count=1)
-              elif '</body>' in new: new=new.replace('</body>',master+'</body>',1)
-              if approved_re.search(new): new=approved_re.sub(approved_link,new,count=1)
-              elif '</head>' in new: new=new.replace('</head>',approved_link+'</head>',1)
-              if new!=old:
-                  p.write_text(new,encoding='utf-8'); changed+=1
-          print('Deployed final approved footer system to',changed,'HTML files')
+          html=home.read_text(encoding='utf-8')
+          approved=source.read_text(encoding='utf-8')
+          master=footer_re.search(approved).group(0)
+          html=footer_re.sub(lambda _:master,html,count=1)
+          html=re.sub(r'<link[^>]+footer-approved\.css[^>]*>', '<link rel="stylesheet" href="/assets/css/footer-approved.css?v=3">', html, count=1, flags=re.I)
+          home.write_text(html,encoding='utf-8')
+          print('Fixed index.html only; all other pages untouched')
           PY
-      - name: Commit final footer deployment
+      - name: Commit English homepage footer fix
         shell: bash
         run: |
           git config user.name "Elajme India QA"
           git config user.email "actions@users.noreply.github.com"
-          git add -- '*.html'
+          git add index.html
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Deploy final approved bilingual footers sitewide"
+          git commit -m "Fix English homepage footer only"
           git push
