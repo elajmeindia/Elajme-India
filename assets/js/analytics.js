@@ -9,7 +9,7 @@
   if (!document.querySelector('link[data-elajme-mobile-header]')) {
     const mobileHeaderStyles = document.createElement('link');
     mobileHeaderStyles.rel = 'stylesheet';
-    mobileHeaderStyles.href = '/assets/css/mobile-header-v2.css?v=6';
+    mobileHeaderStyles.href = '/assets/css/mobile-header-v2.css?v=7';
     mobileHeaderStyles.setAttribute('data-elajme-mobile-header', '');
     document.head.appendChild(mobileHeaderStyles);
   }
