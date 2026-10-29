@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Arabic mobile header assets without touching footer
+      - name: Cache-bust Arabic mobile header without touching footer
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -22,29 +22,34 @@ jobs:
               raise SystemExit('Footer not found; refusing edit')
           footer_end += len('</footer>')
           footer_before=s[footer_start:footer_end]
-          css='<link rel="stylesheet" href="/assets/css/arabic-mobile-header.css?v=1">'
-          js='<script src="/assets/js/arabic-mobile-menu.js?v=1" defer></script>'
-          if css not in s:
-              s=s.replace('</head>',css+'</head>',1)
-          if js not in s:
-              s=s.replace('</body>',js+'</body>',1)
+          old_css='/assets/css/arabic-mobile-header.css?v=1'
+          new_css='/assets/css/arabic-mobile-header.css?v=2'
+          if old_css not in s:
+              raise SystemExit('Expected Arabic mobile CSS v1 reference not found; refusing broad edit')
+          s=s.replace(old_css,new_css,1)
           new_footer_start=s.find('<footer')
           new_footer_end=s.find('</footer>',new_footer_start)+len('</footer>')
           footer_after=s[new_footer_start:new_footer_end]
           if footer_before != footer_after:
               raise SystemExit('LOCK VIOLATION: footer markup changed')
           p.write_text(s)
-          print('Footer markup verified byte-identical.')
+          print('Arabic mobile CSS cache-busted; footer markup verified byte-identical.')
           PY
-      - name: Verify only Arabic homepage changed
+      - name: Verify scoped Arabic homepage change
         run: |
           git diff --check
           git diff -- ar/index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          d=Path('ar/index.html').read_text()
+          if '/assets/css/arabic-mobile-header.css?v=2' not in d:
+              raise SystemExit('Cache-bust verification failed')
+          PY
       - name: Commit
         run: |
           if git diff --quiet -- ar/index.html; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add ar/index.html
-          git commit -m 'Enable professional RTL mobile menu on Arabic homepage'
+          git commit -m 'Refresh compact Arabic mobile navigation CSS'
           git push
