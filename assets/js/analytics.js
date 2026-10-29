@@ -9,9 +9,18 @@
   if (!document.querySelector('link[data-elajme-mobile-header]')) {
     const mobileHeaderStyles = document.createElement('link');
     mobileHeaderStyles.rel = 'stylesheet';
-    mobileHeaderStyles.href = '/assets/css/mobile-header-v2.css?v=9';
+    mobileHeaderStyles.href = '/assets/css/mobile-header-v2.css?v=10';
     mobileHeaderStyles.setAttribute('data-elajme-mobile-header', '');
     document.head.appendChild(mobileHeaderStyles);
+  }
+
+  /* On mobile, use an Elajme-controlled launcher so the native Tawk bubble cannot cover header controls. */
+  if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches && !document.querySelector('script[data-elajme-mobile-tawk]')) {
+    const mobileTawk = document.createElement('script');
+    mobileTawk.src = '/assets/js/mobile-tawk-launcher.js?v=1';
+    mobileTawk.defer = true;
+    mobileTawk.setAttribute('data-elajme-mobile-tawk', '');
+    document.head.appendChild(mobileTawk);
   }
 
   function ensureGA4() {
