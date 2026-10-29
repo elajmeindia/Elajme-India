@@ -50,12 +50,10 @@ jobs:
 
           for page in pages:
               text=page.read_text(errors='ignore')
-              # Internal href/src targets.
               for attr,url in re.findall(r'\b(href|src)=["\']([^"\']+)["\']', text, flags=re.I):
                   if not target_exists(url,page):
                       problems.append(f'BROKEN {page}: {attr}={url}')
 
-              # Canonical must be unique and local absolute URL on indexable content pages.
               canon=re.findall(r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)',text,flags=re.I)
               if page.name=='index.html' and page.as_posix() not in ('404.html',):
                   if len(canon)!=1:
@@ -63,7 +61,6 @@ jobs:
                   elif not canon[0].startswith('https://elajmeindia.com/'):
                       problems.append(f'CANONICAL_DOMAIN {page}: {canon[0]}')
 
-              # If hreflang exists, require en/ar/x-default trio.
               langs=re.findall(r'<link[^>]+rel=["\']alternate["\'][^>]+hreflang=["\']([^"\']+)',text,flags=re.I)
               if langs:
                   needed={'en','ar','x-default'}
@@ -71,7 +68,6 @@ jobs:
                   if missing:
                       problems.append(f'HREFLANG {page}: missing {sorted(missing)}')
 
-          # Known retired path should only survive in redirects, not HTML.
           for page in pages:
               t=page.read_text(errors='ignore')
               if 'orthopedic-treatment-india' in t:
@@ -85,3 +81,5 @@ jobs:
       - name: Verify footer lock files are untouched
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+
+# audit-trigger: current-main-2026-10-29
