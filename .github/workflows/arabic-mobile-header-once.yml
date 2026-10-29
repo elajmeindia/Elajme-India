@@ -22,10 +22,10 @@ jobs:
               raise SystemExit('Footer not found; refusing edit')
           footer_end += len('</footer>')
           footer_before=s[footer_start:footer_end]
-          old_css='/assets/css/arabic-mobile-header.css?v=1'
-          new_css='/assets/css/arabic-mobile-header.css?v=2'
+          old_css='/assets/css/arabic-mobile-header.css?v=2'
+          new_css='/assets/css/arabic-mobile-header.css?v=3'
           if old_css not in s:
-              raise SystemExit('Expected Arabic mobile CSS v1 reference not found; refusing broad edit')
+              raise SystemExit('Expected Arabic mobile CSS v2 reference not found; refusing broad edit')
           s=s.replace(old_css,new_css,1)
           new_footer_start=s.find('<footer')
           new_footer_end=s.find('</footer>',new_footer_start)+len('</footer>')
@@ -42,7 +42,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           d=Path('ar/index.html').read_text()
-          if '/assets/css/arabic-mobile-header.css?v=2' not in d:
+          if '/assets/css/arabic-mobile-header.css?v=3' not in d:
               raise SystemExit('Cache-bust verification failed')
           PY
       - name: Commit
@@ -51,5 +51,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add ar/index.html
-          git commit -m 'Refresh compact Arabic mobile navigation CSS'
+          git commit -m 'Load fixed Arabic mobile navigation CSS'
           git push
