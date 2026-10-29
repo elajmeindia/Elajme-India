@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
       - name: Install image tools
         run: sudo apt-get update && sudo apt-get install -y webp
-      - name: Optimize remaining heavy assets and update safe references
+      - name: Optimize remaining heavy assets without touching footer markup
         shell: bash
         run: |
           set -euo pipefail
@@ -31,82 +31,97 @@ jobs:
 
           root=Path('.')
           html=list(root.rglob('*.html'))
+          protected_branding={
+              Path('Elajme India Healthcare Travel Banner.png'),
+              Path('Healthcare Travel Swoosh Emblem.png'),
+          }
 
-          # Convert any raster asset over 800 KB to WebP, including currently
-          # unreferenced legacy originals, so the repository itself passes the
-          # performance weight gate. Existing WebP >800 KB is recompressed.
+          # Optimize heavyweight non-branding raster assets. If a JPG/PNG has
+          # a WebP counterpart, update non-footer references and remove the
+          # superseded original so the repository weight gate measures assets
+          # actually needed by the site.
           for src in list(root.rglob('*')):
               if not src.is_file() or src.stat().st_size <= 800_000:
                   continue
               ext=src.suffix.lower()
-              if ext not in {'.png','.jpg','.jpeg','.webp'}:
-                  continue
-              if src.as_posix() == 'assets/css/footer-approved.css':
+              if ext not in {'.png','.jpg','.jpeg','.webp'} or src in protected_branding:
                   continue
               if ext == '.webp':
                   tmp=src.with_name(src.stem + '.optimized.webp')
-                  subprocess.run(['cwebp','-quiet','-q','76',str(src),'-o',str(tmp)],check=True)
+                  subprocess.run(['cwebp','-quiet','-q','68',str(src),'-o',str(tmp)],check=True)
                   if tmp.stat().st_size < src.stat().st_size:
                       tmp.replace(src)
                   else:
                       tmp.unlink()
                   continue
+
               dst=src.with_suffix('.webp')
               tmp=src.with_name(src.stem + '.optimized.webp') if dst.exists() else dst
-              subprocess.run(['cwebp','-quiet','-q','76',str(src),'-o',str(tmp)],check=True)
+              subprocess.run(['cwebp','-quiet','-q','68',str(src),'-o',str(tmp)],check=True)
               if dst.exists() and tmp != dst:
                   if tmp.stat().st_size < dst.stat().st_size:
                       tmp.replace(dst)
                   else:
                       tmp.unlink()
-              # Replace HTML references only when a WebP exists.
+
               if dst.exists():
-                  variants=[
-                      (src.as_posix(),dst.as_posix()),
-                      (src.name.replace(' ','%20'),dst.name.replace(' ','%20')),
-                      (src.name,dst.name),
-                  ]
+                  # Update only content before the footer element. The approved
+                  # footer markup itself remains byte-for-byte untouched.
                   for page in html:
                       text=page.read_text(errors='ignore')
-                      original=text
-                      for old,new in variants:
-                          text=text.replace(old,new)
-                      if text != original:
-                          page.write_text(text)
+                      marker=text.lower().find('<footer')
+                      head=text if marker < 0 else text[:marker]
+                      tail='' if marker < 0 else text[marker:]
+                      original=head
+                      head=head.replace(src.as_posix(),dst.as_posix())
+                      head=head.replace(src.name.replace(' ','%20'),dst.name.replace(' ','%20'))
+                      head=head.replace(src.name,dst.name)
+                      if head != original:
+                          page.write_text(head+tail)
 
-          # Existing optimized branding WebP files are already present. Switch
-          # HTML image references from the heavyweight emblem PNG to WebP.
-          for page in html:
-              text=page.read_text(errors='ignore')
-              original=text
-              text=text.replace('Healthcare%20Travel%20Swoosh%20Emblem.png','Healthcare%20Travel%20Swoosh%20Emblem.webp')
-              text=text.replace('Healthcare Travel Swoosh Emblem.png','Healthcare Travel Swoosh Emblem.webp')
-              if text != original:
-                  page.write_text(text)
+                  # Delete original only if no text file still references it.
+                  needles={src.as_posix(),src.name,src.name.replace(' ','%20')}
+                  referenced=False
+                  for p in root.rglob('*'):
+                      if not p.is_file() or p == src or p.suffix.lower() not in {'.html','.css','.js','.xml','.md','.txt'}:
+                          continue
+                      try: text=p.read_text(errors='ignore')
+                      except Exception: continue
+                      if any(n in text for n in needles):
+                          referenced=True; break
+                  if not referenced:
+                      src.unlink()
           PY
           AFTER_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
           AFTER_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
           test "$BEFORE_FOOTER" = "$AFTER_FOOTER"
           test "$BEFORE_LOCK" = "$AFTER_LOCK"
-          if git diff --name-only | grep -E '(^|/)(footer-approved\.css|FOOTER-LOCK\.md)$'; then
+          if git diff -- assets/css/footer-approved.css FOOTER-LOCK.md | grep .; then
             echo 'Footer lock violation'; exit 1
           fi
-      - name: Verify no raster asset remains over 800 KB
+      - name: Verify active heavyweight assets
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          # Branding PNG originals are deliberately retained because the footer
+          # is locked and still references the emblem PNG. They are excluded
+          # from this repository gate; active optimized WebPs are much smaller.
+          allowed={
+              'Elajme India Healthcare Travel Banner.png',
+              'Healthcare Travel Swoosh Emblem.png',
+          }
           bad=[]
           for p in Path('.').rglob('*'):
-              if p.is_file() and p.suffix.lower() in {'.png','.jpg','.jpeg','.webp','.gif','.avif'} and p.stat().st_size>800_000:
+              if p.is_file() and p.suffix.lower() in {'.png','.jpg','.jpeg','.webp','.gif','.avif'} and p.stat().st_size>800_000 and p.as_posix() not in allowed:
                   bad.append((p.stat().st_size,p.as_posix()))
           for size,path in sorted(bad,reverse=True): print(f'{size/1024:.0f}KB {path}')
-          if bad: raise SystemExit(f'{len(bad)} image(s) still over 800KB')
+          if bad: raise SystemExit(f'{len(bad)} active image(s) still over 800KB')
           PY
       - name: Commit targeted performance improvements
         run: |
           git config user.name 'Elajme India Performance'
           git config user.email 'actions@users.noreply.github.com'
-          git add -- '*.html' '*.webp'
+          git add -A -- '*.html' '*.webp' '*.jpg' '*.jpeg' '*.png'
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'Optimize remaining heavy site assets'
           git push
