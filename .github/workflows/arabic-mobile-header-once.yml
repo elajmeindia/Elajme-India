@@ -1,0 +1,50 @@
+name: Arabic mobile header install once
+on:
+  push:
+    paths:
+      - '.github/workflows/arabic-mobile-header-once.yml'
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Arabic mobile header assets without touching footer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ar/index.html')
+          s=p.read_text()
+          footer_start=s.find('<footer')
+          footer_end=s.find('</footer>',footer_start)
+          if footer_start < 0 or footer_end < 0:
+              raise SystemExit('Footer not found; refusing edit')
+          footer_end += len('</footer>')
+          footer_before=s[footer_start:footer_end]
+          css='<link rel="stylesheet" href="/assets/css/arabic-mobile-header.css?v=1">'
+          js='<script src="/assets/js/arabic-mobile-menu.js?v=1" defer></script>'
+          if css not in s:
+              s=s.replace('</head>',css+'</head>',1)
+          if js not in s:
+              s=s.replace('</body>',js+'</body>',1)
+          new_footer_start=s.find('<footer')
+          new_footer_end=s.find('</footer>',new_footer_start)+len('</footer>')
+          footer_after=s[new_footer_start:new_footer_end]
+          if footer_before != footer_after:
+              raise SystemExit('LOCK VIOLATION: footer markup changed')
+          p.write_text(s)
+          print('Footer markup verified byte-identical.')
+          PY
+      - name: Verify only Arabic homepage changed
+        run: |
+          git diff --check
+          git diff -- ar/index.html
+      - name: Commit
+        run: |
+          if git diff --quiet -- ar/index.html; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ar/index.html
+          git commit -m 'Enable professional RTL mobile menu on Arabic homepage'
+          git push
