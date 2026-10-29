@@ -1,0 +1,50 @@
+name: Optimize homepage brand images once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/optimize-brand-images-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install WebP encoder
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq webp
+      - name: Create optimized WebP branding assets
+        run: |
+          cwebp -quiet -q 82 -m 6 'Healthcare Travel Swoosh Emblem.png' -o 'Healthcare Travel Swoosh Emblem.webp'
+          cwebp -quiet -q 82 -m 6 'Elajme India Healthcare Travel Banner.png' -o 'Elajme India Healthcare Travel Banner.webp'
+      - name: Use optimized assets on homepage only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          # Head metadata/social image only.
+          s=s.replace('https://elajmeindia.com/Elajme%20India%20Healthcare%20Travel%20Banner.png','https://elajmeindia.com/Elajme%20India%20Healthcare%20Travel%20Banner.webp')
+          # Critical preload only; do not alter footer references.
+          s=s.replace('<link rel="preload" href="Healthcare%20Travel%20Swoosh%20Emblem.png" as="image" fetchpriority="high">','<link rel="preload" href="Healthcare%20Travel%20Swoosh%20Emblem.webp" as="image" fetchpriority="high" type="image/webp">',1)
+          # Header logo only (first matching image after body); footer remains PNG and untouched.
+          old='<img src="Healthcare%20Travel%20Swoosh%20Emblem.png" alt="" class="brand-icon" decoding="async" fetchpriority="high">'
+          new='<img src="Healthcare%20Travel%20Swoosh%20Emblem.webp" alt="" class="brand-icon" decoding="async" fetchpriority="high" width="60" height="60">'
+          if old not in s:
+              raise SystemExit('Expected homepage header logo markup not found; refusing broad replacement')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify locked footer markup was not rewritten
+        run: |
+          git diff -- index.html | awk '/<footer class="site-footer">/{bad=1} END{exit bad?1:0}'
+      - name: Commit optimized assets
+        run: |
+          git config user.name 'Elajme India Performance'
+          git config user.email 'actions@users.noreply.github.com'
+          git add 'Healthcare Travel Swoosh Emblem.webp' 'Elajme India Healthcare Travel Banner.webp' index.html
+          git commit -m 'Optimize homepage branding images for faster loading' || exit 0
+          git push
