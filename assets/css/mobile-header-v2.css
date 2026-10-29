@@ -1,4 +1,4 @@
-/* Elajme India mobile homepage QA V17. Mobile-only overrides; approved footer intentionally untouched. */
+/* Elajme India mobile homepage QA V18. Mobile-only overrides; approved footer intentionally untouched. */
 @media (max-width:900px){
   html,body{max-width:100%;overflow-x:hidden}
   body{padding-bottom:68px!important}
@@ -54,8 +54,9 @@
   html[lang='ar'] body .site-header .brand-main,html[lang='ar'] body .site-header .brand-ar{text-align:right!important}
   html[lang='ar'] body .site-header .nav-actions{direction:rtl!important}
   html[lang='ar'] body .site-header .desktop-nav{direction:rtl!important}
-  html[lang='ar'] body .site-header .desktop-nav>a{justify-content:flex-start!important;text-align:right!important}
-  html[lang='ar'] body .site-header .desktop-nav>a:hover,html[lang='ar'] body .site-header .desktop-nav>a:focus-visible{padding-left:12px!important;padding-right:16px!important}
+  html[lang='ar'] body .site-header .desktop-nav>a{justify-content:flex-start!important;text-align:right!important;padding-right:14px!important}
+  html[lang='ar'] body .site-header .desktop-nav>a:hover,html[lang='ar'] body .site-header .desktop-nav>a:focus-visible{padding-left:12px!important;padding-right:18px!important}
+  html[lang='ar'] body .site-header .desktop-nav>a.mobile-ar-about:after,html[lang='ar'] body .site-header .desktop-nav>a.mobile-ar-contact:after{content:none!important;display:none!important}
   html[lang='ar'] .audience-inner{direction:rtl!important}
   body .countries-section .country-panel{box-sizing:border-box!important;width:100%!important;max-width:100%!important;padding:12px 20px!important}
   body .countries-section .country-panel>.panel-line{box-sizing:border-box!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto!important;align-items:start!important;justify-items:start!important;width:100%!important;min-height:0!important;padding:18px 0!important;margin:0!important;gap:6px!important}
@@ -74,6 +75,7 @@
   body .site-header .lang-toggle{min-height:38px!important;padding:6px 8px!important;font-size:10px!important}
   body .site-header .mobile-menu-toggle{width:38px!important;height:38px!important}
   body .site-header .desktop-nav>a{min-height:41px!important;font-size:12px!important;padding:9px 10px!important}
+  html[lang='ar'] body .site-header .desktop-nav>a{padding-right:13px!important}
   .hero .container{padding-left:16px!important;padding-right:16px!important}
   .hero-copy h1{font-size:clamp(42px,12vw,58px)!important;line-height:1.05!important}
   .hero-visual{padding-top:4px!important}
