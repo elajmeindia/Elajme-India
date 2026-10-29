@@ -67,7 +67,7 @@ Internal-linking rule for the next implementation pass:
 - [x] Prepare Google Search campaign landing journeys. Existing GCC country and nine treatment pages are mapped to search intent, Elajme-only conversion paths and privacy-safe UTM attribution in `campaign-landing-journeys.md`.
 - [x] Prepare Meta/WhatsApp campaign journeys. Country, treatment and click-to-WhatsApp journeys plus privacy-safe Meta UTM conventions are defined in `campaign-landing-journeys.md`.
 - [x] Define qualified-lead fields: country, treatment need, diagnosis if known, reports available, preferred language.
-- [ ] Establish lead-source and follow-up tracking.
+- [ ] Establish lead-source and follow-up tracking. Privacy-safe source taxonomy, lead fields, follow-up stages, operating discipline and KPI framework are documented in `lead-follow-up-workflow.md`; operational completion still requires a secured private CRM or equivalent private lead-management system to be connected and actively used.
 - [ ] Build hospital/doctor partnership outreach pipeline.
 
 ### Qualified lead definition
