@@ -1,4 +1,4 @@
-/* Elajme India mobile homepage QA V8. Mobile-only overrides; approved footer intentionally untouched. */
+/* Elajme India mobile homepage QA V9. Mobile-only overrides; approved footer intentionally untouched. */
 @media (max-width:900px){
   html,body{max-width:100%;overflow-x:hidden}
   body{padding-bottom:68px!important}
@@ -34,8 +34,8 @@
   .mobile-conversion-bar{left:8px!important;right:8px!important;bottom:max(5px,env(safe-area-inset-bottom))!important;padding:3px!important;border-radius:13px!important;gap:4px!important;z-index:9000!important}
   .mobile-conversion-bar a{min-height:42px!important;font-size:12px!important;border-radius:9px!important}
   .enquiry-section,.section{scroll-margin-bottom:66px}
-  /* Keep Tawk available on mobile, but place its launcher below the complete header so it cannot cover header actions. */
-  iframe[src*='tawk.to' i],iframe[src*='tawk' i],iframe[title*='chat' i],iframe[title*='tawk' i]{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;position:fixed!important;top:390px!important;right:12px!important;bottom:auto!important;left:auto!important;z-index:8990!important}
+  /* Keep Tawk available, but force its launcher clear of every header control. */
+  iframe[src*='tawk.to' i],iframe[src*='tawk' i],iframe[title*='chat' i],iframe[title*='tawk' i]{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;position:fixed!important;top:430px!important;right:12px!important;bottom:auto!important;left:auto!important;z-index:8990!important;transform:none!important}
   html[lang='ar'] iframe[src*='tawk.to' i],html[lang='ar'] iframe[src*='tawk' i],html[lang='ar'] iframe[title*='chat' i],html[lang='ar'] iframe[title*='tawk' i]{right:auto!important;left:12px!important}
   html[lang='ar'] .site-header .nav-wrap{direction:rtl!important;grid-template-columns:minmax(0,1fr)!important;grid-template-areas:'brand' 'actions' 'nav'!important}
   html[lang='ar'] .site-header .brand{grid-area:brand!important;justify-self:start!important}
@@ -60,6 +60,6 @@
   .main-visual-card,.floating-note{max-width:100%!important}
   .audience-strip .country{flex:1 1 calc(50% - 10px)!important;text-align:center!important}
   .mobile-conversion-bar{left:6px!important;right:6px!important}
-  iframe[src*='tawk.to' i],iframe[src*='tawk' i],iframe[title*='chat' i],iframe[title*='tawk' i]{top:370px!important;right:10px!important}
+  iframe[src*='tawk.to' i],iframe[src*='tawk' i],iframe[title*='chat' i],iframe[title*='tawk' i]{top:400px!important;right:10px!important}
   html[lang='ar'] iframe[src*='tawk.to' i],html[lang='ar'] iframe[src*='tawk' i],html[lang='ar'] iframe[title*='chat' i],html[lang='ar'] iframe[title*='tawk' i]{right:auto!important;left:10px!important}
 }
