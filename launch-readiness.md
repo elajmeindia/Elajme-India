@@ -37,8 +37,8 @@ This checklist tracks the production launch and patient-acquisition phase withou
 - [x] Audit Qatar English and Arabic landing pages; existing pages already meet the current SEO, safety and conversion baseline.
 - [x] Audit Kuwait English and Arabic landing pages; existing pages already meet the current SEO, safety and conversion baseline.
 - [x] Audit Bahrain English and Arabic landing pages; existing pages already meet the current SEO, safety and conversion baseline.
-- [ ] Expand Arabic search-intent coverage without unsupported medical claims.
-- [ ] Improve internal linking between GCC, treatment, hospital and doctor pages. English GCC country pages now link directly to all nine treatment categories; Arabic expansion remains pending a footer-safe editing path.
+- [x] Expand Arabic search-intent coverage without unsupported medical claims. The six GCC Arabic country pages already target country-specific treatment-in-India intent and cover pre-travel report review, remote consultation where available, hospital cost estimates, travel/visa coordination and cautious medical limitations.
+- [ ] Improve internal linking between GCC, treatment, hospital and doctor pages. English GCC country pages link directly to all nine treatment categories. Arabic GCC pages have been audited and already link to the Arabic treatment directory, hospital directory, doctor directory and core patient resources; direct links to individual Arabic treatment categories remain pending a footer-safe editing path.
 
 ### GCC search-intent expansion priorities
 Use existing country and treatment pages as the primary landing architecture. Avoid thin duplicate country-treatment pages until Search Console data shows enough distinct demand.
