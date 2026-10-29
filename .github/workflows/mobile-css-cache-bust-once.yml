@@ -1,0 +1,48 @@
+name: Mobile CSS loader cache bust once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/mobile-css-cache-bust-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cache-bust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Cache-bust analytics loader and preserve locked footer
+        shell: python
+        run: |
+          from pathlib import Path
+          import hashlib
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          marker = '<footer'
+          assert marker in text, 'footer marker missing'
+          footer_before = text[text.index(marker):]
+          old = '<script src="assets/js/analytics.js" defer></script>'
+          new = '<script src="assets/js/analytics.js?v=16" defer></script>'
+          assert old in text, 'analytics script tag not found or already changed'
+          text = text.replace(old, new, 1)
+          footer_after = text[text.index(marker):]
+          # The script tag is after the footer, so verify footer markup itself through </footer> is byte-identical.
+          before_markup = footer_before[:footer_before.index('</footer>')+9]
+          after_markup = footer_after[:footer_after.index('</footer>')+9]
+          assert before_markup == after_markup, 'locked footer markup changed'
+          p.write_text(text, encoding='utf-8')
+          print('Locked footer markup SHA256:', hashlib.sha256(after_markup.encode()).hexdigest())
+      - name: Commit surgical cache-bust
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --check
+          git diff --cached --unified=1
+          git commit -m "Cache-bust mobile CSS loader on homepage"
+          git push
