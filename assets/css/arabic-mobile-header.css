@@ -1,0 +1,34 @@
+/* Elajme India Arabic mobile header — RTL parity with approved English mobile header. Footer intentionally untouched. */
+@media (max-width:900px){
+  [dir="rtl"] .shell-header{height:auto!important;min-height:0!important;overflow:visible!important}
+  [dir="rtl"] .shell-header .shell-nav{box-sizing:border-box!important;width:min(100% - 20px,1160px)!important;min-height:68px!important;margin-inline:auto!important;padding:8px 0!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:'brand actions' 'nav nav'!important;gap:7px 10px!important;align-items:center!important;direction:rtl!important}
+  [dir="rtl"] .shell-header .shell-brand{grid-area:brand!important;justify-self:start!important;min-width:0!important;overflow:hidden!important;direction:rtl!important;gap:9px!important}
+  [dir="rtl"] .shell-header .shell-brand img{width:44px!important;height:44px!important;flex:0 0 44px!important}
+  [dir="rtl"] .shell-header .shell-wordmark{align-items:flex-start!important;text-align:right!important;min-width:0!important}
+  [dir="rtl"] .shell-header .shell-name{font-size:16px!important;white-space:nowrap!important}
+  [dir="rtl"] .shell-header .shell-ar{font-size:11px!important;text-align:right!important;white-space:nowrap!important}
+  [dir="rtl"] .shell-header .shell-actions{grid-area:actions!important;display:flex!important;align-items:center!important;justify-self:end!important;gap:6px!important;direction:rtl!important;margin:0!important}
+  [dir="rtl"] .shell-header .shell-phone,[dir="rtl"] .shell-header .shell-cta{display:none!important}
+  [dir="rtl"] .shell-header .shell-whatsapp{display:inline-flex!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;font-size:0!important;border-radius:10px!important}
+  [dir="rtl"] .shell-header .shell-whatsapp:after{content:'WA'!important;font-size:11px!important;font-weight:800!important}
+  [dir="rtl"] .shell-header .shell-lang{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:40px!important;padding:7px 10px!important;font-size:11px!important;border-radius:10px!important}
+  [dir="rtl"] .shell-header .arabic-mobile-menu-toggle{box-sizing:border-box!important;display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;width:40px!important;height:40px!important;padding:0!important;border:1px solid #dce5e7!important;border-radius:10px!important;background:#fff!important;color:#123b50!important;cursor:pointer!important}
+  [dir="rtl"] .shell-header .arabic-mobile-menu-toggle span{display:block!important;width:18px!important;height:2px!important;border-radius:2px!important;background:currentColor!important;transition:transform .18s ease,opacity .18s ease!important}
+  [dir="rtl"] .shell-header.arabic-mobile-menu-open .arabic-mobile-menu-toggle span:nth-child(1){transform:translateY(6px) rotate(45deg)!important}
+  [dir="rtl"] .shell-header.arabic-mobile-menu-open .arabic-mobile-menu-toggle span:nth-child(2){opacity:0!important}
+  [dir="rtl"] .shell-header.arabic-mobile-menu-open .arabic-mobile-menu-toggle span:nth-child(3){transform:translateY(-6px) rotate(-45deg)!important}
+  [dir="rtl"] .shell-header .shell-links{grid-area:nav!important;box-sizing:border-box!important;display:none!important;width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;direction:rtl!important;border-top:1px solid #edf1f2!important}
+  [dir="rtl"] .shell-header.arabic-mobile-menu-open .shell-links{display:grid!important;grid-template-columns:minmax(0,1fr)!important;padding-top:4px!important}
+  [dir="rtl"] .shell-header .shell-links a{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;width:100%!important;min-height:46px!important;margin:0!important;padding:10px 14px!important;border:0!important;border-bottom:1px solid #edf1f2!important;border-radius:0!important;background:#fff!important;color:#405b68!important;font-size:13px!important;font-weight:700!important;line-height:1.35!important;text-align:right!important;white-space:normal!important}
+  [dir="rtl"] .shell-header .shell-links a:last-child{border-bottom:0!important}
+  [dir="rtl"] .shell-header .shell-links a:hover,[dir="rtl"] .shell-header .shell-links a:focus-visible,[dir="rtl"] .shell-header .shell-links a[aria-current="page"]{background:#f3faf9!important;color:#146b68!important}
+}
+@media (max-width:560px){
+  [dir="rtl"] .shell-header .shell-nav{width:calc(100% - 20px)!important;min-height:64px!important;gap:6px 8px!important}
+  [dir="rtl"] .shell-header .shell-brand img{width:42px!important;height:42px!important;flex-basis:42px!important}
+  [dir="rtl"] .shell-header .shell-name{font-size:15px!important}
+  [dir="rtl"] .shell-header .shell-ar{font-size:10.5px!important}
+  [dir="rtl"] .shell-header .shell-whatsapp,[dir="rtl"] .shell-header .arabic-mobile-menu-toggle{width:38px!important;min-width:38px!important;height:38px!important;min-height:38px!important}
+  [dir="rtl"] .shell-header .shell-lang{min-height:38px!important;padding:6px 8px!important;font-size:10px!important}
+  [dir="rtl"] .shell-header .shell-links a{min-height:44px!important;padding:9px 12px!important;font-size:12.5px!important}
+}
