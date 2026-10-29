@@ -1,0 +1,53 @@
+name: Arabic footer cache bust once
+on:
+  push:
+    paths:
+      - '.github/workflows/arabic-footer-cache-bust-once.yml'
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh Arabic approved footer CSS reference safely
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ar/index.html')
+          s=p.read_text()
+          footer_start=s.find('<footer')
+          footer_end=s.find('</footer>',footer_start)
+          if footer_start < 0 or footer_end < 0:
+              raise SystemExit('Footer not found; refusing edit')
+          footer_end += len('</footer>')
+          footer_before=s[footer_start:footer_end]
+          old='/assets/css/footer-approved.css?v=1'
+          new='/assets/css/footer-approved.css?v=2'
+          if old not in s:
+              raise SystemExit('Expected footer CSS v1 reference not found; refusing broad edit')
+          s=s.replace(old,new,1)
+          fs=s.find('<footer')
+          fe=s.find('</footer>',fs)+len('</footer>')
+          if footer_before != s[fs:fe]:
+              raise SystemExit('LOCK VIOLATION: footer markup changed')
+          p.write_text(s)
+          print('Footer CSS reference refreshed; footer markup byte-identical.')
+          PY
+      - name: Verify scoped change
+        run: |
+          git diff --check
+          python3 - <<'PY'
+          from pathlib import Path
+          d=Path('ar/index.html').read_text()
+          if '/assets/css/footer-approved.css?v=2' not in d:
+              raise SystemExit('Footer cache-bust verification failed')
+          PY
+      - name: Commit
+        run: |
+          if git diff --quiet -- ar/index.html; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ar/index.html
+          git commit -m 'Load corrected Arabic mobile footer layout'
+          git push
