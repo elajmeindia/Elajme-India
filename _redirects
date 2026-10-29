@@ -4,5 +4,8 @@
 /index.html / 301
 /ar/index.html /ar/ 301
 
+# Preserve SEO equity from a legacy orthopaedic treatment URL that Google discovered.
+/treatments/orthopedic-treatment-india/ /treatments/knee-replacement-india/ 301
+
 # Note: Cloudflare Pages _redirects does not support matching query parameters.
 # Legacy ?lang=ar handling remains in the homepage JavaScript where required.
