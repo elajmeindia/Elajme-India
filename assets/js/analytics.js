@@ -5,6 +5,15 @@
   const GA4_MEASUREMENT_ID = 'G-ZEKEN0TB2N';
   const CAMPAIGN_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
 
+  /* Load the dedicated mobile-header stylesheet without modifying locked footer markup/styles. */
+  if (!document.querySelector('link[data-elajme-mobile-header]')) {
+    const mobileHeaderStyles = document.createElement('link');
+    mobileHeaderStyles.rel = 'stylesheet';
+    mobileHeaderStyles.href = '/assets/css/mobile-header-v2.css?v=2';
+    mobileHeaderStyles.setAttribute('data-elajme-mobile-header', '');
+    document.head.appendChild(mobileHeaderStyles);
+  }
+
   function ensureGA4() {
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
