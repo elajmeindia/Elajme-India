@@ -13,7 +13,7 @@ This checklist tracks the production launch and patient-acquisition phase withou
 - [x] Confirm English and Arabic canonical + hreflang pairs.
 - [x] Confirm sitemap.xml and robots.txt.
 - [ ] Check mobile navigation, enquiry form and WhatsApp flow.
-- [ ] Check treatment → hospital/doctor → enquiry journey.
+- [x] Check treatment → hospital/doctor → enquiry journey. All nine treatment pathways have been reviewed for relevant discovery links, cautious medical wording and Elajme-only consultation routing.
 - [x] Verify no direct hospital/doctor consultation CTA bypasses Elajme India.
 
 ## Phase 2 — Performance
