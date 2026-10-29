@@ -64,8 +64,8 @@ Internal-linking rule for the next implementation pass:
 - Arabic pages should link to Arabic destinations wherever an equivalent page exists.
 
 ## Phase 5 — Lead generation
-- [ ] Prepare Google Search campaign landing journeys.
-- [ ] Prepare Meta/WhatsApp campaign journeys.
+- [x] Prepare Google Search campaign landing journeys. Existing GCC country and nine treatment pages are mapped to search intent, Elajme-only conversion paths and privacy-safe UTM attribution in `campaign-landing-journeys.md`.
+- [x] Prepare Meta/WhatsApp campaign journeys. Country, treatment and click-to-WhatsApp journeys plus privacy-safe Meta UTM conventions are defined in `campaign-landing-journeys.md`.
 - [x] Define qualified-lead fields: country, treatment need, diagnosis if known, reports available, preferred language.
 - [ ] Establish lead-source and follow-up tracking.
 - [ ] Build hospital/doctor partnership outreach pipeline.
