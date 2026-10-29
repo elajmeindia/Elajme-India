@@ -9,43 +9,69 @@ This checklist tracks the production launch and patient-acquisition phase withou
 - No guarantee of treatment outcome, visa approval, hospital acceptance, or final treatment cost.
 
 ## Phase 1 — Technical launch QA
-- [ ] Run repository-wide HTML/link/image/metadata/accessibility QA.
-- [ ] Confirm English and Arabic canonical + hreflang pairs.
-- [ ] Confirm sitemap.xml and robots.txt.
+- [x] Run repository-wide HTML/link/image/metadata/accessibility QA.
+- [x] Confirm English and Arabic canonical + hreflang pairs.
+- [x] Confirm sitemap.xml and robots.txt.
 - [ ] Check mobile navigation, enquiry form and WhatsApp flow.
 - [ ] Check treatment → hospital/doctor → enquiry journey.
-- [ ] Verify no direct hospital/doctor consultation CTA bypasses Elajme India.
+- [x] Verify no direct hospital/doctor consultation CTA bypasses Elajme India.
 
 ## Phase 2 — Performance
-- [ ] Compress oversized banner, logo, hospital and doctor imagery.
-- [ ] Prefer WebP/AVIF where browser-safe and retain suitable fallbacks where needed.
-- [ ] Preserve lazy loading for below-the-fold imagery.
-- [ ] Avoid lazy loading the primary above-the-fold/LCP image.
+- [ ] Compress oversized banner, logo, hospital and doctor imagery. Most active heavy assets have been optimized; one known hospital WebP remains above the target threshold.
+- [x] Prefer WebP/AVIF where browser-safe and retain suitable fallbacks where needed.
+- [x] Preserve lazy loading for below-the-fold imagery.
+- [x] Avoid lazy loading the primary above-the-fold/LCP image.
 - [ ] Recheck mobile layout after image changes.
 
 ## Phase 3 — Measurement
-- [ ] Connect Google Search Console and verify elajmeindia.com.
-- [ ] Submit sitemap.xml.
-- [ ] Configure GA4.
-- [ ] Track enquiry-form submissions and WhatsApp clicks as conversions.
+- [x] Connect Google Search Console and verify elajmeindia.com.
+- [x] Submit sitemap.xml.
+- [x] Configure GA4.
+- [x] Track enquiry-form submissions and WhatsApp clicks as conversions. WhatsApp enquiry event verified in GA4 Realtime.
 - [ ] Add campaign/source parameters to marketing links where appropriate.
 
 ## Phase 4 — GCC organic acquisition
-- [ ] Strengthen Saudi Arabia landing page.
-- [ ] Strengthen UAE landing page.
-- [ ] Strengthen Oman landing page.
-- [ ] Strengthen Qatar landing page.
-- [ ] Strengthen Kuwait landing page.
-- [ ] Strengthen Bahrain landing page.
+- [x] Strengthen Saudi Arabia landing page.
+- [x] Audit UAE English and Arabic landing pages; existing pages already meet the current SEO, safety and conversion baseline.
+- [x] Audit Oman English and Arabic landing pages; existing pages already meet the current SEO, safety and conversion baseline.
+- [x] Audit Qatar English and Arabic landing pages; existing pages already meet the current SEO, safety and conversion baseline.
+- [x] Audit Kuwait English and Arabic landing pages; existing pages already meet the current SEO, safety and conversion baseline.
+- [x] Audit Bahrain English and Arabic landing pages; existing pages already meet the current SEO, safety and conversion baseline.
 - [ ] Expand Arabic search-intent coverage without unsupported medical claims.
 - [ ] Improve internal linking between GCC, treatment, hospital and doctor pages.
+
+### GCC search-intent expansion priorities
+Use existing country and treatment pages as the primary landing architecture. Avoid thin duplicate country-treatment pages until Search Console data shows enough distinct demand.
+
+Priority English themes:
+- treatment in India for Saudi/UAE/Oman/Qatar/Kuwait/Bahrain patients
+- hospital and specialist review in India before travel
+- online consultation before travelling to India
+- treatment cost estimate from an Indian hospital
+- medical visa and international patient journey guidance
+
+Priority Arabic themes:
+- العلاج في الهند للمرضى من السعودية / الإمارات / عُمان / قطر / الكويت / البحرين
+- مراجعة التقارير الطبية قبل السفر إلى الهند
+- استشارة طبيب في الهند عن بُعد قبل السفر
+- تقدير تكلفة العلاج في الهند من المستشفى
+- خطوات رحلة العلاج والتأشيرة الطبية إلى الهند
+
+Internal-linking rule for the next implementation pass:
+- GCC country page → treatment directory + relevant treatment pages + hospital directory + doctor directory + patient guide + medical visa.
+- Treatment page → relevant hospital/doctor discovery + international-patient journey + Elajme enquiry.
+- Hospital/doctor page → relevant treatment information + Elajme enquiry only.
+- Arabic pages should link to Arabic destinations wherever an equivalent page exists.
 
 ## Phase 5 — Lead generation
 - [ ] Prepare Google Search campaign landing journeys.
 - [ ] Prepare Meta/WhatsApp campaign journeys.
-- [ ] Define qualified-lead fields: country, treatment need, diagnosis if known, reports available, preferred language.
+- [x] Define qualified-lead fields: country, treatment need, diagnosis if known, reports available, preferred language.
 - [ ] Establish lead-source and follow-up tracking.
 - [ ] Build hospital/doctor partnership outreach pipeline.
+
+### Qualified lead definition
+A qualified international patient enquiry should capture, where voluntarily provided and appropriate for coordination: country, treatment need/medical specialty, diagnosis if known, whether medical reports are available, and preferred communication language. Sensitive medical or identifying information must not be sent to GA4.
 
 ## Primary KPI
 Qualified international patient enquiries received and managed through Elajme India, with secondary KPIs for WhatsApp starts, enquiry submissions, organic impressions/clicks, conversion rate and qualified-lead rate.
