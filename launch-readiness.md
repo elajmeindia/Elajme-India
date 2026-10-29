@@ -28,7 +28,7 @@ This checklist tracks the production launch and patient-acquisition phase withou
 - [x] Submit sitemap.xml.
 - [x] Configure GA4.
 - [x] Track enquiry-form submissions and WhatsApp clicks as conversions. WhatsApp enquiry event verified in GA4 Realtime.
-- [ ] Add campaign/source parameters to marketing links where appropriate.
+- [x] Capture standard UTM campaign/source parameters on tracked conversion events without sending patient-identifying or medical data to GA4.
 
 ## Phase 4 — GCC organic acquisition
 - [x] Strengthen Saudi Arabia landing page.
@@ -38,7 +38,7 @@ This checklist tracks the production launch and patient-acquisition phase withou
 - [x] Audit Kuwait English and Arabic landing pages; existing pages already meet the current SEO, safety and conversion baseline.
 - [x] Audit Bahrain English and Arabic landing pages; existing pages already meet the current SEO, safety and conversion baseline.
 - [ ] Expand Arabic search-intent coverage without unsupported medical claims.
-- [ ] Improve internal linking between GCC, treatment, hospital and doctor pages.
+- [ ] Improve internal linking between GCC, treatment, hospital and doctor pages. English GCC country pages now link directly to all nine treatment categories; Arabic expansion remains pending a footer-safe editing path.
 
 ### GCC search-intent expansion priorities
 Use existing country and treatment pages as the primary landing architecture. Avoid thin duplicate country-treatment pages until Search Console data shows enough distinct demand.
