@@ -7,6 +7,18 @@
     var nav=header&&header.querySelector('.desktop-nav');
     var actions=header&&header.querySelector('.nav-actions');
     if(!header||!nav||!actions||header.querySelector('.mobile-menu-toggle'))return;
+
+    /* Arabic homepage legacy CSS can add generated labels to About/Contact.
+       Mark those links so the mobile stylesheet can suppress only those generated copies. */
+    if(document.documentElement.lang==='ar'){
+      Array.prototype.forEach.call(nav.querySelectorAll('a'),function(link){
+        var href=link.getAttribute('href')||'';
+        var dataEn=(link.getAttribute('data-en')||'').toLowerCase();
+        if(dataEn==='about us'||/\/about\/?(?:#.*)?$/.test(href))link.classList.add('mobile-ar-about');
+        if(dataEn==='contact'||/\/contact\/?(?:#.*)?$/.test(href))link.classList.add('mobile-ar-contact');
+      });
+    }
+
     var btn=document.createElement('button');
     btn.type='button';
     btn.className='mobile-menu-toggle';
