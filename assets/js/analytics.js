@@ -10,7 +10,7 @@
   if (!document.querySelector('link[data-elajme-mobile-header]')) {
     const mobileHeaderStyles = document.createElement('link');
     mobileHeaderStyles.rel = 'stylesheet';
-    mobileHeaderStyles.href = '/assets/css/mobile-header-v2.css?v=15';
+    mobileHeaderStyles.href = '/assets/css/mobile-header-v2.css?v=16';
     mobileHeaderStyles.setAttribute('data-elajme-mobile-header', '');
     document.head.appendChild(mobileHeaderStyles);
     /* script.js appends homepage CSS later. Move this mobile sheet back to the end so its mobile QA rules win. */
@@ -39,6 +39,13 @@
       mobileTawk.async = false;
       mobileTawk.setAttribute('data-elajme-mobile-tawk', '');
       document.head.appendChild(mobileTawk);
+    }
+    if (!document.querySelector('script[data-elajme-mobile-menu]')) {
+      const mobileMenu = document.createElement('script');
+      mobileMenu.src = '/assets/js/mobile-menu.js?v=1';
+      mobileMenu.defer = true;
+      mobileMenu.setAttribute('data-elajme-mobile-menu', '');
+      document.head.appendChild(mobileMenu);
     }
   }
 
