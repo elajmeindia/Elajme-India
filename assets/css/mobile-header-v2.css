@@ -1,4 +1,4 @@
-/* Elajme India mobile homepage header V4. Mobile-only overrides; approved footer intentionally untouched. */
+/* Elajme India mobile homepage header V5. Mobile-only overrides; approved footer intentionally untouched. */
 @media (max-width:900px){
   html,body{max-width:100%;overflow-x:hidden}
   body{padding-bottom:76px!important}
@@ -35,8 +35,8 @@
   .mobile-conversion-bar a{min-height:44px!important;font-size:12px!important;border-radius:9px!important}
   .enquiry-section,.section{scroll-margin-bottom:70px}
 
-  /* Tawk launcher: keep it at the bottom-right, safely above the persistent CTA bar. */
-  iframe[title*='chat' i],iframe[title*='tawk' i]{top:auto!important;bottom:76px!important;right:12px!important;left:auto!important;max-width:calc(100vw - 24px)!important}
+  /* Mobile already has persistent enquiry + WhatsApp actions. Hide third-party chat UI so it cannot cover header controls or page content. */
+  iframe[title*='chat' i],iframe[title*='tawk' i],div[class*='tawk' i],div[id*='tawk' i]{display:none!important;visibility:hidden!important;pointer-events:none!important}
 
   html[lang='ar'] .site-header .nav-wrap{direction:rtl!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:'brand actions' 'nav nav'!important}
   html[lang='ar'] .site-header .brand{grid-area:brand!important;justify-self:start!important}
@@ -45,7 +45,6 @@
   html[lang='ar'] .site-header .nav-actions{grid-area:actions!important;justify-self:end!important;direction:rtl!important}
   html[lang='ar'] .site-header .desktop-nav{grid-area:nav!important;direction:rtl!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}
   html[lang='ar'] .audience-inner{direction:rtl!important}
-  html[lang='ar'] iframe[title*='chat' i],html[lang='ar'] iframe[title*='tawk' i]{right:auto!important;left:12px!important}
 }
 @media (max-width:560px){
   .site-header .nav-wrap{padding:9px 10px 10px!important;gap:8px!important}
@@ -61,6 +60,4 @@
   .main-visual-card,.floating-note{max-width:100%!important}
   .audience-strip .country{flex:1 1 calc(50% - 10px)!important;text-align:center!important}
   .mobile-conversion-bar{left:6px!important;right:6px!important}
-  iframe[title*='chat' i],iframe[title*='tawk' i]{bottom:72px!important;right:10px!important}
-  html[lang='ar'] iframe[title*='chat' i],html[lang='ar'] iframe[title*='tawk' i]{right:auto!important;left:10px!important}
 }
