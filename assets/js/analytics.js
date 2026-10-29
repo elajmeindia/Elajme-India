@@ -4,23 +4,42 @@
 
   const GA4_MEASUREMENT_ID = 'G-ZEKEN0TB2N';
   const CAMPAIGN_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+  const IS_MOBILE = !!(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
 
   /* Load the dedicated mobile-header stylesheet without modifying locked footer markup/styles. */
   if (!document.querySelector('link[data-elajme-mobile-header]')) {
     const mobileHeaderStyles = document.createElement('link');
     mobileHeaderStyles.rel = 'stylesheet';
-    mobileHeaderStyles.href = '/assets/css/mobile-header-v2.css?v=10';
+    mobileHeaderStyles.href = '/assets/css/mobile-header-v2.css?v=11';
     mobileHeaderStyles.setAttribute('data-elajme-mobile-header', '');
     document.head.appendChild(mobileHeaderStyles);
+    /* script.js appends homepage CSS later. Move this mobile sheet back to the end so its mobile QA rules win. */
+    window.addEventListener('DOMContentLoaded', function () {
+      if (mobileHeaderStyles.parentNode) mobileHeaderStyles.parentNode.appendChild(mobileHeaderStyles);
+    });
   }
 
-  /* On mobile, use an Elajme-controlled launcher so the native Tawk bubble cannot cover header controls. */
-  if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches && !document.querySelector('script[data-elajme-mobile-tawk]')) {
-    const mobileTawk = document.createElement('script');
-    mobileTawk.src = '/assets/js/mobile-tawk-launcher.js?v=1';
-    mobileTawk.defer = true;
-    mobileTawk.setAttribute('data-elajme-mobile-tawk', '');
-    document.head.appendChild(mobileTawk);
+  /* Define Tawk's onLoad callback BEFORE script.js loads Tawk. This removes the native
+     launcher before it can remain over the mobile header. Our controlled launcher opens chat. */
+  if (IS_MOBILE) {
+    window.Tawk_API = window.Tawk_API || {};
+    const previousTawkOnLoad = window.Tawk_API.onLoad;
+    window.Tawk_API.onLoad = function () {
+      if (typeof previousTawkOnLoad === 'function') {
+        try { previousTawkOnLoad(); } catch (e) {}
+      }
+      if (window.Tawk_API && typeof window.Tawk_API.hideWidget === 'function') {
+        try { window.Tawk_API.hideWidget(); } catch (e) {}
+      }
+    };
+
+    if (!document.querySelector('script[data-elajme-mobile-tawk]')) {
+      const mobileTawk = document.createElement('script');
+      mobileTawk.src = '/assets/js/mobile-tawk-launcher.js?v=2';
+      mobileTawk.async = false;
+      mobileTawk.setAttribute('data-elajme-mobile-tawk', '');
+      document.head.appendChild(mobileTawk);
+    }
   }
 
   function ensureGA4() {
