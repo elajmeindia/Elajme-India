@@ -1,4 +1,4 @@
-/* Elajme India mobile homepage header V3. Mobile-only overrides; approved footer intentionally untouched. */
+/* Elajme India mobile homepage header V4. Mobile-only overrides; approved footer intentionally untouched. */
 @media (max-width:900px){
   html,body{max-width:100%;overflow-x:hidden}
   body{padding-bottom:76px!important}
@@ -18,8 +18,6 @@
   .site-header .desktop-nav{grid-area:nav!important;box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important;padding:0!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;overflow:visible!important;direction:ltr!important}
   .site-header .desktop-nav a{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;min-height:40px!important;margin:0!important;padding:7px 5px!important;border:1px solid #e4e8e9!important;border-radius:9px!important;background:#fff!important;font-size:10.5px!important;line-height:1.2!important;text-align:center!important;white-space:normal!important;overflow-wrap:anywhere!important}
   .site-header .desktop-nav a[href*='patient-guide'],.site-header .desktop-nav a[href*='medical-visa']{display:none!important}
-
-  /* Keep the hero journey graphic fully inside the phone viewport. */
   .hero-grid{grid-template-columns:1fr!important;max-width:100%!important}
   .hero-copy,.hero-visual{min-width:0!important;max-width:100%!important}
   .hero-visual{width:100%!important;padding:18px 0 4px!important;overflow:hidden!important}
@@ -27,21 +25,18 @@
   .main-visual-card{box-sizing:border-box!important;width:100%!important;max-width:520px!important;margin:0 auto!important;overflow:hidden!important}
   .floating-note{position:relative!important;right:auto!important;left:auto!important;bottom:auto!important;box-sizing:border-box!important;width:100%!important;max-width:520px!important;margin:12px auto 0!important;white-space:normal!important}
   .floating-note strong,.floating-note small{white-space:normal!important}
-
-  /* The original trust row is enough on mobile; suppress the JS-added duplicate row. */
   .hero-copy .conversion-reassurance{display:none!important}
-
-  /* GCC country links wrap instead of becoming a clipped horizontal strip. */
   .audience-strip{overflow:hidden!important}
   .audience-inner{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:8px 10px!important;max-width:100%!important;overflow:visible!important}
   .audience-label{flex:1 0 100%!important;min-width:0!important}
   .audience-strip .country{flex:0 1 auto!important;min-width:0!important;max-width:100%!important;white-space:normal!important}
   .audience-strip .country span{white-space:normal!important;overflow-wrap:anywhere!important}
-
-  /* Compact persistent CTA: useful without obscuring large areas of content. */
   .mobile-conversion-bar{left:8px!important;right:8px!important;bottom:max(5px,env(safe-area-inset-bottom))!important;padding:4px!important;border-radius:13px!important;gap:4px!important;z-index:9000!important}
   .mobile-conversion-bar a{min-height:44px!important;font-size:12px!important;border-radius:9px!important}
   .enquiry-section,.section{scroll-margin-bottom:70px}
+
+  /* Tawk launcher: keep it at the bottom-right, safely above the persistent CTA bar. */
+  iframe[title*='chat' i],iframe[title*='tawk' i]{top:auto!important;bottom:76px!important;right:12px!important;left:auto!important;max-width:calc(100vw - 24px)!important}
 
   html[lang='ar'] .site-header .nav-wrap{direction:rtl!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:'brand actions' 'nav nav'!important}
   html[lang='ar'] .site-header .brand{grid-area:brand!important;justify-self:start!important}
@@ -50,6 +45,7 @@
   html[lang='ar'] .site-header .nav-actions{grid-area:actions!important;justify-self:end!important;direction:rtl!important}
   html[lang='ar'] .site-header .desktop-nav{grid-area:nav!important;direction:rtl!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}
   html[lang='ar'] .audience-inner{direction:rtl!important}
+  html[lang='ar'] iframe[title*='chat' i],html[lang='ar'] iframe[title*='tawk' i]{right:auto!important;left:12px!important}
 }
 @media (max-width:560px){
   .site-header .nav-wrap{padding:9px 10px 10px!important;gap:8px!important}
@@ -65,4 +61,6 @@
   .main-visual-card,.floating-note{max-width:100%!important}
   .audience-strip .country{flex:1 1 calc(50% - 10px)!important;text-align:center!important}
   .mobile-conversion-bar{left:6px!important;right:6px!important}
+  iframe[title*='chat' i],iframe[title*='tawk' i]{bottom:72px!important;right:10px!important}
+  html[lang='ar'] iframe[title*='chat' i],html[lang='ar'] iframe[title*='tawk' i]{right:auto!important;left:10px!important}
 }
