@@ -1,0 +1,87 @@
+name: Audit internal links and SEO once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-internal-links-seo-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit local links, canonicals and hreflang
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urlparse, unquote
+          import re
+
+          root=Path('.')
+          pages=list(root.rglob('*.html'))
+          problems=[]
+
+          def target_exists(url, source):
+              if not url or url.startswith(('#','mailto:','tel:','javascript:','https://wa.me/')): return True
+              p=urlparse(url)
+              if p.scheme in ('http','https'):
+                  if p.netloc not in ('elajmeindia.com','www.elajmeindia.com'): return True
+                  path=unquote(p.path)
+              else:
+                  path=unquote(p.path)
+              if not path: return True
+              if path.startswith('/'):
+                  rel=path.lstrip('/')
+              else:
+                  rel=(source.parent / path).resolve().relative_to(root.resolve()).as_posix()
+              candidates=[]
+              q=Path(rel)
+              if rel.endswith('/') or not q.suffix:
+                  candidates += [root/q/'index.html', root/q, root/(rel+'.html')]
+              else:
+                  candidates += [root/q]
+              return any(c.exists() for c in candidates)
+
+          for page in pages:
+              text=page.read_text(errors='ignore')
+              # Internal href/src targets.
+              for attr,url in re.findall(r'\b(href|src)=["\']([^"\']+)["\']', text, flags=re.I):
+                  if not target_exists(url,page):
+                      problems.append(f'BROKEN {page}: {attr}={url}')
+
+              # Canonical must be unique and local absolute URL on indexable content pages.
+              canon=re.findall(r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)',text,flags=re.I)
+              if page.name=='index.html' and page.as_posix() not in ('404.html',):
+                  if len(canon)!=1:
+                      problems.append(f'CANONICAL_COUNT {page}: {len(canon)}')
+                  elif not canon[0].startswith('https://elajmeindia.com/'):
+                      problems.append(f'CANONICAL_DOMAIN {page}: {canon[0]}')
+
+              # If hreflang exists, require en/ar/x-default trio.
+              langs=re.findall(r'<link[^>]+rel=["\']alternate["\'][^>]+hreflang=["\']([^"\']+)',text,flags=re.I)
+              if langs:
+                  needed={'en','ar','x-default'}
+                  missing=needed-set(langs)
+                  if missing:
+                      problems.append(f'HREFLANG {page}: missing {sorted(missing)}')
+
+          # Known retired path should only survive in redirects, not HTML.
+          for page in pages:
+              t=page.read_text(errors='ignore')
+              if 'orthopedic-treatment-india' in t:
+                  problems.append(f'STALE_ORTHOPEDIC_PATH {page}')
+
+          Path('audit-report.txt').write_text('\n'.join(problems) if problems else 'AUDIT CLEAN\n')
+          print(Path('audit-report.txt').read_text())
+          if problems:
+              raise SystemExit(f'Audit found {len(problems)} issue(s)')
+          PY
+      - name: Verify footer lock files are untouched
+        run: |
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
