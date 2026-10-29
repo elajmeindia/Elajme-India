@@ -1,0 +1,66 @@
+name: Mobile homepage header fix once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/mobile-header-fix-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix-mobile-header:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Append footer-safe mobile header rules
+        shell: bash
+        run: |
+          cat >> assets/css/homepage-enhancements.css <<'CSS'
+
+          /* Mobile header overflow fix — header only; approved footer remains untouched. */
+          @media(max-width:900px){
+            .site-header{height:auto!important;min-height:74px!important;overflow:visible!important}
+            .site-header .nav-wrap{width:min(100% - 24px,1160px)!important;min-height:74px!important;height:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:'brand actions' 'nav nav'!important;gap:8px 10px!important;padding:8px 0 10px!important;align-items:center!important}
+            .site-header .brand{grid-area:brand!important;min-width:0!important;max-width:100%!important;justify-self:start!important;overflow:hidden!important}
+            .site-header .brand-icon{width:48px!important;height:48px!important;flex:0 0 48px!important}
+            .site-header .brand-text{min-width:0!important;align-items:flex-start!important;text-align:left!important}
+            .site-header .brand-main{font-size:16px!important;text-align:left!important}
+            .site-header .brand-ar{font-size:12px!important;text-align:left!important}
+            .site-header .nav-actions{grid-area:actions!important;display:flex!important;gap:6px!important;justify-self:end!important;min-width:0!important}
+            .site-header .header-phone{display:none!important}
+            .site-header .header-whatsapp{display:inline-flex!important;width:38px!important;min-width:38px!important;height:38px!important;padding:0!important}
+            .site-header .lang-toggle{min-height:38px!important;padding:7px 9px!important;font-size:12px!important}
+            .site-header .button-small{min-width:0!important;min-height:38px!important;padding:8px 11px!important;font-size:11px!important}
+            .site-header .desktop-nav{grid-area:nav!important;display:flex!important;width:100%!important;max-width:100%!important;min-width:0!important;gap:6px!important;justify-content:flex-start!important;overflow-x:auto!important;overflow-y:hidden!important;padding:2px 0 1px!important;scrollbar-width:none!important;-webkit-overflow-scrolling:touch!important}
+            .site-header .desktop-nav::-webkit-scrollbar{display:none!important}
+            .site-header .desktop-nav a{flex:0 0 auto!important;font-size:11px!important;padding:8px 10px!important;border:1px solid #e4e8e9!important;background:#fff!important}
+            html[lang='ar'] .site-header .nav-wrap{direction:rtl!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:'brand actions' 'nav nav'!important}
+            html[lang='ar'] .site-header .brand{grid-area:brand!important;justify-self:start!important}
+            html[lang='ar'] .site-header .brand-text{align-items:flex-start!important;text-align:right!important}
+            html[lang='ar'] .site-header .brand-main,html[lang='ar'] .site-header .brand-ar{text-align:right!important}
+            html[lang='ar'] .site-header .nav-actions{grid-area:actions!important;justify-self:end!important}
+            html[lang='ar'] .site-header .desktop-nav{grid-area:nav!important;direction:rtl!important;justify-content:flex-start!important}
+            .hero{padding-top:42px!important}
+          }
+          @media(max-width:560px){
+            .site-header .nav-wrap{width:calc(100% - 20px)!important;grid-template-columns:minmax(0,1fr) auto!important}
+            .site-header .brand-icon{width:44px!important;height:44px!important;flex-basis:44px!important}
+            .site-header .brand-main{font-size:15px!important}
+            .site-header .brand-ar{font-size:11px!important}
+            .site-header .button-small{display:none!important}
+            .site-header .desktop-nav a{font-size:10.5px!important;padding:7px 9px!important}
+          }
+          CSS
+      - name: Commit mobile header fix
+        shell: bash
+        run: |
+          if git diff --quiet -- assets/css/homepage-enhancements.css; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/css/homepage-enhancements.css
+          git commit -m 'Fix mobile homepage header overflow'
+          git push
