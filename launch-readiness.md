@@ -68,7 +68,7 @@ Internal-linking rule for the next implementation pass:
 - [x] Prepare Meta/WhatsApp campaign journeys. Country, treatment and click-to-WhatsApp journeys plus privacy-safe Meta UTM conventions are defined in `campaign-landing-journeys.md`.
 - [x] Define qualified-lead fields: country, treatment need, diagnosis if known, reports available, preferred language.
 - [ ] Establish lead-source and follow-up tracking. Privacy-safe source taxonomy, lead fields, follow-up stages, operating discipline and KPI framework are documented in `lead-follow-up-workflow.md`; operational completion still requires a secured private CRM or equivalent private lead-management system to be connected and actively used.
-- [ ] Build hospital/doctor partnership outreach pipeline.
+- [x] Build hospital/doctor partnership outreach pipeline. Target types, outreach stages, private tracking fields, verification checks, outreach cadence and initial implementation priorities are documented in `partnership-outreach-pipeline.md`; actual partner relationships must only be represented after they are confirmed.
 
 ### Qualified lead definition
 A qualified international patient enquiry should capture, where voluntarily provided and appropriate for coordination: country, treatment need/medical specialty, diagnosis if known, whether medical reports are available, and preferred communication language. Sensitive medical or identifying information must not be sent to GA4.
