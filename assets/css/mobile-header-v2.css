@@ -1,4 +1,4 @@
-/* Elajme India mobile homepage QA V12. Mobile-only overrides; approved footer intentionally untouched. */
+/* Elajme India mobile homepage QA V13. Mobile-only overrides; approved footer intentionally untouched. */
 @media (max-width:900px){
   html,body{max-width:100%;overflow-x:hidden}
   body{padding-bottom:68px!important}
@@ -46,6 +46,13 @@
   html[lang='ar'] body .site-header .nav-actions{direction:rtl!important}
   html[lang='ar'] body .site-header .desktop-nav{direction:rtl!important}
   html[lang='ar'] .audience-inner{direction:rtl!important}
+
+  /* Screenshot-specific fix: align only the GCC patient-support information card. */
+  .countries-section .country-panel{box-sizing:border-box!important;width:100%!important;max-width:100%!important;padding:18px 20px!important}
+  .countries-section .country-panel .panel-line{box-sizing:border-box!important;display:grid!important;grid-template-columns:minmax(0,38%) minmax(0,62%)!important;align-items:center!important;column-gap:0!important;width:100%!important;min-height:72px!important;padding:16px 0!important;margin:0!important}
+  .countries-section .country-panel .panel-line>span,.countries-section .country-panel .panel-line>strong{box-sizing:border-box!important;display:block!important;width:100%!important;min-width:0!important;margin:0!important;line-height:1.35!important}
+  .countries-section .country-panel .panel-line>span{padding-right:14px!important;text-align:left!important}
+  .countries-section .country-panel .panel-line>strong{padding-left:14px!important;text-align:left!important;overflow-wrap:normal!important;word-break:normal!important}
 }
 @media (max-width:560px){
   body .site-header .nav-wrap{padding:8px 10px 9px!important;gap:7px!important}
@@ -65,4 +72,8 @@
   .mobile-conversion-bar{left:6px!important;right:6px!important}
   .elajme-mobile-chat{top:300px!important;right:10px!important;width:48px!important;height:48px!important}
   html[lang='ar'] .elajme-mobile-chat{right:auto!important;left:10px!important}
+  .countries-section .country-panel{padding:14px 18px!important}
+  .countries-section .country-panel .panel-line{grid-template-columns:38% 62%!important;min-height:68px!important;padding:14px 0!important}
+  .countries-section .country-panel .panel-line>span{padding-right:10px!important;font-size:14px!important}
+  .countries-section .country-panel .panel-line>strong{padding-left:10px!important;font-size:14px!important;line-height:1.3!important}
 }
