@@ -12,7 +12,7 @@ This checklist tracks the production launch and patient-acquisition phase withou
 - [x] Run repository-wide HTML/link/image/metadata/accessibility QA.
 - [x] Confirm English and Arabic canonical + hreflang pairs.
 - [x] Confirm sitemap.xml and robots.txt.
-- [ ] Check mobile navigation, enquiry form and WhatsApp flow.
+- [ ] Check mobile navigation, enquiry form and WhatsApp flow. Repository implementation has been audited: required-field and phone validation, accessible form status, mobile enquiry/WhatsApp conversion controls, EN/AR routing and Elajme-only WhatsApp handoff are present. A real-device/browser visual interaction test is still required before this item can be closed.
 - [x] Check treatment → hospital/doctor → enquiry journey. All nine treatment pathways have been reviewed for relevant discovery links, cautious medical wording and Elajme-only consultation routing.
 - [x] Verify no direct hospital/doctor consultation CTA bypasses Elajme India.
 
