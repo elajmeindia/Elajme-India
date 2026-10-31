@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Optimize only live local images above 300KB
+      - name: Optimize only live local images above 800KB
         shell: bash
         run: |
           set -euo pipefail
@@ -25,7 +25,6 @@ jobs:
           from pathlib import Path
           from PIL import Image
           import re, urllib.parse
-
           root=Path('.')
           refs=set()
           for page in root.rglob('*.html'):
@@ -36,30 +35,32 @@ jobs:
                   clean=urllib.parse.unquote(src.split('?',1)[0].split('#',1)[0])
                   if clean.startswith(('http://','https://','//','data:')): continue
                   p=root/clean.lstrip('/')
-                  if p.is_file() and p.suffix.lower() in {'.jpg','.jpeg','.png','.webp'} and p.stat().st_size>300_000:
+                  if p.is_file() and p.suffix.lower() in {'.jpg','.jpeg','.png','.webp'} and p.stat().st_size>800_000:
                       refs.add(p)
-          print('Live local images selected:',len(refs))
+          print('Oversized live local images selected:',len(refs))
           for p in sorted(refs):
               before=p.stat().st_size
               with Image.open(p) as im:
                   im.load()
-                  # Preserve dimensions and format. Re-encode only; never crop or replace content.
                   if p.suffix.lower()=='.webp':
                       if im.mode not in ('RGB','RGBA'): im=im.convert('RGB')
-                      im.save(p,'WEBP',quality=78,method=6)
+                      # Stronger pass only for assets still over the live 800KB budget.
+                      im.save(p,'WEBP',quality=68,method=6)
                   elif p.suffix.lower() in {'.jpg','.jpeg'}:
                       if im.mode!='RGB': im=im.convert('RGB')
-                      im.save(p,'JPEG',quality=82,optimize=True,progressive=True)
+                      im.save(p,'JPEG',quality=76,optimize=True,progressive=True)
                   elif p.suffix.lower()=='.png':
                       im.save(p,'PNG',optimize=True)
               after=p.stat().st_size
               print(f'{p}: {before/1024:.0f}KB -> {after/1024:.0f}KB')
+              if after>800_000:
+                  raise SystemExit(f'Live image remains above 800KB after safe re-encode: {p} ({after} bytes)')
           PY
           AFTER_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
           AFTER_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
           test "$BEFORE_FOOTER" = "$AFTER_FOOTER"
           test "$BEFORE_LOCK" = "$AFTER_LOCK"
-      - name: Verify optimized live assets and protected portraits
+      - name: Verify protected doctor portraits remain present
         shell: bash
         run: |
           set -euo pipefail
@@ -71,11 +72,6 @@ jobs:
               matches=[p for p in root.glob(slug+'.*') if p.suffix.lower() in {'.jpg','.jpeg','.png','.webp','.avif'}]
               if not matches: raise SystemExit('Protected portrait missing: '+slug)
               print('protected portrait present:',slug)
-          oversized=[]
-          for p in Path('.').rglob('*'):
-              if p.is_file() and p.suffix.lower() in {'.jpg','.jpeg','.png','.webp'} and p.stat().st_size>800_000:
-                  # Repository may retain unused originals; live audit decides whether they matter.
-                  print('repository large original retained:',p)
           PY
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
       - name: Commit optimized image binaries
@@ -85,8 +81,8 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add assets/images
           if git diff --cached --quiet; then
-            echo 'No live image binaries required optimization.'
+            echo 'No oversized live image binaries required optimization.'
             exit 0
           fi
-          git commit -m 'Optimize remaining live image assets'
+          git commit -m 'Finish oversized live image optimization'
           git push
