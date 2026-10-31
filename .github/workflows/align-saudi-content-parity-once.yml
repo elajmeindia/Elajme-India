@@ -1,0 +1,52 @@
+name: Align Saudi content parity once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/align-saudi-content-parity-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add missing Arabic Saudi treatment exploration section
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ar/saudi-arabia/treatment-in-india/index.html')
+          s=p.read_text()
+          if 'مجالات العلاج التي يمكن للمرضى من السعودية استكشافها في الهند' in s:
+              print('Saudi Arabic treatment section already present')
+          else:
+              marker='<section class="sec alt"><div class="c"><h2>ما الذي ترسله للمراجعة الأولية؟</h2>'
+              block='''<section class="sec alt"><div class="c"><h2>مجالات العلاج التي يمكن للمرضى من السعودية استكشافها في الهند</h2><p>يعتمد اختيار المستشفى والطبيب المناسبين على التشخيص والتاريخ الطبي ومدى تعقيد الحالة. توفر صفحات العلاج معلومات عامة قبل إرسال التقارير للمراجعة الخاصة بالحالة.</p><div class="related"><a href="/ar/treatments/cancer-treatment-india/">علاج السرطان</a><a href="/ar/treatments/heart-treatment-india/">علاج القلب</a><a href="/ar/treatments/liver-transplant-india/">زراعة الكبد</a><a href="/ar/treatments/kidney-transplant-india/">زراعة الكلى</a><a href="/ar/treatments/knee-replacement-india/">استبدال الركبة</a><a href="/ar/treatments/neurosurgery-india/">جراحة الأعصاب</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a><a href="/ar/treatments/urology-treatment-india/">المسالك البولية</a><a href="/ar/treatments/gastroenterology-treatment-india/">الجهاز الهضمي</a></div><div class="note">تحدد الجهة الطبية بعد مراجعة الحالة مدى ملاءمة العلاج والفحوصات والإجراءات والمدة المتوقعة للإقامة.</div></div></section>'''
+              if marker not in s: raise SystemExit('Expected insertion marker not found')
+              s=s.replace(marker, block+marker, 1)
+              p.write_text(s)
+          assert '/ar/#enquiry' in s
+          assert 'href="/saudi-arabia/treatment-in-india/">English</a>' in s
+          for x in ['cancer-treatment-india','heart-treatment-india','liver-transplant-india','kidney-transplant-india','knee-replacement-india','neurosurgery-india','spine-surgery-india','urology-treatment-india','gastroenterology-treatment-india']:
+              assert f'/ar/treatments/{x}/' in s
+          PY
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+      - name: Commit aligned content
+        shell: bash
+        run: |
+          if git diff --quiet -- ar/saudi-arabia/treatment-in-india/index.html; then
+            echo 'No content change required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ar/saudi-arabia/treatment-in-india/index.html
+          git commit -m 'Align Arabic Saudi treatment content'
+          git push
