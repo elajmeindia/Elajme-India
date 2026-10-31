@@ -57,4 +57,4 @@ jobs:
       - name: Verify footer lock files are untouched
         run: test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
 
-# audit-trigger: post-internal-authority-and-language-2026-10-31
+# audit-trigger: post-hospital-authority-growth-2026-10-31
