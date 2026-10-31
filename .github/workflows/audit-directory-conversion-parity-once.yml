@@ -30,13 +30,18 @@ jobs:
               text=path.read_text(errors='ignore')
               return bool(re.search(r'<meta[^>]+http-equiv=["\']?refresh["\']?', text, flags=re.I))
 
-          def slugs(base):
+          def slugs(base, active_only=False):
               p=root/base
               if not p.exists(): return set()
-              return {x.parent.name for x in p.glob('*/index.html')}
+              pages=list(p.glob('*/index.html'))
+              if active_only:
+                  pages=[x for x in pages if not is_redirect_page(x)]
+              return {x.parent.name for x in pages}
 
           en_docs=slugs('doctors'); ar_docs=slugs('ar/doctors')
           en_hosp=slugs('hospitals'); ar_hosp=slugs('ar/hospitals')
+          active_en_docs=slugs('doctors', True); active_ar_docs=slugs('ar/doctors', True)
+          active_en_hosp=slugs('hospitals', True); active_ar_hosp=slugs('ar/hospitals', True)
 
           for label,en,ar in [('DOCTOR',en_docs,ar_docs),('HOSPITAL',en_hosp,ar_hosp)]:
               for x in sorted(en-ar): problems.append(f'{label}_MISSING_AR {x}')
@@ -59,10 +64,10 @@ jobs:
               return urlparse(urljoin(base,h)).path or '/'
 
           for lang,path,prefix,known in [
-              ('EN','doctors/index.html','/doctors/',en_docs),
-              ('AR','ar/doctors/index.html','/ar/doctors/',ar_docs),
-              ('EN','hospitals/index.html','/hospitals/',en_hosp),
-              ('AR','ar/hospitals/index.html','/ar/hospitals/',ar_hosp),
+              ('EN','doctors/index.html','/doctors/',active_en_docs),
+              ('AR','ar/doctors/index.html','/ar/doctors/',active_ar_docs),
+              ('EN','hospitals/index.html','/hospitals/',active_en_hosp),
+              ('AR','ar/hospitals/index.html','/ar/hospitals/',active_ar_hosp),
           ]:
               hrefs,text=links(path)
               seen=set()
@@ -73,11 +78,11 @@ jobs:
                       seen.add(slug)
                       if slug not in known:
                           problems.append(f'{lang}_DIRECTORY_BAD_PROFILE {path}: {h}')
-              print(f'{path}: {len(seen)} unique profile link(s)')
-              expected_count=len(known)
-              if len(seen) != expected_count:
+              print(f'{path}: {len(seen)} active profile link(s)')
+              if seen != known:
                   missing=sorted(known-seen)
-                  problems.append(f'{lang}_DIRECTORY_PROFILE_COUNT {path}: found {len(seen)} expected {expected_count}; missing={missing}')
+                  extra=sorted(seen-known)
+                  problems.append(f'{lang}_DIRECTORY_PROFILE_SET {path}: found {len(seen)} expected {len(known)}; missing={missing}; extra={extra}')
 
           pages=[]
           for base in ('doctors','ar/doctors','hospitals','ar/hospitals'):
@@ -101,8 +106,8 @@ jobs:
               if expected not in active:
                   problems.append(f'MISSING_ELAJME_ENQUIRY {page}: expected {expected}')
 
-          print(f'English doctor profiles: {len(en_docs)}; Arabic: {len(ar_docs)}')
-          print(f'English hospital profiles: {len(en_hosp)}; Arabic: {len(ar_hosp)}')
+          print(f'English doctor profiles: {len(en_docs)} total / {len(active_en_docs)} active; Arabic: {len(ar_docs)} total / {len(active_ar_docs)} active')
+          print(f'English hospital profiles: {len(en_hosp)} total / {len(active_en_hosp)} active; Arabic: {len(ar_hosp)} total / {len(active_ar_hosp)} active')
           print(f'Active profiles checked for conversion routing: {active_profiles}')
           if problems:
               print('\n'.join(problems))
@@ -113,4 +118,4 @@ jobs:
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
 
-# audit-trigger: strict-relative-link-resolution-2026-10-31
+# audit-trigger: active-profile-set-2026-10-31
