@@ -44,17 +44,16 @@ jobs:
                   im.load()
                   if p.suffix.lower()=='.webp':
                       if im.mode not in ('RGB','RGBA'): im=im.convert('RGB')
-                      # Stronger pass only for assets still over the live 800KB budget.
-                      im.save(p,'WEBP',quality=68,method=6)
+                      im.save(p,'WEBP',quality=60,method=6)
                   elif p.suffix.lower() in {'.jpg','.jpeg'}:
                       if im.mode!='RGB': im=im.convert('RGB')
-                      im.save(p,'JPEG',quality=76,optimize=True,progressive=True)
+                      im.save(p,'JPEG',quality=72,optimize=True,progressive=True)
                   elif p.suffix.lower()=='.png':
                       im.save(p,'PNG',optimize=True)
               after=p.stat().st_size
               print(f'{p}: {before/1024:.0f}KB -> {after/1024:.0f}KB')
               if after>800_000:
-                  raise SystemExit(f'Live image remains above 800KB after safe re-encode: {p} ({after} bytes)')
+                  raise SystemExit(f'Live image remains above 800KB: {p} ({after} bytes)')
           PY
           AFTER_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
           AFTER_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
@@ -84,5 +83,5 @@ jobs:
             echo 'No oversized live image binaries required optimization.'
             exit 0
           fi
-          git commit -m 'Finish oversized live image optimization'
+          git commit -m 'Complete live image size optimization'
           git push
