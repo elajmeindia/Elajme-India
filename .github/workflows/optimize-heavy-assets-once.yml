@@ -1,4 +1,4 @@
-name: Optimize heavy assets once
+name: Switch live image references to existing WebP assets
 
 on:
   push:
@@ -11,87 +11,73 @@ permissions:
   contents: write
 
 jobs:
-  optimize:
+  optimize-references:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install image tools
-        run: sudo apt-get update && sudo apt-get install -y webp
-      - name: Optimize remaining heavy assets without touching footer markup
+
+      - name: Switch HTML references only when an existing WebP counterpart is present
         shell: bash
         run: |
           set -euo pipefail
           BEFORE_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
           BEFORE_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
+
           python3 - <<'PY'
           from pathlib import Path
-          import subprocess
 
-          root=Path('.')
-          html=list(root.rglob('*.html'))
-          protected_branding={
-              Path('Elajme India Healthcare Travel Banner.png'),
-              Path('Healthcare Travel Swoosh Emblem.png'),
-          }
+          root = Path('.')
+          html_pages = list(root.rglob('*.html'))
+          raster_exts = {'.png', '.jpg', '.jpeg'}
 
-          # Optimize heavyweight non-branding raster assets. If a JPG/PNG has
-          # a WebP counterpart, update non-footer references and remove the
-          # superseded original so the repository weight gate measures assets
-          # actually needed by the site.
-          for src in list(root.rglob('*')):
-              if not src.is_file() or src.stat().st_size <= 800_000:
+          # Build a conservative mapping only where the optimized WebP already
+          # exists next to the original. No binary file is created, modified,
+          # recompressed, renamed or deleted by this workflow.
+          mappings = []
+          for src in root.rglob('*'):
+              if not src.is_file() or src.suffix.lower() not in raster_exts:
                   continue
-              ext=src.suffix.lower()
-              if ext not in {'.png','.jpg','.jpeg','.webp'} or src in protected_branding:
-                  continue
-              if ext == '.webp':
-                  tmp=src.with_name(src.stem + '.optimized.webp')
-                  subprocess.run(['cwebp','-quiet','-q','68',str(src),'-o',str(tmp)],check=True)
-                  if tmp.stat().st_size < src.stat().st_size:
-                      tmp.replace(src)
-                  else:
-                      tmp.unlink()
-                  continue
+              dst = src.with_suffix('.webp')
+              if dst.exists() and dst.is_file():
+                  mappings.append((src, dst))
 
-              dst=src.with_suffix('.webp')
-              tmp=src.with_name(src.stem + '.optimized.webp') if dst.exists() else dst
-              subprocess.run(['cwebp','-quiet','-q','68',str(src),'-o',str(tmp)],check=True)
-              if dst.exists() and tmp != dst:
-                  if tmp.stat().st_size < dst.stat().st_size:
-                      tmp.replace(dst)
-                  else:
-                      tmp.unlink()
+          changed_pages = []
+          replacements = []
 
-              if dst.exists():
-                  # Update only content before the footer element. The approved
-                  # footer markup itself remains byte-for-byte untouched.
-                  for page in html:
-                      text=page.read_text(errors='ignore')
-                      marker=text.lower().find('<footer')
-                      head=text if marker < 0 else text[:marker]
-                      tail='' if marker < 0 else text[marker:]
-                      original=head
-                      head=head.replace(src.as_posix(),dst.as_posix())
-                      head=head.replace(src.name.replace(' ','%20'),dst.name.replace(' ','%20'))
-                      head=head.replace(src.name,dst.name)
-                      if head != original:
-                          page.write_text(head+tail)
+          for page in html_pages:
+              text = page.read_text(encoding='utf-8', errors='ignore')
+              marker = text.lower().find('<footer')
+              head = text if marker < 0 else text[:marker]
+              tail = '' if marker < 0 else text[marker:]
+              original_head = head
 
-                  # Delete original only if no text file still references it.
-                  needles={src.as_posix(),src.name,src.name.replace(' ','%20')}
-                  referenced=False
-                  for p in root.rglob('*'):
-                      if not p.is_file() or p == src or p.suffix.lower() not in {'.html','.css','.js','.xml','.md','.txt'}:
-                          continue
-                      try: text=p.read_text(errors='ignore')
-                      except Exception: continue
-                      if any(n in text for n in needles):
-                          referenced=True; break
-                  if not referenced:
-                      src.unlink()
+              for src, dst in mappings:
+                  src_posix = src.as_posix()
+                  dst_posix = dst.as_posix()
+                  candidates = {
+                      src_posix: dst_posix,
+                      '/' + src_posix: '/' + dst_posix,
+                      src.name: dst.name,
+                      src.name.replace(' ', '%20'): dst.name.replace(' ', '%20'),
+                  }
+                  for old, new in candidates.items():
+                      count = head.count(old)
+                      if count:
+                          head = head.replace(old, new)
+                          replacements.append((page.as_posix(), old, new, count))
+
+              if head != original_head:
+                  page.write_text(head + tail, encoding='utf-8')
+                  changed_pages.append(page.as_posix())
+
+          print(f'Existing raster→WebP pairs found: {len(mappings)}')
+          print(f'HTML pages changed: {len(changed_pages)}')
+          for page, old, new, count in replacements:
+              print(f'{page}: {old} -> {new} ({count})')
           PY
+
           AFTER_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
           AFTER_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
           test "$BEFORE_FOOTER" = "$AFTER_FOOTER"
@@ -99,29 +85,62 @@ jobs:
           if git diff -- assets/css/footer-approved.css FOOTER-LOCK.md | grep .; then
             echo 'Footer lock violation'; exit 1
           fi
-      - name: Verify active heavyweight assets
+
+      - name: Verify optimized alternatives are used where available
+        shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          # Branding PNG originals are deliberately retained because the footer
-          # is locked and still references the emblem PNG. They are excluded
-          # from this repository gate; active optimized WebPs are much smaller.
-          allowed={
-              'Elajme India Healthcare Travel Banner.png',
-              'Healthcare Travel Swoosh Emblem.png',
-          }
-          bad=[]
-          for p in Path('.').rglob('*'):
-              if p.is_file() and p.suffix.lower() in {'.png','.jpg','.jpeg','.webp','.gif','.avif'} and p.stat().st_size>800_000 and p.as_posix() not in allowed:
-                  bad.append((p.stat().st_size,p.as_posix()))
-          for size,path in sorted(bad,reverse=True): print(f'{size/1024:.0f}KB {path}')
-          if bad: raise SystemExit(f'{len(bad)} active image(s) still over 800KB')
+
+          root = Path('.')
+          raster_exts = {'.png', '.jpg', '.jpeg'}
+          remaining = []
+
+          pairs = []
+          for src in root.rglob('*'):
+              if src.is_file() and src.suffix.lower() in raster_exts:
+                  dst = src.with_suffix('.webp')
+                  if dst.exists():
+                      pairs.append((src, dst))
+
+          for page in root.rglob('*.html'):
+              text = page.read_text(encoding='utf-8', errors='ignore')
+              marker = text.lower().find('<footer')
+              active = text if marker < 0 else text[:marker]
+              for src, dst in pairs:
+                  needles = {
+                      src.as_posix(),
+                      '/' + src.as_posix(),
+                      src.name,
+                      src.name.replace(' ', '%20'),
+                  }
+                  if any(n in active for n in needles):
+                      remaining.append((page.as_posix(), src.as_posix(), dst.as_posix()))
+
+          if remaining:
+              for page, src, dst in remaining:
+                  print(f'REMAINING: {page}: {src} (WebP exists: {dst})')
+              raise SystemExit(f'{len(remaining)} live HTML reference(s) still use an original despite an existing WebP')
+
+          print('PASS: live HTML uses existing WebP counterparts wherever available.')
           PY
-      - name: Commit targeted performance improvements
+
+      - name: Confirm binary assets were not changed
+        shell: bash
+        run: |
+          if git diff --name-only | grep -Ei '\.(png|jpe?g|webp|gif|avif)$'; then
+            echo 'Binary asset changed unexpectedly'; exit 1
+          fi
+
+      - name: Commit reference-only performance improvements
+        shell: bash
         run: |
           git config user.name 'Elajme India Performance'
           git config user.email 'actions@users.noreply.github.com'
-          git add -A -- '*.html' '*.webp' '*.jpg' '*.jpeg' '*.png'
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Optimize remaining heavy site assets'
+          git add -- '*.html'
+          if git diff --cached --quiet; then
+            echo 'No HTML references required changing.'
+            exit 0
+          fi
+          git commit -m 'Use existing WebP assets on live pages'
           git push
