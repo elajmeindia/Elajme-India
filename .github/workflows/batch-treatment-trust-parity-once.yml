@@ -1,4 +1,4 @@
-name: Complete Oman Arabic treatment discovery parity once
+name: Add bilingual patient guide preparation section once
 
 on:
   push:
@@ -11,33 +11,37 @@ permissions:
   contents: write
 
 jobs:
-  align:
+  improve:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Align Oman Arabic treatment discovery
+      - name: Add patient preparation guidance
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re, hashlib
-          p=Path('ar/oman/treatment-in-india/index.html')
-          text=p.read_text(); fi=text.lower().find('<footer'); assert fi>=0
-          pre,foot=text[:fi],text[fi:]
-          links='''<div class="related"><a href="/ar/treatments/cancer-treatment-india/">علاج السرطان</a><a href="/ar/treatments/heart-treatment-india/">علاج القلب</a><a href="/ar/treatments/liver-transplant-india/">زراعة الكبد</a><a href="/ar/treatments/kidney-transplant-india/">زراعة الكلى</a><a href="/ar/treatments/knee-replacement-india/">استبدال مفصل الركبة</a><a href="/ar/treatments/neurosurgery-india/">جراحة الأعصاب</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a><a href="/ar/treatments/urology-treatment-india/">المسالك البولية</a><a href="/ar/treatments/gastroenterology-treatment-india/">أمراض الجهاز الهضمي</a><a href="/ar/treatments/">جميع مجالات العلاج</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/medical-visa/">معلومات التأشيرة الطبية</a><a href="/ar/patient-guide/">دليل المريض الدولي</a><a href="/ar/international-patients/mea/">دعم مرضى الخليج والمرضى الدوليين</a></div>'''
-          matches=list(re.finditer(r'<div class="related">.*?</div>',pre,flags=re.S)); assert matches
-          m=matches[-1]; new=pre[:m.start()]+links+pre[m.end():]+foot
-          assert foot==text[fi:]
-          assert 'href="/ar/#enquiry"' in new and 'hreflang="en"' in new and 'hreflang="ar"' in new
-          if new!=text: p.write_text(new); print('Changed Oman Arabic discovery section')
-          else: print('Oman Arabic discovery section already aligned')
-          for q in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]: print('LOCK',q,hashlib.sha256(q.read_bytes()).hexdigest())
+          import hashlib
+          blocks={
+          'patient-guide/index.html': '<section class="sec"><div class="c"><h2>Preparing information for a hospital review</h2><p>Organising the available records can make the initial case review easier. Patients can start with a short summary of the medical problem, the diagnosis if known, recent relevant reports, previous treatment information and a current medicine list.</p><p>Relevant records may include laboratory results, imaging reports, pathology reports, discharge summaries and notes from major previous procedures. The exact information needed depends on the individual case, and the hospital or specialist may request additional documents after the first review.</p><p>You do not need to delay an initial enquiry because every record is not available. Start with the information you have and keep the documents clearly labelled where possible.</p></div></section>',
+          'ar/patient-guide/index.html': '<section class="sec"><div class="c"><h2>تجهيز المعلومات قبل مراجعة المستشفى</h2><p>يساعد تنظيم السجلات المتوفرة على تسهيل المراجعة الأولية للحالة. يمكن للمريض البدء بملخص قصير للمشكلة الطبية والتشخيص إن كان معروفاً والتقارير الحديثة ذات الصلة ومعلومات العلاج السابق وقائمة الأدوية الحالية.</p><p>قد تشمل السجلات المهمة نتائج التحاليل وتقارير الأشعة وتقارير الباثولوجي وملخصات الخروج من المستشفى وتقارير الإجراءات أو العمليات السابقة المهمة. وتختلف المعلومات المطلوبة حسب كل حالة، وقد يطلب المستشفى أو الطبيب مستندات إضافية بعد المراجعة الأولى.</p><p>لا يلزم تأخير الاستفسار الأولي بسبب عدم توفر جميع السجلات. ابدأ بالمعلومات المتاحة لديك، وحاول ترتيب المستندات وتسميتها بوضوح قدر الإمكان.</p></div></section>'}
+          changed=[]
+          for fn,block in blocks.items():
+              p=Path(fn); text=p.read_text(); fi=text.lower().find('<footer'); assert fi>=0
+              pre,foot=text[:fi],text[fi:]
+              marker='Preparing information for a hospital review' if not fn.startswith('ar/') else 'تجهيز المعلومات قبل مراجعة المستشفى'
+              if marker in pre: continue
+              assert '</main>' in pre
+              new=pre.replace('</main>',block+'</main>',1)+foot
+              assert foot==text[fi:]
+              p.write_text(new); changed.append(fn)
+          print('Changed:',changed)
+          for p in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]: print('LOCK',p,hashlib.sha256(p.read_bytes()).hexdigest())
           PY
-      - name: Commit Oman parity improvement
+      - name: Commit patient guide improvements
         run: |
-          if git diff --quiet -- ar/oman/treatment-in-india/index.html; then echo 'No changes required'; exit 0; fi
+          if git diff --quiet -- patient-guide/index.html ar/patient-guide/index.html; then echo 'No changes required'; exit 0; fi
           git config user.name 'elajmeindia'
           git config user.email 'shahzadalamnadwi@gmail.com'
-          git add ar/oman/treatment-in-india/index.html
-          git commit -m 'Complete Oman Arabic treatment discovery parity'
+          git add patient-guide/index.html ar/patient-guide/index.html
+          git commit -m 'Add bilingual patient preparation guidance'
           git push
