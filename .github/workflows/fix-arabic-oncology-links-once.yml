@@ -1,0 +1,49 @@
+name: Fix Arabic oncology topical links once
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-arabic-oncology-links-once.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add exact oncology doctor and hospital links before footer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ar/treatments/cancer-treatment-india/index.html')
+          s=p.read_text(encoding='utf-8')
+          old='<h2>استكشف الأطباء والمستشفيات</h2><div class="related"><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/patient-guide/">دليل المريض</a><a href="/ar/medical-visa/">التأشيرة الطبية</a></div>'
+          new='<h2>استكشف أطباء الأورام والمستشفيات</h2><div class="related"><a href="/ar/doctors/dr-atul-sharma/">البروفيسور د. أتول شارما</a><a href="/ar/doctors/dr-ankur-bahl/">د. أنكور باهل</a><a href="/ar/doctors/dr-ashok-kumar-vaid/">د. أشوك كومار فايد</a><a href="/ar/doctors/dr-boman-nariman-dhabhar/">د. بومان ناريمان دابهار</a><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/hospitals/max-super-speciality-hospital-saket/">مستشفى ماكس سوبر التخصصي، ساكيت</a><a href="/ar/hospitals/fortis-memorial-research-institute-gurugram/">معهد فورتيس ميموريال للأبحاث، جوروجرام</a><a href="/ar/hospitals/medanta-the-medicity-gurugram/">ميدانتا ذا ميديسيتي، جوروجرام</a><a href="/ar/hospitals/blk-max-super-speciality-hospital-delhi/">مستشفى BLK-Max سوبر التخصصي، دلهي</a><a href="/ar/hospitals/fortis-hospital-mulund-mumbai/">مستشفى فورتيس، مولوند</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/patient-guide/">دليل المريض</a><a href="/ar/medical-visa/">التأشيرة الطبية</a></div>'
+          if old not in s:
+              raise SystemExit('Expected Arabic oncology discovery block not found; refusing unsafe edit')
+          before_footer=s[s.index('<footer'):]
+          s2=s.replace(old,new,1)
+          if s2[s2.index('<footer'):] != before_footer:
+              raise SystemExit('Footer changed; refusing edit')
+          p.write_text(s2,encoding='utf-8')
+          PY
+      - name: Verify exact targets and Elajme routing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('ar/treatments/cancer-treatment-india/index.html').read_text(encoding='utf-8')
+          for x in ['/ar/doctors/dr-atul-sharma/','/ar/doctors/dr-ankur-bahl/','/ar/doctors/dr-ashok-kumar-vaid/','/ar/doctors/dr-boman-nariman-dhabhar/','/ar/hospitals/max-super-speciality-hospital-saket/','/ar/hospitals/fortis-memorial-research-institute-gurugram/','/ar/hospitals/medanta-the-medicity-gurugram/','/ar/hospitals/blk-max-super-speciality-hospital-delhi/','/ar/hospitals/fortis-hospital-mulund-mumbai/','href="/ar/#enquiry"']:
+              assert x in s, x
+          assert 'href="/treatments/cancer-treatment-india/">English</a>' in s
+          print('Arabic oncology topical parity verified')
+          PY
+      - name: Commit change
+        run: |
+          if git diff --quiet; then echo 'No change required'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ar/treatments/cancer-treatment-india/index.html
+          git commit -m 'Align Arabic oncology topical links'
+          git push
