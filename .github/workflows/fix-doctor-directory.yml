@@ -1,5 +1,6 @@
 name: Align verified doctor directory imagery
 
+# audit-trigger: final-directory-alignment-2026-10-31
 on:
   push:
     paths:
