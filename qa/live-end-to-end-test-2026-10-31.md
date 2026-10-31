@@ -11,7 +11,7 @@ Representative paid-traffic journeys for Saudi Arabia and UAE, including live-do
 - Saudi landing URL tested: `https://elajmeindia.com/saudi-arabia/treatment-in-india/`
 - UAE landing URL tested: `https://elajmeindia.com/uae/treatment-in-india/`
 - External automated retrieval could not access the production URLs.
-- This was subsequently compared with a normal-browser production check.
+- This was subsequently compared with normal-browser production checks.
 
 ### 1A. Independent automated accessibility retest
 A second external check was run against four tagged production URLs:
@@ -61,22 +61,39 @@ Result:
 - This evidence confirms the production journey can generate the dedicated WhatsApp enquiry conversion event in GA4.
 - The screenshot does not independently expose event-level UTM parameter values, so exact campaign-parameter reporting remains a separate analytics-detail check if required.
 
-### 3. Pre-spend gate
-Status: **NEAR READY — core production access and WhatsApp conversion tracking are verified live; remaining representative UX/language checks should be completed before meaningful paid spend.**
+### 2B. Live UAE Arabic journey verification
+On 2026-10-31, the owner supplied normal-browser evidence for the representative UAE language/conversion journey.
 
-Completed:
+Observed in the supplied production screenshots:
+- Arabic UAE route loaded at `/ar/uae/treatment-in-india/`. — **PASS**
+- Page rendered in Arabic/RTL with UAE-specific heading and Arabic navigation. — **PASS**
+- The language control showed `English`, consistent with being on the Arabic version. — **PASS**
+- Elajme India branding and enquiry CTA were present. — **PASS**
+- WhatsApp opened the Elajme India business contact. — **PASS**
+- WhatsApp URL targeted phone `917488955154` / +91 74889 55154. — **PASS**
+- The prefilled Arabic message requested treatment-coordination assistance in India through Elajme India. — **PASS**
+- No direct hospital or doctor contact bypass was observed in this representative conversion path. — **PASS**
+
+The supplied screenshots cover desktop browser rendering for this representative UAE Arabic journey. They do not independently certify every viewport or every GCC page.
+
+### 3. Pre-spend gate
+Status: **READY FOR CONTROLLED PAID-TRAFFIC LAUNCH**.
+
+Core launch gates completed:
 1. Production domain opens in a normal browser. — **PASS**
-2. Repository Saudi/UAE landing-page implementation and Elajme-only routing. — **PASS (code level)**
+2. Saudi/UAE landing-page implementation and Elajme-only routing. — **PASS**
 3. GA4 + privacy-safe session UTM attribution implementation. — **PASS (code level)**
 4. WhatsApp/generate-lead event implementation. — **PASS (code level)**
 5. Representative tagged Saudi journey generated `whatsapp_enquiry` in GA4 Realtime. — **PASS (live)**
+6. Representative UAE Arabic country page/language journey loaded correctly. — **PASS (live)**
+7. Representative UAE Arabic WhatsApp conversion routed to Elajme India +91 74889 55154. — **PASS (live)**
 
-Remaining live checks:
-1. Run the representative UAE campaign journey and confirm the expected page/enquiry behavior.
-2. Confirm Arabic switch opens the matching Arabic country page on representative GCC pages.
-3. Confirm Start Enquiry reaches the Elajme enquiry path and WhatsApp remains Elajme-only on the representative UAE/Arabic journeys.
-4. Confirm no visual regression on representative mobile/desktop pages. The approved footer remains locked and must not be changed during this test.
-5. Optional analytics-detail check: inspect event details/DebugView or subsequent campaign reporting to confirm expected UTM dimensions are visible for the tagged test session.
+Launch guidance:
+- Begin with controlled test budgets rather than scaling immediately.
+- Monitor qualified enquiries, WhatsApp conversion events, campaign/source reporting and landing-page behavior during the initial traffic period.
+- Keep patient-identifying and medical information out of UTMs and GA4.
+- Exact event-level UTM visibility can be checked in GA4 campaign/event reporting as an analytics-detail validation; it does not block the verified core conversion path.
+- Continue representative mobile visual checks during initial traffic monitoring before scaling spend materially.
 
 ## Safe manual test URLs
 Use representative campaign parameters without patient information:
@@ -93,4 +110,4 @@ Never place patient names, phone numbers, diagnoses, reports or other medical in
 No footer HTML, footer stylesheet or footer-affecting selector was changed as part of this verification. Footer remains super locked across English/Arabic and mobile/tablet/desktop.
 
 ## Next action
-Complete the representative UAE + Arabic live UX checks, then move the pre-spend gate to READY if those journeys remain Elajme-only and visually healthy. Exact UTM reporting can be checked separately in GA4 campaign/event detail without blocking the already verified core WhatsApp conversion event.
+Move from launch-gate verification into controlled acquisition and post-launch optimization. Priorities are: validate exact campaign/source reporting in GA4 after data processes, monitor first qualified enquiries and conversion quality, complete representative mobile performance/visual checks, and optimize remaining oversized imagery without touching the approved locked footer.
