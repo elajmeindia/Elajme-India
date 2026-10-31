@@ -1,0 +1,55 @@
+name: Arabic mobile conversion parity once
+on:
+  push:
+    paths:
+      - '.github/workflows/arabic-mobile-conversion-parity-once.yml'
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh Arabic mobile conversion assets without touching footer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('ar/index.html')
+          s=p.read_text()
+          fs=s.find('<footer')
+          fe=s.find('</footer>',fs)
+          if fs < 0 or fe < 0: raise SystemExit('Footer not found; refusing edit')
+          fe += len('</footer>')
+          footer=s[fs:fe]
+          old='/assets/css/arabic-mobile-header.css?v=3'
+          new='/assets/css/arabic-mobile-header.css?v=4'
+          if old not in s: raise SystemExit('Expected Arabic mobile CSS v3 not found')
+          s=s.replace(old,new,1)
+          pattern=r'/assets/js/arabic-mobile-menu\.js(?:\?v=\d+)?'
+          matches=re.findall(pattern,s)
+          if not matches: raise SystemExit('Arabic mobile menu script reference not found')
+          s=re.sub(pattern,'/assets/js/arabic-mobile-menu.js?v=2',s,count=1)
+          nfs=s.find('<footer'); nfe=s.find('</footer>',nfs)+len('</footer>')
+          if footer != s[nfs:nfe]: raise SystemExit('SUPER LOCK VIOLATION: footer changed')
+          p.write_text(s)
+          print('Arabic mobile conversion assets refreshed; footer byte-identical.')
+          PY
+      - name: Verify scoped change
+        run: |
+          git diff --check
+          git diff -- ar/index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('ar/index.html').read_text()
+          assert '/assets/css/arabic-mobile-header.css?v=4' in s
+          assert '/assets/js/arabic-mobile-menu.js?v=2' in s
+          PY
+      - name: Commit
+        run: |
+          if git diff --quiet -- ar/index.html; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ar/index.html
+          git commit -m 'Load Arabic mobile conversion parity assets'
+          git push
