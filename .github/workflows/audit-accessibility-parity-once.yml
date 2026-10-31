@@ -1,0 +1,61 @@
+name: Audit accessibility and bilingual structure once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-accessibility-parity-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit accessibility and EN AR structure
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root=Path('.')
+          pages=sorted(root.rglob('*.html'))
+          issues=[]
+          en=set(); ar=set()
+          for p in pages:
+              rel=p.as_posix()
+              text=p.read_text(encoding='utf-8',errors='ignore')
+              low=text.lower()
+              is_ar=rel.startswith('ar/') or rel=='ar/index.html'
+              if is_ar:
+                  ar.add(rel[3:] if rel.startswith('ar/') else 'index.html')
+                  if not re.search(r'<html\b[^>]*\blang=["\']ar(?:-[^"\']*)?["\']',text,re.I): issues.append((rel,'Arabic page missing lang=ar'))
+                  if not re.search(r'<html\b[^>]*\bdir=["\']rtl["\']',text,re.I): issues.append((rel,'Arabic page missing dir=rtl'))
+              elif not rel.startswith('.github/'):
+                  en.add(rel)
+                  if not re.search(r'<html\b[^>]*\blang=["\']en(?:-[^"\']*)?["\']',text,re.I): issues.append((rel,'English page missing lang=en'))
+              active=text[:low.find('<footer')] if '<footer' in low else text
+              h1=len(re.findall(r'<h1\b',active,re.I))
+              if h1!=1: issues.append((rel,f'expected 1 h1, found {h1}'))
+              for tag in re.findall(r'<img\b[^>]*>',active,re.I):
+                  if not re.search(r'\balt=["\'][^"\']*["\']',tag,re.I): issues.append((rel,'image missing alt'))
+              for tag in re.findall(r'<a\b[^>]*>.*?</a>',active,re.I|re.S):
+                  body=re.sub(r'<[^>]+>',' ',tag)
+                  if not body.strip() and not re.search(r'\baria-label=["\'][^"\']+["\']',tag,re.I): issues.append((rel,'link missing accessible name'))
+              for tag in re.findall(r'<button\b[^>]*>.*?</button>',active,re.I|re.S):
+                  body=re.sub(r'<[^>]+>',' ',tag)
+                  if not body.strip() and not re.search(r'\baria-label=["\'][^"\']+["\']',tag,re.I): issues.append((rel,'button missing accessible name'))
+          print('HTML pages:',len(pages))
+          print('EN pages:',len(en),'AR pages:',len(ar))
+          print('EN pages without AR counterpart:',sorted(en-ar))
+          print('AR pages without EN counterpart:',sorted(ar-en))
+          print('Accessibility issues:',len(issues))
+          for x in issues[:150]: print('A11Y',*x)
+          PY
+      - name: Verify footer lock files are untouched
+        run: |
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
