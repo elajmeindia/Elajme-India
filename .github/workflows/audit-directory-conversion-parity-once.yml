@@ -46,7 +46,6 @@ jobs:
               text=(root/path).read_text(errors='ignore')
               return re.findall(r'\bhref=["\']([^"\']+)', text, flags=re.I), text
 
-          # Normalize root-relative, relative and absolute elajmeindia.com directory links.
           def local_path(href):
               h=href.strip()
               if h.startswith(('mailto:','tel:','javascript:','#')):
@@ -77,7 +76,6 @@ jobs:
                           problems.append(f'{lang}_DIRECTORY_BAD_PROFILE {path}: {h}')
               print(f'{path}: {len(seen)} unique profile link(s)')
 
-          # Consultation/treatment CTA links on active doctor/hospital pages must stay inside Elajme India.
           pages=[]
           for base in ('doctors','ar/doctors','hospitals','ar/hospitals'):
               pages.extend((root/base).glob('*/index.html'))
@@ -111,3 +109,5 @@ jobs:
       - name: Verify locked footer files remain untouched
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+
+# audit-trigger: final-post-gcc-2026-10-31
