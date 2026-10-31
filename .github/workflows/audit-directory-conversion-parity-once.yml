@@ -20,10 +20,15 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          from urllib.parse import urlparse
           import re
 
           root=Path('.')
           problems=[]
+
+          def is_redirect_page(path):
+              text=path.read_text(errors='ignore')
+              return bool(re.search(r'<meta[^>]+http-equiv=["\']?refresh["\']?', text, flags=re.I))
 
           def slugs(base):
               p=root/base
@@ -41,7 +46,18 @@ jobs:
               text=(root/path).read_text(errors='ignore')
               return re.findall(r'\bhref=["\']([^"\']+)', text, flags=re.I), text
 
-          # Directory profile links should resolve to an existing same-language profile.
+          # Normalize root-relative, relative and absolute elajmeindia.com directory links.
+          def local_path(href):
+              h=href.strip()
+              if h.startswith(('mailto:','tel:','javascript:','#')):
+                  return ''
+              parsed=urlparse(h)
+              if parsed.scheme or parsed.netloc:
+                  if parsed.netloc.lower() not in ('elajmeindia.com','www.elajmeindia.com'):
+                      return ''
+                  return parsed.path or '/'
+              return parsed.path or h.split('#',1)[0].split('?',1)[0]
+
           for lang,path,prefix,known in [
               ('EN','doctors/index.html','/doctors/',en_docs),
               ('AR','ar/doctors/index.html','/ar/doctors/',ar_docs),
@@ -51,7 +67,9 @@ jobs:
               hrefs,text=links(path)
               seen=set()
               for h in hrefs:
-                  clean=h.split('#',1)[0].split('?',1)[0]
+                  clean=local_path(h).split('#',1)[0].split('?',1)[0]
+                  if not clean.startswith('/'):
+                      clean='/' + clean.lstrip('./')
                   if clean.startswith(prefix) and clean.rstrip('/') != prefix.rstrip('/'):
                       slug=clean.rstrip('/').split('/')[-1]
                       seen.add(slug)
@@ -59,27 +77,32 @@ jobs:
                           problems.append(f'{lang}_DIRECTORY_BAD_PROFILE {path}: {h}')
               print(f'{path}: {len(seen)} unique profile link(s)')
 
-          # Consultation/treatment CTA links on doctor/hospital pages must stay inside Elajme India.
+          # Consultation/treatment CTA links on active doctor/hospital pages must stay inside Elajme India.
           pages=[]
           for base in ('doctors','ar/doctors','hospitals','ar/hospitals'):
               pages.extend((root/base).glob('*/index.html'))
           external_hosts=('apollohospitals.com','fortishealthcare.com','medanta.org','maxhealthcare.in','artemishospitals.com','kokilabenhospital.com','nanavatimaxhospital.org','jaslokhospital.net')
           cta_words=('consult','appointment','enquir','inquiry','treatment','book','استشارة','موعد','استفسار','علاج','احجز')
+          active_profiles=0
           for page in pages:
+              if is_redirect_page(page):
+                  print(f'Skipping legacy redirect page: {page}')
+                  continue
+              active_profiles += 1
               text=page.read_text(errors='ignore')
-              active=text[:text.lower().find('<footer')] if '<footer' in text.lower() else text
+              pos=text.lower().find('<footer')
+              active=text[:pos] if pos >= 0 else text
               for m in re.finditer(r'<a\b([^>]*)href=["\']([^"\']+)["\']([^>]*)>(.*?)</a>',active,flags=re.I|re.S):
                   href=m.group(2).strip(); body=re.sub('<[^>]+>',' ',m.group(4)); blob=(m.group(1)+' '+m.group(3)+' '+body).lower()
-                  if any(w in blob for w in cta_words):
-                      if any(host in href.lower() for host in external_hosts):
-                          problems.append(f'EXTERNAL_CONSULT_CTA {page}: {href}')
-              # Every profile should retain an Elajme enquiry path.
+                  if any(w in blob for w in cta_words) and any(host in href.lower() for host in external_hosts):
+                      problems.append(f'EXTERNAL_CONSULT_CTA {page}: {href}')
               expected='/ar/#enquiry' if page.as_posix().startswith('ar/') else '/#enquiry'
               if expected not in active:
                   problems.append(f'MISSING_ELAJME_ENQUIRY {page}: expected {expected}')
 
           print(f'English doctor profiles: {len(en_docs)}; Arabic: {len(ar_docs)}')
           print(f'English hospital profiles: {len(en_hosp)}; Arabic: {len(ar_hosp)}')
+          print(f'Active profiles checked for conversion routing: {active_profiles}')
           if problems:
               print('\n'.join(problems))
               raise SystemExit(f'Directory/conversion audit found {len(problems)} issue(s)')
