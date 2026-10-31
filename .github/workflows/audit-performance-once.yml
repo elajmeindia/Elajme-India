@@ -1,5 +1,6 @@
 name: Audit site performance once
 
+# Final verification rerun after image optimization and accessibility cleanup.
 on:
   push:
     branches: [main]
