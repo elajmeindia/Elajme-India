@@ -1,0 +1,53 @@
+name: Expand GCC hub country links once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/expand-gcc-hub-country-links-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Link all six GCC country guides from bilingual hub
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          en=Path('international-patients/mea/index.html')
+          ar=Path('ar/international-patients/mea/index.html')
+          s=en.read_text(); a=ar.read_text()
+          old='<article class="card"><h3>Qatar, Kuwait & Bahrain</h3><p>Patients from across the GCC can submit their case directly through the Elajme India enquiry form for coordination.</p><a href="../../#enquiry">Start an enquiry →</a></article>'
+          new='<article class="card"><h3>Qatar</h3><p>Arabic and English medical-case coordination for patients travelling from Qatar to India.</p><a href="../../qatar/treatment-in-india/">Qatar patient guide →</a></article><article class="card"><h3>Kuwait</h3><p>Hospital review and treatment-visit coordination for patients and families from Kuwait.</p><a href="../../kuwait/treatment-in-india/">Kuwait patient guide →</a></article><article class="card"><h3>Bahrain</h3><p>Arabic and English coordination for patients from Bahrain considering medical treatment in India.</p><a href="../../bahrain/treatment-in-india/">Bahrain patient guide →</a></article>'
+          if old in s: s=s.replace(old,new,1); en.write_text(s)
+          elif '../../qatar/treatment-in-india/' not in s: raise SystemExit('English GCC hub marker not found')
+          olda='<article class="card"><h3>قطر والكويت والبحرين</h3><p>يمكن للمرضى من جميع دول الخليج إرسال حالاتهم مباشرة من خلال نموذج علاج مي إنديا.</p><a href="/ar/#enquiry">ابدأ استفسارك ←</a></article>'
+          newa='<article class="card"><h3>قطر</h3><p>تنسيق الحالة الطبية بالعربية والإنجليزية للمرضى القادمين من قطر إلى الهند.</p><a href="/ar/qatar/treatment-in-india/">دليل المرضى من قطر ←</a></article><article class="card"><h3>الكويت</h3><p>تنسيق مراجعة المستشفى ورحلة العلاج للمرضى والعائلات من الكويت.</p><a href="/ar/kuwait/treatment-in-india/">دليل المرضى من الكويت ←</a></article><article class="card"><h3>البحرين</h3><p>تنسيق بالعربية والإنجليزية للمرضى من البحرين الراغبين في العلاج في الهند.</p><a href="/ar/bahrain/treatment-in-india/">دليل المرضى من البحرين ←</a></article>'
+          if olda in a: a=a.replace(olda,newa,1); ar.write_text(a)
+          elif '/ar/qatar/treatment-in-india/' not in a: raise SystemExit('Arabic GCC hub marker not found')
+          for x in ['saudi-arabia','uae','oman','qatar','kuwait','bahrain']:
+              assert f'../../{x}/treatment-in-india/' in s
+              assert f'/ar/{x}/treatment-in-india/' in a
+          assert '../../#enquiry' in s and '/ar/#enquiry' in a
+          PY
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+      - name: Commit GCC hub expansion
+        shell: bash
+        run: |
+          if git diff --quiet -- international-patients/mea/index.html ar/international-patients/mea/index.html; then
+            echo 'No content change required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add international-patients/mea/index.html ar/international-patients/mea/index.html
+          git commit -m 'Link all GCC country guides from patient hub'
+          git push
