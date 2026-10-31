@@ -1,4 +1,4 @@
-name: Fix directory consistency
+name: Align verified doctor directory imagery
 
 on:
   push:
@@ -13,42 +13,75 @@ jobs:
   fix-directory:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Add missing Jaslok hospital directory cards
+      - uses: actions/checkout@v5
+      - name: Align Dr Anil Mandhani directory portrait
+        shell: bash
         run: |
-          python - <<'PY'
+          set -euo pipefail
+          before_footer_hash=$(sha256sum assets/css/footer-approved.css FOOTER-LOCK.md)
+          python3 - <<'PY'
           from pathlib import Path
 
-          p = Path('hospitals/index.html')
-          s = p.read_text(encoding='utf-8')
-          slug = '/hospitals/jaslok-hospital-mumbai/'
-          if slug not in s:
-              marker = '</div><div class="notice">'
-              card = '''<article class="card" data-city="Mumbai" data-search="jaslok hospital pedder road mumbai oncology cardiac neuro transplant"><div class="media"><img class="photo" onerror="this.onerror=null;this.src='/assets/images/hospitals/hospital-placeholder.svg'" loading="lazy" src="/assets/images/hospitals/jaslok-mumbai.png" alt="Jaslok Hospital and Research Centre, Mumbai" decoding="async"></div><div class="body"><h2>Jaslok Hospital and Research Centre</h2><p class="muted">Pedder Road, Mumbai</p><p><span class="tag">Oncology</span><span class="tag">Cardiac Sciences</span><span class="tag">Neurosciences</span><span class="tag">Transplants</span></p><div class="actions"><a class="btn secondary" href="/hospitals/jaslok-hospital-mumbai/">View Hospital Profile</a><a class="btn" href="/#enquiry">Enquire through Elajme India</a></div></div></article>\n'''
-              if marker not in s:
-                  raise SystemExit('English directory insertion marker not found')
-              s = s.replace(marker, card + marker, 1)
-              p.write_text(s, encoding='utf-8')
+          official = 'https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ'
+          placeholder = '/assets/images/doctors/doctor-placeholder.svg'
 
-          p = Path('ar/hospitals/index.html')
+          p = Path('doctors/index.html')
           s = p.read_text(encoding='utf-8')
-          slug = '/ar/hospitals/jaslok-hospital-mumbai/'
-          if slug not in s:
-              marker = '</div><div class="notice">'
-              card = '''<article class="card"><img class="directory-photo hospital" loading="lazy" decoding="async" src="/assets/images/hospitals/jaslok-mumbai.png" alt="مستشفى جاسلوك ومركز الأبحاث، مومباي"><h2><a href="/ar/hospitals/jaslok-hospital-mumbai/">مستشفى جاسلوك ومركز الأبحاث</a></h2><p>بيدر رود، مومباي</p><p>الأورام · القلب · الأعصاب · زراعة الأعضاء</p><p><a href="/hospitals/jaslok-hospital-mumbai/" hreflang="en">عرض ملف المستشفى بالإنجليزية</a></p><a class="btn" href="/ar/#enquiry">استفسر عبر علاج مي إنديا</a></article>\n'''
-              if marker not in s:
-                  raise SystemExit('Arabic directory insertion marker not found')
-              s = s.replace(marker, card + marker, 1)
+          marker = 'data-search="anil mandhani urology renal fortis"'
+          start = s.find(marker)
+          if start < 0:
+              raise SystemExit('Dr Anil Mandhani English directory card not found')
+          card_start = s.rfind('<article', 0, start)
+          card_end = s.find('</article>', start)
+          if card_start < 0 or card_end < 0:
+              raise SystemExit('Could not isolate Dr Anil Mandhani card')
+          card_end += len('</article>')
+          card = s[card_start:card_end]
+          if official not in card:
+              if placeholder not in card:
+                  raise SystemExit('Expected placeholder not found in Mandhani English card')
+              card = card.replace(placeholder, official, 1)
+              s = s[:card_start] + card + s[card_end:]
               p.write_text(s, encoding='utf-8')
+              print('Updated English Mandhani directory card to verified Fortis portrait.')
+          else:
+              print('English Mandhani directory card already uses verified Fortis portrait.')
+
+          checks = [
+              Path('doctors/index.html'),
+              Path('ar/doctors/index.html'),
+              Path('doctors/dr-anil-mandhani/index.html'),
+              Path('ar/doctors/dr-anil-mandhani/index.html'),
+          ]
+          for path in checks:
+              text = path.read_text(encoding='utf-8')
+              if official not in text:
+                  raise SystemExit(f'Verified Fortis portrait missing from {path}')
+              print('verified portrait reference:', path)
+
+          for lang, path, expected in [
+              ('EN', Path('doctors/dr-anil-mandhani/index.html'), '/#enquiry'),
+              ('AR', Path('ar/doctors/dr-anil-mandhani/index.html'), '/ar/#enquiry'),
+          ]:
+              if expected not in path.read_text(encoding='utf-8'):
+                  raise SystemExit(f'{lang} Elajme enquiry route missing')
           PY
-      - name: Commit fixes
+          after_footer_hash=$(sha256sum assets/css/footer-approved.css FOOTER-LOCK.md)
+          test "$before_footer_hash" = "$after_footer_hash"
+          if git diff --name-only | grep -E '\.(png|jpe?g|webp|gif|svg|avif)$'; then
+            echo 'ERROR: binary/image asset changed unexpectedly.'
+            exit 1
+          fi
+      - name: Commit safe directory fix
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add hospitals/index.html ar/hospitals/index.html
+          git add doctors/index.html
           if git diff --cached --quiet; then
-            echo "No changes required"
+            echo 'No directory change required.'
           else
-            git commit -m "Add Jaslok to hospital directories"
+            git commit -m 'Use verified Mandhani portrait in English doctor directory'
             git push
           fi
