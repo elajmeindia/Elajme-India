@@ -20,64 +20,37 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          from urllib.parse import urljoin, urlparse
           import re, hashlib
-
-          def redirect_only(text):
-              return bool(re.search(r'<meta[^>]+http-equiv=["\']refresh["\']', text, re.I))
-
-          def active_pages():
-              out=[]
-              for p in Path('.').rglob('index.html'):
-                  s=str(p).replace('\\','/')
-                  if '/.git/' in s: continue
-                  t=p.read_text(errors='ignore')
-                  if redirect_only(t): continue
-                  out.append((p,t))
-              return out
-
-          pages=active_pages()
-          bypath={str(p).replace('\\','/'):t for p,t in pages}
-          issues=[]; pairs=0
-
-          def hrefs(text):
-              pre=text[:text.lower().find('<footer')] if '<footer' in text.lower() else text
-              return re.findall(r'<a\b[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', pre, re.I|re.S)
-
-          def norm(h):
+          def redirect_only(t): return bool(re.search(r'<meta[^>]+http-equiv=["\']refresh["\']',t,re.I))
+          def webpath(s): return '/' if s=='index.html' else ('/'+s[:-10] if s.endswith('index.html') else '/'+s)
+          def resolve(current,h):
               h=h.split('#')[0].split('?')[0]
-              if h.startswith('https://elajmeindia.com'): h=h[len('https://elajmeindia.com'):]
-              return h
-
-          for s,t in sorted(bypath.items()):
-              if s=='index.html': counterpart='ar/index.html'; expected='/ar/'
-              elif s.startswith('ar/'):
-                  counterpart=s[3:]
-                  if counterpart=='index.html': expected='/'
-                  else: expected='/' + counterpart[:-10] if counterpart.endswith('index.html') else '/' + counterpart
-              else:
-                  counterpart='ar/'+s
-                  expected='/ar/' + (s[:-10] if s.endswith('index.html') else s)
-              if counterpart not in bypath: continue
-              pairs += 1
+              if h.startswith('https://elajmeindia.com'): return urlparse(h).path
+              if h.startswith('/'): return h
+              return urlparse(urljoin('https://elajmeindia.com'+webpath(current),h)).path
+          pages={}
+          for p in Path('.').rglob('index.html'):
+              s=str(p).replace('\\','/'); t=p.read_text(errors='ignore')
+              if not redirect_only(t): pages[s]=t
+          issues=[]; checked=0
+          for s,t in sorted(pages.items()):
+              cp=('ar/index.html' if s=='index.html' else (s[3:] if s.startswith('ar/') else 'ar/'+s))
+              if cp not in pages: continue
+              checked+=1; expected=webpath(cp)
+              fi=t.lower().find('<footer'); pre=t[:fi] if fi>=0 else t
               candidates=[]
-              for h,label in hrefs(t):
-                  label_clean=re.sub(r'<[^>]+>',' ',label)
-                  if s.startswith('ar/'):
-                      if re.search(r'English',label_clean,re.I) or 'shell-lang' in label:
-                          candidates.append(norm(h))
-                  else:
-                      if 'العربية' in label_clean or 'Arabic' in label_clean:
-                          candidates.append(norm(h))
-              if not candidates:
-                  issues.append((s,'NO_VISIBLE_LANGUAGE_SWITCH',expected))
-              elif expected not in candidates:
-                  issues.append((s,'WRONG_SWITCH',expected,candidates))
-
-          print(f'Active paired pages checked: {pairs}')
-          print(f'Language-switch issues: {len(issues)}')
+              for m in re.finditer(r'<a\b([^>]*)>(.*?)</a>',pre,re.I|re.S):
+                  attrs,label=m.group(1),m.group(2); hm=re.search(r'href=["\']([^"\']+)["\']',attrs,re.I)
+                  if not hm: continue
+                  clean=re.sub(r'<[^>]+>',' ',label)
+                  switch=('shell-lang' in attrs) or (s.startswith('ar/') and re.search(r'English',clean,re.I)) or ((not s.startswith('ar/')) and ('العربية' in clean or re.search(r'Arabic',clean,re.I)))
+                  if switch: candidates.append(resolve(s,hm.group(1)))
+              if expected not in candidates: issues.append((s,expected,candidates))
+          print(f'Active paired pages checked: {checked}')
+          print(f'Exact language-switch issues: {len(issues)}')
           for x in issues: print('ISSUE',x)
           for p in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]:
-              if not p.exists(): raise SystemExit(f'Missing locked file: {p}')
               print('LOCK',p,hashlib.sha256(p.read_bytes()).hexdigest())
           if issues: raise SystemExit('EXACT BILINGUAL LANGUAGE SWITCH AUDIT FAILED')
           print('EXACT BILINGUAL LANGUAGE SWITCH AUDIT CLEAN')
