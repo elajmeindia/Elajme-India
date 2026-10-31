@@ -24,19 +24,13 @@ jobs:
 
           root=Path('.')
           problems=[]; warnings=[]
-
-          # Core launch files.
           for f in ('index.html','robots.txt','sitemap.xml','404.html'):
               if not (root/f).exists(): problems.append(f'MISSING_CORE_FILE {f}')
-
-          # robots.txt should expose sitemap and not block the whole site.
           rp=root/'robots.txt'
           if rp.exists():
               r=rp.read_text(errors='ignore')
               if re.search(r'(?im)^\s*disallow\s*:\s*/\s*$',r): problems.append('ROBOTS_BLOCKS_SITE')
               if 'sitemap' not in r.lower(): problems.append('ROBOTS_MISSING_SITEMAP')
-
-          # Sitemap should be valid XML, use production domain, and contain EN/AR URLs.
           sp=root/'sitemap.xml'
           if sp.exists():
               try:
@@ -47,7 +41,6 @@ jobs:
                   if bad: problems.append(f'SITEMAP_NON_PRODUCTION_URLS {len(bad)}')
                   if not any('/ar/' in u or u.rstrip('/').endswith('/ar') for u in locs): problems.append('SITEMAP_MISSING_AR_URLS')
               except Exception as e: problems.append(f'SITEMAP_XML_INVALID {e}')
-
           active=[]
           for p in root.rglob('*.html'):
               s=p.as_posix()
@@ -55,7 +48,6 @@ jobs:
               text=p.read_text(errors='ignore')
               if re.search(r'<meta[^>]+http-equiv=["\']refresh["\']',text,re.I): continue
               active.append((p,text))
-
           for p,text in active:
               pre=text[:text.lower().find('<footer')] if '<footer' in text.lower() else text
               low=pre.lower()
@@ -71,23 +63,19 @@ jobs:
               if re.match(r'^(ar/)?(doctors|hospitals)/[^/]+/index\.html$',p.as_posix()):
                   expected='/ar/#enquiry' if p.as_posix().startswith('ar/') else '/#enquiry'
                   if expected not in pre: problems.append(f'PROFILE_ENQUIRY {p}: {expected}')
-
           home=(root/'index.html').read_text(errors='ignore') if (root/'index.html').exists() else ''
           for token,label in [('og:title','HOME_MISSING_OG_TITLE'),('og:description','HOME_MISSING_OG_DESCRIPTION'),('og:image','HOME_MISSING_OG_IMAGE')]:
               if token not in home.lower(): warnings.append(label)
           if not re.search(r'<link[^>]+rel=["\'][^"\']*(icon|shortcut icon)',home,re.I): warnings.append('HOME_MISSING_FAVICON')
           if 'application/ld+json' not in home.lower(): warnings.append('HOME_MISSING_STRUCTURED_DATA')
-
           print(f'Active pages checked: {len(active)}')
           print(f'Blocking issues: {len(problems)}')
           print(f'Review warnings: {len(warnings)}')
-          if warnings:
-              print('--- WARNINGS ---'); print('\n'.join(warnings))
-          if problems:
-              print('--- BLOCKING ---'); print('\n'.join(problems)); raise SystemExit(1)
+          if warnings: print('--- WARNINGS ---'); print('\n'.join(warnings))
+          if problems: print('--- BLOCKING ---'); print('\n'.join(problems)); raise SystemExit(1)
           print('PRELAUNCH TECHNICAL BLOCKING CHECKS CLEAN')
           PY
       - name: Verify locked footer files remain untouched
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
-# audit-trigger: final-production-readiness-2026-10-31
+# audit-trigger: post-seo-growth-final-gate-2026-10-31
