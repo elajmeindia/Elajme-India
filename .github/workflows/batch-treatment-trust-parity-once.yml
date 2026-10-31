@@ -1,4 +1,4 @@
-name: Strengthen international patient treatment pathways once
+name: Align Arabic neurosurgery specialist links once
 
 on:
   push:
@@ -15,36 +15,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add direct treatment pathways to international patient hubs
+      - name: Align Arabic neurosurgery specialist links
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re, hashlib
-          targets={
-          'international-patients/mea/index.html':(
-          'Explore treatment options and patient resources',
-          '<section class="sec"><div class="c"><h2>Explore treatment options and patient resources</h2><div class="related"><a href="../../treatments/cancer-treatment-india/">Cancer treatment</a><a href="../../treatments/heart-treatment-india/">Heart treatment</a><a href="../../treatments/knee-replacement-india/">Knee replacement</a><a href="../../treatments/neurosurgery-india/">Neurosurgery</a><a href="../../treatments/urology-treatment-india/">Urology</a><a href="../../treatments/gastroenterology-treatment-india/">Gastroenterology</a><a href="../../treatments/kidney-transplant-india/">Kidney transplant</a><a href="../../treatments/liver-transplant-india/">Liver transplant</a><a href="../../treatments/spine-surgery-india/">Spine surgery</a><a href="../../treatments/">All treatment areas</a><a href="../../hospitals/">Hospital directory</a><a href="../../doctors/">Doctor directory</a><a href="../../patient-guide/">International patient guide</a><a href="../../medical-visa/">Medical visa guidance</a></div></div></section>'),
-          'ar/international-patients/mea/index.html':(
-          'استكشف العلاجات وموارد المريض',
-          '<section class="sec"><div class="c"><h2>استكشف العلاجات وموارد المريض</h2><div class="related"><a href="/ar/treatments/cancer-treatment-india/">علاج السرطان</a><a href="/ar/treatments/heart-treatment-india/">علاج القلب</a><a href="/ar/treatments/knee-replacement-india/">استبدال مفصل الركبة</a><a href="/ar/treatments/neurosurgery-india/">جراحة الأعصاب</a><a href="/ar/treatments/urology-treatment-india/">المسالك البولية</a><a href="/ar/treatments/gastroenterology-treatment-india/">أمراض الجهاز الهضمي</a><a href="/ar/treatments/kidney-transplant-india/">زراعة الكلى</a><a href="/ar/treatments/liver-transplant-india/">زراعة الكبد</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a><a href="/ar/treatments/">جميع مجالات العلاج</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/patient-guide/">دليل المريض الدولي</a><a href="/ar/medical-visa/">إرشادات التأشيرة الطبية</a></div></div></section>')}
-          changed=[]
-          for fn,(heading,new) in targets.items():
-              p=Path(fn); text=p.read_text(); fi=text.lower().find('<footer'); assert fi>=0
-              pre,foot=text[:fi],text[fi:]
-              if new in pre: continue
-              pattern=r'<section class="sec"><div class="c"><h2>'+re.escape(heading)+r'</h2>.*?</section>'
-              pre2,n=re.subn(pattern,new,pre,count=1,flags=re.S)
-              assert n==1, f'target section not found in {fn}'
-              p.write_text(pre2+foot); changed.append(fn)
-          print('Changed:',changed)
-          for p in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]: print('LOCK',p,hashlib.sha256(p.read_bytes()).hexdigest())
+          import hashlib
+          p=Path('ar/treatments/neurosurgery-india/index.html')
+          text=p.read_text(); fi=text.lower().find('<footer'); assert fi>=0
+          pre,foot=text[:fi],text[fi:]
+          old='<h2>استكشف الأطباء والمستشفيات</h2><div class="related"><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/international-patients/mea/">دليل المرضى الدوليين</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a></div>'
+          new='<h2>استكشف الأطباء والمستشفيات</h2><div class="related"><a href="/ar/doctors/dr-aditya-gupta/">د. أديتيا غوبتا</a><a href="/ar/doctors/dr-jayesh-sardhara/">د. جايش ساردارا</a><a href="/ar/hospitals/blk-max-super-speciality-hospital-delhi/">BLK-Max دلهي</a><a href="/ar/hospitals/artemis-hospital-gurugram/">مستشفى أرتيمس، جوروجرام</a><a href="/ar/hospitals/max-super-speciality-hospital-noida/">ماكس نويدا</a><a href="/ar/hospitals/wockhardt-hospitals-mumbai-central/">ووكهارت مومباي سنترال</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a><a href="/ar/patient-guide/">دليل المريض الدولي</a></div>'
+          if new not in pre:
+              assert old in pre, 'expected Arabic neurosurgery related section not found'
+              pre=pre.replace(old,new,1)
+              p.write_text(pre+foot)
+              print('Changed Arabic neurosurgery specialist links')
+          else:
+              print('Already aligned')
+          for q in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]: print('LOCK',q,hashlib.sha256(q.read_bytes()).hexdigest())
           PY
-      - name: Commit hub internal-link improvements
+      - name: Commit Arabic neurosurgery parity
         run: |
-          if git diff --quiet -- international-patients/mea/index.html ar/international-patients/mea/index.html; then echo 'No changes required'; exit 0; fi
+          if git diff --quiet -- ar/treatments/neurosurgery-india/index.html; then echo 'No changes required'; exit 0; fi
           git config user.name 'elajmeindia'
           git config user.email 'shahzadalamnadwi@gmail.com'
-          git add international-patients/mea/index.html ar/international-patients/mea/index.html
-          git commit -m 'Strengthen international patient treatment pathways'
+          git add ar/treatments/neurosurgery-india/index.html
+          git commit -m 'Align Arabic neurosurgery specialist links'
           git push
