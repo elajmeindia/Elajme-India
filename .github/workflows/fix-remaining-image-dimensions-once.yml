@@ -1,0 +1,102 @@
+name: Finish remaining image dimensions safely
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-remaining-image-dimensions-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finish-dimensions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add dimensions to remaining known local imagery
+        shell: bash
+        run: |
+          set -euo pipefail
+          BEFORE_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
+          BEFORE_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root=Path('.')
+          changed=[]
+          for page in root.rglob('*.html'):
+              text=page.read_text(encoding='utf-8', errors='ignore')
+              marker=text.lower().find('<footer')
+              active=text if marker < 0 else text[:marker]
+              tail='' if marker < 0 else text[marker:]
+
+              def fix(m):
+                  tag=m.group(0)
+                  low=tag.lower()
+                  sm=re.search(r'\bsrc=["\']([^"\']+)',tag,re.I)
+                  if not sm or ('width=' in low and 'height=' in low):
+                      return tag
+                  src=sm.group(1).split('?',1)[0]
+                  dims=None
+                  if src.endswith('/assets/images/hospitals/hospital-placeholder.svg'):
+                      dims=(800,500)
+                  elif src.endswith('/assets/images/doctors/doctor-placeholder.svg'):
+                      dims=(600,720)
+                  elif src.endswith('Healthcare%20Travel%20Swoosh%20Emblem.webp') or src.endswith('Healthcare Travel Swoosh Emblem.webp'):
+                      dims=(1305,1206)
+                  if not dims:
+                      return tag
+                  attrs=''
+                  if 'width=' not in low: attrs += f' width="{dims[0]}"'
+                  if 'height=' not in low: attrs += f' height="{dims[1]}"'
+                  return tag[:-1] + attrs + '>'
+
+              new_active=re.sub(r'<img\b[^>]*>',fix,active,flags=re.I)
+              if new_active != active:
+                  page.write_text(new_active+tail,encoding='utf-8')
+                  changed.append(page.as_posix())
+          print(f'HTML pages changed: {len(changed)}')
+          PY
+          AFTER_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
+          AFTER_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
+          test "$BEFORE_FOOTER" = "$AFTER_FOOTER"
+          test "$BEFORE_LOCK" = "$AFTER_LOCK"
+      - name: Verify safe scope and report unresolved dimensions
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --name-only | grep -Ei '\.(png|jpe?g|webp|gif|avif|svg)$'; then
+            echo 'Image asset changed unexpectedly'; exit 1
+          fi
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          unresolved=[]
+          for page in Path('.').rglob('*.html'):
+              text=page.read_text(errors='ignore')
+              marker=text.lower().find('<footer')
+              active=text if marker < 0 else text[:marker]
+              for tag in re.findall(r'<img\b[^>]*>',active,re.I):
+                  if 'width=' in tag.lower() and 'height=' in tag.lower(): continue
+                  m=re.search(r'\bsrc=["\']([^"\']+)',tag,re.I)
+                  if m: unresolved.append((page.as_posix(),m.group(1)))
+          print(f'Remaining images missing width/height: {len(unresolved)}')
+          for p,s in unresolved: print('UNRESOLVED',p,s)
+          PY
+      - name: Commit safe dimension fixes
+        run: |
+          git config user.name 'Elajme India Performance'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- '*.html'
+          if git diff --cached --quiet; then
+            echo 'No remaining known local dimensions required changes.'
+            exit 0
+          fi
+          git commit -m 'Finish intrinsic dimensions for known local images'
+          git push
