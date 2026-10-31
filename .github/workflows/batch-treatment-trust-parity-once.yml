@@ -1,4 +1,4 @@
-name: Optimize priority Search Console pages once
+name: Optimize kidney and knee Search Console pages once
 
 on:
   push:
@@ -15,58 +15,55 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply conservative bilingual snippet improvements
+      - name: Apply conservative bilingual kidney and knee snippet improvements
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import hashlib
 
-          locks = {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in ['FOOTER-LOCK.md','assets/css/footer-approved.css']}
-          replacements = {
-            'treatments/heart-treatment-india/index.html': [
-              ('<title>Heart Treatment in India | International Patient Coordination | Elajme India</title>', '<title>Heart Disease Treatment in India | International Patients | Elajme India</title>'),
-              ('<meta name="description" content="Heart treatment coordination in India for international patients. Coordinate cardiology or cardiac-surgery case review, hospital consultations and treatment-visit planning through Elajme India.">', '<meta name="description" content="Heart disease treatment in India for international patients, with cardiology and cardiac-surgery case review and consultation coordination through Elajme India.">'),
-              ('<meta property="og:title" content="Heart Treatment in India | Elajme India">', '<meta property="og:title" content="Heart Disease Treatment in India | Elajme India">')
+          locks={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in ['FOOTER-LOCK.md','assets/css/footer-approved.css']}
+          replacements={
+            'treatments/kidney-transplant-india/index.html':[
+              ('<title>Kidney Transplant in India | International Patient Coordination | Elajme India</title>','<title>Kidney Transplant in India for International Patients | Elajme India</title>'),
+              ('<meta name="description" content="Kidney transplant coordination in India for international patients, including patient and donor document review, transplant-team communication and treatment-visit planning through Elajme India.">','<meta name="description" content="Kidney transplant in India for international patients, with recipient and potential-donor document review and transplant-hospital coordination through Elajme India.">'),
+              ('<meta property="og:title" content="Kidney Transplant in India | Elajme India">','<meta property="og:title" content="Kidney Transplant in India for International Patients | Elajme India">')
             ],
-            'ar/treatments/heart-treatment-india/index.html': [
-              ('<title>علاج القلب في الهند للمرضى الدوليين | علاج مي إنديا</title>', '<title>علاج أمراض القلب في الهند للمرضى الدوليين | علاج مي إنديا</title>'),
-              ('<meta name="description" content="تنسيق علاج القلب في الهند للمرضى الدوليين، من مراجعة تقارير القلب والتواصل مع المستشفى إلى الاستشارة والمواعيد وترتيبات الزيارة العلاجية.">', '<meta name="description" content="علاج أمراض القلب في الهند للمرضى الدوليين، مع تنسيق مراجعة تقارير القلب واستشارات أمراض القلب وجراحة القلب عبر علاج مي إنديا.">'),
-              ('<meta property="og:title" content="علاج القلب في الهند للمرضى الدوليين | علاج مي إنديا">', '<meta property="og:title" content="علاج أمراض القلب في الهند للمرضى الدوليين | علاج مي إنديا">')
+            'ar/treatments/kidney-transplant-india/index.html':[
+              ('<title>زراعة الكلى في الهند للمرضى الدوليين | علاج مي إنديا</title>','<title>زراعة الكلى في الهند للمرضى الدوليين | تنسيق طبي | علاج مي إنديا</title>'),
+              ('<meta name="description" content="تنسيق استفسارات زراعة الكلى في الهند للمرضى الدوليين، بما يشمل بيانات المريض والمتبرع المحتمل والتواصل مع فريق الزراعة وترتيبات الزيارة العلاجية.">','<meta name="description" content="زراعة الكلى في الهند للمرضى الدوليين، مع تنسيق مراجعة بيانات المريض والمتبرع المحتمل والتواصل مع مستشفيات وبرامج الزراعة عبر علاج مي إنديا.">')
             ],
-            'hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html': [
-              ('<title>Nanavati Max Super Speciality Hospital Mumbai | Elajme India</title>', '<title>Nanavati Hospital Mumbai | International Patient Guide | Elajme India</title>'),
-              ('<meta name="description" content="International patient coordination profile for Nanavati Max Super Speciality Hospital in Mumbai, with treatment enquiry support through Elajme India.">', '<meta name="description" content="Nanavati Max Hospital Mumbai information for international patients, including key specialties and consultation coordination through Elajme India.">'),
-              ('<meta property="og:title" content="Nanavati Max Super Speciality Hospital Mumbai | Elajme India">', '<meta property="og:title" content="Nanavati Hospital Mumbai | International Patient Guide | Elajme India">')
+            'treatments/knee-replacement-india/index.html':[
+              ('<title>Knee Replacement in India | International Patient Coordination | Elajme India</title>','<title>Knee Replacement Surgery in India | International Patients | Elajme India</title>'),
+              ('<meta name="description" content="Knee replacement coordination in India for international patients, including orthopaedic review, hospital consultation, rehabilitation planning and travel support through Elajme India.">','<meta name="description" content="Knee replacement surgery in India for international patients, with orthopaedic case review, hospital consultation and rehabilitation planning through Elajme India.">'),
+              ('<meta property="og:title" content="Knee Replacement in India | Elajme India">','<meta property="og:title" content="Knee Replacement Surgery in India | Elajme India">')
             ],
-            'ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html': [
-              ('<title>مستشفى نانافاتي ماكس التخصصي مومباي | علاج مي إنديا</title>', '<title>مستشفى نانافاتي ماكس مومباي | دليل المرضى الدوليين | علاج مي إنديا</title>'),
-              ('<meta name="description" content="ملف مستشفى نانافاتي ماكس التخصصي في مومباي للمرضى الدوليين مع تنسيق الاستشارات وخطط العلاج عبر علاج مي إنديا.">', '<meta name="description" content="معلومات مستشفى نانافاتي ماكس في مومباي للمرضى الدوليين، مع أبرز التخصصات وتنسيق طلبات الاستشارة عبر علاج مي إنديا.">'),
-              ('<meta property="og:title" content="مستشفى نانافاتي ماكس التخصصي مومباي | علاج مي إنديا">', '<meta property="og:title" content="مستشفى نانافاتي ماكس مومباي | دليل المرضى الدوليين | علاج مي إنديا">')
+            'ar/treatments/knee-replacement-india/index.html':[
+              ('<title>استبدال مفصل الركبة في الهند للمرضى الدوليين | علاج مي إنديا</title>','<title>جراحة استبدال مفصل الركبة في الهند للمرضى الدوليين | علاج مي إنديا</title>'),
+              ('<meta name="description" content="تنسيق استفسارات استبدال مفصل الركبة في الهند للمرضى الدوليين، من مراجعة التقارير والأشعة إلى الاستشارة وتخطيط الزيارة والتأهيل.">','<meta name="description" content="جراحة استبدال مفصل الركبة في الهند للمرضى الدوليين، مع تنسيق مراجعة التقارير والأشعة والاستشارة وخطة التأهيل عبر علاج مي إنديا.">'),
+              ('<meta property="og:title" content="استبدال مفصل الركبة في الهند | علاج مي إنديا">','<meta property="og:title" content="جراحة استبدال مفصل الركبة في الهند | علاج مي إنديا">')
             ]
           }
           changed=[]
-          for name, reps in replacements.items():
-              p=Path(name); t=p.read_text()
-              fi=t.lower().find('<footer')
-              if fi < 0: raise SystemExit(f'No footer boundary: {name}')
-              pre, footer=t[:fi], t[fi:]
+          for name,reps in replacements.items():
+              p=Path(name); t=p.read_text(); fi=t.lower().find('<footer')
+              if fi<0: raise SystemExit(f'No footer boundary: {name}')
+              pre,footer=t[:fi],t[fi:]
               for old,new in reps:
-                  if old not in pre: raise SystemExit(f'Expected text missing in {name}: {old[:80]}')
+                  if old not in pre: raise SystemExit(f'Expected text missing in {name}: {old[:90]}')
                   pre=pre.replace(old,new,1)
-              p.write_text(pre+footer)
-              changed.append(name)
+              p.write_text(pre+footer); changed.append(name)
           for p,h in locks.items():
               if hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h: raise SystemExit(f'LOCK CHANGED: {p}')
           print('Changed pages:',len(changed))
           for p in changed: print(p)
-          print('PRIORITY SEARCH SNIPPET OPTIMIZATION CLEAN')
+          print('KIDNEY AND KNEE SEARCH SNIPPET OPTIMIZATION CLEAN')
           PY
       - name: Commit safe SEO changes
         run: |
           if git diff --quiet; then echo "No changes"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add treatments/heart-treatment-india/index.html ar/treatments/heart-treatment-india/index.html hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html
-          git commit -m "Improve priority Search Console snippets"
+          git add treatments/kidney-transplant-india/index.html ar/treatments/kidney-transplant-india/index.html treatments/knee-replacement-india/index.html ar/treatments/knee-replacement-india/index.html
+          git commit -m "Improve kidney and knee Search Console snippets"
           git push
