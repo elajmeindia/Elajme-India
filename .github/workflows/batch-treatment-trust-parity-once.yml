@@ -1,4 +1,4 @@
-name: Optimize priority directory search snippets once
+name: Align remaining GCC Arabic treatment discovery once
 
 on:
   push:
@@ -11,60 +11,52 @@ permissions:
   contents: write
 
 jobs:
-  optimize:
+  align:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Improve EN AR hospital and doctor directory snippets
+      - name: Align Qatar Kuwait Bahrain Arabic treatment links
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re, hashlib
 
-          changes={
-            'hospitals/index.html': {
-              'title':'Hospitals in India for International Patients | Elajme India',
-              'desc':'Explore selected hospitals in Delhi NCR, Mumbai and Navi Mumbai for international patients, with treatment enquiry and consultation coordination through Elajme India.',
-              'ogtitle':'Hospitals in India for International Patients | Elajme India',
-              'ogdesc':'Explore selected hospitals in India and coordinate international patient treatment enquiries through Elajme India.'},
-            'ar/hospitals/index.html': {
-              'title':'مستشفيات في الهند للمرضى الدوليين | علاج مي إنديا',
-              'desc':'استعرض مستشفيات مختارة في دلهي وغوروغرام ونويدا ومومباي ونافي مومباي للمرضى الدوليين، مع تنسيق الاستفسارات وطلبات الاستشارة عبر علاج مي إنديا.',
-              'ogtitle':'مستشفيات في الهند للمرضى الدوليين | علاج مي إنديا',
-              'ogdesc':'استعرض مستشفيات مختارة في الهند ونسّق استفسارات العلاج للمرضى الدوليين عبر علاج مي إنديا.'},
-            'doctors/index.html': {
-              'title':'Doctors in India for International Patients | Elajme India',
-              'desc':'Explore selected specialist doctors in Delhi NCR, Mumbai and Navi Mumbai and coordinate international patient consultation requests through Elajme India.',
-              'ogtitle':'Doctors in India for International Patients | Elajme India',
-              'ogdesc':'Explore selected specialist doctors in India and coordinate international patient consultation requests through Elajme India.'},
-            'ar/doctors/index.html': {
-              'title':'أطباء في الهند للمرضى الدوليين | علاج مي إنديا',
-              'desc':'استعرض أطباء وتخصصات مختارة في دلهي وغوروغرام ومومباي ونافي مومباي، مع تنسيق طلبات الاستشارة للمرضى الدوليين عبر علاج مي إنديا.',
-              'ogtitle':'أطباء في الهند للمرضى الدوليين | علاج مي إنديا',
-              'ogdesc':'استعرض أطباء وتخصصات مختارة في الهند ونسّق طلبات الاستشارة للمرضى الدوليين عبر علاج مي إنديا.'}
-          }
+          files = [
+            Path('ar/qatar/treatment-in-india/index.html'),
+            Path('ar/kuwait/treatment-in-india/index.html'),
+            Path('ar/bahrain/treatment-in-india/index.html'),
+          ]
+          links = '''<div class="related"><a href="/ar/treatments/cancer-treatment-india/">علاج السرطان</a><a href="/ar/treatments/heart-treatment-india/">علاج القلب</a><a href="/ar/treatments/liver-transplant-india/">زراعة الكبد</a><a href="/ar/treatments/kidney-transplant-india/">زراعة الكلى</a><a href="/ar/treatments/knee-replacement-india/">استبدال مفصل الركبة</a><a href="/ar/treatments/neurosurgery-india/">جراحة الأعصاب</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a><a href="/ar/treatments/urology-treatment-india/">المسالك البولية</a><a href="/ar/treatments/gastroenterology-treatment-india/">أمراض الجهاز الهضمي</a><a href="/ar/treatments/">جميع مجالات العلاج</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/medical-visa/">معلومات التأشيرة الطبية</a><a href="/ar/patient-guide/">دليل المريض الدولي</a><a href="/ar/international-patients/mea/">دعم مرضى الخليج والمرضى الدوليين</a></div>'''
           changed=[]
-          for fn,v in changes.items():
-              p=Path(fn); text=p.read_text()
-              low=text.lower(); fi=low.find('<footer'); pre=text[:fi] if fi>=0 else text; foot=text[fi:] if fi>=0 else ''
-              pre=re.sub(r'<title>.*?</title>', '<title>'+v['title']+'</title>', pre, count=1, flags=re.I|re.S)
-              pre=re.sub(r'(<meta\s+name=["\']description["\']\s+content=["\'])[^"\']*(["\'])', lambda m:m.group(1)+v['desc']+m.group(2), pre, count=1, flags=re.I)
-              pre=re.sub(r'(<meta\s+property=["\']og:title["\']\s+content=["\'])[^"\']*(["\'])', lambda m:m.group(1)+v['ogtitle']+m.group(2), pre, count=1, flags=re.I)
-              pre=re.sub(r'(<meta\s+property=["\']og:description["\']\s+content=["\'])[^"\']*(["\'])', lambda m:m.group(1)+v['ogdesc']+m.group(2), pre, count=1, flags=re.I)
-              new=pre+foot
-              if new!=text: p.write_text(new); changed.append(fn)
-          print('Changed:',changed)
-          for fn in changes:
-              t=Path(fn).read_text(); assert t.count('<title>')==1
-              assert 'elajmeindia.com' in t
-          for p in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]: print('LOCK',p,hashlib.sha256(p.read_bytes()).hexdigest())
+          for p in files:
+              text=p.read_text()
+              fi=text.lower().find('<footer')
+              assert fi>=0, p
+              pre, foot=text[:fi], text[fi:]
+              # Replace the final related-links block before the footer. Country pages use this as their discovery section.
+              matches=list(re.finditer(r'<div class="related">.*?</div>', pre, flags=re.S))
+              assert matches, p
+              m=matches[-1]
+              newpre=pre[:m.start()]+links+pre[m.end():]
+              new=newpre+foot
+              assert foot==text[fi:], 'footer changed'
+              assert new.count('/ar/treatments/cancer-treatment-india/')>=1
+              assert new.count('/ar/treatments/gastroenterology-treatment-india/')>=1
+              assert 'href="/ar/#enquiry"' in new
+              assert 'hreflang="en"' in new and 'hreflang="ar"' in new
+              if new!=text:
+                  p.write_text(new)
+                  changed.append(str(p))
+          print('Changed:', changed)
+          for p in [Path('FOOTER-LOCK.md'), Path('assets/css/footer-approved.css')]:
+              print('LOCK', p, hashlib.sha256(p.read_bytes()).hexdigest())
           PY
-      - name: Commit snippet improvements
+      - name: Commit GCC parity improvements
         run: |
-          if git diff --quiet -- hospitals/index.html ar/hospitals/index.html doctors/index.html ar/doctors/index.html; then echo 'No changes required'; exit 0; fi
+          if git diff --quiet -- ar/qatar/treatment-in-india/index.html ar/kuwait/treatment-in-india/index.html ar/bahrain/treatment-in-india/index.html; then echo 'No changes required'; exit 0; fi
           git config user.name 'elajmeindia'
           git config user.email 'shahzadalamnadwi@gmail.com'
-          git add hospitals/index.html ar/hospitals/index.html doctors/index.html ar/doctors/index.html
-          git commit -m 'Improve hospital and doctor directory search snippets'
+          git add ar/qatar/treatment-in-india/index.html ar/kuwait/treatment-in-india/index.html ar/bahrain/treatment-in-india/index.html
+          git commit -m 'Align remaining GCC Arabic treatment discovery'
           git push
