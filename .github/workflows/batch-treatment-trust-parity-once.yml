@@ -1,4 +1,4 @@
-name: Optimize priority doctor Search Console profiles once
+name: Verify exact bilingual language switches sitewide
 
 on:
   push:
@@ -8,63 +8,49 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  optimize:
+  audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply conservative bilingual doctor snippet improvements
+      - name: Verify exact EN AR visible language switches
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import hashlib
-
-          locks={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in ['FOOTER-LOCK.md','assets/css/footer-approved.css']}
-          replacements={
-            'doctors/dr-arvinder-singh-soin/index.html':[
-              ('<title>Dr. Arvinder Singh Soin | Liver Transplant & Liver Surgery | Elajme India</title>','<title>Dr. Arvinder Singh Soin | Liver Transplant Surgeon | Elajme India</title>'),
-              ('<meta name="description" content="International patient directory profile for Dr. Arvinder Singh Soin, Chairman, Liver Transplant at Medanta Gurugram, with consultation coordination through Elajme India.">','<meta name="description" content="Dr. Arvinder Singh Soin profile for international patients seeking liver transplant or liver surgery consultation coordination through Elajme India.">'),
-              ('<meta property="og:title" content="Dr. Arvinder Singh Soin | Liver Transplant | Elajme India">','<meta property="og:title" content="Dr. Arvinder Singh Soin | Liver Transplant Surgeon | Elajme India">')
-            ],
-            'ar/doctors/dr-arvinder-singh-soin/index.html':[
-              ('<title>د. أرفيندر سينغ سوين | زراعة وجراحة الكبد | علاج مي إنديا</title>','<title>د. أرفيندر سينغ سوين | جراح زراعة الكبد | علاج مي إنديا</title>'),
-              ('<meta name="description" content="ملف د. أرفيندر سينغ سوين، رئيس قسم زراعة الكبد في ميدانتا جوروجرام، لتنسيق استشارات المرضى الدوليين عبر علاج مي إنديا.">','<meta name="description" content="ملف د. أرفيندر سينغ سوين للمرضى الدوليين الراغبين في تنسيق استشارة زراعة الكبد أو جراحة الكبد عبر علاج مي إنديا.">'),
-              ('<meta property="og:title" content="د. أرفيندر سينغ سوين | زراعة الكبد | علاج مي إنديا">','<meta property="og:title" content="د. أرفيندر سينغ سوين | جراح زراعة الكبد | علاج مي إنديا">')
-            ],
-            'doctors/dr-kaushal-malhan/index.html':[
-              ('<title>Dr. Kaushal Malhan | Orthopaedics & Joint Replacement | Elajme India</title>','<title>Dr. Kaushal Malhan | Knee & Joint Replacement | Elajme India</title>'),
-              ('<meta name="description" content="Directory profile for Dr. Kaushal Malhan, Director Orthopaedics at Fortis Hospital Mulund, for international patient consultation coordination through Elajme India.">','<meta name="description" content="Dr. Kaushal Malhan profile for international patients seeking knee or joint replacement consultation coordination through Elajme India.">'),
-              ('<meta property="og:title" content="Dr. Kaushal Malhan | Orthopaedics & Joint Replacement | Elajme India">','<meta property="og:title" content="Dr. Kaushal Malhan | Knee & Joint Replacement | Elajme India">')
-            ],
-            'ar/doctors/dr-kaushal-malhan/index.html':[
-              ('<title>د. كوشال مالهان | جراحة العظام واستبدال المفاصل | علاج مي إنديا</title>','<title>د. كوشال مالهان | استبدال الركبة والمفاصل | علاج مي إنديا</title>'),
-              ('<meta name="description" content="ملف د. كوشال مالهان، مدير جراحة العظام في مستشفى فورتيس مولوند، وتنسيق الاستشارة للمرضى الدوليين عبر علاج مي إنديا.">','<meta name="description" content="ملف د. كوشال مالهان للمرضى الدوليين الراغبين في تنسيق استشارة استبدال الركبة أو المفاصل عبر علاج مي إنديا.">'),
-              ('<meta property="og:title" content="د. كوشال مالهان | جراحة العظام واستبدال المفاصل | علاج مي إنديا">','<meta property="og:title" content="د. كوشال مالهان | استبدال الركبة والمفاصل | علاج مي إنديا">')
-            ]
-          }
-          changed=[]
-          for name,reps in replacements.items():
-              p=Path(name); t=p.read_text(); fi=t.lower().find('<footer')
-              if fi<0: raise SystemExit(f'No footer boundary: {name}')
-              pre,footer=t[:fi],t[fi:]
-              for old,new in reps:
-                  if old not in pre: raise SystemExit(f'Expected text missing in {name}: {old[:90]}')
-                  pre=pre.replace(old,new,1)
-              p.write_text(pre+footer); changed.append(name)
-          for p,h in locks.items():
-              if hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h: raise SystemExit(f'LOCK CHANGED: {p}')
-          print('Changed pages:',len(changed))
-          for p in changed: print(p)
-          print('PRIORITY DOCTOR SEARCH SNIPPET OPTIMIZATION CLEAN')
+          from urllib.parse import urljoin,urlparse
+          import re,hashlib
+          def redirect_only(t): return bool(re.search(r'<meta[^>]+http-equiv=["\']refresh["\']',t,re.I))
+          def webpath(s): return '/' if s=='index.html' else ('/'+s[:-10] if s.endswith('index.html') else '/'+s)
+          def resolve(current,h):
+              h=h.split('#')[0].split('?')[0]
+              if h.startswith('https://elajmeindia.com'): return urlparse(h).path
+              if h.startswith('/'): return h
+              return urlparse(urljoin('https://elajmeindia.com'+webpath(current),h)).path
+          pages={}
+          for p in Path('.').rglob('index.html'):
+              s=str(p).replace('\\','/'); t=p.read_text(errors='ignore')
+              if not redirect_only(t): pages[s]=t
+          issues=[]; checked=0
+          for s,t in sorted(pages.items()):
+              cp=('ar/index.html' if s=='index.html' else (s[3:] if s.startswith('ar/') else 'ar/'+s))
+              if cp not in pages: continue
+              checked+=1; expected=webpath(cp)
+              fi=t.lower().find('<footer'); pre=t[:fi] if fi>=0 else t
+              candidates=[]
+              for m in re.finditer(r'<a\b([^>]*)>(.*?)</a>',pre,re.I|re.S):
+                  attrs,label=m.group(1),m.group(2); hm=re.search(r'href=["\']([^"\']+)["\']',attrs,re.I)
+                  if not hm: continue
+                  clean=re.sub(r'<[^>]+>',' ',label)
+                  switch=('shell-lang' in attrs) or (s.startswith('ar/') and re.search(r'English',clean,re.I)) or ((not s.startswith('ar/')) and ('العربية' in clean or re.search(r'Arabic',clean,re.I)))
+                  if switch: candidates.append(resolve(s,hm.group(1)))
+              if expected not in candidates: issues.append((s,expected,candidates))
+          print('Active paired pages checked:',checked)
+          print('Exact language-switch issues:',len(issues))
+          for x in issues: print('ISSUE',x)
+          for p in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]: print('LOCK',p,hashlib.sha256(p.read_bytes()).hexdigest())
+          if issues: raise SystemExit('EXACT BILINGUAL LANGUAGE SWITCH AUDIT FAILED')
+          print('EXACT BILINGUAL LANGUAGE SWITCH AUDIT CLEAN')
           PY
-      - name: Commit safe doctor SEO changes
-        run: |
-          if git diff --quiet; then echo "No changes"; exit 0; fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add doctors/dr-arvinder-singh-soin/index.html ar/doctors/dr-arvinder-singh-soin/index.html doctors/dr-kaushal-malhan/index.html ar/doctors/dr-kaushal-malhan/index.html
-          git commit -m "Improve priority doctor Search Console snippets"
-          git push
