@@ -62,10 +62,8 @@ jobs:
               if is_profile:
                   expected='/ar/#enquiry' if p.as_posix().startswith('ar/') else '/#enquiry'
                   if expected not in pre:
-                      # Redirect/legacy exceptions are already excluded above.
                       problems.append(f'PROFILE_ENQUIRY {p}: missing {expected}')
 
-          # Duplicates are warnings because deliberate directory/template titles can be valid.
           for value,paths in titles.items():
               if len(paths)>1: warnings.append('DUP_TITLE '+value+' :: '+', '.join(paths))
           for value,paths in descs.items():
@@ -87,4 +85,4 @@ jobs:
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
 
-# audit-trigger: final-conversion-readiness-2026-10-31
+# audit-trigger: post-seo-growth-and-language-audit-2026-10-31
