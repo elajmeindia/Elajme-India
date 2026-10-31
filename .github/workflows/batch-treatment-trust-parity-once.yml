@@ -1,0 +1,90 @@
+name: Apply bilingual treatment trust parity once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/batch-treatment-trust-parity-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add trust and patient-safety notes to remaining treatment pairs
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, re
+
+          slugs = [
+            'gastroenterology-treatment-india','heart-treatment-india',
+            'kidney-transplant-india','knee-replacement-india',
+            'liver-transplant-india','neurosurgery-india',
+            'spine-surgery-india','urology-treatment-india'
+          ]
+          footer_files = [Path('FOOTER-LOCK.md'), Path('assets/css/footer-approved.css')]
+          locked = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in footer_files}
+
+          en = '<section class="sec alt trust-standards" aria-labelledby="trust-standards"><div class="c"><h2 id="trust-standards">How to use this treatment information safely</h2><div class="grid"><article class="card"><h3>Clinical decisions</h3><p>Diagnosis, treatment suitability and clinical decisions are made by qualified treating professionals after reviewing the individual patient.</p></article><article class="card"><h3>Provider listings</h3><p>Doctor and hospital listings are informational, not rankings or guarantees of suitability. Inclusion does not imply a partnership unless Elajme India explicitly states that a relationship has been verified.</p></article><article class="card"><h3>Costs and availability</h3><p>Doctor availability, hospital acceptance, investigations, treatment plans and estimates can change and must be confirmed for the individual case.</p></article><article class="card"><h3>Corrections and emergencies</h3><p>If information appears outdated or inaccurate, please contact Elajme India so it can be checked and corrected. For a medical emergency, contact local emergency services or an appropriate emergency-care provider without waiting for website coordination.</p></article></div><p class="lead">Read more about our information and verification approach on the <a href="/about/">About Elajme India</a> page.</p></div></section>'
+          ar = '<section class="sec alt trust-standards" aria-labelledby="trust-standards"><div class="c"><h2 id="trust-standards">كيفية استخدام معلومات العلاج بصورة آمنة</h2><div class="grid"><article class="card"><h3>القرارات الطبية</h3><p>التشخيص ومدى ملاءمة العلاج والقرارات السريرية يحددها الأطباء والمختصون المؤهلون بعد مراجعة حالة المريض بصورة فردية.</p></article><article class="card"><h3>قوائم الأطباء والمستشفيات</h3><p>قوائم الأطباء والمستشفيات معلوماتية وليست تصنيفاً أو ضماناً لملاءمة جهة معينة. كما أن إدراج أي جهة لا يعني وجود شراكة معها ما لم توضح علاج مي إنديا صراحةً أن العلاقة قد تم التحقق منها.</p></article><article class="card"><h3>التكلفة والتوفر</h3><p>قد يتغير توفر الطبيب وقبول المستشفى والفحوصات والخطة العلاجية والتقديرات، ويجب تأكيدها بحسب كل حالة.</p></article><article class="card"><h3>التصحيح والحالات الطارئة</h3><p>إذا بدت أي معلومة قديمة أو غير دقيقة، يرجى التواصل مع علاج مي إنديا للتحقق منها وتصحيحها. وفي الحالات الطبية الطارئة، تواصل فوراً مع خدمات الطوارئ المحلية أو جهة رعاية طارئة مناسبة دون انتظار تنسيق الموقع.</p></article></div><p class="lead">للمزيد عن منهج المعلومات والتحقق، راجع صفحة <a href="/ar/about/">من نحن</a>.</p></div></section>'
+
+          changed=[]
+          for slug in slugs:
+            for lang, block in [('en',en),('ar',ar)]:
+              p = Path('treatments' if lang=='en' else 'ar/treatments') / slug / 'index.html'
+              if not p.exists():
+                raise SystemExit(f'Missing treatment page: {p}')
+              text=p.read_text()
+              if 'class="sec alt trust-standards"' in text:
+                continue
+              low=text.lower(); fi=low.find('<footer')
+              if fi < 0: raise SystemExit(f'No footer boundary: {p}')
+              before, footer=text[:fi], text[fi:]
+              marker='<section class="cta">'
+              if marker in before:
+                before=before.replace(marker, block+marker, 1)
+              elif '</main>' in before:
+                before=before.replace('</main>', block+'</main>', 1)
+              else:
+                raise SystemExit(f'No safe insertion point: {p}')
+              p.write_text(before+footer)
+              changed.append(str(p))
+
+          for p,h in locked.items():
+            if hashlib.sha256(p.read_bytes()).hexdigest()!=h:
+              raise SystemExit(f'LOCKED FOOTER FILE CHANGED: {p}')
+
+          # Verify all 16 pages have the trust layer, correct language architecture and Elajme enquiry route.
+          for slug in slugs:
+            for lang in ('en','ar'):
+              p=Path('treatments' if lang=='en' else 'ar/treatments')/slug/'index.html'
+              text=p.read_text(); pre=text[:text.lower().find('<footer')]
+              if 'class="sec alt trust-standards"' not in pre: raise SystemExit(f'Missing trust block: {p}')
+              if lang=='ar' and not re.search(r'<html[^>]+lang="ar"[^>]+dir="rtl"|<html[^>]+dir="rtl"[^>]+lang="ar"',text,re.I): raise SystemExit(f'Arabic RTL failure: {p}')
+              if lang=='en' and not re.search(r'<html[^>]+lang="en"',text,re.I): raise SystemExit(f'English lang failure: {p}')
+              expected='/ar/#enquiry' if lang=='ar' else '/#enquiry'
+              if expected not in pre: raise SystemExit(f'Elajme enquiry route missing: {p}')
+          print(f'Changed pages: {len(changed)}')
+          for p in changed: print(p)
+          print('BILINGUAL TREATMENT TRUST PARITY: CLEAN')
+          PY
+      - name: Commit treatment trust parity
+        shell: bash
+        run: |
+          if git diff --quiet -- treatments ar/treatments; then
+            echo 'No treatment changes required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments
+          git commit -m 'Apply trust standards across bilingual treatment pages'
+          git push
