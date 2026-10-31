@@ -22,64 +22,39 @@ jobs:
           from pathlib import Path
           from urllib.parse import urlparse, unquote
           import re
-
-          root=Path('.')
-          pages=list(root.rglob('*.html'))
-          problems=[]
-
+          root=Path('.'); pages=list(root.rglob('*.html')); problems=[]
           def target_exists(url, source):
               if not url or url.startswith(('#','mailto:','tel:','javascript:','https://wa.me/')): return True
               p=urlparse(url)
               if p.scheme in ('http','https'):
                   if p.netloc not in ('elajmeindia.com','www.elajmeindia.com'): return True
                   path=unquote(p.path)
-              else:
-                  path=unquote(p.path)
+              else: path=unquote(p.path)
               if not path: return True
-              if path.startswith('/'):
-                  rel=path.lstrip('/')
-              else:
-                  rel=(source.parent / path).resolve().relative_to(root.resolve()).as_posix()
-              candidates=[]
-              q=Path(rel)
-              if rel.endswith('/') or not q.suffix:
-                  candidates += [root/q/'index.html', root/q, root/(rel+'.html')]
-              else:
-                  candidates += [root/q]
+              if path.startswith('/'): rel=path.lstrip('/')
+              else: rel=(source.parent/path).resolve().relative_to(root.resolve()).as_posix()
+              q=Path(rel); candidates=[]
+              if rel.endswith('/') or not q.suffix: candidates += [root/q/'index.html',root/q,root/(rel+'.html')]
+              else: candidates += [root/q]
               return any(c.exists() for c in candidates)
-
           for page in pages:
               text=page.read_text(errors='ignore')
-              for attr,url in re.findall(r'\b(href|src)=["\']([^"\']+)["\']', text, flags=re.I):
-                  if not target_exists(url,page):
-                      problems.append(f'BROKEN {page}: {attr}={url}')
-
+              for attr,url in re.findall(r'\b(href|src)=["\']([^"\']+)["\']',text,flags=re.I):
+                  if not target_exists(url,page): problems.append(f'BROKEN {page}: {attr}={url}')
               canon=re.findall(r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)',text,flags=re.I)
               if page.name=='index.html' and page.as_posix() not in ('404.html',):
-                  if len(canon)!=1:
-                      problems.append(f'CANONICAL_COUNT {page}: {len(canon)}')
-                  elif not canon[0].startswith('https://elajmeindia.com/'):
-                      problems.append(f'CANONICAL_DOMAIN {page}: {canon[0]}')
-
+                  if len(canon)!=1: problems.append(f'CANONICAL_COUNT {page}: {len(canon)}')
+                  elif not canon[0].startswith('https://elajmeindia.com/'): problems.append(f'CANONICAL_DOMAIN {page}: {canon[0]}')
               langs=re.findall(r'<link[^>]+rel=["\']alternate["\'][^>]+hreflang=["\']([^"\']+)',text,flags=re.I)
               if langs:
-                  needed={'en','ar','x-default'}
-                  missing=needed-set(langs)
-                  if missing:
-                      problems.append(f'HREFLANG {page}: missing {sorted(missing)}')
-
+                  missing={'en','ar','x-default'}-set(langs)
+                  if missing: problems.append(f'HREFLANG {page}: missing {sorted(missing)}')
           for page in pages:
-              t=page.read_text(errors='ignore')
-              if 'orthopedic-treatment-india' in t:
-                  problems.append(f'STALE_ORTHOPEDIC_PATH {page}')
-
-          Path('audit-report.txt').write_text('\n'.join(problems) if problems else 'AUDIT CLEAN\n')
-          print(Path('audit-report.txt').read_text())
-          if problems:
-              raise SystemExit(f'Audit found {len(problems)} issue(s)')
+              if 'orthopedic-treatment-india' in page.read_text(errors='ignore'): problems.append(f'STALE_ORTHOPEDIC_PATH {page}')
+          print('\n'.join(problems) if problems else 'AUDIT CLEAN')
+          if problems: raise SystemExit(f'Audit found {len(problems)} issue(s)')
           PY
       - name: Verify footer lock files are untouched
-        run: |
-          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+        run: test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
 
-# audit-trigger: post-gcc-and-directory-final-2026-10-31
+# audit-trigger: post-language-switch-repair-2026-10-31
