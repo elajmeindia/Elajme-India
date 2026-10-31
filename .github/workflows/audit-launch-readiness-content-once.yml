@@ -1,0 +1,88 @@
+name: Audit launch readiness content once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-launch-readiness-content-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit active-page launch readiness
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          from collections import defaultdict
+
+          root=Path('.')
+          problems=[]
+          warnings=[]
+          active=[]
+          for p in root.rglob('*.html'):
+              s=p.as_posix()
+              if s.startswith('.github/') or s in ('404.html',): continue
+              text=p.read_text(errors='ignore')
+              # Legacy redirect-only pages are not active content pages.
+              if re.search(r'<meta[^>]+http-equiv=["\']refresh["\']', text, re.I):
+                  continue
+              active.append((p,text))
+
+          titles=defaultdict(list); descs=defaultdict(list)
+          placeholders=('lorem ipsum','coming soon','todo','tbd','sample text','your hospital','your doctor')
+          risky=('guaranteed cure','100% success','best hospital in india','no. 1 hospital','number 1 hospital')
+
+          for p,text in active:
+              pre=text[:text.lower().find('<footer')] if '<footer' in text.lower() else text
+              title=re.findall(r'<title[^>]*>(.*?)</title>', text, re.I|re.S)
+              desc=re.findall(r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']*)', text, re.I)
+              if len(title)!=1 or not re.sub('<[^>]+>','',title[0]).strip():
+                  problems.append(f'TITLE {p}: count={len(title)}')
+              else:
+                  clean=re.sub(r'\s+',' ',re.sub('<[^>]+>','',title[0])).strip().lower(); titles[clean].append(str(p))
+              if len(desc)!=1 or not desc[0].strip():
+                  problems.append(f'DESCRIPTION {p}: count={len(desc)}')
+              else:
+                  clean=re.sub(r'\s+',' ',desc[0]).strip().lower(); descs[clean].append(str(p))
+              low=pre.lower()
+              for x in placeholders:
+                  if x in low: warnings.append(f'PLACEHOLDER_TEXT {p}: {x}')
+              for x in risky:
+                  if x in low: problems.append(f'RISKY_CLAIM {p}: {x}')
+
+              is_profile=bool(re.match(r'^(ar/)?(doctors|hospitals)/[^/]+/index\.html$',p.as_posix()))
+              if is_profile:
+                  expected='/ar/#enquiry' if p.as_posix().startswith('ar/') else '/#enquiry'
+                  if expected not in pre:
+                      # Redirect/legacy exceptions are already excluded above.
+                      problems.append(f'PROFILE_ENQUIRY {p}: missing {expected}')
+
+          # Duplicates are warnings because deliberate directory/template titles can be valid.
+          for value,paths in titles.items():
+              if len(paths)>1: warnings.append('DUP_TITLE '+value+' :: '+', '.join(paths))
+          for value,paths in descs.items():
+              if len(paths)>1: warnings.append('DUP_DESC '+value[:100]+' :: '+', '.join(paths))
+
+          print(f'Active HTML pages checked: {len(active)}')
+          print(f'Blocking issues: {len(problems)}')
+          print(f'Review warnings: {len(warnings)}')
+          if warnings:
+              print('--- WARNINGS ---')
+              print('\n'.join(warnings))
+          if problems:
+              print('--- BLOCKING ---')
+              print('\n'.join(problems))
+              raise SystemExit(f'Launch readiness audit found {len(problems)} blocking issue(s)')
+          print('LAUNCH READINESS BLOCKING CHECKS CLEAN')
+          PY
+      - name: Verify locked footer files remain untouched
+        run: |
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
