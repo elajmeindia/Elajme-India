@@ -23,6 +23,12 @@
   [dir="rtl"] .shell-header .shell-links a:last-child{border-bottom:0!important}
   [dir="rtl"] .shell-header .shell-links a:hover,[dir="rtl"] .shell-header .shell-links a:focus-visible,[dir="rtl"] .shell-header .shell-links a[aria-current="page"]{background:#f3faf9!important;color:#146b68!important}
   [dir="rtl"] .shell-header .shell-links a[href*="/about/"]::after,[dir="rtl"] .shell-header .shell-links a[href*="/contact/"]::after{content:none!important;display:none!important}
+  [dir="rtl"] body{padding-bottom:76px!important}
+  [dir="rtl"] .arabic-mobile-conversion-bar{position:fixed!important;z-index:9998!important;left:0!important;right:0!important;bottom:0!important;box-sizing:border-box!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;padding:8px 10px calc(8px + env(safe-area-inset-bottom))!important;background:rgba(255,255,255,.97)!important;border-top:1px solid #dbe5e8!important;box-shadow:0 -6px 20px rgba(9,47,59,.10)!important;direction:rtl!important}
+  [dir="rtl"] .arabic-mobile-conversion-bar a{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-height:48px!important;padding:10px 12px!important;border-radius:12px!important;text-decoration:none!important;font-size:14px!important;font-weight:800!important;line-height:1.2!important}
+  [dir="rtl"] .arabic-mobile-case-cta{background:#123b50!important;color:#fff!important}
+  [dir="rtl"] .arabic-mobile-wa-cta{background:#eaf8ef!important;color:#13864a!important}
+  [dir="rtl"] .shell-header.arabic-mobile-menu-open~main~.arabic-mobile-conversion-bar{display:none!important}
 }
 @media (max-width:560px){
   [dir="rtl"] .shell-header .shell-nav{width:calc(100% - 20px)!important;min-height:64px!important;gap:6px 8px!important}
@@ -33,4 +39,5 @@
   [dir="rtl"] .shell-header .shell-lang{min-height:38px!important;padding:6px 8px!important;font-size:10px!important}
   [dir="rtl"] .shell-header.arabic-mobile-menu-open .shell-links{grid-auto-rows:46px!important}
   [dir="rtl"] .shell-header .shell-links a{height:46px!important;min-height:46px!important;max-height:46px!important;padding:0 12px!important;font-size:12.5px!important}
+  [dir="rtl"] .arabic-mobile-conversion-bar a{min-height:46px!important;font-size:13px!important;padding:9px 8px!important}
 }
