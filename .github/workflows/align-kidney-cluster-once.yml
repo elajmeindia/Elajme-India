@@ -1,0 +1,40 @@
+name: Align kidney cluster parity once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/align-kidney-cluster-once.yml'
+permissions:
+  contents: write
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Align Arabic kidney transplant links with English
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('ar/treatments/kidney-transplant-india/index.html')
+          s=p.read_text()
+          old='<h2>استكشف الأطباء والمستشفيات</h2><div class="related"><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/treatments/urology-treatment-india/">المسالك البولية والكلى</a><a href="/ar/patient-guide/">دليل المريض</a></div>'
+          new='<h2>استكشف الطبيب والمستشفيات ذات الصلة</h2><div class="related"><a href="/ar/doctors/dr-anant-kumar/">د. أنانت كومار</a><a href="/ar/hospitals/max-super-speciality-hospital-saket/">مستشفى ماكس سوبر التخصصي، ساكيت</a><a href="/ar/hospitals/fortis-hospital-noida/">مستشفى فورتيس، نويدا</a><a href="/ar/hospitals/gleneagles-hospital-parel-mumbai/">مستشفى جلين إيجلز، باريل</a><a href="/ar/hospitals/fortis-hospital-mulund-mumbai/">مستشفى فورتيس، مولوند</a><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/treatments/urology-treatment-india/">المسالك البولية والكلى</a><a href="/ar/patient-guide/">دليل المريض</a></div>'
+          if old not in s:
+              raise SystemExit('Expected kidney related-links block not found')
+          before=s.split('<footer',1)[1]
+          s=s.replace(old,new,1)
+          after=s.split('<footer',1)[1]
+          if before != after:
+              raise SystemExit('Footer changed')
+          p.write_text(s)
+          PY
+      - name: Commit content update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ar/treatments/kidney-transplant-india/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Align kidney transplant specialist links'
+          git push
