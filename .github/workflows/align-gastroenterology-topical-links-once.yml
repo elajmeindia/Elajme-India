@@ -1,0 +1,55 @@
+name: Align gastroenterology topical links once
+on:
+  push:
+    paths:
+      - '.github/workflows/align-gastroenterology-topical-links-once.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Correct English specialist set and add Arabic parity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          en=Path('treatments/gastroenterology-treatment-india/index.html')
+          ar=Path('ar/treatments/gastroenterology-treatment-india/index.html')
+          se=en.read_text(encoding='utf-8'); sa=ar.read_text(encoding='utf-8')
+          en_old='<div class="related"><a href="../../doctors/dr-amit-gharat/">Dr. Amit Gharat</a><a href="../../doctors/dr-arvind-kumar-khurana/">Dr. Arvind Kumar Khurana</a><a href="../../doctors/dr-harsh-dua/">Dr. Harsh Dua</a><a href="../../doctors/">Browse all doctors</a><a href="../../hospitals/">Browse hospitals</a></div>'
+          en_new='<div class="related"><a href="../../doctors/dr-amit-gharat/">Dr. Amit Gharat</a><a href="../../doctors/dr-arvind-kumar-khurana/">Dr. Arvind Kumar Khurana</a><a href="../../doctors/">Browse all doctors</a><a href="../../hospitals/">Browse hospitals</a></div>'
+          ar_old='<h2>استكشف الأطباء والمستشفيات</h2><div class="related"><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/patient-guide/">دليل المريض</a><a href="/ar/international-patients/mea/">المرضى الدوليون</a></div>'
+          ar_new='<h2>استكشف أطباء الجهاز الهضمي والمستشفيات</h2><div class="related"><a href="/ar/doctors/dr-amit-gharat/">د. أميت غارات</a><a href="/ar/doctors/dr-arvind-kumar-khurana/">د. أرفيند كومار خورانا</a><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/patient-guide/">دليل المريض</a><a href="/ar/international-patients/mea/">المرضى الدوليون</a></div>'
+          if en_old not in se: raise SystemExit('Expected EN gastro block not found')
+          if ar_old not in sa: raise SystemExit('Expected AR gastro block not found')
+          fe=se[se.index('<footer'):]; fa=sa[sa.index('<footer'):]
+          se2=se.replace(en_old,en_new,1); sa2=sa.replace(ar_old,ar_new,1)
+          assert se2[se2.index('<footer'):] == fe
+          assert sa2[sa2.index('<footer'):] == fa
+          en.write_text(se2,encoding='utf-8'); ar.write_text(sa2,encoding='utf-8')
+          PY
+      - name: Verify parity and routing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          en=Path('treatments/gastroenterology-treatment-india/index.html').read_text(encoding='utf-8')
+          ar=Path('ar/treatments/gastroenterology-treatment-india/index.html').read_text(encoding='utf-8')
+          assert 'dr-harsh-dua' not in en
+          for slug in ['dr-amit-gharat','dr-arvind-kumar-khurana']:
+              assert slug in en and slug in ar
+          assert '../../#enquiry' in en and '/ar/#enquiry' in ar
+          assert 'href="/treatments/gastroenterology-treatment-india/">English</a>' in ar
+          print('Gastroenterology topical links aligned')
+          PY
+      - name: Commit change
+        run: |
+          if git diff --quiet; then echo 'No change required'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments/gastroenterology-treatment-india/index.html ar/treatments/gastroenterology-treatment-india/index.html
+          git commit -m 'Align gastroenterology specialist links'
+          git push
