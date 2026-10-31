@@ -10,48 +10,56 @@ Representative paid-traffic journeys for Saudi Arabia and UAE, including live-do
 ### 1. Live public-domain reachability
 - Saudi landing URL tested: `https://elajmeindia.com/saudi-arabia/treatment-in-india/`
 - UAE landing URL tested: `https://elajmeindia.com/uae/treatment-in-india/`
-- External live-page retrieval from the available web-testing environment failed for both URLs.
-- A fresh search-engine query also returned no result for the two exact country landing pages during this test.
-- Therefore live production rendering, response status, redirects, visual mobile layout and interactive behavior cannot be marked verified from this run.
+- External automated retrieval could not access the production URLs.
+- This was subsequently compared with a normal-browser production check.
 
-### 1A. Independent production accessibility retest
+### 1A. Independent automated accessibility retest
 A second external check was run against four tagged production URLs:
 - Saudi English
 - UAE English
 - Saudi Arabic
 - UAE Arabic
 
-All four production URLs remained inaccessible from the independent web retrieval environment. A fresh public-web search for `elajmeindia.com` and the Saudi/UAE landing pages also did not surface Elajme India pages during the retest.
+All four remained inaccessible from the independent automated retrieval environment. This is retained as a testing-environment limitation and must not be represented as proof that the public site is down.
 
-Interpretation:
-- This strengthens the need for a normal-browser/DNS/Cloudflare check before ad spend.
-- It does **not**, by itself, prove that the website is down for ordinary visitors; the external retrieval environment may be blocked or unable to resolve the production setup.
-- Repository files for the Saudi and UAE pages exist and have already passed code-level checks.
+### 1B. Normal-browser production verification
+On 2026-10-31, the owner supplied browser evidence showing `elajmeindia.com` loading successfully on the production domain with the expected Elajme India page title/domain visible.
 
-### 2. Repository-level implementation already verified
-The current repository implementation has previously been checked for:
+Result:
+- Production-domain accessibility in a normal browser: **PASS**.
+- Earlier automated retrieval failures are treated as an external testing-environment limitation, not a confirmed production outage.
+- The browser tab may temporarily display `1 new message`; the repository homepage title itself remains correctly configured. No speculative code workaround was applied.
+
+### 2. Repository-level implementation verified
+The current repository implementation has been checked for:
 - Saudi and UAE country-specific landing-page structure.
 - English/Arabic alternate routing.
 - Elajme-only enquiry CTAs.
 - Direct links to all nine English treatment categories.
 - Hospital, doctor, patient-guide and medical-visa discovery routes.
 - Cautious medical wording without outcome, cost, hospital-acceptance or visa guarantees.
-- GA4 conversion events and privacy-safe UTM attribution implementation.
-
-These are code-level checks only and must not be represented as live-browser verification.
+- GA4 measurement ID `G-ZEKEN0TB2N`.
+- Session-persistent standard UTM attribution using `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, and `utm_term`.
+- `whatsapp_enquiry` tracking for WhatsApp links.
+- `generate_lead` support for enquiry conversion.
+- Privacy rule: no patient name, phone number, diagnosis, report or message text is sent through this analytics module.
 
 ### 3. Pre-spend gate
-Status: **HOLD — live-domain verification required before paid traffic is launched.**
+Status: **PARTIAL PASS — production access is confirmed; final interaction/analytics verification remains.**
 
-Do not spend on Google Ads or Meta campaigns until the following are confirmed in a normal browser on the production domain:
-1. Saudi landing page loads successfully on mobile and desktop.
-2. UAE landing page loads successfully on mobile and desktop.
-3. Arabic switch opens the matching Arabic country page.
-4. Start Enquiry reaches the Elajme enquiry form.
-5. Form validation works and valid submission opens the Elajme India WhatsApp number only.
-6. A tagged campaign URL retains/records source attribution through conversion.
-7. GA4 receives `whatsapp_enquiry` and/or `generate_lead` from the production journey.
-8. No visual regression is present in the approved locked footer.
+Completed:
+1. Production domain opens in a normal browser. — **PASS**
+2. Repository Saudi/UAE landing-page implementation and Elajme-only routing. — **PASS (code level)**
+3. GA4 + privacy-safe session UTM attribution implementation. — **PASS (code level)**
+4. WhatsApp/generate-lead event implementation. — **PASS (code level)**
+
+Still requiring final live confirmation before paid traffic:
+1. Open representative Saudi and UAE campaign URLs on mobile and desktop.
+2. Confirm Arabic switch opens the matching Arabic country page.
+3. Confirm Start Enquiry reaches the Elajme enquiry form.
+4. Submit a test enquiry with non-sensitive test data and confirm WhatsApp opens only the Elajme India number.
+5. Confirm GA4 receives the resulting `whatsapp_enquiry` and/or `generate_lead` event with the expected campaign attribution.
+6. Confirm no visual regression on representative mobile/desktop pages. The approved footer remains locked and must not be changed during this test.
 
 ## Safe manual test URLs
 Use representative campaign parameters without patient information:
@@ -65,7 +73,7 @@ UAE:
 Never place patient names, phone numbers, diagnoses, reports or other medical information in UTM parameters.
 
 ## Footer protection
-No footer HTML, footer stylesheet or footer-affecting selector was changed as part of this verification.
+No footer HTML, footer stylesheet or footer-affecting selector was changed as part of this verification. Footer remains super locked across English/Arabic and mobile/tablet/desktop.
 
 ## Next action
-Check the production domain in a normal browser and inspect Cloudflare custom-domain/DNS status if either Saudi or UAE URL fails there. If both pages load normally, complete the remaining interaction/GA4 checks and move campaign status to READY only after all eight gates pass.
+Run the two tagged production journeys with non-sensitive test data and verify the resulting event in GA4 Realtime/DebugView. Move paid campaign status to READY only after the remaining live interaction and analytics checks pass.
