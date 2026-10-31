@@ -40,7 +40,7 @@ jobs:
           sp=root/'sitemap.xml'
           if sp.exists():
               try:
-                  tree=ET.parse(sp); xml=sp.read_text(errors='ignore')
+                  ET.parse(sp); xml=sp.read_text(errors='ignore')
                   locs=re.findall(r'<loc>\s*([^<]+)',xml,re.I)
                   if not locs: problems.append('SITEMAP_NO_URLS')
                   bad=[u for u in locs if not u.startswith('https://elajmeindia.com/')]
@@ -59,24 +59,19 @@ jobs:
           for p,text in active:
               pre=text[:text.lower().find('<footer')] if '<footer' in text.lower() else text
               low=pre.lower()
-              # Canonical and social metadata on active index pages.
               if p.name=='index.html':
                   canon=re.findall(r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)',text,re.I)
                   if len(canon)!=1: problems.append(f'CANONICAL_COUNT {p}: {len(canon)}')
                   elif not canon[0].startswith('https://elajmeindia.com/'): problems.append(f'CANONICAL_DOMAIN {p}: {canon[0]}')
-              # Flag missing viewport on user-facing pages.
               if '<meta name="viewport"' not in low and "<meta name='viewport'" not in low:
                   warnings.append(f'MISSING_VIEWPORT {p}')
-              # Forms should not post directly to hospital/doctor domains.
               for action in re.findall(r'<form[^>]+action=["\']([^"\']+)',pre,re.I):
                   if action.startswith('http') and 'elajmeindia.com' not in action:
                       problems.append(f'EXTERNAL_FORM_ACTION {p}: {action}')
-              # Doctor/hospital active profiles need Elajme enquiry route.
               if re.match(r'^(ar/)?(doctors|hospitals)/[^/]+/index\.html$',p.as_posix()):
                   expected='/ar/#enquiry' if p.as_posix().startswith('ar/') else '/#enquiry'
                   if expected not in pre: problems.append(f'PROFILE_ENQUIRY {p}: {expected}')
 
-          # Root branding/favicons/social metadata are high-value launch checks.
           home=(root/'index.html').read_text(errors='ignore') if (root/'index.html').exists() else ''
           for token,label in [('og:title','HOME_MISSING_OG_TITLE'),('og:description','HOME_MISSING_OG_DESCRIPTION'),('og:image','HOME_MISSING_OG_IMAGE')]:
               if token not in home.lower(): warnings.append(label)
@@ -95,3 +90,4 @@ jobs:
       - name: Verify locked footer files remain untouched
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+# audit-trigger: final-production-readiness-2026-10-31
