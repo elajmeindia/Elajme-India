@@ -1,0 +1,42 @@
+name: Align heart bilingual cluster once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/align-heart-cluster-once.yml'
+permissions:
+  contents: write
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Align Arabic heart links with English
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('ar/treatments/heart-treatment-india/index.html')
+          s=p.read_text()
+          old='<h2>استكشف الأطباء والمستشفيات</h2><div class="related"><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/patient-guide/">دليل المريض</a></div>'
+          new='<h2>أطباء القلب ذوو الصلة</h2><div class="related"><a href="/ar/doctors/dr-viveka-kumar/">د. فيفيكا كومار</a><a href="/ar/doctors/dr-naresh-trehan/">د. ناريش تريهان</a><a href="/ar/doctors/dr-atul-limaye/">د. أتول ليماي</a></div><h2>استكشف المستشفيات</h2><div class="related"><a href="/ar/hospitals/fortis-escorts-heart-institute-delhi/">معهد فورتيس إسكورتس للقلب</a><a href="/ar/hospitals/medanta-the-medicity-gurugram/">ميدانتا، جوروجرام</a><a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">إندرابراستا أبولو، دلهي</a><a href="/ar/hospitals/max-super-speciality-hospital-saket/">ماكس ساكيت</a><a href="/ar/patient-guide/">دليل المريض</a></div>'
+          if old not in s:
+              raise SystemExit('Expected Arabic heart block not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Verify protected invariants
+        run: |
+          grep -q 'href="/ar/#enquiry"' ar/treatments/heart-treatment-india/index.html
+          grep -q 'href="/treatments/heart-treatment-india/">English' ar/treatments/heart-treatment-india/index.html
+          grep -q '/ar/doctors/dr-viveka-kumar/' ar/treatments/heart-treatment-india/index.html
+          grep -q '/ar/hospitals/fortis-escorts-heart-institute-delhi/' ar/treatments/heart-treatment-india/index.html
+          git diff --exit-code -- assets/css/footer-approved.css FOOTER-LOCK.md
+      - name: Commit update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ar/treatments/heart-treatment-india/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Align Arabic heart specialist links'
+          git push
