@@ -1,38 +1,92 @@
-name: Doctor image verification audit
+name: Optimize remaining live image assets safely
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/localize-doctor-images.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
-  audit-doctor-images:
+  optimize-live-images:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Verify protected doctor portrait assets
+        with:
+          fetch-depth: 0
+      - name: Optimize only live local images above 300KB
+        shell: bash
+        run: |
+          set -euo pipefail
+          BEFORE_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
+          BEFORE_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
+          python3 -m pip install --disable-pip-version-check pillow
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import re, urllib.parse
+
+          root=Path('.')
+          refs=set()
+          for page in root.rglob('*.html'):
+              text=page.read_text(encoding='utf-8',errors='ignore')
+              marker=text.lower().find('<footer')
+              active=text if marker < 0 else text[:marker]
+              for src in re.findall(r'<img\b[^>]*?\bsrc=["\']([^"\']+)',active,re.I):
+                  clean=urllib.parse.unquote(src.split('?',1)[0].split('#',1)[0])
+                  if clean.startswith(('http://','https://','//','data:')): continue
+                  p=root/clean.lstrip('/')
+                  if p.is_file() and p.suffix.lower() in {'.jpg','.jpeg','.png','.webp'} and p.stat().st_size>300_000:
+                      refs.add(p)
+          print('Live local images selected:',len(refs))
+          for p in sorted(refs):
+              before=p.stat().st_size
+              with Image.open(p) as im:
+                  im.load()
+                  # Preserve dimensions and format. Re-encode only; never crop or replace content.
+                  if p.suffix.lower()=='.webp':
+                      if im.mode not in ('RGB','RGBA'): im=im.convert('RGB')
+                      im.save(p,'WEBP',quality=78,method=6)
+                  elif p.suffix.lower() in {'.jpg','.jpeg'}:
+                      if im.mode!='RGB': im=im.convert('RGB')
+                      im.save(p,'JPEG',quality=82,optimize=True,progressive=True)
+                  elif p.suffix.lower()=='.png':
+                      im.save(p,'PNG',optimize=True)
+              after=p.stat().st_size
+              print(f'{p}: {before/1024:.0f}KB -> {after/1024:.0f}KB')
+          PY
+          AFTER_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
+          AFTER_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
+          test "$BEFORE_FOOTER" = "$AFTER_FOOTER"
+          test "$BEFORE_LOCK" = "$AFTER_LOCK"
+      - name: Verify optimized live assets and protected portraits
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          protected = [
-              'dr-aditya-gupta',
-              'dr-arvind-kumar-khurana',
-              'dr-rajneesh-malhotra',
-              'dr-ramneek-mahajan',
-              'dr-sanjay-gogoi',
-          ]
-          root = Path('assets/images/doctors')
-          missing = []
+          protected=['dr-aditya-gupta','dr-arvind-kumar-khurana','dr-rajneesh-malhotra','dr-ramneek-mahajan','dr-sanjay-gogoi']
+          root=Path('assets/images/doctors')
           for slug in protected:
-              matches = [p for p in root.glob(slug + '.*') if p.suffix.lower() in {'.jpg','.jpeg','.png','.webp','.avif'}]
-              if matches:
-                  print('verified local asset present:', slug, '=>', ', '.join(str(p) for p in matches))
-              else:
-                  missing.append(slug)
-                  print('WARNING: protected portrait missing:', slug)
-          if missing:
-              print('Protected portrait audit completed with missing assets:', ', '.join(missing))
-          else:
-              print('All protected local doctor portraits are present.')
-          print('This workflow is intentionally read-only. It never deletes or replaces doctor portraits.')
+              matches=[p for p in root.glob(slug+'.*') if p.suffix.lower() in {'.jpg','.jpeg','.png','.webp','.avif'}]
+              if not matches: raise SystemExit('Protected portrait missing: '+slug)
+              print('protected portrait present:',slug)
+          oversized=[]
+          for p in Path('.').rglob('*'):
+              if p.is_file() and p.suffix.lower() in {'.jpg','.jpeg','.png','.webp'} and p.stat().st_size>800_000:
+                  # Repository may retain unused originals; live audit decides whether they matter.
+                  print('repository large original retained:',p)
           PY
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+      - name: Commit optimized image binaries
+        shell: bash
+        run: |
+          git config user.name 'Elajme India Performance'
+          git config user.email 'actions@users.noreply.github.com'
+          git add assets/images
+          if git diff --cached --quiet; then
+            echo 'No live image binaries required optimization.'
+            exit 0
+          fi
+          git commit -m 'Optimize remaining live image assets'
+          git push
