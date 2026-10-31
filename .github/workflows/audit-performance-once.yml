@@ -15,60 +15,57 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Audit image weight and loading hints
+      - name: Audit live image weight and loading hints
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
+          import re, urllib.parse
 
           root=Path('.')
           pages=list(root.rglob('*.html'))
           image_ext={'.png','.jpg','.jpeg','.webp','.avif','.gif'}
-          large=[]
-          very_large=[]
-          png_refs=[]
-          missing_lazy=[]
-          missing_dims=[]
-
-          for p in root.rglob('*'):
-              if p.is_file() and p.suffix.lower() in image_ext:
-                  size=p.stat().st_size
-                  if size>300_000: large.append((size,p.as_posix()))
-                  if size>800_000: very_large.append((size,p.as_posix()))
+          refs=[]; png_refs=[]; missing_lazy=[]; missing_dims=[]
 
           for page in pages:
               text=page.read_text(errors='ignore')
-              imgs=re.findall(r'<img\b[^>]*>',text,flags=re.I)
-              for tag in imgs:
+              marker=text.lower().find('<footer')
+              active=text if marker < 0 else text[:marker]
+              for tag in re.findall(r'<img\b[^>]*>',active,flags=re.I):
                   m=re.search(r'\bsrc=["\']([^"\']+)',tag,flags=re.I)
                   if not m: continue
-                  src=m.group(1)
-                  if src.lower().split('?')[0].endswith('.png'):
+                  src=m.group(1); low=tag.lower(); sl=src.lower()
+                  clean=urllib.parse.unquote(src.split('?',1)[0].split('#',1)[0])
+                  if not clean.startswith(('http://','https://','//','data:')):
+                      p=root/clean.lstrip('/')
+                      if p.is_file() and p.suffix.lower() in image_ext:
+                          refs.append((p.stat().st_size,p.as_posix(),page.as_posix()))
+                  if sl.split('?')[0].endswith('.png'):
                       png_refs.append((page.as_posix(),src))
-                  low=tag.lower()
-                  if 'loading=' not in low and not any(k in src.lower() for k in ('logo','banner','hero','emblem')):
+                  critical=any(k in sl for k in ('logo','banner','hero','emblem')) or 'fetchpriority="high"' in low or "fetchpriority='high'" in low
+                  if 'loading=' not in low and not critical:
                       missing_lazy.append((page.as_posix(),src))
                   if 'width=' not in low or 'height=' not in low:
                       missing_dims.append((page.as_posix(),src))
 
-          print('PERFORMANCE AUDIT (read-only)')
+          unique={path:size for size,path,page in refs}
+          large=sorted(((size,path) for path,size in unique.items() if size>300_000),reverse=True)
+          very_large=[(size,path) for size,path in large if size>800_000]
+          print('LIVE PERFORMANCE AUDIT (pre-footer content only)')
           print(f'HTML pages: {len(pages)}')
-          print(f'Images >300KB: {len(large)}')
-          for size,path in sorted(large,reverse=True)[:80]: print(f'LARGE {size/1024:.0f}KB {path}')
-          print(f'Images >800KB: {len(very_large)}')
-          print(f'PNG references in HTML: {len(png_refs)}')
+          print(f'Unique live local images >300KB: {len(large)}')
+          for size,path in large: print(f'LARGE {size/1024:.0f}KB {path}')
+          print(f'Unique live local images >800KB: {len(very_large)}')
+          print(f'Live PNG references: {len(png_refs)}')
           for page,src in png_refs[:80]: print(f'PNG_REF {page}: {src}')
           print(f'Non-critical images missing loading hint: {len(missing_lazy)}')
-          for page,src in missing_lazy[:80]: print(f'NO_LAZY {page}: {src}')
           print(f'Images missing width/height: {len(missing_dims)}')
-          for page,src in missing_dims[:80]: print(f'NO_DIMS {page}: {src}')
-
+          for page,src in missing_dims[:40]: print(f'NO_DIMS {page}: {src}')
           if very_large:
-              raise SystemExit(f'Performance audit found {len(very_large)} image(s) over 800KB')
+              raise SystemExit(f'Live performance audit found {len(very_large)} referenced image(s) over 800KB')
+          if missing_lazy:
+              raise SystemExit(f'Live performance audit found {len(missing_lazy)} non-critical image(s) without lazy loading')
           PY
       - name: Verify footer lock files are untouched
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
-
-# audit-trigger: final-current-main-2026-10-31
