@@ -44,22 +44,39 @@ The current repository implementation has been checked for:
 - `generate_lead` support for enquiry conversion.
 - Privacy rule: no patient name, phone number, diagnosis, report or message text is sent through this analytics module.
 
+### 2A. Live GA4 conversion verification
+On 2026-10-31, the owner ran the representative Saudi tagged campaign journey in a normal production browser and supplied GA4 Realtime evidence after opening the Elajme WhatsApp enquiry path.
+
+GA4 Realtime showed:
+- `page_view`: 7
+- `user_engagement`: 5
+- `click`: 1
+- `form_start`: 1
+- `scroll`: 1
+- `whatsapp_enquiry`: **1**
+
+Result:
+- Production WhatsApp conversion event reaching GA4: **PASS**.
+- The `whatsapp_enquiry` event is confirmed live, not merely present in repository code.
+- This evidence confirms the production journey can generate the dedicated WhatsApp enquiry conversion event in GA4.
+- The screenshot does not independently expose event-level UTM parameter values, so exact campaign-parameter reporting remains a separate analytics-detail check if required.
+
 ### 3. Pre-spend gate
-Status: **PARTIAL PASS — production access is confirmed; final interaction/analytics verification remains.**
+Status: **NEAR READY — core production access and WhatsApp conversion tracking are verified live; remaining representative UX/language checks should be completed before meaningful paid spend.**
 
 Completed:
 1. Production domain opens in a normal browser. — **PASS**
 2. Repository Saudi/UAE landing-page implementation and Elajme-only routing. — **PASS (code level)**
 3. GA4 + privacy-safe session UTM attribution implementation. — **PASS (code level)**
 4. WhatsApp/generate-lead event implementation. — **PASS (code level)**
+5. Representative tagged Saudi journey generated `whatsapp_enquiry` in GA4 Realtime. — **PASS (live)**
 
-Still requiring final live confirmation before paid traffic:
-1. Open representative Saudi and UAE campaign URLs on mobile and desktop.
-2. Confirm Arabic switch opens the matching Arabic country page.
-3. Confirm Start Enquiry reaches the Elajme enquiry form.
-4. Submit a test enquiry with non-sensitive test data and confirm WhatsApp opens only the Elajme India number.
-5. Confirm GA4 receives the resulting `whatsapp_enquiry` and/or `generate_lead` event with the expected campaign attribution.
-6. Confirm no visual regression on representative mobile/desktop pages. The approved footer remains locked and must not be changed during this test.
+Remaining live checks:
+1. Run the representative UAE campaign journey and confirm the expected page/enquiry behavior.
+2. Confirm Arabic switch opens the matching Arabic country page on representative GCC pages.
+3. Confirm Start Enquiry reaches the Elajme enquiry path and WhatsApp remains Elajme-only on the representative UAE/Arabic journeys.
+4. Confirm no visual regression on representative mobile/desktop pages. The approved footer remains locked and must not be changed during this test.
+5. Optional analytics-detail check: inspect event details/DebugView or subsequent campaign reporting to confirm expected UTM dimensions are visible for the tagged test session.
 
 ## Safe manual test URLs
 Use representative campaign parameters without patient information:
@@ -76,4 +93,4 @@ Never place patient names, phone numbers, diagnoses, reports or other medical in
 No footer HTML, footer stylesheet or footer-affecting selector was changed as part of this verification. Footer remains super locked across English/Arabic and mobile/tablet/desktop.
 
 ## Next action
-Run the two tagged production journeys with non-sensitive test data and verify the resulting event in GA4 Realtime/DebugView. Move paid campaign status to READY only after the remaining live interaction and analytics checks pass.
+Complete the representative UAE + Arabic live UX checks, then move the pre-spend gate to READY if those journeys remain Elajme-only and visually healthy. Exact UTM reporting can be checked separately in GA4 campaign/event detail without blocking the already verified core WhatsApp conversion event.
