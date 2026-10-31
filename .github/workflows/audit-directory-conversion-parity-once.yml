@@ -1,0 +1,90 @@
+name: Audit directory and conversion parity once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-directory-conversion-parity-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit hospital and doctor parity plus enquiry routing
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root=Path('.')
+          problems=[]
+
+          def slugs(base):
+              p=root/base
+              if not p.exists(): return set()
+              return {x.parent.name for x in p.glob('*/index.html')}
+
+          en_docs=slugs('doctors'); ar_docs=slugs('ar/doctors')
+          en_hosp=slugs('hospitals'); ar_hosp=slugs('ar/hospitals')
+
+          for label,en,ar in [('DOCTOR',en_docs,ar_docs),('HOSPITAL',en_hosp,ar_hosp)]:
+              for x in sorted(en-ar): problems.append(f'{label}_MISSING_AR {x}')
+              for x in sorted(ar-en): problems.append(f'{label}_MISSING_EN {x}')
+
+          def links(path):
+              text=(root/path).read_text(errors='ignore')
+              return re.findall(r'\bhref=["\']([^"\']+)', text, flags=re.I), text
+
+          # Directory profile links should resolve to an existing same-language profile.
+          for lang,path,prefix,known in [
+              ('EN','doctors/index.html','/doctors/',en_docs),
+              ('AR','ar/doctors/index.html','/ar/doctors/',ar_docs),
+              ('EN','hospitals/index.html','/hospitals/',en_hosp),
+              ('AR','ar/hospitals/index.html','/ar/hospitals/',ar_hosp),
+          ]:
+              hrefs,text=links(path)
+              seen=set()
+              for h in hrefs:
+                  clean=h.split('#',1)[0].split('?',1)[0]
+                  if clean.startswith(prefix) and clean.rstrip('/') != prefix.rstrip('/'):
+                      slug=clean.rstrip('/').split('/')[-1]
+                      seen.add(slug)
+                      if slug not in known:
+                          problems.append(f'{lang}_DIRECTORY_BAD_PROFILE {path}: {h}')
+              print(f'{path}: {len(seen)} unique profile link(s)')
+
+          # Consultation/treatment CTA links on doctor/hospital pages must stay inside Elajme India.
+          pages=[]
+          for base in ('doctors','ar/doctors','hospitals','ar/hospitals'):
+              pages.extend((root/base).glob('*/index.html'))
+          external_hosts=('apollohospitals.com','fortishealthcare.com','medanta.org','maxhealthcare.in','artemishospitals.com','kokilabenhospital.com','nanavatimaxhospital.org','jaslokhospital.net')
+          cta_words=('consult','appointment','enquir','inquiry','treatment','book','استشارة','موعد','استفسار','علاج','احجز')
+          for page in pages:
+              text=page.read_text(errors='ignore')
+              active=text[:text.lower().find('<footer')] if '<footer' in text.lower() else text
+              for m in re.finditer(r'<a\b([^>]*)href=["\']([^"\']+)["\']([^>]*)>(.*?)</a>',active,flags=re.I|re.S):
+                  href=m.group(2).strip(); body=re.sub('<[^>]+>',' ',m.group(4)); blob=(m.group(1)+' '+m.group(3)+' '+body).lower()
+                  if any(w in blob for w in cta_words):
+                      if any(host in href.lower() for host in external_hosts):
+                          problems.append(f'EXTERNAL_CONSULT_CTA {page}: {href}')
+              # Every profile should retain an Elajme enquiry path.
+              expected='/ar/#enquiry' if page.as_posix().startswith('ar/') else '/#enquiry'
+              if expected not in active:
+                  problems.append(f'MISSING_ELAJME_ENQUIRY {page}: expected {expected}')
+
+          print(f'English doctor profiles: {len(en_docs)}; Arabic: {len(ar_docs)}')
+          print(f'English hospital profiles: {len(en_hosp)}; Arabic: {len(ar_hosp)}')
+          if problems:
+              print('\n'.join(problems))
+              raise SystemExit(f'Directory/conversion audit found {len(problems)} issue(s)')
+          print('DIRECTORY / CONVERSION AUDIT CLEAN')
+          PY
+      - name: Verify locked footer files remain untouched
+        run: |
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
