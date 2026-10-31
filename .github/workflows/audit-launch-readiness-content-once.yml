@@ -86,3 +86,5 @@ jobs:
       - name: Verify locked footer files remain untouched
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+
+# audit-trigger: final-conversion-readiness-2026-10-31
