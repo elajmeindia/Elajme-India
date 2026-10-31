@@ -46,7 +46,6 @@ jobs:
                   src=m.group(1)
                   if src.lower().split('?')[0].endswith('.png'):
                       png_refs.append((page.as_posix(),src))
-                  # Flag non-logo/non-hero images without lazy loading.
                   low=tag.lower()
                   if 'loading=' not in low and not any(k in src.lower() for k in ('logo','banner','hero','emblem')):
                       missing_lazy.append((page.as_posix(),src))
@@ -65,10 +64,11 @@ jobs:
           print(f'Images missing width/height: {len(missing_dims)}')
           for page,src in missing_dims[:80]: print(f'NO_DIMS {page}: {src}')
 
-          # Fail only for extreme asset weight; informational findings remain visible in logs.
           if very_large:
               raise SystemExit(f'Performance audit found {len(very_large)} image(s) over 800KB')
           PY
       - name: Verify footer lock files are untouched
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+
+# audit-trigger: final-current-main-2026-10-31
