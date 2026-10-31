@@ -20,7 +20,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          from urllib.parse import urlparse
+          from urllib.parse import urlparse, urljoin
           import re
 
           root=Path('.')
@@ -46,7 +46,7 @@ jobs:
               text=(root/path).read_text(errors='ignore')
               return re.findall(r'\bhref=["\']([^"\']+)', text, flags=re.I), text
 
-          def local_path(href):
+          def local_path(href, page_path):
               h=href.strip()
               if h.startswith(('mailto:','tel:','javascript:','#')):
                   return ''
@@ -55,7 +55,8 @@ jobs:
                   if parsed.netloc.lower() not in ('elajmeindia.com','www.elajmeindia.com'):
                       return ''
                   return parsed.path or '/'
-              return parsed.path or h.split('#',1)[0].split('?',1)[0]
+              base='https://elajmeindia.com/' + page_path
+              return urlparse(urljoin(base,h)).path or '/'
 
           for lang,path,prefix,known in [
               ('EN','doctors/index.html','/doctors/',en_docs),
@@ -66,15 +67,17 @@ jobs:
               hrefs,text=links(path)
               seen=set()
               for h in hrefs:
-                  clean=local_path(h).split('#',1)[0].split('?',1)[0]
-                  if not clean.startswith('/'):
-                      clean='/' + clean.lstrip('./')
+                  clean=local_path(h,path).split('#',1)[0].split('?',1)[0]
                   if clean.startswith(prefix) and clean.rstrip('/') != prefix.rstrip('/'):
                       slug=clean.rstrip('/').split('/')[-1]
                       seen.add(slug)
                       if slug not in known:
                           problems.append(f'{lang}_DIRECTORY_BAD_PROFILE {path}: {h}')
               print(f'{path}: {len(seen)} unique profile link(s)')
+              expected_count=len(known)
+              if len(seen) != expected_count:
+                  missing=sorted(known-seen)
+                  problems.append(f'{lang}_DIRECTORY_PROFILE_COUNT {path}: found {len(seen)} expected {expected_count}; missing={missing}')
 
           pages=[]
           for base in ('doctors','ar/doctors','hospitals','ar/hospitals'):
@@ -110,4 +113,4 @@ jobs:
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
 
-# audit-trigger: final-post-gcc-2026-10-31
+# audit-trigger: strict-relative-link-resolution-2026-10-31
