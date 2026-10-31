@@ -55,7 +55,12 @@ jobs:
           print('AR pages without EN counterpart:',sorted(ar-en))
           print('Accessibility issues:',len(issues))
           for x in issues[:150]: print('A11Y',*x)
+          if issues:
+              raise SystemExit(f'Accessibility audit found {len(issues)} issue(s)')
+          print('ACCESSIBILITY / BILINGUAL STRUCTURE AUDIT CLEAN')
           PY
       - name: Verify footer lock files are untouched
         run: |
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+
+# audit-trigger: final-post-cloudflare-2026-10-31
