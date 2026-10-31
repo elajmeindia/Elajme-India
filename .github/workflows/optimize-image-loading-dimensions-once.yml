@@ -1,0 +1,159 @@
+name: Optimize image loading and dimensions safely
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/optimize-image-loading-dimensions-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize-image-markup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install image metadata reader
+        run: python3 -m pip install --disable-pip-version-check pillow
+
+      - name: Add safe lazy loading and intrinsic dimensions
+        shell: bash
+        run: |
+          set -euo pipefail
+          BEFORE_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
+          BEFORE_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
+
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import re, urllib.parse
+
+          root = Path('.')
+          img_re = re.compile(r'<img\b[^>]*>', re.I)
+          src_re = re.compile(r'\bsrc=["\']([^"\']+)', re.I)
+
+          def local_asset(src):
+              clean = urllib.parse.unquote(src.split('?',1)[0].split('#',1)[0])
+              if clean.startswith(('http://','https://','//','data:')):
+                  return None
+              clean = clean.lstrip('/')
+              p = root / clean
+              return p if p.is_file() else None
+
+          changed_pages=[]
+          lazy_added=0
+          dims_added=0
+
+          for page in root.rglob('*.html'):
+              text=page.read_text(encoding='utf-8', errors='ignore')
+              marker=text.lower().find('<footer')
+              active=text if marker < 0 else text[:marker]
+              tail='' if marker < 0 else text[marker:]
+
+              def fix(tag_match):
+                  nonlocal_dummy = None
+                  global lazy_added, dims_added
+                  tag=tag_match.group(0)
+                  m=src_re.search(tag)
+                  if not m:
+                      return tag
+                  src=m.group(1)
+                  low=tag.lower()
+                  src_low=src.lower()
+                  out=tag
+
+                  # Preserve likely above-the-fold/identity imagery as eager.
+                  critical=any(k in src_low for k in ('logo','banner','hero','emblem')) or 'fetchpriority="high"' in low or "fetchpriority='high'" in low
+                  if 'loading=' not in low and not critical:
+                      out=out[:-1] + ' loading="lazy">'
+                      lazy_added += 1
+
+                  low2=out.lower()
+                  if 'width=' not in low2 or 'height=' not in low2:
+                      asset=local_asset(src)
+                      if asset:
+                          try:
+                              with Image.open(asset) as im:
+                                  w,h=im.size
+                              attrs=''
+                              if 'width=' not in low2:
+                                  attrs += f' width="{w}"'
+                              if 'height=' not in low2:
+                                  attrs += f' height="{h}"'
+                              if attrs:
+                                  out=out[:-1] + attrs + '>'
+                                  dims_added += 1
+                          except Exception as e:
+                              print(f'SKIP_DIM {page}: {src}: {e}')
+                  return out
+
+              new_active=img_re.sub(fix, active)
+              if new_active != active:
+                  page.write_text(new_active + tail, encoding='utf-8')
+                  changed_pages.append(page.as_posix())
+
+          print(f'HTML pages changed: {len(changed_pages)}')
+          print(f'Lazy-loading attributes added: {lazy_added}')
+          print(f'Image tags receiving missing intrinsic dimensions: {dims_added}')
+          PY
+
+          AFTER_FOOTER=$(sha256sum assets/css/footer-approved.css | cut -d' ' -f1)
+          AFTER_LOCK=$(sha256sum FOOTER-LOCK.md | cut -d' ' -f1)
+          test "$BEFORE_FOOTER" = "$AFTER_FOOTER"
+          test "$BEFORE_LOCK" = "$AFTER_LOCK"
+
+      - name: Verify footer and binary assets remain untouched
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --name-only | grep -Ei '\.(png|jpe?g|webp|gif|avif)$'; then
+            echo 'Binary asset changed unexpectedly'; exit 1
+          fi
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+
+      - name: Audit remaining loading and dimension findings
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          missing_lazy=[]
+          missing_dims=[]
+          for page in Path('.').rglob('*.html'):
+              text=page.read_text(errors='ignore')
+              marker=text.lower().find('<footer')
+              active=text if marker < 0 else text[:marker]
+              for tag in re.findall(r'<img\b[^>]*>', active, flags=re.I):
+                  m=re.search(r'\bsrc=["\']([^"\']+)',tag,flags=re.I)
+                  if not m: continue
+                  src=m.group(1); low=tag.lower(); sl=src.lower()
+                  critical=any(k in sl for k in ('logo','banner','hero','emblem')) or 'fetchpriority="high"' in low or "fetchpriority='high'" in low
+                  if 'loading=' not in low and not critical:
+                      missing_lazy.append((page.as_posix(),src))
+                  if 'width=' not in low or 'height=' not in low:
+                      missing_dims.append((page.as_posix(),src))
+          print(f'Remaining non-critical images missing loading hint: {len(missing_lazy)}')
+          print(f'Remaining images missing width/height: {len(missing_dims)}')
+          for p,s in missing_lazy[:40]: print('NO_LAZY',p,s)
+          for p,s in missing_dims[:40]: print('NO_DIMS',p,s)
+          if missing_lazy:
+              raise SystemExit('Non-critical lazy-loading findings remain')
+          PY
+
+      - name: Commit markup-only performance improvements
+        shell: bash
+        run: |
+          git config user.name 'Elajme India Performance'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- '*.html'
+          if git diff --cached --quiet; then
+            echo 'No HTML image markup required changing.'
+            exit 0
+          fi
+          git commit -m 'Optimize image loading and intrinsic dimensions'
+          git push
