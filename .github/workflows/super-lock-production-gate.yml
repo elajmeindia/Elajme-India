@@ -129,3 +129,5 @@ jobs:
         shell: bash
         run: |
           git diff --exit-code "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- assets/css/footer-approved.css FOOTER-LOCK.md
+
+# audit-trigger: post-treatment-trust-rollout-2026-10-31
