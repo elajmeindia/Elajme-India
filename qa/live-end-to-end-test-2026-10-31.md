@@ -14,6 +14,20 @@ Representative paid-traffic journeys for Saudi Arabia and UAE, including live-do
 - A fresh search-engine query also returned no result for the two exact country landing pages during this test.
 - Therefore live production rendering, response status, redirects, visual mobile layout and interactive behavior cannot be marked verified from this run.
 
+### 1A. Independent production accessibility retest
+A second external check was run against four tagged production URLs:
+- Saudi English
+- UAE English
+- Saudi Arabic
+- UAE Arabic
+
+All four production URLs remained inaccessible from the independent web retrieval environment. A fresh public-web search for `elajmeindia.com` and the Saudi/UAE landing pages also did not surface Elajme India pages during the retest.
+
+Interpretation:
+- This strengthens the need for a normal-browser/DNS/Cloudflare check before ad spend.
+- It does **not**, by itself, prove that the website is down for ordinary visitors; the external retrieval environment may be blocked or unable to resolve the production setup.
+- Repository files for the Saudi and UAE pages exist and have already passed code-level checks.
+
 ### 2. Repository-level implementation already verified
 The current repository implementation has previously been checked for:
 - Saudi and UAE country-specific landing-page structure.
@@ -54,4 +68,4 @@ Never place patient names, phone numbers, diagnoses, reports or other medical in
 No footer HTML, footer stylesheet or footer-affecting selector was changed as part of this verification.
 
 ## Next action
-Resolve or independently verify production-domain accessibility first. Once the two URLs load in a normal browser, complete the eight-point pre-spend gate above and only then move campaign status from HOLD to READY.
+Check the production domain in a normal browser and inspect Cloudflare custom-domain/DNS status if either Saudi or UAE URL fails there. If both pages load normally, complete the remaining interaction/GA4 checks and move campaign status to READY only after all eight gates pass.
