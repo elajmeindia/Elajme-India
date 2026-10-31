@@ -1,4 +1,4 @@
-name: Fix GCC bilingual country parity once
+name: Audit exact bilingual language switches sitewide
 
 on:
   push:
@@ -8,80 +8,77 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  apply:
+  audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Fix GCC language switches and Arabic treatment links
+      - name: Audit exact EN AR visible language switches
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import hashlib, re
+          import re, hashlib
 
-          countries=['saudi-arabia','uae','oman','qatar','kuwait','bahrain']
-          treatment_links='''<a href="/ar/treatments/cancer-treatment-india/">علاج السرطان</a><a href="/ar/treatments/heart-treatment-india/">علاج القلب</a><a href="/ar/treatments/liver-transplant-india/">زراعة الكبد</a><a href="/ar/treatments/kidney-transplant-india/">زراعة الكلى</a><a href="/ar/treatments/knee-replacement-india/">استبدال مفصل الركبة</a><a href="/ar/treatments/neurosurgery-india/">جراحة الأعصاب</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a><a href="/ar/treatments/urology-treatment-india/">المسالك البولية</a><a href="/ar/treatments/gastroenterology-treatment-india/">أمراض الجهاز الهضمي</a>'''
-          locked_files=[Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]
-          locked={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in locked_files}
-          changed=[]
+          def redirect_only(text):
+              return bool(re.search(r'<meta[^>]+http-equiv=["\']refresh["\']', text, re.I))
 
-          for country in countries:
-            p=Path('ar')/country/'treatment-in-india/index.html'
-            if not p.exists(): raise SystemExit(f'Missing GCC Arabic page: {p}')
-            text=p.read_text(); low=text.lower(); fi=low.find('<footer')
-            if fi < 0: raise SystemExit(f'No footer boundary: {p}')
-            before,footer=text[:fi],text[fi:]
-            expected=f'/{country}/treatment-in-india/'
-            before,n=re.subn(r'<a class="shell-lang" href="[^"]*">English</a>',f'<a class="shell-lang" href="{expected}">English</a>',before,count=1)
-            if n != 1: raise SystemExit(f'English switch not found exactly once: {p}')
+          def active_pages():
+              out=[]
+              for p in Path('.').rglob('index.html'):
+                  s=str(p).replace('\\','/')
+                  if '/.git/' in s: continue
+                  t=p.read_text(errors='ignore')
+                  if redirect_only(t): continue
+                  out.append((p,t))
+              return out
 
-            # Strengthen treatment-level internal linking only where the page lacks direct Arabic treatment links.
-            if '/ar/treatments/cancer-treatment-india/' not in before:
-              generic='<a href="/ar/treatments/">العلاجات</a>'
-              if generic in before:
-                before=before.replace(generic,treatment_links+generic,1)
+          pages=active_pages()
+          bypath={str(p).replace('\\','/'):t for p,t in pages}
+          issues=[]; pairs=0
+
+          def hrefs(text):
+              pre=text[:text.lower().find('<footer')] if '<footer' in text.lower() else text
+              return re.findall(r'<a\b[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', pre, re.I|re.S)
+
+          def norm(h):
+              h=h.split('#')[0].split('?')[0]
+              if h.startswith('https://elajmeindia.com'): h=h[len('https://elajmeindia.com'):]
+              return h
+
+          for s,t in sorted(bypath.items()):
+              if s=='index.html': counterpart='ar/index.html'; expected='/ar/'
+              elif s.startswith('ar/'):
+                  counterpart=s[3:]
+                  if counterpart=='index.html': expected='/'
+                  else: expected='/' + counterpart[:-10] if counterpart.endswith('index.html') else '/' + counterpart
               else:
-                raise SystemExit(f'Arabic treatments hub link not found: {p}')
+                  counterpart='ar/'+s
+                  expected='/ar/' + (s[:-10] if s.endswith('index.html') else s)
+              if counterpart not in bypath: continue
+              pairs += 1
+              candidates=[]
+              for h,label in hrefs(t):
+                  label_clean=re.sub(r'<[^>]+>',' ',label)
+                  if s.startswith('ar/'):
+                      if re.search(r'English',label_clean,re.I) or 'shell-lang' in label:
+                          candidates.append(norm(h))
+                  else:
+                      if 'العربية' in label_clean or 'Arabic' in label_clean:
+                          candidates.append(norm(h))
+              if not candidates:
+                  issues.append((s,'NO_VISIBLE_LANGUAGE_SWITCH',expected))
+              elif expected not in candidates:
+                  issues.append((s,'WRONG_SWITCH',expected,candidates))
 
-            new=before+footer
-            if new != text:
-              p.write_text(new); changed.append(str(p))
-
-          for p,h in locked.items():
-            if hashlib.sha256(p.read_bytes()).hexdigest()!=h:
-              raise SystemExit(f'LOCKED FOOTER FILE CHANGED: {p}')
-
-          for country in countries:
-            ar=Path('ar')/country/'treatment-in-india/index.html'
-            en=Path(country)/'treatment-in-india/index.html'
-            if not en.exists(): raise SystemExit(f'Missing English counterpart: {en}')
-            text=ar.read_text(); pre=text[:text.lower().find('<footer')]
-            expected=f'/{country}/treatment-in-india/'
-            if f'<a class="shell-lang" href="{expected}">English</a>' not in pre:
-              raise SystemExit(f'Wrong English language switch: {ar}')
-            if not re.search(r'<html[^>]+lang="ar"[^>]+dir="rtl"|<html[^>]+dir="rtl"[^>]+lang="ar"',text,re.I):
-              raise SystemExit(f'Arabic RTL failure: {ar}')
-            if '/ar/#enquiry' not in pre: raise SystemExit(f'Elajme enquiry route missing: {ar}')
-            for slug in ['cancer-treatment-india','heart-treatment-india','liver-transplant-india','kidney-transplant-india','knee-replacement-india','neurosurgery-india','spine-surgery-india','urology-treatment-india','gastroenterology-treatment-india']:
-              if f'/ar/treatments/{slug}/' not in pre: raise SystemExit(f'Missing Arabic treatment link {slug}: {ar}')
-          print(f'Changed pages: {len(changed)}')
-          for p in changed: print(p)
-          print('GCC BILINGUAL COUNTRY PARITY: CLEAN')
+          print(f'Active paired pages checked: {pairs}')
+          print(f'Language-switch issues: {len(issues)}')
+          for x in issues: print('ISSUE',x)
+          for p in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]:
+              if not p.exists(): raise SystemExit(f'Missing locked file: {p}')
+              print('LOCK',p,hashlib.sha256(p.read_bytes()).hexdigest())
+          if issues: raise SystemExit('EXACT BILINGUAL LANGUAGE SWITCH AUDIT FAILED')
+          print('EXACT BILINGUAL LANGUAGE SWITCH AUDIT CLEAN')
           PY
-      - name: Commit GCC parity fixes
-        shell: bash
-        run: |
-          if git diff --quiet -- ar; then
-            echo 'No GCC page changes required.'
-            exit 0
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add ar/saudi-arabia ar/uae ar/oman ar/qatar ar/kuwait ar/bahrain
-          git commit -m 'Fix GCC bilingual navigation and treatment links'
-          git push
