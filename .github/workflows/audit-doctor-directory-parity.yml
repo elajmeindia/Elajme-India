@@ -1,5 +1,6 @@
 name: Audit doctor directory image and bilingual parity
 
+# audit-trigger: final-current-main-2026-10-31
 on:
   workflow_dispatch:
   push:
