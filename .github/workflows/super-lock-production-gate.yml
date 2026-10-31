@@ -1,0 +1,131 @@
+name: Elajme Super Lock production gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  super-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate protected production invariants
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys, xml.etree.ElementTree as ET
+
+          root=Path('.')
+          problems=[]
+          html=[]
+          redirects=[]
+          for p in root.rglob('*.html'):
+              if p.as_posix().startswith('.github/'):
+                  continue
+              text=p.read_text(errors='ignore')
+              if re.search(r'<meta[^>]+http-equiv=["\']refresh["\']', text, re.I):
+                  redirects.append((p,text)); continue
+              html.append((p,text))
+
+          # Required policy/core files.
+          for f in ('SUPER-LOCK.md','FOOTER-LOCK.md','assets/css/footer-approved.css','index.html','ar/index.html','robots.txt','sitemap.xml'):
+              if not (root/f).exists(): problems.append(f'MISSING_REQUIRED {f}')
+
+          # Core production identity.
+          en=(root/'index.html').read_text(errors='ignore') if (root/'index.html').exists() else ''
+          ar=(root/'ar/index.html').read_text(errors='ignore') if (root/'ar/index.html').exists() else ''
+          if '+91 74889 55154' not in en and '917488955154' not in en: problems.append('EN_HOME_MISSING_ELAJME_PHONE')
+          if '+91 74889 55154' not in ar and '917488955154' not in ar: problems.append('AR_HOME_MISSING_ELAJME_PHONE')
+          if not re.search(r'<html[^>]+lang=["\']en["\']', en, re.I): problems.append('EN_HOME_LANG')
+          if not re.search(r'<html[^>]+lang=["\']ar["\'][^>]+dir=["\']rtl["\']|<html[^>]+dir=["\']rtl["\'][^>]+lang=["\']ar["\']', ar, re.I): problems.append('AR_HOME_RTL')
+
+          hospital_domains=('apollohospitals.com','fortishealthcare.com','maxhealthcare.in','medanta.org','artemishospitals.com','jaslokhospital.net','kokilabenhospital.com','nanavatimaxhospital.org')
+
+          for p,text in html:
+              s=p.as_posix(); low=text.lower()
+              pre=text[:low.find('<footer')] if '<footer' in low else text
+              plow=pre.lower()
+
+              # Language architecture.
+              if s.startswith('ar/'):
+                  if not re.search(r'<html[^>]+lang=["\']ar["\']',text,re.I): problems.append(f'AR_LANG {s}')
+                  if not re.search(r'<html[^>]+dir=["\']rtl["\']',text,re.I): problems.append(f'AR_RTL {s}')
+              elif s != '404.html':
+                  if not re.search(r'<html[^>]+lang=["\']en["\']',text,re.I): problems.append(f'EN_LANG {s}')
+
+              # User-facing metadata/accessibility basics.
+              if s != '404.html':
+                  if not re.search(r'<title>\s*[^<]+\s*</title>',text,re.I): problems.append(f'TITLE {s}')
+                  if not re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\'][^"\']+',text,re.I): problems.append(f'DESCRIPTION {s}')
+                  if len(re.findall(r'<h1\b',pre,re.I)) != 1: problems.append(f'H1_COUNT {s}')
+                  if not re.search(r'<meta[^>]+name=["\']viewport["\']',text,re.I): problems.append(f'VIEWPORT {s}')
+
+              # Production canonical on index pages.
+              if p.name == 'index.html':
+                  canon=re.findall(r'<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)',text,re.I)
+                  if len(canon)!=1 or not canon[0].startswith('https://elajmeindia.com/'):
+                      problems.append(f'CANONICAL {s}')
+
+              # Active doctor/hospital profiles must retain Elajme enquiry path.
+              if re.match(r'^(ar/)?(doctors|hospitals)/[^/]+/index\.html$',s):
+                  expected='/ar/#enquiry' if s.startswith('ar/') else '/#enquiry'
+                  if expected not in pre: problems.append(f'ELAJME_ENQUIRY {s}')
+
+              # No forms or consultation CTAs directly to known provider domains.
+              for action in re.findall(r'<form[^>]+action=["\']([^"\']+)',pre,re.I):
+                  if action.startswith('http') and 'elajmeindia.com' not in action:
+                      problems.append(f'EXTERNAL_FORM {s}: {action}')
+              for href in re.findall(r'<a[^>]+href=["\']([^"\']+)',pre,re.I):
+                  h=href.lower()
+                  if any(d in h for d in hospital_domains) and re.search(r'(consult|appointment|book|enquir|inquir|contact|whatsapp|wa\.me)',h,re.I):
+                      problems.append(f'DIRECT_PROVIDER_CTA {s}: {href}')
+
+              # Block obvious high-risk unsupported claims.
+              visible=re.sub(r'<script\b.*?</script>|<style\b.*?</style>',' ',pre,flags=re.I|re.S)
+              visible=re.sub(r'<[^>]+>',' ',visible)
+              risky=(r'100\s*%\s*(success|guarantee)',r'guaranteed\s+(cure|success|result)',r'official\s+(hospital\s+)?partner',r'no\.?\s*1\s+(hospital|doctor|medical)')
+              for pat in risky:
+                  if re.search(pat,visible,re.I): problems.append(f'RISKY_CLAIM {s}: {pat}')
+
+          # Sitemap/robots production checks.
+          rp=root/'robots.txt'
+          if rp.exists():
+              r=rp.read_text(errors='ignore')
+              if re.search(r'(?im)^\s*disallow\s*:\s*/\s*$',r): problems.append('ROBOTS_BLOCKS_SITE')
+              if 'sitemap' not in r.lower(): problems.append('ROBOTS_MISSING_SITEMAP')
+          sp=root/'sitemap.xml'
+          if sp.exists():
+              try:
+                  ET.parse(sp)
+                  xml=sp.read_text(errors='ignore')
+                  locs=re.findall(r'<loc>\s*([^<]+)',xml,re.I)
+                  if not locs: problems.append('SITEMAP_EMPTY')
+                  if any(not u.startswith('https://elajmeindia.com/') for u in locs): problems.append('SITEMAP_DOMAIN')
+                  if not any('/ar/' in u or u.rstrip('/').endswith('/ar') for u in locs): problems.append('SITEMAP_AR')
+              except Exception as e: problems.append(f'SITEMAP_INVALID {e}')
+
+          print(f'Active HTML pages checked: {len(html)}')
+          print(f'Redirect HTML pages skipped: {len(redirects)}')
+          print(f'Super Lock blocking issues: {len(problems)}')
+          if problems:
+              print('--- BLOCKING ---')
+              print('\n'.join(problems))
+              sys.exit(1)
+          print('ELAJME SITEWIDE SUPER LOCK: CLEAN')
+          PY
+
+      - name: Verify footer lock files were not changed in pull request
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git diff --exit-code "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- assets/css/footer-approved.css FOOTER-LOCK.md
