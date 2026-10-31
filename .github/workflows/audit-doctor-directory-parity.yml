@@ -1,0 +1,76 @@
+name: Audit doctor directory image and bilingual parity
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/audit-doctor-directory-parity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit doctor profiles, images, parity and Elajme enquiry routing
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root=Path('.')
+          en_dir=root/'doctors'
+          ar_dir=root/'ar'/'doctors'
+          en_profiles={p.parent.name:p for p in en_dir.glob('*/index.html')}
+          ar_profiles={p.parent.name:p for p in ar_dir.glob('*/index.html')}
+          print('English doctor profiles:',len(en_profiles))
+          print('Arabic doctor profiles:',len(ar_profiles))
+          print('Missing Arabic profiles:',sorted(set(en_profiles)-set(ar_profiles)))
+          print('Missing English profiles:',sorted(set(ar_profiles)-set(en_profiles)))
+
+          def first_main_img(path):
+              text=path.read_text(encoding='utf-8',errors='ignore')
+              marker=text.lower().find('<footer')
+              active=text if marker<0 else text[:marker]
+              imgs=re.findall(r'<img\b[^>]*>',active,re.I)
+              for tag in imgs:
+                  m=re.search(r'\bsrc=["\']([^"\']+)',tag,re.I)
+                  if m and 'emblem' not in m.group(1).lower() and 'logo' not in m.group(1).lower():
+                      return m.group(1),tag
+              return None,None
+
+          placeholder=[]; external=[]; noimg=[]; bad_cta=[]
+          for lang,profiles in [('EN',en_profiles),('AR',ar_profiles)]:
+              for slug,path in sorted(profiles.items()):
+                  src,tag=first_main_img(path)
+                  if not src: noimg.append((lang,slug)); continue
+                  if 'placeholder' in src.lower(): placeholder.append((lang,slug,src))
+                  if src.startswith(('http://','https://','//')): external.append((lang,slug,src))
+                  text=path.read_text(encoding='utf-8',errors='ignore')
+                  expected='/ar/#enquiry' if lang=='AR' else '/#enquiry'
+                  if expected not in text: bad_cta.append((lang,slug,expected))
+
+          print('\nProfiles using placeholder imagery:')
+          for x in placeholder: print('PLACEHOLDER',*x)
+          print('\nProfiles using externally hosted imagery:')
+          for x in external: print('EXTERNAL',*x)
+          print('\nProfiles without a detected doctor image:')
+          for x in noimg: print('NO_IMAGE',*x)
+          print('\nProfiles missing expected Elajme enquiry route:')
+          for x in bad_cta: print('CTA',*x)
+
+          for lang,path in [('EN',en_dir/'index.html'),('AR',ar_dir/'index.html')]:
+              if not path.exists(): continue
+              text=path.read_text(encoding='utf-8',errors='ignore')
+              cards=re.findall(r'<article\b.*?</article>',text,re.I|re.S)
+              print(f'\n{lang} directory cards:',len(cards))
+              for card in cards:
+                  h=re.search(r'<h2>(.*?)</h2>',card,re.I|re.S)
+                  im=re.search(r'<img\b[^>]*\bsrc=["\']([^"\']+)',card,re.I)
+                  if h and (not im or 'placeholder' in im.group(1).lower() or im.group(1).startswith(('http://','https://','//'))):
+                      name=re.sub('<[^>]+>','',h.group(1)).strip()
+                      print('DIRECTORY_IMAGE_REVIEW',name, im.group(1) if im else 'NO_IMAGE')
+          PY
