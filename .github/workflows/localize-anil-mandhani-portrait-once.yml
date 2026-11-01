@@ -30,19 +30,17 @@ jobs:
           (async()=>{
             const browser=await chromium.launch({headless:true});
             const page=await browser.newPage({viewport:{width:1400,height:1000}});
-            await page.goto('https://www.fortishealthcare.com/doctors/dr-anil-mandhani-4722',{waitUntil:'domcontentloaded',timeout:120000});
-            await page.waitForTimeout(5000);
-            const candidates=page.locator('img');
-            let target=null;
-            for(let i=0;i<await candidates.count();i++){
-              const img=candidates.nth(i);
-              const src=(await img.getAttribute('src'))||'';
-              const alt=(await img.getAttribute('alt'))||'';
-              if(/dr-anil--mandhani-1879|anil mandhani/i.test(src+' '+alt)){target=img;break;}
-            }
-            if(!target) throw new Error('Verified Anil Mandhani portrait element not found on Fortis profile');
-            await target.scrollIntoViewIfNeeded();
-            await target.screenshot({path:'assets/images/doctors/dr-anil-mandhani.png'});
+            await page.goto('https://www.fortishealthcare.com/doctors?field_hospitals=3528&field_speciality=445',{waitUntil:'domcontentloaded',timeout:120000});
+            await page.waitForTimeout(6000);
+            const name=page.getByText('Dr. Anil Mandhani',{exact:true}).first();
+            if(await name.count()===0) throw new Error('Verified Dr. Anil Mandhani card not found on official Fortis doctor directory');
+            const card=name.locator('xpath=ancestor::*[self::div or self::article or self::li][.//img][1]');
+            if(await card.count()===0) throw new Error('Fortis Anil Mandhani card image container not found');
+            const img=card.locator('img').first();
+            if(await img.count()===0) throw new Error('Fortis Anil Mandhani card portrait not found');
+            await img.scrollIntoViewIfNeeded();
+            await page.waitForTimeout(1000);
+            await img.screenshot({path:'assets/images/doctors/dr-anil-mandhani.png'});
             await browser.close();
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
@@ -67,7 +65,7 @@ jobs:
             p.write_text(n,encoding='utf-8')
           if changed != 4: raise SystemExit(f'Expected all four bilingual surfaces to change; changed={changed}')
           en=Path('doctors/dr-anil-mandhani/index.html')
-          s=en.read_text(encoding='utf-8').replace("The portrait is referenced from Fortis Healthcare's first-party doctor imagery. If the external image cannot load, the page automatically falls back to Elajme India's neutral doctor placeholder rather than displaying a broken image.","The portrait was verified against Fortis Healthcare's first-party doctor profile and is served locally by Elajme India to improve reliability and page performance.")
+          s=en.read_text(encoding='utf-8').replace("The portrait is referenced from Fortis Healthcare's first-party doctor imagery. If the external image cannot load, the page automatically falls back to Elajme India's neutral doctor placeholder rather than displaying a broken image.","The portrait was verified against Fortis Healthcare's first-party doctor directory and is served locally by Elajme India to improve reliability and page performance.")
           en.write_text(s,encoding='utf-8')
           for p in pages:
             s=p.read_text(encoding='utf-8')
@@ -75,7 +73,7 @@ jobs:
             if local not in s and absolute not in s: raise SystemExit(f'Local portrait missing in {p}')
           for p,h in before.items():
             if hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h: raise SystemExit(f'Locked file changed: {p}')
-          print('ANIL MANDHANI VERIFIED PORTRAIT LOCALIZED VIA FORTIS PROFILE')
+          print('ANIL MANDHANI VERIFIED PORTRAIT LOCALIZED VIA FORTIS DIRECTORY')
           PY
       - name: Commit localized portrait
         run: |
