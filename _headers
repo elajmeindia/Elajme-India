@@ -11,6 +11,21 @@
 # Keep application assets on Pages defaults because current CSS/JS/image filenames
 # are not content-hashed; long browser max-age values could otherwise serve stale files.
 
+# The English doctor and hospital directory routes previously exposed stale legacy
+# header markup at the custom domain. Force HTML revalidation on every request so
+# Cloudflare/browser caches cannot retain an older directory document.
+/hospitals/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/hospitals/*
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/doctors/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/doctors/*
+  Cache-Control: no-cache, no-store, must-revalidate
+
 /robots.txt
   Cache-Control: public, max-age=3600
 
