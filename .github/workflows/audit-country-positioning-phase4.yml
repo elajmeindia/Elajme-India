@@ -1,0 +1,32 @@
+name: Audit international positioning phase 4
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-country-positioning-phase4.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit country positioning and Nigeria parity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          en=Path('index.html').read_text()
+          ar=Path('ar/index.html').read_text()
+          nigeria=Path('nigeria/treatment-in-india/index.html').read_text()
+          assert '/nigeria/treatment-in-india/' in en
+          assert 'Dedicated patient pages' in en
+          assert 'international patients travelling to India' in en.lower()
+          assert 'Nigeria' in en
+          assert 'rel="canonical"' in nigeria and 'hreflang="en"' in nigeria
+          assert '/#enquiry' in nigeria
+          assert '/assets/css/footer-approved.css' in nigeria
+          assert 'lang="ar"' in ar and 'dir="rtl"' in ar
+          assert '/assets/css/footer-approved.css' in ar
+          print('PHASE 4 INTERNATIONAL POSITIONING AUDIT CLEAN')
+          PY
