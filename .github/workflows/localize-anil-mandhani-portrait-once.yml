@@ -1,0 +1,54 @@
+name: Localize verified Anil Mandhani portrait once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/localize-anil-mandhani-portrait-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  localize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download verified Fortis portrait and update bilingual pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/images/doctors
+          curl -L --fail --retry 2 --connect-timeout 15 --max-time 60 'https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ' -o assets/images/doctors/dr-anil-mandhani.jpg
+          test -s assets/images/doctors/dr-anil-mandhani.jpg
+          file assets/images/doctors/dr-anil-mandhani.jpg | grep -Eqi 'JPEG|image'
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          locked=['assets/css/footer-approved.css','FOOTER-LOCK.md']
+          before={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in locked}
+          old='https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ'
+          local='/assets/images/doctors/dr-anil-mandhani.jpg'
+          pages=[Path('doctors/index.html'),Path('ar/doctors/index.html'),Path('doctors/dr-anil-mandhani/index.html'),Path('ar/doctors/dr-anil-mandhani/index.html')]
+          changed=0
+          for p in pages:
+            if not p.exists(): raise SystemExit(f'Missing expected page: {p}')
+            s=p.read_text(encoding='utf-8')
+            n=s.replace(old,local)
+            if n!=s: changed+=1
+            p.write_text(n,encoding='utf-8')
+            if old in n: raise SystemExit(f'External Anil portrait remains: {p}')
+          if changed < 2: raise SystemExit(f'Expected verified Fortis portrait on multiple pages; changed={changed}')
+          for p,h in before.items():
+            if hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h: raise SystemExit(f'Locked file changed: {p}')
+          print('ANIL MANDHANI VERIFIED PORTRAIT LOCALIZED')
+          PY
+      - name: Commit localized portrait
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/images/doctors/dr-anil-mandhani.jpg doctors/index.html ar/doctors/index.html doctors/dr-anil-mandhani/index.html ar/doctors/dr-anil-mandhani/index.html
+          if git diff --cached --quiet; then echo 'No Anil portrait changes required.'; else git commit -m 'Localize verified Dr Anil Mandhani portrait'; git push; fi
