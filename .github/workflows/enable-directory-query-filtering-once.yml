@@ -1,0 +1,80 @@
+name: Enable bilingual directory query filtering once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/enable-directory-query-filtering-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Make treatment query routes functional
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, re
+
+          locked=[Path('assets/css/footer-approved.css'),Path('FOOTER-LOCK.md')]
+          before={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in locked}
+
+          # English directories already have search controls. Upgrade them so ?q= routes
+          # from treatment pages actually prefill and filter, using OR token matching.
+          for file in ('doctors/index.html','hospitals/index.html'):
+              p=Path(file); s=p.read_text(encoding='utf-8')
+              marker='<!-- elajme-query-filter-v1 -->'
+              if marker not in s:
+                  js='''\n<!-- elajme-query-filter-v1 -->\n<script>\n(function(){\n  const input=document.getElementById('q');\n  const city=document.getElementById('city');\n  const cards=[...document.querySelectorAll('#grid .card')];\n  if(!input||!cards.length)return;\n  function norm(v){return (v||'').toLocaleLowerCase().trim();}\n  function apply(){\n    const terms=norm(input.value).split(/\\s+/).filter(Boolean);\n    const selected=city?norm(city.value):'';\n    cards.forEach(card=>{\n      const hay=norm((card.dataset.search||'')+' '+card.textContent);\n      const cardCity=norm(card.dataset.city||'');\n      const textOk=!terms.length||terms.some(t=>hay.includes(t));\n      const cityOk=!selected||cardCity===selected;\n      card.hidden=!(textOk&&cityOk);\n    });\n  }\n  const initial=new URLSearchParams(location.search).get('q')||'';\n  if(initial)input.value=initial;\n  input.addEventListener('input',apply);\n  if(city)city.addEventListener('change',apply);\n  apply();\n})();\n</script>\n'''
+                  s=s.replace('</body>',js+'</body>',1)
+                  p.write_text(s,encoding='utf-8')
+
+          # Arabic directories previously had no search UI, although treatment pages route
+          # to /ar/doctors/?q= and /ar/hospitals/?q=. Add a compact Arabic search control
+          # and filter cards against visible Arabic text plus safe specialty aliases.
+          aliases={
+            'oncology':'الأورام سرطان','cancer':'الأورام سرطان','cardiac':'القلب','cardiology':'القلب',
+            'orthopaedics':'العظام المفاصل الركبة','neurosurgery':'الأعصاب جراحة الأعصاب','urology':'المسالك البولية',
+            'gastroenterology':'الجهاز الهضمي','kidney':'الكلى','transplant':'زراعة','liver':'الكبد','spine':'العمود الفقري',
+            'fertility':'الخصوبة أطفال الأنابيب','ivf':'الخصوبة أطفال الأنابيب','dental':'الأسنان',
+            'plastic':'التجميل','surgery':'الجراحة','ophthalmology':'العيون','gynaecology':'النساء','ent':'الأنف الأذن الحنجرة',
+            'heart':'القلب','renal':'الكلى','neuro':'الأعصاب','robotic':'الروبوتية','reproductive':'الخصوبة'
+          }
+          alias_js='{'+','.join(repr(k)+':'+repr(v) for k,v in aliases.items())+'}'
+          for file in ('ar/doctors/index.html','ar/hospitals/index.html'):
+              p=Path(file); s=p.read_text(encoding='utf-8')
+              marker='<!-- elajme-ar-query-filter-v1 -->'
+              if marker in s: continue
+              grid='<div class="grid">'
+              assert grid in s, f'{file}: grid marker missing'
+              controls='''<div class="tools" style="margin:20px 0"><input id="q" type="search" aria-label="البحث" placeholder="ابحث حسب التخصص أو الاسم" style="width:min(100%,420px);padding:12px;border:1px solid #dce7e9;border-radius:9px;font:inherit"></div>'''
+              s=s.replace(grid,controls+grid,1)
+              js=f'''\n<!-- elajme-ar-query-filter-v1 -->\n<script>\n(function(){{\n  const aliases={alias_js};\n  const input=document.getElementById('q');\n  const cards=[...document.querySelectorAll('.grid .card')];\n  if(!input||!cards.length)return;\n  function norm(v){{return (v||'').toLocaleLowerCase().trim();}}\n  function expanded(v){{return norm(v).split(/\\s+/).filter(Boolean).flatMap(t=>[t,...(aliases[t]||'').split(/\\s+/).filter(Boolean)]);}}\n  function apply(){{\n    const terms=expanded(input.value);\n    cards.forEach(card=>{{const hay=norm(card.textContent);card.hidden=!!terms.length&&!terms.some(t=>hay.includes(t));}});\n  }}\n  const initial=new URLSearchParams(location.search).get('q')||'';\n  if(initial)input.value=initial;\n  input.addEventListener('input',apply);\n  apply();\n}})();\n</script>\n'''
+              s=s.replace('</body>',js+'</body>',1)
+              p.write_text(s,encoding='utf-8')
+
+          for p,h in before.items():
+              assert hashlib.sha256(Path(p).read_bytes()).hexdigest()==h, f'LOCK VIOLATION {p}'
+          for f in ('doctors/index.html','hospitals/index.html','ar/doctors/index.html','ar/hospitals/index.html'):
+              s=Path(f).read_text(encoding='utf-8')
+              assert 'URLSearchParams' in s, f'{f}: query parameter support missing'
+          print('DIRECTORY QUERY FILTERING ENABLED FOR EN/AR DOCTORS + HOSPITALS')
+          PY
+      - name: Commit functional directory filtering
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add doctors/index.html hospitals/index.html ar/doctors/index.html ar/hospitals/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Make bilingual treatment directory filters functional'
+          git push
