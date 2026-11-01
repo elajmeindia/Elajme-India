@@ -1,0 +1,53 @@
+name: Audit expanded treatment coverage quality once
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-expanded-treatment-coverage-once.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit 15-specialty bilingual coverage
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, sys
+          pairs = [
+            'cancer-treatment-india','heart-treatment-india','knee-replacement-india','neurosurgery-india','urology-treatment-india','gastroenterology-treatment-india','kidney-transplant-india','liver-transplant-india','spine-surgery-india','fertility-ivf-treatment-india','dental-treatment-india','cosmetic-surgery-india','eye-treatment-india','womens-health-gynaecology-india','ent-treatment-india'
+          ]
+          issues=[]
+          sitemap=Path('sitemap.xml').read_text(encoding='utf-8')
+          for slug in pairs:
+            enp=Path('treatments')/slug/'index.html'; arp=Path('ar/treatments')/slug/'index.html'
+            for p,lang in [(enp,'en'),(arp,'ar')]:
+              if not p.exists(): issues.append(f'missing {p}'); continue
+              t=p.read_text(encoding='utf-8')
+              pre=t.partition('<footer')[0]
+              if f'<html lang="{lang}"' not in t: issues.append(f'{p}: lang')
+              if lang=='ar' and 'dir="rtl"' not in t: issues.append(f'{p}: rtl')
+              if pre.count('<h1') != 1: issues.append(f'{p}: h1 count {pre.count("<h1")}')
+              if 'rel="canonical"' not in t: issues.append(f'{p}: canonical')
+              for hreflang in ['en','ar','x-default']:
+                if f'hreflang="{hreflang}"' not in t: issues.append(f'{p}: hreflang {hreflang}')
+              route='/ar/#enquiry' if lang=='ar' else '/#enquiry'
+              if route not in t and ('../#enquiry' not in t if lang=='en' else True): issues.append(f'{p}: Elajme enquiry route')
+              if 'footer-approved.css' not in t: issues.append(f'{p}: approved footer css')
+            enurl=f'https://elajmeindia.com/treatments/{slug}/'
+            arurl=f'https://elajmeindia.com/ar/treatments/{slug}/'
+            if enurl not in sitemap: issues.append(f'sitemap missing {enurl}')
+            if arurl not in sitemap: issues.append(f'sitemap missing {arurl}')
+          enidx=Path('treatments/index.html').read_text(encoding='utf-8')
+          aridx=Path('ar/treatments/index.html').read_text(encoding='utf-8')
+          for slug in pairs:
+            if f'{slug}/' not in enidx: issues.append(f'EN directory missing {slug}')
+            if f'{slug}/' not in aridx: issues.append(f'AR directory missing {slug}')
+          if '15 Specialties' not in enidx: issues.append('EN directory specialty count not 15')
+          if issues:
+            print('\n'.join(issues)); sys.exit(1)
+          print('EXPANDED TREATMENT COVERAGE AUDIT CLEAN')
+          print('15 EN/AR treatment pairs verified with directory, sitemap, canonical/hreflang and Elajme routing checks.')
+          PY
