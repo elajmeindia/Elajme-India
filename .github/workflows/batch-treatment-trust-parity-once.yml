@@ -1,4 +1,4 @@
-name: Add Nigeria to international patient hub once
+name: Surface Nigeria on bilingual homepage once
 on:
   push:
     branches: [main]
@@ -11,39 +11,61 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add Nigeria to bilingual international patient hub
+      - name: Add Nigeria to homepage international market visibility
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import hashlib
-          updates=[
-          ('international-patients/mea/index.html',
-           '<article class="card"><h3>Bahrain</h3><p>Arabic and English coordination for patients from Bahrain considering medical treatment in India.</p><a href="../../bahrain/treatment-in-india/">Bahrain patient guide →</a></article>',
-           '<article class="card"><h3>Bahrain</h3><p>Arabic and English coordination for patients from Bahrain considering medical treatment in India.</p><a href="../../bahrain/treatment-in-india/">Bahrain patient guide →</a></article><article class="card"><h3>Nigeria</h3><p>Case review, hospital communication and treatment-visit coordination for patients and families travelling from Nigeria to India.</p><a href="../../nigeria/treatment-in-india/">Nigeria patient guide →</a></article>'),
-          ('ar/international-patients/mea/index.html',
-           '<article class="card"><h3>البحرين</h3><p>تنسيق بالعربية والإنجليزية للمرضى من البحرين الراغبين في العلاج في الهند.</p><a href="/ar/bahrain/treatment-in-india/">دليل المرضى من البحرين ←</a></article>',
-           '<article class="card"><h3>البحرين</h3><p>تنسيق بالعربية والإنجليزية للمرضى من البحرين الراغبين في العلاج في الهند.</p><a href="/ar/bahrain/treatment-in-india/">دليل المرضى من البحرين ←</a></article><article class="card"><h3>نيجيريا</h3><p>تنسيق مراجعة الحالة والتواصل مع المستشفى ورحلة العلاج للمرضى والعائلات القادمين من نيجيريا إلى الهند.</p><a href="/ar/nigeria/treatment-in-india/">دليل المرضى من نيجيريا ←</a></article>')]
+
+          files=['index.html','ar/index.html']
+          before={q:hashlib.sha256(Path(q).read_bytes()).hexdigest() for q in ['FOOTER-LOCK.md','assets/css/footer-approved.css']}
           changed=[]
-          for fn,old,new in updates:
-            p=Path(fn); text=p.read_text(); i=text.lower().find('<footer'); assert i>=0
-            pre,footer=text[:i],text[i:]
-            if new not in pre:
-              assert old in pre, f'anchor missing: {fn}'
-              p.write_text(pre.replace(old,new,1)+footer); changed.append(fn)
-          # Explicitly expose Nigeria in metadata/service coverage too.
-          for fn in ['international-patients/mea/index.html','ar/international-patients/mea/index.html']:
-            p=Path(fn); text=p.read_text(); i=text.lower().find('<footer'); pre,footer=text[:i],text[i:]
-            pre=pre.replace('"Bahrain","Middle East","Africa"','"Bahrain","Nigeria","Middle East","Africa"')
-            p.write_text(pre+footer)
-          for q in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]: print('LOCK',q,hashlib.sha256(q.read_bytes()).hexdigest())
+
+          # English homepage
+          p=Path('index.html'); text=p.read_text(); i=text.lower().find('<footer'); assert i>=0
+          pre,footer=text[:i],text[i:]
+          old='''<div class="country"><span data-en="Bahrain" data-ar="البحرين">Bahrain</span></div></div></section>'''
+          new='''<div class="country"><span data-en="Bahrain" data-ar="البحرين">Bahrain</span></div><div class="country"><a href="nigeria/treatment-in-india/" aria-label="Nigeria patient guide"><span data-en="Nigeria" data-ar="نيجيريا">Nigeria</span></a></div></div></section>'''
+          if new not in pre:
+            assert old in pre, 'English homepage country-strip anchor missing'
+            pre=pre.replace(old,new,1)
+          pre=pre.replace('''"areaServed":["Saudi Arabia","United Arab Emirates","Oman","Qatar","Kuwait","Bahrain"]''','''"areaServed":["Saudi Arabia","United Arab Emirates","Oman","Qatar","Kuwait","Bahrain","Nigeria","Middle East","Africa","International"]''',1)
+          updated=pre+footer
+          if updated!=text: p.write_text(updated); changed.append(str(p))
+
+          # Arabic homepage: add Nigeria only when the equivalent Bahrain strip is present.
+          p=Path('ar/index.html'); text=p.read_text(); i=text.lower().find('<footer'); assert i>=0
+          pre,footer=text[:i],text[i:]
+          candidates=[
+            ('<div class="country"><span>البحرين</span></div></div></section>','<div class="country"><span>البحرين</span></div><div class="country"><a href="/ar/nigeria/treatment-in-india/" aria-label="دليل المرضى من نيجيريا"><span>نيجيريا</span></a></div></div></section>'),
+            ('<div class="country"><span data-en="Bahrain" data-ar="البحرين">البحرين</span></div></div></section>','<div class="country"><span data-en="Bahrain" data-ar="البحرين">البحرين</span></div><div class="country"><a href="/ar/nigeria/treatment-in-india/" aria-label="دليل المرضى من نيجيريا"><span data-en="Nigeria" data-ar="نيجيريا">نيجيريا</span></a></div></div></section>')]
+          if '/ar/nigeria/treatment-in-india/' not in pre:
+            for old,new in candidates:
+              if old in pre:
+                pre=pre.replace(old,new,1); break
+            else:
+              # If Arabic homepage uses a different layout, insert a compact country link before the enquiry section.
+              marker='<section class="section enquiry-section"'
+              assert marker in pre, 'Arabic homepage insertion marker missing'
+              block='<section class="section" aria-labelledby="nigeria-market"><div class="container"><div class="section-heading centered"><span class="section-label">المرضى الدوليون</span><h2 id="nigeria-market">تنسيق العلاج للمرضى من نيجيريا</h2><p>يمكن للمرضى والعائلات من نيجيريا مشاركة التقارير الطبية عبر علاج مي إنديا لتنسيق مراجعة الحالة والتواصل مع المستشفيات والتخطيط العملي لرحلة العلاج في الهند.</p><p><a class="button button-secondary" href="/ar/nigeria/treatment-in-india/">دليل المرضى من نيجيريا</a></p></div></div></section>'
+              pre=pre.replace(marker,block+marker,1)
+          pre=pre.replace('''"areaServed":["Saudi Arabia","United Arab Emirates","Oman","Qatar","Kuwait","Bahrain"]''','''"areaServed":["Saudi Arabia","United Arab Emirates","Oman","Qatar","Kuwait","Bahrain","Nigeria","Middle East","Africa","International"]''',1)
+          updated=pre+footer
+          if updated!=text: p.write_text(updated); changed.append(str(p))
+
+          after={q:hashlib.sha256(Path(q).read_bytes()).hexdigest() for q in before}
+          assert before==after, 'Locked footer assets changed'
+          for fn in files:
+            t=Path(fn).read_text(); assert 'nigeria/treatment-in-india/' in t.lower(), f'Nigeria link missing: {fn}'
           print('Changed',changed)
+          print('Footer locks unchanged',after)
           PY
-      - name: Commit Nigeria hub visibility
+      - name: Commit homepage Nigeria visibility
         run: |
-          if git diff --quiet -- international-patients/mea/index.html ar/international-patients/mea/index.html; then exit 0; fi
+          if git diff --quiet -- index.html ar/index.html; then exit 0; fi
           git config user.name elajmeindia
           git config user.email shahzadalamnadwi@gmail.com
-          git add international-patients/mea/index.html ar/international-patients/mea/index.html
-          git commit -m 'Add Nigeria to international patient hub'
+          git add index.html ar/index.html
+          git commit -m 'Surface Nigeria on bilingual homepage'
           git push
