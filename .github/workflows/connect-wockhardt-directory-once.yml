@@ -17,45 +17,24 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Add bilingual directory cards safely
+      - name: Repair bilingual Wockhardt directory links safely
         run: |
           python - <<'PY'
           from pathlib import Path
           import hashlib
-
-          locked = ['assets/css/footer-approved.css', 'FOOTER-LOCK.md']
-          before = {p: hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in locked}
-
-          en = Path('hospitals/index.html')
-          s = en.read_text(encoding='utf-8')
-          if '/hospitals/wockhardt-hospitals-mumbai-central/' not in s:
-              marker = '<div class="grid" id="grid">'
-              card = '''\n<article class="card" data-city="Mumbai" data-search="wockhardt mumbai central cardiac heart cancer oncology neurology neurosurgery orthopaedics kidney gastroenterology"><div class="media"><img class="photo" loading="lazy" decoding="async" src="/assets/images/hospitals/hospital-placeholder.svg" alt="Wockhardt Hospitals, Mumbai Central" width="800" height="500"></div><div class="body"><h2>Wockhardt Hospitals, Mumbai Central</h2><p class="muted">Mumbai Central, Mumbai</p><p><span class="tag">Cardiac Sciences</span><span class="tag">Neurosciences</span><span class="tag">Orthopaedics</span><span class="tag">Oncology</span></p><div class="actions"><a class="btn secondary" href="/hospitals/wockhardt-hospitals-mumbai-central/">View Hospital Profile</a><a class="btn" href="/#enquiry">Enquire through Elajme India</a></div></div></article>\n'''
-              if marker not in s: raise SystemExit('English grid marker missing')
-              s = s.replace(marker, marker + card, 1)
-              en.write_text(s, encoding='utf-8')
-
-          ar = Path('ar/hospitals/index.html')
-          s = ar.read_text(encoding='utf-8')
-          if '/ar/hospitals/wockhardt-hospitals-mumbai-central/' not in s:
-              marker = '<div class="grid">'
-              card = '''\n<article class="card"><img class="directory-photo hospital" loading="lazy" decoding="async" src="/assets/images/hospitals/hospital-placeholder.svg" alt="مستشفى ووكهارت، مومباي سنترال" width="800" height="500"><h2><a href="/ar/hospitals/wockhardt-hospitals-mumbai-central/">مستشفى ووكهارت، مومباي سنترال</a></h2><p>مومباي سنترال، مومباي</p><p>القلب · الأعصاب · العظام · الأورام</p><p><a href="/hospitals/wockhardt-hospitals-mumbai-central/" hreflang="en">عرض ملف المستشفى بالإنجليزية</a></p><a class="btn" href="/ar/#enquiry">استفسر عبر علاج مي إنديا</a></article>\n'''
-              if marker not in s: raise SystemExit('Arabic grid marker missing')
-              s = s.replace(marker, marker + card, 1)
-              ar.write_text(s, encoding='utf-8')
-
-          sm = Path('sitemap.xml').read_text(encoding='utf-8')
-          required = [
-              'https://elajmeindia.com/hospitals/wockhardt-hospitals-mumbai-central/',
-              'https://elajmeindia.com/ar/hospitals/wockhardt-hospitals-mumbai-central/'
-          ]
-          for u in required:
-              if u not in sm: raise SystemExit(f'Sitemap missing {u}')
-
-          for p, h in before.items():
-              if hashlib.sha256(Path(p).read_bytes()).hexdigest() != h:
-                  raise SystemExit(f'Locked file changed: {p}')
-          print('Wockhardt bilingual directory connection ready; sitemap entries confirmed.')
+          locked=['assets/css/footer-approved.css','FOOTER-LOCK.md']
+          before={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in locked}
+          old='wockhardt-hospitals-mumbai-central'
+          new='wockhardt-hospital-mumbai-central'
+          for p in (Path('hospitals/index.html'),Path('ar/hospitals/index.html')):
+              s=p.read_text(encoding='utf-8')
+              s=s.replace(old,new)
+              p.write_text(s,encoding='utf-8')
+              if new not in s: raise SystemExit(f'{p}: canonical Wockhardt profile link missing')
+              if old in s: raise SystemExit(f'{p}: stale Wockhardt profile link remains')
+          for p,h in before.items():
+              if hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h: raise SystemExit(f'Locked file changed: {p}')
+          print('WOCKHARDT BILINGUAL DIRECTORY LINKS CLEAN')
           PY
       - name: Commit directory updates
         run: |
@@ -65,6 +44,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'No directory changes required.'
           else
-            git commit -m 'Connect Wockhardt Mumbai Central to hospital directories'
+            git commit -m 'Repair Wockhardt canonical directory links'
             git push
           fi
