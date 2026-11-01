@@ -1,4 +1,4 @@
-name: Align Arabic neurosurgery specialist links once
+name: Strengthen high-intent profile enquiry paths once
 
 on:
   push:
@@ -15,31 +15,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Align Arabic neurosurgery specialist links
+      - name: Strengthen bilingual enquiry paths
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import hashlib
-          p=Path('ar/treatments/neurosurgery-india/index.html')
-          text=p.read_text(); fi=text.lower().find('<footer'); assert fi>=0
-          pre,foot=text[:fi],text[fi:]
-          old='<h2>استكشف الأطباء والمستشفيات</h2><div class="related"><a href="/ar/doctors/">دليل الأطباء</a><a href="/ar/hospitals/">دليل المستشفيات</a><a href="/ar/international-patients/mea/">دليل المرضى الدوليين</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a></div>'
-          new='<h2>استكشف الأطباء والمستشفيات</h2><div class="related"><a href="/ar/doctors/dr-aditya-gupta/">د. أديتيا غوبتا</a><a href="/ar/doctors/dr-jayesh-sardhara/">د. جايش ساردارا</a><a href="/ar/hospitals/blk-max-super-speciality-hospital-delhi/">BLK-Max دلهي</a><a href="/ar/hospitals/artemis-hospital-gurugram/">مستشفى أرتيمس، جوروجرام</a><a href="/ar/hospitals/max-super-speciality-hospital-noida/">ماكس نويدا</a><a href="/ar/hospitals/wockhardt-hospitals-mumbai-central/">ووكهارت مومباي سنترال</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a><a href="/ar/patient-guide/">دليل المريض الدولي</a></div>'
-          if new not in pre:
-              assert old in pre, 'expected Arabic neurosurgery related section not found'
-              pre=pre.replace(old,new,1)
-              p.write_text(pre+foot)
-              print('Changed Arabic neurosurgery specialist links')
-          else:
-              print('Already aligned')
+          changes = {
+            'doctors/dr-anant-kumar/index.html': (
+              '<div class="profile-links"><a href="/hospitals/max-super-speciality-hospital-saket/">View Max Saket hospital profile</a></div>',
+              '<h2>What happens after you enquire?</h2><p>Share the available medical summary and relevant reports with Elajme India. We can coordinate the case-review request with the relevant hospital team and help you understand the next practical step. Appointment availability, transplant acceptance and treatment decisions remain subject to the treating team.</p><div class="profile-links"><a href="/#enquiry">Share reports / start an Elajme India enquiry</a><a href="/hospitals/max-super-speciality-hospital-saket/">View Max Saket hospital profile</a></div>'
+            ),
+            'ar/doctors/dr-anant-kumar/index.html': (
+              '<div class="profile-links"><a href="/ar/hospitals/max-super-speciality-hospital-saket/">عرض ملف مستشفى ماكس ساكيت</a></div>',
+              '<h2>ماذا يحدث بعد إرسال الاستفسار؟</h2><p>شارك الملخص الطبي والتقارير المتاحة مع علاج مي إنديا. يمكننا تنسيق طلب مراجعة الحالة مع فريق المستشفى المعني ومساعدتك على فهم الخطوة العملية التالية. يبقى توفر الموعد وقبول حالة الزراعة والقرارات العلاجية خاضعاً للفريق المعالج.</p><div class="profile-links"><a href="/ar/#enquiry">أرسل التقارير / ابدأ استفسارك عبر علاج مي إنديا</a><a href="/ar/hospitals/max-super-speciality-hospital-saket/">عرض ملف مستشفى ماكس ساكيت</a></div>'
+            ),
+            'hospitals/max-super-speciality-hospital-saket/index.html': (
+              '<p><strong>All consultation enquiries submitted from this page are coordinated only through Elajme India.</strong></p><h2>Relevant specialist profile</h2>',
+              '<p><strong>All consultation enquiries submitted from this page are coordinated only through Elajme India.</strong></p><h2>What happens after you enquire?</h2><p>Share the available medical summary and relevant reports with Elajme India. We can coordinate a preliminary review request with the relevant hospital team and help clarify the next practical step. Case acceptance, doctor availability, treatment plans and estimates remain subject to hospital review.</p><p class="links"><a href="/#enquiry">Share reports / start an Elajme India enquiry</a><a href="../../patient-guide/">See the international patient guide</a></p><h2>Relevant specialist profile</h2>'
+            ),
+            'ar/hospitals/max-super-speciality-hospital-saket/index.html': (
+              '<p><strong>جميع طلبات الاستشارة المقدمة من خلال هذه الصفحة يتم تنسيقها عبر علاج مي إنديا فقط.</strong></p><h2>ملف اختصاصي ذي صلة</h2>',
+              '<p><strong>جميع طلبات الاستشارة المقدمة من خلال هذه الصفحة يتم تنسيقها عبر علاج مي إنديا فقط.</strong></p><h2>ماذا يحدث بعد إرسال الاستفسار؟</h2><p>شارك الملخص الطبي والتقارير المتاحة مع علاج مي إنديا. يمكننا تنسيق طلب مراجعة أولية مع فريق المستشفى المعني ومساعدتك على فهم الخطوة العملية التالية. يبقى قبول الحالة وتوفر الطبيب وخطة العلاج والتكلفة التقديرية خاضعاً لمراجعة المستشفى.</p><p class="links"><a href="/ar/#enquiry">أرسل التقارير / ابدأ استفسارك عبر علاج مي إنديا</a><a href="/ar/patient-guide/">دليل المريض الدولي</a></p><h2>ملف اختصاصي ذي صلة</h2>'
+            )
+          }
+          changed=[]
+          for fn,(old,new) in changes.items():
+              p=Path(fn); text=p.read_text(); fi=text.lower().find('<footer'); assert fi>=0
+              pre,foot=text[:fi],text[fi:]
+              if new in pre:
+                  print('Already strengthened:',fn); continue
+              assert old in pre, f'expected conversion anchor not found in {fn}'
+              pre=pre.replace(old,new,1); p.write_text(pre+foot); changed.append(fn)
+              print('Changed:',fn)
           for q in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]: print('LOCK',q,hashlib.sha256(q.read_bytes()).hexdigest())
+          print('Changed files:',len(changed))
           PY
-      - name: Commit Arabic neurosurgery parity
+      - name: Commit conversion improvements
         run: |
-          if git diff --quiet -- ar/treatments/neurosurgery-india/index.html; then echo 'No changes required'; exit 0; fi
+          if git diff --quiet -- doctors/dr-anant-kumar/index.html ar/doctors/dr-anant-kumar/index.html hospitals/max-super-speciality-hospital-saket/index.html ar/hospitals/max-super-speciality-hospital-saket/index.html; then echo 'No changes required'; exit 0; fi
           git config user.name 'elajmeindia'
           git config user.email 'shahzadalamnadwi@gmail.com'
-          git add ar/treatments/neurosurgery-india/index.html
-          git commit -m 'Align Arabic neurosurgery specialist links'
+          git add doctors/dr-anant-kumar/index.html ar/doctors/dr-anant-kumar/index.html hospitals/max-super-speciality-hospital-saket/index.html ar/hospitals/max-super-speciality-hospital-saket/index.html
+          git commit -m 'Strengthen high-intent profile enquiry paths'
           git push
