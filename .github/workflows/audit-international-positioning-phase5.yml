@@ -1,0 +1,35 @@
+name: Audit international positioning phase 5
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-international-positioning-phase5.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit sitewide international positioning
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          checks={
+            'index.html':['Nigeria','International','/#enquiry'],
+            'ar/index.html':['نيجيريا','/ar/#enquiry'],
+            'international-patients/mea/index.html':['Nigeria','Africa','International','../../nigeria/treatment-in-india/','../../#enquiry'],
+            'ar/international-patients/mea/index.html':['نيجيريا','/ar/#enquiry'],
+            'nigeria/treatment-in-india/index.html':['Nigeria','/#enquiry'],
+            'ar/nigeria/treatment-in-india/index.html':['نيجيريا','/ar/#enquiry'],
+          }
+          for path, needles in checks.items():
+            p=Path(path)
+            assert p.exists(), f'missing {path}'
+            text=p.read_text()
+            for needle in needles:
+              assert needle in text, f'{path}: missing {needle}'
+            assert 'footer-approved.css' in text, f'{path}: approved footer missing'
+          print('PHASE 5 INTERNATIONAL POSITIONING AUDIT CLEAN')
+          PY
