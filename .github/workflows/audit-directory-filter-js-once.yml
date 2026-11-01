@@ -1,4 +1,5 @@
 name: Audit bilingual directory filter JavaScript once
+# Verification rerun after removing duplicate English directory handlers.
 on:
   push:
     branches: [main]
