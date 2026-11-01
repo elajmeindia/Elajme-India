@@ -4,20 +4,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   const isDocs=path.startsWith('/doctors/');
   if(!isHosp&&!isDocs)return;
 
-  /* Directory pages must use the locked master footer stylesheet. */
-  if(!document.querySelector('link[href*="home-footer-parity.css"]')){
-    const footerCss=document.createElement('link');
-    footerCss.rel='stylesheet';
-    footerCss.href='/assets/css/home-footer-parity.css?v=2';
-    document.head.appendChild(footerCss);
-  }
-
-  const current=isHosp?'hospitals':'doctors';
-  const header=document.querySelector('header');
-  if(header){
-    header.className='directory-site-header';
-    header.innerHTML=`<div class="directory-shell"><a class="directory-brand" href="/"><img src="/Healthcare%20Travel%20Swoosh%20Emblem.png" alt="" width="52" height="52" decoding="async"><span><strong><b>Elajme</b> <em>India</em></strong><small lang="ar" dir="rtl">علاج مي إنديا</small></span></a><nav aria-label="Main navigation"><a href="/">Home</a><a href="/treatments/">Treatments</a><a href="/hospitals/" ${current==='hospitals'?'aria-current="page"':''}>Hospitals</a><a href="/doctors/" ${current==='doctors'?'aria-current="page"':''}>Doctors</a><a href="/international-patients/mea/">International Patients</a><a href="/#how-it-works">How it works</a><a href="/about/">About Us</a><a href="/contact/">Contact</a></nav><div class="directory-actions"><a class="directory-phone" href="tel:+917488955154">Call +91 74889 55154</a><a class="directory-lang" href="/ar/${current}/">العربية</a><a class="directory-cta" href="/#enquiry">Start Your Enquiry</a></div></div>`;
-  }
+  /* The English Home header is the immutable master header.
+     This legacy directory helper must never replace or restyle it. */
 
   if(path==='/doctors/'||path==='/doctors/index.html'){
     const verifiedPortraits={
@@ -41,13 +29,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   }
 
-  let footer=document.querySelector('footer');
-  if(!footer){
-    footer=document.createElement('footer');
-    document.body.appendChild(footer);
-  }
-
-  /* Exact locked English master-footer structure used by the homepage. */
-  footer.className='site-footer';
-  footer.innerHTML=`<div class="container footer-wrap"><div class="footer-top"><div class="footer-brand"><img src="/Healthcare%20Travel%20Swoosh%20Emblem.png" alt="" class="brand-icon" loading="lazy" decoding="async"><span class="brand-text"><strong>Elajme India</strong><span lang="ar" dir="rtl">علاج مي إنديا</span></span></div><nav class="footer-links" aria-label="Footer navigation"><a href="/">Home</a><a href="/treatments/">Treatments</a><a href="/hospitals/">Hospitals</a><a href="/doctors/">Doctors</a><a href="/international-patients/mea/">International Patients</a><a href="/privacy.html">Privacy Policy</a><a href="/terms.html">Terms &amp; Medical Disclaimer</a></nav></div><div class="footer-bottom"><p>© 2026 Elajme India. International patient coordination.</p></div></div>`;
+  /* Footer markup is already present in the page and protected by the approved
+     footer stylesheet. Do not rewrite header or footer DOM from JavaScript. */
 });
