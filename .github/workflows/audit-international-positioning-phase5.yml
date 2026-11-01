@@ -17,7 +17,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           checks={
-            'index.html':['Nigeria','International','/#enquiry'],
+            'index.html':['Nigeria','International','href="#enquiry"'],
             'ar/index.html':['نيجيريا','/ar/#enquiry'],
             'international-patients/mea/index.html':['Nigeria','Africa','International','../../nigeria/treatment-in-india/','../../#enquiry'],
             'ar/international-patients/mea/index.html':['نيجيريا','/ar/#enquiry'],
@@ -33,3 +33,4 @@ jobs:
             assert 'footer-approved.css' in text, f'{path}: approved footer missing'
           print('PHASE 5 INTERNATIONAL POSITIONING AUDIT CLEAN')
           PY
+# homepage uses same-page #enquiry; subpages use root-language enquiry routes
