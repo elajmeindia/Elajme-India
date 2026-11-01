@@ -1,0 +1,50 @@
+name: Audit sitewide conversion routing once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/audit-sitewide-conversion-routing-once.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit patient-facing conversion routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+          problems=[]; active=0; enquiry_links=0
+          files=[p for p in Path('.').rglob('*.html') if '.git' not in p.parts and 'node_modules' not in p.parts]
+          external_booking_terms=('book appointment','book consultation','direct appointment','hospital appointment','doctor appointment','احجز موعد','حجز موعد مباشر')
+          for p in files:
+              t=p.read_text(encoding='utf-8',errors='ignore'); low=t.lower()
+              if 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low or re.search(r'<meta\s+name=["\']robots["\'][^>]*noindex',t,re.I): continue
+              active+=1
+              is_ar=str(p).startswith('ar/')
+              # Patient-facing doctor, hospital and treatment pages must expose an Elajme enquiry route.
+              if any(part in p.parts for part in ('doctors','hospitals','treatments')) and p.name=='index.html':
+                  if p.parent.name not in ('doctors','hospitals','treatments'):
+                      expected='/ar/#enquiry' if is_ar else '/#enquiry'
+                      if expected not in t: problems.append(f'{p}: Elajme enquiry route missing')
+              for href,label in re.findall(r'<a\b[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',t,re.I|re.S):
+                  text=re.sub(r'<[^>]+>',' ',label); text=' '.join(text.split()).lower()
+                  if '#enquiry' in href: enquiry_links+=1
+                  if href.startswith(('http://','https://')) and any(term in text for term in external_booking_terms):
+                      problems.append(f'{p}: possible external direct-booking CTA {href}')
+              # Prevent known third-party patient-lead/form destinations in active pages.
+              for href in re.findall(r'href=["\']([^"\']+)["\']',t,re.I):
+                  h=href.lower()
+                  if any(x in h for x in ('vaidam.com','ilajindia.com')):
+                      problems.append(f'{p}: competitor/provider outbound patient route {href}')
+          print(f'ACTIVE HTML FILES AUDITED: {active}')
+          print(f'ELAJME ENQUIRY LINKS FOUND: {enquiry_links}')
+          if problems:
+              print('CONVERSION ROUTING ISSUES:')
+              print('\n'.join(dict.fromkeys(problems)))
+              sys.exit(1)
+          print('SITEWIDE CONVERSION ROUTING AUDIT CLEAN')
+          PY
