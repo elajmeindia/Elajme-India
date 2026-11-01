@@ -12,66 +12,86 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Enforce homepage header dimensions without narrow desktop compression
+      - name: Copy one homepage master header to every English page
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('assets/css/site-shell.css')
-          text=p.read_text(encoding='utf-8')
-          marker='/* homepage-master-no-compression-v5 */'
-          block='''
-          /* homepage-master-no-compression-v5 */
-          @media(min-width:1041px){
-            .shell-header{height:82px!important}
-            .shell-header .shell-container{width:min(1160px,calc(100% - 40px))!important;margin-inline:auto!important}
-            .shell-nav{height:100%!important;gap:22px!important;justify-content:space-between!important;overflow:visible!important}
-            .shell-brand{gap:10px!important;overflow:visible!important}
-            .shell-brand img{width:60px!important;height:60px!important;flex:0 0 60px!important}
-            .shell-wordmark{display:flex!important;align-items:flex-start!important;text-align:left!important;overflow:visible!important}
-            .shell-name{font-size:18px!important;line-height:1.05!important}
-            .shell-ar{font-size:12px!important;margin-top:5px!important}
-            .shell-links{gap:18px!important;overflow:visible!important}
-            .shell-header .shell-links a{font-size:12px!important;padding:8px 6px!important;overflow:visible!important}
-            .shell-header .shell-links a[href*="about"]{font-size:12px!important}
-            .shell-header .shell-links a[href*="about"]:after{content:none!important;display:none!important}
-            .shell-actions{gap:10px!important;overflow:visible!important}
-            .shell-phone{font-size:12px!important;padding:8px 10px!important;overflow:visible!important}
-            .shell-whatsapp{font-size:12px!important;padding:9px 12px!important;min-width:max-content!important;overflow:visible!important;filter:none!important;opacity:1!important}
-            .shell-lang{font-size:13px!important;padding:9px 12px!important}
-            .shell-cta{padding:11px 15px!important;min-width:max-content!important;overflow:visible!important}
-            .shell-cta:after{font-size:12px!important}
-          }
-          '''
-          if marker not in text:
-              p.write_text(text+'\n'+block+'\n',encoding='utf-8')
-          PY
-      - name: Verify homepage master header parity
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          css=Path('assets/css/site-shell.css').read_text(encoding='utf-8')
-          for n in ['homepage-master-no-compression-v5','width:min(1160px,calc(100% - 40px))!important','gap:22px!important','gap:18px!important','font-size:18px!important']:
-              assert n in css
-          bad=[]; checked=0
+          import re
+
+          master='''<header class="master-site-header"><div class="master-header-inner"><a class="master-brand" href="/" aria-label="Elajme India Home"><img src="/Healthcare%20Travel%20Swoosh%20Emblem.webp" alt="" width="60" height="60"><span class="master-brand-text"><span class="master-brand-main"><span>Elajme</span><b>India</b></span><span class="master-brand-ar" lang="ar" dir="rtl">علاج مي إنديا</span></span></a><nav class="master-nav" aria-label="Main navigation"><a href="/">Home</a><a href="/treatments/">Treatments</a><a href="/hospitals/">Hospitals</a><a href="/doctors/">Doctors</a><a href="/international-patients/mea/">International Patients</a><a href="/about/">About Us</a><a href="/contact/">Contact</a></nav><div class="master-actions"><a class="master-phone" href="tel:+917488955154">Call +91 74889 55154</a><a class="master-whatsapp" href="https://wa.me/917488955154" aria-label="WhatsApp Elajme India">◉&nbsp; WhatsApp Us</a><a class="master-lang" href="/ar/">العربية</a><a class="master-cta" href="/#enquiry">Start Your Enquiry</a></div></div></header>'''
+
+          css='''<style id="elajme-master-header-v6">
+          .master-site-header{height:82px;position:sticky;top:0;z-index:100;background:rgba(255,255,255,.97);border-bottom:1px solid #e4e8e9;box-shadow:0 5px 24px rgba(18,59,80,.055);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+          .master-header-inner{width:min(1280px,calc(100% - 24px));height:100%;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;white-space:nowrap}
+          .master-brand{display:flex;align-items:center;gap:10px;flex:0 0 auto;text-decoration:none;color:#123b50}.master-brand img{display:block;width:60px;height:60px;object-fit:contain;flex:0 0 60px}.master-brand-text{display:flex;flex-direction:column;line-height:1.05}.master-brand-main{font-size:18px;font-weight:800;letter-spacing:-.025em}.master-brand-main b{color:#1c827e;margin-left:3px}.master-brand-ar{font-size:12px;color:#5b737d;margin-top:5px;font-weight:650;text-align:left}
+          .master-nav{display:flex;align-items:center;justify-content:center;gap:10px;flex:1 1 auto;min-width:0}.master-nav a{font-size:12px;font-weight:700;color:#405b68;text-decoration:none;padding:8px 5px;border-radius:8px;line-height:1.25}.master-nav a:hover,.master-nav a[aria-current="page"]{color:#146b68;background:#e8f6f3}
+          .master-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}.master-phone{font-size:11px;font-weight:750;color:#123b50;text-decoration:none;padding:8px 5px}.master-whatsapp{display:inline-flex;align-items:center;min-height:40px;padding:9px 11px;border:1px solid #bfe7d1;border-radius:10px;background:#effbf4;color:#147a4c!important;font-size:11px;font-weight:800;text-decoration:none}.master-lang{border:1px solid #e4e8e9;background:#fff;border-radius:10px;padding:9px 11px;color:#123b50!important;font-size:12px;font-weight:700;text-decoration:none}.master-cta{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:11px 14px;border-radius:11px;background:#1c827e;color:#fff!important;font-size:11px;font-weight:800;text-decoration:none;box-shadow:0 9px 24px rgba(28,130,126,.22)}
+          @media(max-width:1180px) and (min-width:901px){.master-header-inner{width:calc(100% - 16px);gap:7px}.master-brand img{width:50px;height:50px;flex-basis:50px}.master-brand-main{font-size:16px}.master-brand-ar{font-size:10px}.master-nav{gap:3px}.master-nav a{font-size:10.5px;padding-inline:3px}.master-actions{gap:5px}.master-phone{font-size:9.5px;padding-inline:2px}.master-whatsapp{font-size:10px;padding-inline:7px}.master-lang{font-size:10px;padding-inline:8px}.master-cta{font-size:10px;padding-inline:9px}}
+          @media(max-width:900px){.master-site-header{height:auto}.master-header-inner{min-height:72px;flex-wrap:wrap;padding:7px 0}.master-brand img{width:44px;height:44px;flex-basis:44px}.master-brand-main{font-size:16px}.master-brand-ar{font-size:10px}.master-actions{margin-left:auto}.master-phone,.master-whatsapp{display:none}.master-nav{order:3;width:100%;overflow-x:auto;justify-content:flex-start;padding-bottom:5px}.master-nav a{flex:0 0 auto;font-size:11px}.master-cta{display:none}}
+          </style>'''
+
+          def active_for(path):
+              rel=path.as_posix()
+              href='/'
+              if rel.startswith('treatments/'): href='/treatments/'
+              elif rel.startswith('hospitals/'): href='/hospitals/'
+              elif rel.startswith('doctors/'): href='/doctors/'
+              elif rel.startswith('international-patients/'): href='/international-patients/mea/'
+              elif rel.startswith('about/'): href='/about/'
+              elif rel.startswith('contact/'): href='/contact/'
+              return master.replace(f'href="{href}"',f'href="{href}" aria-current="page"',1)
+
+          changed=[]
           for p in Path('.').rglob('*.html'):
-              s=p.as_posix()
-              if s.startswith(('.git/','.github/','ar/')): continue
+              rel=p.as_posix()
+              if rel.startswith(('.git/','.github/','ar/')): continue
+              text=p.read_text(encoding='utf-8')
+              if rel=='index.html':
+                  pattern=r'<header class="site-header">.*?</header>'
+              elif '<header class="shell-header">' in text:
+                  pattern=r'<header class="shell-header">.*?</header>'
+              else:
+                  continue
+              new_header=active_for(p)
+              new,count=re.subn(pattern,new_header,text,count=1,flags=re.S)
+              if count!=1: raise SystemExit(f'Header replacement failed: {rel}')
+              if 'id="elajme-master-header-v6"' not in new:
+                  new=new.replace('</head>',css+'</head>',1)
+              if new!=text:
+                  p.write_text(new,encoding='utf-8'); changed.append(rel)
+          print('Master header applied to',len(changed),'English pages')
+          PY
+      - name: Verify one immutable header structure
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          headers=[]; bad=[]
+          for p in Path('.').rglob('*.html'):
+              rel=p.as_posix()
+              if rel.startswith(('.git/','.github/','ar/')): continue
               t=p.read_text(encoding='utf-8')
-              if '<header class="shell-header">' not in t: continue
-              checked+=1
-              h=t.split('<header class="shell-header">',1)[1].split('</header>',1)[0]
-              for n in ['Home','Treatments','Hospitals','Doctors','International Patients','About Us','Contact','WhatsApp Us','Start Your Enquiry','+91 74889 55154']:
-                  if n not in h: bad.append((s,n))
-          print('Headers checked:',checked)
+              if 'class="master-site-header"' not in t: continue
+              m=re.search(r'<header class="master-site-header">(.*?)</header>',t,re.S)
+              if not m: bad.append((rel,'header parse')); continue
+              h=re.sub(r' aria-current="page"','',m.group(1))
+              headers.append((rel,h))
+              for n in ['Elajme','India','Home','Treatments','Hospitals','Doctors','International Patients','About Us','Contact','Call +91 74889 55154','WhatsApp Us','العربية','Start Your Enquiry']:
+                  if n not in h: bad.append((rel,n))
+              if 'elajme-master-header-v6' not in t: bad.append((rel,'master css'))
+          if not headers: raise SystemExit('No master headers found')
+          baseline=headers[0][1]
+          for rel,h in headers[1:]:
+              if h!=baseline: bad.append((rel,'header differs from master'))
           if bad: raise SystemExit(str(bad))
-          print('HOMEPAGE MASTER HEADER PARITY CLEAN')
+          print('MASTER HEADER STRUCTURE IDENTICAL:',len(headers),'English pages')
           PY
           git diff --exit-code -- assets/css/footer-approved.css FOOTER-LOCK.md
-      - name: Commit fix
+      - name: Commit master header
         run: |
           if git diff --quiet; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/css/site-shell.css
-          git commit -m 'Remove subpage header compression'
+          git add -- '*.html'
+          git commit -m 'Use one immutable homepage header across English site'
           git push
