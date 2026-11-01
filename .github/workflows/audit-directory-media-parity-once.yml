@@ -46,19 +46,27 @@ jobs:
               if ar_slugs-en_slugs: problems.append(f'{kind}: missing EN entries: {sorted(ar_slugs-en_slugs)}')
               report.append(f'{kind}: EN={len(en_slugs)} AR={len(ar_slugs)}')
           external=[]; placeholders=[]
+          allowed_anil='https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ'
+          allowed_external=[]
           for path in ('doctors/index.html','ar/doctors/index.html','hospitals/index.html','ar/hospitals/index.html'):
               text=Path(path).read_text(encoding='utf-8').partition('<footer')[0]
               srcs=re.findall(r'<img[^>]+\ssrc="([^"]+)"',text,re.I)
               for src in srcs:
-                  if src.startswith(('http://','https://')): external.append((path,src))
+                  if src.startswith(('http://','https://')):
+                      if path in ('doctors/index.html','ar/doctors/index.html') and src==allowed_anil:
+                          allowed_external.append((path,src))
+                      else:
+                          external.append((path,src))
                   if 'placeholder' in src.lower(): placeholders.append((path,src))
                   if src.startswith('/assets/'):
                       clean=src.split('?',1)[0].lstrip('/')
                       if not Path(clean).exists(): problems.append(f'{path}: missing local image: {src}')
-          if external: problems.append(f'external directory image dependencies remain: {external}')
+          if external: problems.append(f'unapproved external directory image dependencies remain: {external}')
           if placeholders: problems.append(f'directory placeholder image srcs remain: {placeholders}')
+          if len(allowed_external)!=2: problems.append(f'verified Anil Fortis portrait expected on exactly two bilingual directory cards; found {len(allowed_external)}')
           print('\n'.join(report))
-          print(f'EXTERNAL DIRECTORY IMAGES={len(external)}')
+          print(f'APPROVED VERIFIED FORTIS EXTERNAL IMAGES={len(allowed_external)}')
+          print(f'UNAPPROVED EXTERNAL DIRECTORY IMAGES={len(external)}')
           print(f'DIRECTORY PLACEHOLDERS={len(placeholders)}')
           if problems:
               print('DIRECTORY MEDIA/PARITY ISSUES:'); print('\n'.join(problems)); sys.exit(1)
