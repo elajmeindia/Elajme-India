@@ -1,4 +1,4 @@
-name: Strengthen doctor and treatment directory conversion journeys once
+name: Strengthen Nigeria patient conversion journey once
 
 on:
   workflow_dispatch:
@@ -11,11 +11,11 @@ permissions:
   contents: write
 
 jobs:
-  strengthen-directories:
+  strengthen-nigeria:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add bilingual decision and enquiry guidance safely
+      - name: Add bilingual Nigeria treatment and case-submission guidance safely
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -25,21 +25,13 @@ jobs:
           hashes={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in protected}
 
           jobs={
-            Path('doctors/index.html'):(
-              '<section class="sec"><div class="c"><div class="tools">',
-              '<section class="sec"><div class="c"><div class="notice"><h2>Not sure which specialist fits your case?</h2><p>Send the diagnosis or main medical concern, recent reports and scans, and your country to Elajme India. We can coordinate an initial case review with an appropriate hospital or specialist team. The treating medical team confirms the suitable specialty, doctor availability and medical plan.</p><p><a class="btn" href="/#enquiry">Send your case to Elajme India</a> <a class="outline" href="/patient-guide/">Read the patient guide</a></p></div><div class="tools">'
+            Path('nigeria/treatment-in-india/index.html'):(
+              '<section class="sec alt"><div class="c"><h2>From Nigeria to treatment in India</h2>',
+              '<section class="sec alt"><div class="c"><h2>Treatment areas Nigerian patients can explore</h2><p>The appropriate specialty, hospital and doctor depend on the diagnosis and medical review. These treatment pages can help you understand common care pathways before submitting a case.</p><div class="related"><a href="/treatments/cancer-treatment-india/">Cancer treatment</a><a href="/treatments/heart-treatment-india/">Heart treatment</a><a href="/treatments/kidney-transplant-india/">Kidney transplant</a><a href="/treatments/liver-transplant-india/">Liver transplant</a><a href="/treatments/knee-replacement-india/">Knee replacement</a><a href="/treatments/neurosurgery-india/">Neurosurgery</a><a href="/treatments/spine-surgery-india/">Spine surgery</a><a href="/treatments/urology-treatment-india/">Urology</a><a href="/treatments/gastroenterology-treatment-india/">Gastroenterology</a></div><div class="note">The treating medical team determines the appropriate specialty, investigations and treatment after reviewing the individual case.</div></div></section><section class="sec"><div class="c"><h2>What to send for an initial review</h2><div class="grid"><article class="card"><h3>Medical summary</h3><p>Diagnosis if known, current medical concern, symptoms and relevant medical history.</p></article><article class="card"><h3>Recent reports</h3><p>Relevant laboratory, pathology, biopsy, discharge or specialist reports where available.</p></article><article class="card"><h3>Scans and imaging</h3><p>MRI, CT, PET-CT, X-ray, ultrasound or other relevant imaging reports and files when available.</p></article><article class="card"><h3>Previous treatment</h3><p>Details of previous surgery, medicines, chemotherapy, radiotherapy or other treatment where applicable.</p></article></div><p><a class="btn" href="/#enquiry">Send your case to Elajme India</a></p></div></section><section class="sec alt"><div class="c"><h2>From Nigeria to treatment in India</h2>'
             ),
-            Path('ar/doctors/index.html'):(
-              '<section class="sec"><div class="c"><div class="grid">',
-              '<section class="sec"><div class="c"><div class="notice"><h2>لست متأكداً من الطبيب أو التخصص المناسب لحالتك؟</h2><p>أرسل التشخيص أو المشكلة الطبية الرئيسية والتقارير والصور الحديثة وبلد الإقامة إلى علاج مي إنديا. يمكننا تنسيق مراجعة أولية للحالة مع مستشفى أو فريق متخصص مناسب. ويؤكد الفريق الطبي المعالج التخصص المناسب وتوفر الطبيب والخطة الطبية.</p><p><a class="btn" href="/ar/#enquiry">أرسل حالتك إلى علاج مي إنديا</a> <a href="/ar/patient-guide/">اقرأ دليل المريض</a></p></div><div class="grid">'
-            ),
-            Path('treatments/index.html'):(
-              '<section class="cta"><div class="c"><h2>Start with your medical information</h2>',
-              '<section class="sec"><div class="c"><h2>What happens after you send your case?</h2><p class="lead">Share the diagnosis or main medical concern, recent reports and scans, previous treatment records and your country. Elajme India can coordinate submission to an appropriate hospital or specialist team for preliminary review. After review, the treating team confirms the relevant specialty, any additional investigations, consultation availability and proposed next steps.</p><div class="related"><a href="/#enquiry">Send your case</a><a href="/patient-guide/">Patient guide</a><a href="/hospitals/">Browse hospitals</a><a href="/doctors/">Browse doctors</a></div><div class="note">Treatment recommendations, acceptance, appointment availability, expected stay and cost estimates remain subject to the treating team and hospital review.</div></div></section><section class="cta"><div class="c"><h2>Start with your medical information</h2>'
-            ),
-            Path('ar/treatments/index.html'):(
-              '<section class="cta"><div class="c"><h2>لست متأكداً من التخصص المناسب؟</h2>',
-              '<section class="sec"><div class="c"><h2>ماذا يحدث بعد إرسال حالتك؟</h2><p class="lead">أرسل التشخيص أو المشكلة الطبية الرئيسية والتقارير والصور الحديثة وسجلات العلاج السابقة وبلد الإقامة. يمكن لعلاج مي إنديا تنسيق إرسال الحالة إلى مستشفى أو فريق متخصص مناسب للمراجعة الأولية. وبعد المراجعة يؤكد الفريق الطبي المعالج التخصص المناسب وأي فحوصات إضافية وتوفر الاستشارة والخطوات المقترحة.</p><div class="related"><a href="/ar/#enquiry">أرسل حالتك</a><a href="/ar/patient-guide/">دليل المريض</a><a href="/ar/hospitals/">المستشفيات</a><a href="/ar/doctors/">الأطباء</a></div><div class="note">تبقى التوصيات العلاجية وقبول الحالة وتوفر الموعد ومدة الإقامة المتوقعة والتكلفة التقديرية خاضعة لمراجعة الفريق الطبي المعالج والمستشفى.</div></div></section><section class="cta"><div class="c"><h2>لست متأكداً من التخصص المناسب؟</h2>'
+            Path('ar/nigeria/treatment-in-india/index.html'):(
+              '<section class="sec"><div class="c"><h2>كيف ننسق رحلة العلاج؟</h2>',
+              '<section class="sec"><div class="c"><h2>مجالات علاج يمكن للمرضى من نيجيريا استكشافها</h2><p>يعتمد اختيار التخصص والمستشفى والطبيب على التشخيص ومراجعة الحالة الطبية. تساعد صفحات العلاج التالية على فهم مسارات الرعاية العامة قبل إرسال الحالة.</p><div class="related"><a href="/ar/treatments/cancer-treatment-india/">علاج السرطان</a><a href="/ar/treatments/heart-treatment-india/">علاج القلب</a><a href="/ar/treatments/kidney-transplant-india/">زراعة الكلى</a><a href="/ar/treatments/liver-transplant-india/">زراعة الكبد</a><a href="/ar/treatments/knee-replacement-india/">استبدال الركبة</a><a href="/ar/treatments/neurosurgery-india/">جراحة الأعصاب</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a><a href="/ar/treatments/urology-treatment-india/">المسالك البولية</a><a href="/ar/treatments/gastroenterology-treatment-india/">الجهاز الهضمي</a></div><div class="note">يحدد الفريق الطبي المعالج التخصص والفحوصات والخطة العلاجية المناسبة بعد مراجعة الحالة الفردية.</div></div></section><section class="sec alt"><div class="c"><h2>ما الذي يُفضل إرساله للمراجعة الأولية؟</h2><div class="grid"><div class="card"><h3>ملخص طبي</h3><p>التشخيص إن كان معروفاً والمشكلة الطبية الحالية والأعراض والتاريخ الطبي ذي الصلة.</p></div><div class="card"><h3>التقارير الحديثة</h3><p>التحاليل وتقارير الخزعة أو علم الأمراض وملخصات الخروج وتقارير الأطباء ذات الصلة عند توفرها.</p></div><div class="card"><h3>صور الأشعة</h3><p>تقارير وملفات الرنين المغناطيسي أو الأشعة المقطعية أو PET-CT أو الأشعة السينية أو الموجات فوق الصوتية عند توفرها.</p></div><div class="card"><h3>العلاج السابق</h3><p>تفاصيل العمليات والأدوية والعلاج الكيميائي أو الإشعاعي أو أي علاج سابق عند انطباق ذلك.</p></div></div><p><a class="btn" href="/ar/#enquiry">أرسل حالتك إلى علاج مي إنديا</a></p></div></section><section class="sec"><div class="c"><h2>كيف ننسق رحلة العلاج؟</h2>'
             )
           }
 
@@ -47,8 +39,7 @@ jobs:
               s=path.read_text(encoding='utf-8')
               pre,sep,footer=s.partition('<footer')
               if not sep: raise SystemExit(f'Footer missing: {path}')
-              duplicate=('Not sure which specialist fits your case?' in pre or 'لست متأكداً من الطبيب أو التخصص المناسب لحالتك؟' in pre or 'What happens after you send your case?' in pre or 'ماذا يحدث بعد إرسال حالتك؟' in pre)
-              if duplicate:
+              if 'Treatment areas Nigerian patients can explore' in pre or 'مجالات علاج يمكن للمرضى من نيجيريا استكشافها' in pre:
                   print('Already updated:',path); continue
               if marker not in pre: raise SystemExit(f'Marker missing: {path}')
               pre=pre.replace(marker,replacement,1)
@@ -60,24 +51,22 @@ jobs:
                   raise SystemExit(f'Protected footer file changed: {p}')
           print('Footer lock files unchanged.')
           PY
-      - name: Verify bilingual routing and commit
+      - name: Verify Nigeria bilingual conversion and commit
         run: |
           python3 - <<'PY'
           from pathlib import Path
           checks={
-            'doctors/index.html':['Not sure which specialist fits your case?','href="/#enquiry"','href="/patient-guide/"'],
-            'ar/doctors/index.html':['لست متأكداً من الطبيب أو التخصص المناسب لحالتك؟','href="/ar/#enquiry"','href="/ar/patient-guide/"'],
-            'treatments/index.html':['What happens after you send your case?','href="/#enquiry"','href="/patient-guide/"'],
-            'ar/treatments/index.html':['ماذا يحدث بعد إرسال حالتك؟','href="/ar/#enquiry"','href="/ar/patient-guide/"']
+            'nigeria/treatment-in-india/index.html':['Treatment areas Nigerian patients can explore','What to send for an initial review','href="/#enquiry"','/treatments/cancer-treatment-india/','/treatments/spine-surgery-india/'],
+            'ar/nigeria/treatment-in-india/index.html':['مجالات علاج يمكن للمرضى من نيجيريا استكشافها','ما الذي يُفضل إرساله للمراجعة الأولية؟','href="/ar/#enquiry"','/ar/treatments/cancer-treatment-india/','/ar/treatments/spine-surgery-india/']
           }
           for f,needles in checks.items():
               s=Path(f).read_text(encoding='utf-8')
               for n in needles: assert n in s,(f,n)
-          print('Doctor and treatment directory conversion journeys verified.')
+          print('Nigeria bilingual treatment and case-submission journey verified.')
           PY
           if git diff --quiet; then echo 'No content change required.'; exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add doctors/index.html ar/doctors/index.html treatments/index.html ar/treatments/index.html
-          git commit -m 'Strengthen doctor and treatment directory conversion journeys'
+          git add nigeria/treatment-in-india/index.html ar/nigeria/treatment-in-india/index.html
+          git commit -m 'Strengthen Nigeria patient conversion journey'
           git push
