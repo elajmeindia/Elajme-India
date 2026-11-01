@@ -12,132 +12,68 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Normalize all English shell headers to homepage navigation
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          root=Path('.')
-          changed=[]
-          skipped=[]
-          for p in root.rglob('*.html'):
-              s=p.as_posix()
-              if s.startswith(('.git/','.github/','ar/')):
-                  continue
-              text=p.read_text(encoding='utf-8')
-              if '<header class="shell-header">' not in text:
-                  continue
-              rel=s
-              parts=p.parts
-              first=parts[0] if len(parts)>1 else ''
-              def current(key):
-                  if key=='home': return first not in {'treatments','hospitals','doctors','international-patients','about','contact'}
-                  return first==key
-              def a(href,label,key):
-                  cur=' aria-current="page"' if current(key) else ''
-                  return f'<a href="{href}"{cur}>{label}</a>'
-              ar_path='/ar/' + ('' if rel=='index.html' else rel[:-10] if rel.endswith('index.html') else rel)
-              if not ar_path.endswith('/'):
-                  ar_path+='/'
-              nav=''.join([
-                  a('/','Home','home'),
-                  a('/treatments/','Treatments','treatments'),
-                  a('/hospitals/','Hospitals','hospitals'),
-                  a('/doctors/','Doctors','doctors'),
-                  a('/international-patients/mea/','International Patients','international-patients'),
-                  a('/about/','About Us','about'),
-                  a('/contact/','Contact','contact'),
-              ])
-              header=(
-                '<header class="shell-header"><div class="shell-container shell-nav">'
-                '<a class="shell-brand" href="/" aria-label="Elajme India Home">'
-                '<img src="/Healthcare%20Travel%20Swoosh%20Emblem.webp" alt="" decoding="async" fetchpriority="high" width="60" height="60">'
-                '<span class="shell-wordmark"><span class="shell-name"><span>Elajme</span> <b>India</b></span><span class="shell-ar" lang="ar" dir="rtl">علاج مي إنديا</span></span></a>'
-                f'<nav class="shell-links" aria-label="Main navigation">{nav}</nav>'
-                '<div class="shell-actions">'
-                '<a class="shell-phone" href="tel:+917488955154"><span class="shell-call-label">Call</span> +91 74889 55154</a>'
-                '<a class="shell-whatsapp" href="https://wa.me/917488955154" target="_blank" rel="noopener" aria-label="WhatsApp Elajme India"><span aria-hidden="true">◉</span> WhatsApp Us</a>'
-                f'<a class="shell-lang" href="{ar_path}">العربية</a>'
-                '<a class="shell-cta" href="/#enquiry">Start Your Enquiry</a>'
-                '</div></div></header>'
-              )
-              new,n=re.subn(r'<header class="shell-header">.*?</header>',header,text,count=1,flags=re.S)
-              if n!=1:
-                  skipped.append(s); continue
-              if new!=text:
-                  p.write_text(new,encoding='utf-8'); changed.append(s)
-          print('Headers normalized:',len(changed))
-          for x in changed: print(' -',x)
-          if skipped: raise SystemExit('Could not replace: '+', '.join(skipped))
-          if not changed: print('No header markup changes required')
-          PY
-      - name: Align shared shell header styling with homepage
+      - name: Fix shared desktop header crowding and WhatsApp readability
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('assets/css/site-shell.css')
-          text=p.read_text()
-          marker='/* homepage-header-parity-v1 */'
+          text=p.read_text(encoding='utf-8')
+          marker='/* header-crowding-whatsapp-fix-v2 */'
           block=r'''
-          /* homepage-header-parity-v1 */
+          /* header-crowding-whatsapp-fix-v2 */
           @media(min-width:1041px){
-            .shell-header{height:87px!important;background:#fff!important;box-shadow:none!important;border-bottom:1px solid #e4e8e9!important}
-            .shell-container{width:min(1220px,calc(100% - 24px))!important}
-            .shell-nav{gap:12px!important}
-            .shell-brand{gap:9px!important}
-            .shell-brand img{width:52px!important;height:52px!important;flex-basis:52px!important}
-            .shell-wordmark{align-items:flex-start!important;text-align:left!important}
-            .shell-name{font-size:16px!important;font-weight:800!important;line-height:1.05!important}
-            .shell-ar{font-size:10.5px!important;margin-top:4px!important;text-align:center!important}
-            .shell-links{gap:2px!important;justify-content:center!important}
-            .shell-header .shell-links a{font-size:12px!important;padding:10px 8px!important;border-radius:9px!important;font-weight:700!important}
-            .shell-actions{gap:8px!important}
-            .shell-phone{font-size:11px!important;padding:8px 7px!important}
-            .shell-call-label{display:inline!important}
-            .shell-whatsapp{min-height:38px!important;padding:9px 12px!important;font-size:11px!important;border-radius:10px!important}
-            .shell-lang{padding:9px 12px!important;font-size:12px!important}
-            .shell-cta{min-height:42px!important;padding:11px 15px!important;border-radius:11px!important}
-            .shell-cta:after{font-size:11px!important}
+            .shell-container{width:min(1260px,calc(100% - 20px))!important}
+            .shell-nav{gap:8px!important}
+            .shell-links{gap:0!important}
+            .shell-header .shell-links a{padding:10px 6px!important;font-size:11.5px!important}
+            .shell-header .shell-links a[href*="about"]{font-size:11.5px!important}
+            .shell-header .shell-links a[href*="about"]:after{content:none!important;display:none!important}
+            .shell-actions{gap:6px!important}
+            .shell-phone{font-size:10.5px!important;padding:8px 5px!important}
+            .shell-whatsapp{font-size:11px!important;padding:9px 10px!important;min-width:max-content!important;overflow:visible!important;filter:none!important;opacity:1!important;text-shadow:none!important}
+            .shell-whatsapp span{display:inline-block!important;margin-right:5px!important;font-size:12px!important;line-height:1!important;filter:none!important;opacity:1!important}
+            .shell-lang{padding:9px 10px!important;font-size:11.5px!important}
+            .shell-cta{padding:11px 12px!important}
+            .shell-cta:after{font-size:10.5px!important}
+          }
+          @media(min-width:1041px) and (max-width:1180px){
+            .shell-wordmark{display:none!important}
+            .shell-header .shell-links a{font-size:10.5px!important;padding-inline:5px!important}
+            .shell-whatsapp{font-size:10.5px!important;padding-inline:8px!important}
+            .shell-phone{font-size:10px!important}
           }
           '''
           if marker not in text:
-              text += '\n'+block+'\n'
-              p.write_text(text)
+              p.write_text(text+'\n'+block+'\n',encoding='utf-8')
           PY
-      - name: Verify normalized headers
+      - name: Verify shared header fix
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          css=Path('assets/css/site-shell.css').read_text(encoding='utf-8')
+          assert 'header-crowding-whatsapp-fix-v2' in css
+          assert 'a[href*="about"]:after{content:none!important' in css
+          assert 'min-width:max-content!important' in css
           bad=[]; checked=0
-          required=['/Healthcare%20Travel%20Swoosh%20Emblem.webp','Home','Treatments','Hospitals','Doctors','International Patients','About Us','Contact','WhatsApp Us','العربية','Start Your Enquiry','+91 74889 55154']
           for p in Path('.').rglob('*.html'):
               s=p.as_posix()
               if s.startswith(('.git/','.github/','ar/')): continue
-              t=p.read_text()
+              t=p.read_text(encoding='utf-8')
               if '<header class="shell-header">' not in t: continue
               checked+=1
-              header=t.split('<header class="shell-header">',1)[1].split('</header>',1)[0]
-              miss=[x for x in required if x not in header]
-              if miss: bad.append((s,miss))
-          print('English shell headers checked:',checked)
-          if bad:
-              for x in bad: print(x)
-              raise SystemExit('Header parity verification failed')
-          print('ENGLISH HEADER PARITY CLEAN')
+              h=t.split('<header class="shell-header">',1)[1].split('</header>',1)[0]
+              for needle in ['WhatsApp Us','About Us','Contact','Start Your Enquiry','+91 74889 55154']:
+                  if needle not in h: bad.append((s,needle))
+          print('English shared headers checked:',checked)
+          if bad: raise SystemExit(str(bad))
+          print('HEADER WHATSAPP / CROWDING FIX CLEAN')
           PY
-      - name: Protect locked footer
-        run: |
           git diff --exit-code -- assets/css/footer-approved.css FOOTER-LOCK.md
-      - name: Commit normalized headers
+      - name: Commit fix
         run: |
-          if git diff --quiet; then
-            echo 'No changes to commit'
-            exit 0
-          fi
+          if git diff --quiet; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/css/site-shell.css '*.html' ':!ar/**' || true
-          git add $(git diff --name-only -- '*.html' | grep -v '^ar/' || true)
-          git commit -m 'Match English site headers to homepage'
+          git add assets/css/site-shell.css
+          git commit -m 'Fix header crowding and WhatsApp readability'
           git push
