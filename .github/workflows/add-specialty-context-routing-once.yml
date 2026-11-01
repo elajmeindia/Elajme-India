@@ -1,0 +1,73 @@
+name: Add specialty-aware treatment routing once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/add-specialty-context-routing-once.yml']
+permissions:
+  contents: write
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Add specialty-aware directory routing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, urllib.parse
+          slugs={
+          'cancer-treatment-india':('oncology cancer','الأورام السرطان'),
+          'heart-treatment-india':('cardiology cardiac heart','القلب أمراض القلب'),
+          'knee-replacement-india':('orthopaedics joint replacement knee','العظام استبدال المفاصل الركبة'),
+          'neurosurgery-india':('neurosurgery brain spine','جراحة الأعصاب الدماغ'),
+          'urology-treatment-india':('urology uro robotic','المسالك البولية'),
+          'gastroenterology-treatment-india':('gastroenterology hepatobiliary','الجهاز الهضمي الكبد'),
+          'kidney-transplant-india':('kidney transplant urology renal','زراعة الكلى المسالك'),
+          'liver-transplant-india':('liver transplant hepatobiliary','زراعة الكبد'),
+          'spine-surgery-india':('spine neurosurgery orthopaedics','العمود الفقري جراحة الأعصاب'),
+          'fertility-ivf-treatment-india':('fertility ivf reproductive','الخصوبة أطفال الأنابيب'),
+          'dental-treatment-india':('dental dentistry oral','الأسنان'),
+          'cosmetic-surgery-india':('plastic cosmetic reconstructive','التجميل الجراحة التجميلية'),
+          'eye-treatment-india':('ophthalmology eye','العيون طب العيون'),
+          'womens-health-gynaecology-india':('gynaecology women health','النساء أمراض النساء'),
+          'ent-treatment-india':('ent ear nose throat','الأنف الأذن الحنجرة')}
+          locked=[Path('assets/css/footer-approved.css'),Path('FOOTER-LOCK.md')]
+          before={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in locked}
+          changed=[]
+          for lang in ('en','ar'):
+            for slug,(enq,arq) in slugs.items():
+              p=Path('treatments' if lang=='en' else 'ar/treatments')/slug/'index.html'
+              s=p.read_text(encoding='utf-8'); pre,sep,foot=s.partition('<footer')
+              q=enq if lang=='en' else arq
+              base='/doctors/' if lang=='en' else '/ar/doctors/'
+              target=base+'?q='+urllib.parse.quote(q)
+              label='Browse matching doctors' if lang=='en' else 'استكشف الأطباء المرتبطين بالتخصص'
+              # Upgrade the generic doctor-directory journey link to a specialty-filtered route.
+              candidates=['../../doctors/','../../../ar/doctors/']
+              done=False
+              for old in candidates:
+                token=f'href="{old}"'
+                if token in pre:
+                  pre=pre.replace(token,f'href="{target}"',1); done=True; break
+              if done:
+                # Make the first matching generic doctor label explicit where present.
+                for oldlabel in ('Explore relevant doctors','استكشف الأطباء'):
+                  if oldlabel in pre:
+                    pre=pre.replace(oldlabel,label,1); break
+              out=pre+sep+foot
+              assert target in pre, f'{p}: specialty doctor route missing'
+              if out!=s:
+                p.write_text(out,encoding='utf-8'); changed.append(str(p))
+          for p,h in before.items(): assert hashlib.sha256(p.read_bytes()).hexdigest()==h, f'LOCK VIOLATION {p}'
+          assert len(changed)==30, f'expected 30 treatment pages, changed {len(changed)}'
+          print('SPECIALTY-AWARE TREATMENT ROUTING CLEAN:',len(changed))
+          PY
+      - name: Commit specialty-aware routing
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add treatments ar/treatments
+          git diff --cached --quiet && exit 0
+          git commit -m 'Route bilingual treatment pages to specialty-matched doctors'
+          git push
