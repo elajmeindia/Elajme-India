@@ -44,4 +44,31 @@
 </div><div class="notice"><strong>Hospital information:</strong> Hospital services, specialist availability and treatment acceptance can change. Elajme India reconfirms relevant details during case coordination. Listings do not imply ranking, endorsement, formal partnership or guaranteed availability, treatment outcome, final cost or visa approval. All consultation and treatment enquiries from this directory are coordinated through Elajme India.</div></div></section></main>
 <footer class="site-footer"><div class="container footer-wrap"><div class="footer-top"><div class="footer-brand"><img src="/Healthcare%20Travel%20Swoosh%20Emblem.png" alt="" class="brand-icon" loading="lazy" decoding="async"><span class="brand-text"><strong>Elajme India</strong><span lang="ar" dir="rtl">علاج مي إنديا</span></span></div><nav class="footer-links" aria-label="Footer navigation"><a href="/">Home</a><a href="/treatments/">Treatments</a><a href="/hospitals/">Hospitals</a><a href="/doctors/">Doctors</a><a href="/international-patients/mea/">International Patients</a><a href="/privacy.html">Privacy Policy</a><a href="/terms.html">Terms &amp; Medical Disclaimer</a></nav></div><div class="footer-bottom"><p>© 2026 Elajme India. International patient coordination.</p></div></div></footer>
 <script>const q=document.getElementById('q'),city=document.getElementById('city'),cards=[...document.querySelectorAll('.card')];function f(){const s=q.value.toLowerCase().trim(),c=city.value;cards.forEach(x=>x.style.display=(!s||x.dataset.search.includes(s))&&(!c||x.dataset.city===c)?'flex':'none')}q.addEventListener('input',f);city.addEventListener('change',f);</script><script src="/assets/js/directory-shell.js" defer></script>
+
+<!-- elajme-query-filter-v1 -->
+<script>
+(function(){
+  const input=document.getElementById('q');
+  const city=document.getElementById('city');
+  const cards=[...document.querySelectorAll('#grid .card')];
+  if(!input||!cards.length)return;
+  function norm(v){return (v||'').toLocaleLowerCase().trim();}
+  function apply(){
+    const terms=norm(input.value).split(/\s+/).filter(Boolean);
+    const selected=city?norm(city.value):'';
+    cards.forEach(card=>{
+      const hay=norm((card.dataset.search||'')+' '+card.textContent);
+      const cardCity=norm(card.dataset.city||'');
+      const textOk=!terms.length||terms.some(t=>hay.includes(t));
+      const cityOk=!selected||cardCity===selected;
+      card.hidden=!(textOk&&cityOk);
+    });
+  }
+  const initial=new URLSearchParams(location.search).get('q')||'';
+  if(initial)input.value=initial;
+  input.addEventListener('input',apply);
+  if(city)city.addEventListener('change',apply);
+  apply();
+})();
+</script>
 </body></html>
