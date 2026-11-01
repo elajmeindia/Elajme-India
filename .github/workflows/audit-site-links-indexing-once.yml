@@ -1,0 +1,80 @@
+name: Audit sitewide links and indexing once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/audit-site-links-indexing-once.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit internal links, redirect sitemap entries and bilingual indexing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urlsplit, unquote
+          import re, sys
+          problems=[]; checked_links=0; html_files=list(Path('.').rglob('*.html'))
+          skip_parts={'.git','node_modules'}
+          def ignored(p): return any(x in p.parts for x in skip_parts)
+          html_files=[p for p in html_files if not ignored(p)]
+          def local_target(href):
+              if not href or href.startswith(('#','mailto:','tel:','javascript:','data:')): return None
+              u=urlsplit(href)
+              if u.scheme or u.netloc: return None
+              path=unquote(u.path)
+              if not path: return None
+              if path.startswith('/'):
+                  q=Path(path.lstrip('/'))
+              else:
+                  q=None
+              return q
+          for p in html_files:
+              t=p.read_text(encoding='utf-8',errors='ignore')
+              for href in re.findall(r'href=["\']([^"\']+)["\']',t,re.I):
+                  q=local_target(href)
+                  if q is None: continue
+                  checked_links+=1
+                  candidates=[]
+                  if href.startswith('/'):
+                      candidates=[q, q/'index.html'] if q.suffix=='' else [q]
+                  else:
+                      base=p.parent/q
+                      candidates=[base, base/'index.html'] if base.suffix=='' else [base]
+                  if not any(c.exists() for c in candidates):
+                      problems.append(f'{p}: broken internal link {href}')
+          sitemap=Path('sitemap.xml').read_text(encoding='utf-8') if Path('sitemap.xml').exists() else ''
+          for url in re.findall(r'<loc>([^<]+)</loc>',sitemap):
+              path=urlsplit(url).path.strip('/')
+              target=Path(path)/'index.html' if path and not Path(path).suffix else (Path(path) if path else Path('index.html'))
+              if not target.exists():
+                  problems.append(f'sitemap target missing: {url}')
+                  continue
+              t=target.read_text(encoding='utf-8',errors='ignore')
+              if re.search(r'<meta\s+name=["\']robots["\'][^>]*content=["\'][^"\']*noindex',t,re.I):
+                  problems.append(f'noindex URL present in sitemap: {url}')
+              if re.search(r'<meta\s+http-equiv=["\']refresh["\']',t,re.I):
+                  problems.append(f'redirect URL present in sitemap: {url}')
+          # Active doctor/hospital EN pages must have matching Arabic profile and reciprocal language links.
+          for kind in ('doctors','hospitals'):
+              for p in Path(kind).glob('*/index.html'):
+                  t=p.read_text(encoding='utf-8',errors='ignore')
+                  if 'noindex' in t.lower() or 'http-equiv="refresh"' in t.lower(): continue
+                  slug=p.parent.name; ar=Path('ar')/kind/slug/'index.html'
+                  if not ar.exists(): problems.append(f'{p}: Arabic counterpart missing'); continue
+                  at=ar.read_text(encoding='utf-8',errors='ignore')
+                  enurl=f'https://elajmeindia.com/{kind}/{slug}/'; arurl=f'https://elajmeindia.com/ar/{kind}/{slug}/'
+                  if enurl not in t or arurl not in t: problems.append(f'{p}: bilingual canonical/hreflang pair incomplete')
+                  if enurl not in at or arurl not in at: problems.append(f'{ar}: bilingual canonical/hreflang pair incomplete')
+          print(f'HTML FILES SCANNED: {len(html_files)}')
+          print(f'INTERNAL LINKS CHECKED: {checked_links}')
+          if problems:
+              print('SITE LINK/INDEXING ISSUES:')
+              print('\n'.join(dict.fromkeys(problems)))
+              sys.exit(1)
+          print('SITEWIDE LINKS/INDEXING AUDIT CLEAN')
+          PY
