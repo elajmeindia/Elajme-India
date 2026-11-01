@@ -1,0 +1,57 @@
+name: Audit sitewide metadata and accessibility once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/audit-sitewide-metadata-accessibility-once.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit active HTML metadata, language and image accessibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+          problems=[]; active=0; images=0
+          skip={'.git','node_modules'}
+          files=[p for p in Path('.').rglob('*.html') if not any(x in p.parts for x in skip)]
+          for p in files:
+              t=p.read_text(encoding='utf-8',errors='ignore')
+              low=t.lower()
+              if 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low or re.search(r'<meta\s+name=["\']robots["\'][^>]*noindex',t,re.I):
+                  continue
+              active+=1
+              m=re.search(r'<html\b([^>]*)>',t,re.I)
+              attrs=m.group(1) if m else ''
+              lang=re.search(r'\blang=["\']([^"\']+)',attrs,re.I)
+              if not lang: problems.append(f'{p}: html lang missing')
+              if str(p).startswith('ar/'):
+                  if not lang or not lang.group(1).lower().startswith('ar'): problems.append(f'{p}: Arabic lang not set')
+                  if not re.search(r'\bdir=["\']rtl["\']',attrs,re.I): problems.append(f'{p}: Arabic RTL missing')
+              title=re.search(r'<title>(.*?)</title>',t,re.I|re.S)
+              if not title or not re.sub(r'\s+',' ',title.group(1)).strip(): problems.append(f'{p}: title missing/empty')
+              desc=re.search(r'<meta\s+name=["\']description["\'][^>]*content=["\']([^"\']+)',t,re.I)
+              if not desc:
+                  desc=re.search(r'<meta\s+content=["\']([^"\']+)["\'][^>]*name=["\']description["\']',t,re.I)
+              if not desc or len(desc.group(1).strip()) < 50: problems.append(f'{p}: meta description missing/too short')
+              canon=re.findall(r'<link\s+[^>]*rel=["\']canonical["\'][^>]*>',t,re.I)
+              if len(canon)!=1: problems.append(f'{p}: canonical count {len(canon)}')
+              h1=len(re.findall(r'<h1\b',t,re.I))
+              if h1!=1: problems.append(f'{p}: H1 count {h1}')
+              for tag in re.findall(r'<img\b[^>]*>',t,re.I):
+                  images+=1
+                  if not re.search(r'\balt=["\'][^"\']*["\']',tag,re.I): problems.append(f'{p}: image missing alt attribute')
+              if 'footer-approved.css' not in t: problems.append(f'{p}: approved footer CSS missing')
+          print(f'ACTIVE HTML FILES AUDITED: {active}')
+          print(f'IMAGE TAGS AUDITED: {images}')
+          if problems:
+              print('METADATA/ACCESSIBILITY ISSUES:')
+              print('\n'.join(dict.fromkeys(problems)))
+              sys.exit(1)
+          print('SITEWIDE METADATA/ACCESSIBILITY AUDIT CLEAN')
+          PY
