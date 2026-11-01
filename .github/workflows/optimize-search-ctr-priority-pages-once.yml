@@ -1,0 +1,86 @@
+name: Optimize priority search CTR pages once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/optimize-search-ctr-priority-pages-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Improve search snippets on priority impression pages
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+
+          protected=[Path('assets/css/footer-approved.css'),Path('FOOTER-LOCK.md')]
+          hashes={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in protected}
+          replacements={
+            'hospitals/index.html':[
+              ('<title>Hospitals in India for International Patients | Elajme India</title>','<title>Hospitals in India: Delhi, Mumbai & Navi Mumbai | Elajme India</title>'),
+              ('<meta name="description" content="Explore selected hospitals in Delhi NCR, Mumbai and Navi Mumbai for international patients, with treatment enquiry and consultation coordination through Elajme India.">','<meta name="description" content="Explore hospitals in Delhi NCR, Mumbai and Navi Mumbai for international patients. Compare locations and specialties, then send reports to Elajme India for treatment-enquiry coordination.">'),
+              ('<meta property="og:title" content="Hospitals in India for International Patients | Elajme India">','<meta property="og:title" content="Hospitals in India: Delhi, Mumbai & Navi Mumbai | Elajme India">')],
+            'doctors/index.html':[
+              ('<title>Doctors in India for International Patients | Elajme India</title>','<title>Specialist Doctors in India for International Patients | Elajme India</title>'),
+              ('<meta name="description" content="Explore selected specialist doctors in Delhi NCR, Mumbai and Navi Mumbai and coordinate international patient consultation requests through Elajme India.">','<meta name="description" content="Explore specialist doctors in Delhi NCR, Mumbai and Navi Mumbai by specialty and hospital. Send medical reports to Elajme India for international consultation coordination.">'),
+              ('<meta property="og:title" content="Doctors in India for International Patients | Elajme India">','<meta property="og:title" content="Specialist Doctors in India for International Patients | Elajme India">')],
+            'treatments/index.html':[
+              ('<title>Medical Treatments in India for International Patients | Elajme India</title>','<title>Medical Treatment in India: 9 Specialties | Elajme India</title>'),
+              ('<meta name="description" content="Explore medical treatments in India for international patients, including cancer, heart care, orthopaedics, neurosurgery, urology, gastroenterology, kidney and liver transplant, and spine surgery coordination.">','<meta name="description" content="Explore 9 medical treatment areas in India for international patients, including cancer, heart care, transplants, neurosurgery, spine, urology and orthopaedics, with Elajme India coordination.">'),
+              ('<meta property="og:title" content="Medical Treatments in India for International Patients | Elajme India">','<meta property="og:title" content="Medical Treatment in India: 9 Specialties | Elajme India">')],
+            'hospitals/max-super-speciality-hospital-saket/index.html':[
+              ('<title>Max Super Speciality Hospital Saket, Delhi | Elajme India</title>','<title>Max Hospital Saket, Delhi: Specialties & Patient Guide | Elajme India</title>'),
+              ('<meta name="description" content="Max Super Speciality Hospital Saket, Delhi information for international patients, including major specialties and consultation coordination through Elajme India.">','<meta name="description" content="Max Hospital Saket, Delhi information for international patients: major specialties, relevant doctor and treatment links, and consultation coordination through Elajme India.">'),
+              ('<meta property="og:title" content="Max Super Speciality Hospital Saket, Delhi | Elajme India">','<meta property="og:title" content="Max Hospital Saket, Delhi: Specialties & Patient Guide | Elajme India">')],
+            'hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html':[
+              ('<title>Nanavati Hospital Mumbai | International Patient Guide | Elajme India</title>','<title>Nanavati Max Hospital Mumbai: Specialties & Patient Guide | Elajme India</title>'),
+              ('<meta name="description" content="Nanavati Max Hospital Mumbai information for international patients, including key specialties and consultation coordination through Elajme India.">','<meta name="description" content="Nanavati Max Hospital Mumbai information for international patients: key specialties, case-review steps and consultation coordination through Elajme India.">'),
+              ('<meta property="og:title" content="Nanavati Hospital Mumbai | International Patient Guide | Elajme India">','<meta property="og:title" content="Nanavati Max Hospital Mumbai: Specialties & Patient Guide | Elajme India">')]
+          }
+          for name,pairs in replacements.items():
+              p=Path(name); text=p.read_text(encoding='utf-8')
+              pre,sep,footer=text.partition('<footer')
+              if not sep: raise SystemExit(f'Footer missing: {name}')
+              for old,new in pairs:
+                  if old not in pre:
+                      if new in pre: continue
+                      raise SystemExit(f'Expected snippet missing in {name}: {old[:70]}')
+                  pre=pre.replace(old,new,1)
+              p.write_text(pre+sep+footer,encoding='utf-8')
+              print('optimized',name)
+          for p,h in hashes.items():
+              if hashlib.sha256(p.read_bytes()).hexdigest()!=h:
+                  raise SystemExit(f'Protected footer file changed: {p}')
+          PY
+      - name: Verify canonicals and bilingual alternates remain intact
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          checks={
+            'hospitals/index.html':['rel="canonical" href="https://elajmeindia.com/hospitals/"','hreflang="ar" href="https://elajmeindia.com/ar/hospitals/"'],
+            'doctors/index.html':['rel="canonical" href="https://elajmeindia.com/doctors/"','hreflang="ar" href="https://elajmeindia.com/ar/doctors/"'],
+            'treatments/index.html':['rel="canonical" href="https://elajmeindia.com/treatments/"','hreflang="ar" href="https://elajmeindia.com/ar/treatments/"'],
+            'hospitals/max-super-speciality-hospital-saket/index.html':['rel="canonical" href="https://elajmeindia.com/hospitals/max-super-speciality-hospital-saket/"','hreflang="ar" href="https://elajmeindia.com/ar/hospitals/max-super-speciality-hospital-saket/"'],
+            'hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html':['rel="canonical" href="https://elajmeindia.com/hospitals/nanavati-max-super-speciality-hospital-mumbai/"','hreflang="ar" href="https://elajmeindia.com/ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/"']}
+          for f,needles in checks.items():
+              s=Path(f).read_text(encoding='utf-8')
+              for n in needles: assert n in s,(f,n)
+          print('Priority CTR pages verified.')
+          PY
+      - name: Commit CTR updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hospitals/index.html doctors/index.html treatments/index.html hospitals/max-super-speciality-hospital-saket/index.html hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html
+          if git diff --cached --quiet; then echo 'No changes required'; exit 0; fi
+          git commit -m "Improve search snippets on priority impression pages"
+          git push
