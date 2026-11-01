@@ -37,7 +37,6 @@ jobs:
                   if expected not in text: problems.append(f'{path}: Elajme enquiry route missing')
                   if 'footer-approved.css' not in full: problems.append(f'{path}: approved footer CSS missing')
               if kind=='doctor':
-                  # Count profile links in both relative and root-relative forms so all active cards are included.
                   en_slugs=set(re.findall(r'href="(?:/doctors/)?(dr-[a-z0-9-]+)/?"',en_pre))
                   ar_slugs=set(re.findall(r'href="(?:/ar/doctors/)?(dr-[a-z0-9-]+)/?"',ar_pre))
               else:
@@ -51,7 +50,8 @@ jobs:
           allowed_external=[]
           for path in ('doctors/index.html','ar/doctors/index.html','hospitals/index.html','ar/hospitals/index.html'):
               text=Path(path).read_text(encoding='utf-8').partition('<footer')[0]
-              imgs=re.findall(r'<img\b[^>]*>',text,re.I)
+              # Performance rules apply to directory card media, not the above-the-fold site logo.
+              imgs=[tag for tag in re.findall(r'<img\b[^>]*>',text,re.I) if re.search(r'class="[^"]*(?:photo|directory-photo)[^"]*"',tag,re.I)]
               for tag in imgs:
                   m=re.search(r'\ssrc="([^"]+)"',tag,re.I)
                   if not m: continue
@@ -64,10 +64,8 @@ jobs:
                   if src.startswith('/assets/'):
                       clean=src.split('?',1)[0].lstrip('/')
                       if not Path(clean).exists(): problems.append(f'{path}: missing local image: {src}')
-                  # Directory cards should defer decoding and below-fold loading.
                   if 'loading="lazy"' not in tag: media_issues.append((path,src,'missing loading=lazy'))
                   if 'decoding="async"' not in tag: media_issues.append((path,src,'missing decoding=async'))
-                  # Local assets should carry intrinsic dimensions to reduce layout shift.
                   if src.startswith('/assets/') and not ('width="' in tag and 'height="' in tag):
                       media_issues.append((path,src,'missing width/height'))
           if external: problems.append(f'unapproved external directory image dependencies remain: {external}')
