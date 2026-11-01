@@ -1,0 +1,57 @@
+name: Elajme Bilingual Header Super Lock
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  header-super-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Protect approved English header and Arabic parity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,sys
+          problems=[]
+          master=Path('assets/css/master-header.css')
+          arcss=Path('assets/css/arabic-master-header.css')
+          if not master.exists(): problems.append('MISSING master-header.css')
+          if not arcss.exists(): problems.append('MISSING arabic-master-header.css')
+          if master.exists():
+              c=master.read_text(encoding='utf-8')
+              for n in ['height:82px!important','width:60px!important','.master-whatsapp','font-weight:500!important','min-width:122px!important']:
+                  if n not in c: problems.append('MASTER_CSS_DRIFT '+n)
+          if arcss.exists():
+              c=arcss.read_text(encoding='utf-8')
+              for n in ['html[lang="ar"] .master-header-inner','direction:rtl!important','.master-whatsapp']:
+                  if n not in c: problems.append('ARABIC_PARITY_DRIFT '+n)
+          for p in Path('.').rglob('*.html'):
+              rel=p.as_posix()
+              if rel.startswith(('.git/','.github/')) or rel=='404.html': continue
+              t=p.read_text(encoding='utf-8',errors='ignore')
+              if '<header' not in t: continue
+              m=re.search(r'<header class="master-site-header">.*?</header>',t,re.S)
+              if not m:
+                  problems.append('NON_MASTER_HEADER '+rel); continue
+              h=m.group(0)
+              if t.count('class="master-site-header"')!=1: problems.append('HEADER_COUNT '+rel)
+              if '/assets/css/master-header.css?v=5' not in t: problems.append('MASTER_STYLE_MISSING '+rel)
+              if any(x in h for x in ['How it works','directory-site-header','shell-header']): problems.append('LEGACY_HEADER '+rel)
+              if '917488955154' not in h: problems.append('CONTACT_ROUTE '+rel)
+              if rel.startswith('ar/'):
+                  if '/assets/css/arabic-master-header.css?v=1' not in t: problems.append('AR_STYLE_MISSING '+rel)
+                  for x in ['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا','واتساب','English','ابدأ استفسارك']:
+                      if x not in h: problems.append('AR_HEADER_DRIFT '+rel+' '+x)
+              else:
+                  for x in ['Home','Treatments','Hospitals','Doctors','International Patients','About Us','Contact','WhatsApp Us','العربية','Start Your Enquiry']:
+                      if x not in h: problems.append('EN_HEADER_DRIFT '+rel+' '+x)
+          print('Header Super Lock blocking issues:',len(problems))
+          if problems:
+              print('\n'.join(problems)); sys.exit(1)
+          print('ELAJME BILINGUAL MASTER HEADER SUPER LOCK: CLEAN')
+          PY
