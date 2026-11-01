@@ -1,0 +1,59 @@
+name: Audit bilingual profile SEO and internal links once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/audit-profile-seo-parity-once.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit doctor and hospital profile SEO, parity and routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+          problems=[]; checked=0
+          for kind in ('doctors','hospitals'):
+              root=Path(kind)
+              for p in sorted(root.glob('*/index.html')):
+                  slug=p.parent.name
+                  ar=Path('ar')/kind/slug/'index.html'
+                  if not ar.exists():
+                      problems.append(f'{kind}/{slug}: missing Arabic profile'); continue
+                  for path,lang in ((p,'en'),(ar,'ar')):
+                      t=path.read_text(encoding='utf-8')
+                      checked += 1
+                      prefix='https://elajmeindia.com/' + ('ar/' if lang=='ar' else '') + kind + '/' + slug + '/'
+                      if f'<link rel="canonical" href="{prefix}"' not in t: problems.append(f'{path}: canonical missing/wrong')
+                      for hreflang in ('en','ar','x-default'):
+                          if f'hreflang="{hreflang}"' not in t: problems.append(f'{path}: hreflang {hreflang} missing')
+                      if not re.search(r'<title>[^<]{8,}</title>',t,re.I): problems.append(f'{path}: title missing/weak')
+                      if not re.search(r'<meta\s+name="description"\s+content="[^"]{40,}"',t,re.I): problems.append(f'{path}: meta description missing/weak')
+                      if len(re.findall(r'<h1\b',t,re.I)) != 1: problems.append(f'{path}: expected exactly one H1')
+                      if 'footer-approved.css' not in t: problems.append(f'{path}: approved footer CSS missing')
+                      expected='/ar/#enquiry' if lang=='ar' else '/#enquiry'
+                      if expected not in t: problems.append(f'{path}: Elajme enquiry route missing')
+                      directory=('/ar/' if lang=='ar' else '/')+kind+'/'
+                      if directory not in t: problems.append(f'{path}: directory backlink missing')
+                      if lang=='ar':
+                          if 'lang="ar"' not in t or 'dir="rtl"' not in t: problems.append(f'{path}: Arabic lang/RTL missing')
+                      else:
+                          if 'lang="en"' not in t: problems.append(f'{path}: English lang missing')
+          # Sitemap should include every active bilingual profile.
+          sitemap=Path('sitemap.xml').read_text(encoding='utf-8') if Path('sitemap.xml').exists() else ''
+          for kind in ('doctors','hospitals'):
+              for p in Path(kind).glob('*/index.html'):
+                  slug=p.parent.name
+                  for url in (f'https://elajmeindia.com/{kind}/{slug}/',f'https://elajmeindia.com/ar/{kind}/{slug}/'):
+                      if url not in sitemap: problems.append(f'sitemap missing {url}')
+          print(f'PROFILE SEO/PARITY PAGES CHECKED: {checked}')
+          if problems:
+              print('PROFILE SEO/PARITY ISSUES:')
+              print('\n'.join(problems)); sys.exit(1)
+          print('BILINGUAL PROFILE SEO/PARITY AUDIT CLEAN')
+          PY
