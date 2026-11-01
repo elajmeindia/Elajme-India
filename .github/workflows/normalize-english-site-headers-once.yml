@@ -39,7 +39,9 @@ jobs:
               if n!=1: raise SystemExit(f'header replacement failed: {rel}')
               new=re.sub(r'<style id="elajme-master-header-v\d+">.*?</style>','',new,flags=re.S)
               new=re.sub(r'<link rel="stylesheet" href="/assets/css/master-header\.css\?v=\d+">','',new)
-              new=new.replace('</head>','<link rel="stylesheet" href="/assets/css/master-header.css?v=3"></head>',1)
+              if rel in ('hospitals/index.html','doctors/index.html'):
+                  new=new.replace('<link rel="stylesheet" href="/assets/css/directory-shell.css">','')
+              new=new.replace('</head>','<link rel="stylesheet" href="/assets/css/master-header.css?v=4"></head>',1)
               if new!=text:
                   p.write_text(new,encoding='utf-8'); changed.append(rel)
           print('HOME MASTER HEADER APPLIED:',len(changed),'English pages')
@@ -57,12 +59,15 @@ jobs:
               if not m: bad.append((req,'master header missing')); continue
               h=m.group(0)
               if t.count('class="master-site-header"')!=1: bad.append((req,'master header count'))
-              if t.count('/assets/css/master-header.css?v=3')!=1: bad.append((req,'master stylesheet v3 count'))
+              if t.count('/assets/css/master-header.css?v=4')!=1: bad.append((req,'master stylesheet v4 count'))
               if 'WhatsApp Us' not in h or 'wa.me/917488955154' not in h: bad.append((req,'WhatsApp mismatch'))
               if 'How it works' in h: bad.append((req,'legacy nav leaked'))
               for legacy in ['directory-site-header','directory-shell','directory-actions','shell-header']:
                   if legacy in h: bad.append((req,'legacy header class leaked: '+legacy))
               headers.append((req,re.sub(r' aria-current="page"','',h)))
+          for req in ['hospitals/index.html','doctors/index.html']:
+              t=Path(req).read_text(encoding='utf-8')
+              if '/assets/css/directory-shell.css' in t: bad.append((req,'legacy directory stylesheet still loaded'))
           if headers:
               base=headers[0][1]
               for rel,h in headers[1:]:
@@ -70,12 +75,9 @@ jobs:
           css=Path('assets/css/master-header.css').read_text(encoding='utf-8')
           for needle in ['height:82px!important','min-height:82px!important','max-height:82px!important','width:60px!important','min-width:122px!important','.master-whatsapp']:
               if needle not in css: bad.append(('master-header.css',needle))
-          dcss=Path('assets/css/directory-shell.css').read_text(encoding='utf-8')
-          if 'body>header:not(.directory-site-header) .c.nav' in dcss: bad.append(('directory-shell.css','legacy generic header selector can target master'))
-          if 'body>header:not(.directory-site-header):not(.master-site-header)' not in dcss: bad.append(('directory-shell.css','master isolation missing'))
           if bad: raise SystemExit(str(bad))
-          print('HOME HEADER DIMENSIONS HARD-LOCKED AND IDENTICAL ON REQUIRED PAGES')
-          print('WHATSAPP PRESENT; HOW IT WORKS ABSENT; CACHE VERSION v3')
+          print('HOME HEADER IS THE ONLY HEADER SYSTEM ON ENGLISH HOSPITALS AND DOCTORS')
+          print('WHATSAPP PRESENT; HOW IT WORKS ABSENT; CACHE VERSION v4')
           PY
           git diff --exit-code -- assets/css/footer-approved.css FOOTER-LOCK.md
       - name: Commit normalized headers
@@ -84,5 +86,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- '*.html'
-          git commit -m 'Hard lock Home header dimensions across English site'
+          git commit -m 'Remove legacy directory header CSS and lock Home header'
           git push
