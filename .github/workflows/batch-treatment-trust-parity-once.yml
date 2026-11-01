@@ -1,61 +1,39 @@
-name: Strengthen Medanta and Soin enquiry pathways once
-
+name: Improve Nigeria patient pages once
 on:
   push:
     branches: [main]
-    paths:
-      - '.github/workflows/batch-treatment-trust-parity-once.yml'
+    paths: ['.github/workflows/batch-treatment-trust-parity-once.yml']
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   improve:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Strengthen bilingual Medanta and Soin enquiry paths
-        shell: bash
+      - name: Add Nigeria pre-travel guidance
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import hashlib
-          changes = {
-            'hospitals/medanta-the-medicity-gurugram/index.html': (
-              '<p><strong>Consultation requests submitted through this page are coordinated only through Elajme India.</strong></p><h2>Related doctor profile</h2>',
-              '<p><strong>Consultation requests submitted through this page are coordinated only through Elajme India.</strong></p><h2>What happens after you enquire?</h2><p>Share the available medical summary and relevant reports with Elajme India. We can coordinate a preliminary case-review request with the relevant hospital team and help clarify the next practical step. Case acceptance, specialist availability, treatment plans and estimates remain subject to hospital review.</p><p class="links"><a href="/#enquiry">Share reports / start an Elajme India enquiry</a><a href="../../patient-guide/">See the international patient guide</a></p><h2>Related doctor profile</h2>'
-            ),
-            'ar/hospitals/medanta-the-medicity-gurugram/index.html': (
-              '<p><strong>تُنسق جميع طلبات الاستشارة الواردة من هذه الصفحة حصريًا عبر علاج مي إنديا.</strong></p><h2>ملف طبيب ذي صلة</h2>',
-              '<p><strong>تُنسق جميع طلبات الاستشارة الواردة من هذه الصفحة حصريًا عبر علاج مي إنديا.</strong></p><h2>ماذا يحدث بعد إرسال الاستفسار؟</h2><p>شارك الملخص الطبي والتقارير المتاحة مع علاج مي إنديا. يمكننا تنسيق طلب مراجعة أولية للحالة مع فريق المستشفى المعني ومساعدتك على فهم الخطوة العملية التالية. يبقى قبول الحالة وتوفر الاختصاصي وخطة العلاج والتكلفة التقديرية خاضعاً لمراجعة المستشفى.</p><p class="links"><a href="/ar/#enquiry">أرسل التقارير / ابدأ استفسارك عبر علاج مي إنديا</a><a href="/ar/patient-guide/">دليل المريض الدولي</a></p><h2>ملف طبيب ذي صلة</h2>'
-            ),
-            'doctors/dr-arvinder-singh-soin/index.html': (
-              '<p><strong>All consultation enquiries submitted from this profile are coordinated only through Elajme India.</strong></p><div class="profile-links"><a href="/#enquiry">Submit medical reports / start an enquiry</a></div>',
-              '<p><strong>All consultation enquiries submitted from this profile are coordinated only through Elajme India.</strong></p><h2>What happens after you enquire?</h2><p>Share the available medical summary and relevant liver or transplant reports with Elajme India. We can coordinate the consultation or case-review request with the relevant hospital team and help clarify the next practical step. Transplant eligibility, donor suitability, case acceptance and treatment decisions remain subject to qualified transplant teams and applicable requirements.</p><div class="profile-links"><a href="/#enquiry">Share reports / start an Elajme India enquiry</a><a href="/patient-guide/">See the international patient guide</a></div>'
-            ),
-            'ar/doctors/dr-arvinder-singh-soin/index.html': (
-              '<p><strong>يتم تنسيق جميع طلبات الاستشارة المقدمة من هذه الصفحة حصراً عبر علاج مي إنديا.</strong></p><div class="profile-links"><a href="/ar/#enquiry">إرسال التقارير الطبية / بدء الاستفسار</a></div>',
-              '<p><strong>يتم تنسيق جميع طلبات الاستشارة المقدمة من هذه الصفحة حصراً عبر علاج مي إنديا.</strong></p><h2>ماذا يحدث بعد إرسال الاستفسار؟</h2><p>شارك الملخص الطبي وتقارير الكبد أو الزراعة المتاحة مع علاج مي إنديا. يمكننا تنسيق طلب الاستشارة أو مراجعة الحالة مع فريق المستشفى المعني ومساعدتك على فهم الخطوة العملية التالية. تبقى أهلية الزراعة وملاءمة المتبرع وقبول الحالة والقرارات العلاجية خاضعة لفرق الزراعة المؤهلة والمتطلبات المعمول بها.</p><div class="profile-links"><a href="/ar/#enquiry">أرسل التقارير / ابدأ استفسارك عبر علاج مي إنديا</a><a href="/ar/patient-guide/">دليل المريض الدولي</a></div>'
-            )
-          }
+          updates=[
+          ('nigeria/treatment-in-india/index.html','<section class="sec alt"><div class="c"><h2>From Nigeria to treatment in India</h2>','''<section class="sec"><div class="c"><h2>Prepare before travelling from Nigeria</h2><p>Share the available medical records with Elajme India before making travel arrangements. We can coordinate the case-review request and help you understand the available response and practical next steps.</p><div class="grid"><article class="card"><h3>Review the response</h3><p>Check the available hospital feedback and whether more reports or an in-person consultation are requested.</p></article><article class="card"><h3>Review the estimate</h3><p>Any hospital estimate is preliminary and may change after clinical evaluation or additional requirements.</p></article><article class="card"><h3>Prepare documents</h3><p>Keep reports, scans, medicine details, passport documents and available hospital correspondence together.</p></article><article class="card"><h3>Plan the visit</h3><p>Elajme India can help coordinate available appointments and practical treatment-related travel arrangements when required.</p></article></div><div class="related"><a href="../../patient-guide/">Patient guide</a><a href="../../medical-visa/">Medical visa guidance</a><a href="../../treatments/">Treatments</a><a href="../../hospitals/">Hospitals</a><a href="../../doctors/">Doctors</a></div><div class="note">Hospital acceptance, specialist availability, final treatment decisions, costs and visa approval remain subject to the relevant hospital, clinical team and authorities.</div><p><a class="btn" href="/#enquiry">Share reports with Elajme India</a></p></div></section>'''),
+          ('ar/nigeria/treatment-in-india/index.html','<section class="sec"><div class="c"><h2>كيف ننسق رحلة العلاج؟</h2>','''<section class="sec alt"><div class="c"><h2>الاستعداد قبل السفر من نيجيريا</h2><p>شارك التقارير الطبية المتاحة مع علاج مي إنديا قبل ترتيب السفر. يمكننا تنسيق طلب مراجعة الحالة ومساعدتك على فهم الرد المتاح والخطوات العملية التالية.</p><div class="grid"><div class="card"><h3>مراجعة الرد</h3><p>راجع ملاحظات المستشفى المتاحة وما إذا كانت هناك حاجة إلى تقارير إضافية أو استشارة حضورية.</p></div><div class="card"><h3>مراجعة التقدير</h3><p>أي تقدير صادر عن المستشفى يكون أولياً وقد يتغير بعد التقييم السريري أو المتطلبات الإضافية.</p></div><div class="card"><h3>تجهيز المستندات</h3><p>احتفظ بالتقارير وصور الأشعة ومعلومات الأدوية ووثائق جواز السفر ومراسلات المستشفى المتاحة معاً.</p></div><div class="card"><h3>التخطيط للزيارة</h3><p>يمكن لعلاج مي إنديا المساعدة في تنسيق المواعيد المتاحة والترتيبات العملية المرتبطة برحلة العلاج عند الحاجة.</p></div></div><div class="related"><a href="/ar/patient-guide/">دليل المريض</a><a href="/ar/medical-visa/">التأشيرة الطبية</a><a href="/ar/treatments/">العلاجات</a><a href="/ar/hospitals/">المستشفيات</a><a href="/ar/doctors/">الأطباء</a></div><div class="note">يبقى قبول المستشفى وتوفر الطبيب والقرارات العلاجية والتكلفة النهائية والموافقة على التأشيرة خاضعة للجهات المختصة.</div><p><a class="btn" href="/ar/#enquiry">أرسل التقارير إلى علاج مي إنديا</a></p></div></section>''')]
           changed=[]
-          for fn,(old,new) in changes.items():
-              p=Path(fn); text=p.read_text(); fi=text.lower().find('<footer'); assert fi>=0
-              pre,foot=text[:fi],text[fi:]
-              if new in pre:
-                  print('Already strengthened:',fn); continue
-              assert old in pre, f'expected conversion anchor not found in {fn}'
-              p.write_text(pre.replace(old,new,1)+foot); changed.append(fn)
-              print('Changed:',fn)
+          for fn,anchor,block in updates:
+            p=Path(fn); text=p.read_text(); i=text.lower().find('<footer'); assert i>=0
+            pre,footer=text[:i],text[i:]
+            if block not in pre:
+              assert anchor in pre
+              p.write_text(pre.replace(anchor,block+anchor,1)+footer); changed.append(fn)
           for q in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]: print('LOCK',q,hashlib.sha256(q.read_bytes()).hexdigest())
-          print('Changed files:',len(changed))
+          print('Changed',changed)
           PY
-      - name: Commit Medanta and Soin conversion improvements
+      - name: Commit changes
         run: |
-          if git diff --quiet -- hospitals/medanta-the-medicity-gurugram/index.html ar/hospitals/medanta-the-medicity-gurugram/index.html doctors/dr-arvinder-singh-soin/index.html ar/doctors/dr-arvinder-singh-soin/index.html; then echo 'No changes required'; exit 0; fi
-          git config user.name 'elajmeindia'
-          git config user.email 'shahzadalamnadwi@gmail.com'
-          git add hospitals/medanta-the-medicity-gurugram/index.html ar/hospitals/medanta-the-medicity-gurugram/index.html doctors/dr-arvinder-singh-soin/index.html ar/doctors/dr-arvinder-singh-soin/index.html
-          git commit -m 'Strengthen Medanta and Soin enquiry pathways'
+          if git diff --quiet -- nigeria/treatment-in-india/index.html ar/nigeria/treatment-in-india/index.html; then exit 0; fi
+          git config user.name elajmeindia
+          git config user.email shahzadalamnadwi@gmail.com
+          git add nigeria/treatment-in-india/index.html ar/nigeria/treatment-in-india/index.html
+          git commit -m 'Improve Nigeria patient pathway'
           git push
