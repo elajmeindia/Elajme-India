@@ -2,7 +2,14 @@ name: Audit bilingual directory media and parity once
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/audit-directory-media-parity-once.yml']
+    paths:
+      - '.github/workflows/audit-directory-media-parity-once.yml'
+      - 'doctors/index.html'
+      - 'ar/doctors/index.html'
+      - 'hospitals/index.html'
+      - 'ar/hospitals/index.html'
+      - 'assets/images/doctors/**'
+      - 'assets/images/hospitals/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,13 +25,10 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re, sys
-
-          problems=[]
-          report=[]
+          problems=[]; report=[]
           pairs=[('doctors/index.html','ar/doctors/index.html','doctor'),('hospitals/index.html','ar/hospitals/index.html','hospital')]
           for enpath,arpath,kind in pairs:
-              en=Path(enpath).read_text(encoding='utf-8')
-              ar=Path(arpath).read_text(encoding='utf-8')
+              en=Path(enpath).read_text(encoding='utf-8'); ar=Path(arpath).read_text(encoding='utf-8')
               en_pre=en.partition('<footer')[0]; ar_pre=ar.partition('<footer')[0]
               for path,text,full,lang in ((enpath,en_pre,en,'en'),(arpath,ar_pre,ar,'ar')):
                   if 'id="q"' not in text: problems.append(f'{path}: missing search input')
@@ -38,31 +42,25 @@ jobs:
               else:
                   en_slugs=set(re.findall(r'href="/hospitals/([a-z0-9-]+)/?"',en_pre))
                   ar_slugs=set(re.findall(r'href="/ar/hospitals/([a-z0-9-]+)/?"',ar_pre))
-              missing_ar=sorted(en_slugs-ar_slugs); missing_en=sorted(ar_slugs-en_slugs)
-              if missing_ar: problems.append(f'{kind}: missing AR directory entries: {missing_ar}')
-              if missing_en: problems.append(f'{kind}: missing EN directory entries: {missing_en}')
+              if en_slugs-ar_slugs: problems.append(f'{kind}: missing AR entries: {sorted(en_slugs-ar_slugs)}')
+              if ar_slugs-en_slugs: problems.append(f'{kind}: missing EN entries: {sorted(ar_slugs-en_slugs)}')
               report.append(f'{kind}: EN={len(en_slugs)} AR={len(ar_slugs)}')
-
-          # Inspect actual src values only. Do not treat onerror fallback text as a live placeholder.
+          external=[]; placeholders=[]
           for path in ('doctors/index.html','ar/doctors/index.html','hospitals/index.html','ar/hospitals/index.html'):
               text=Path(path).read_text(encoding='utf-8').partition('<footer')[0]
               srcs=re.findall(r'<img[^>]+\ssrc="([^"]+)"',text,re.I)
-              placeholders=[s for s in srcs if 'placeholder' in s.lower()]
-              if placeholders:
-                  # Harsh Dua is the only intentionally protected doctor placeholder until an exact portrait is verified.
-                  if path not in ('doctors/index.html','ar/doctors/index.html') or len(placeholders)!=1:
-                      problems.append(f'{path}: placeholder image srcs remain: {placeholders}')
-              missing=[]
               for src in srcs:
-                  if not src.startswith('/assets/'): continue
-                  clean=src.split('?',1)[0].lstrip('/')
-                  if not Path(clean).exists(): missing.append(src)
-              if missing: problems.append(f'{path}: missing local image files: {missing}')
-
+                  if src.startswith(('http://','https://')): external.append((path,src))
+                  if 'placeholder' in src.lower(): placeholders.append((path,src))
+                  if src.startswith('/assets/'):
+                      clean=src.split('?',1)[0].lstrip('/')
+                      if not Path(clean).exists(): problems.append(f'{path}: missing local image: {src}')
+          if external: problems.append(f'external directory image dependencies remain: {external}')
+          if placeholders: problems.append(f'directory placeholder image srcs remain: {placeholders}')
           print('\n'.join(report))
+          print(f'EXTERNAL DIRECTORY IMAGES={len(external)}')
+          print(f'DIRECTORY PLACEHOLDERS={len(placeholders)}')
           if problems:
-              print('DIRECTORY MEDIA/PARITY ISSUES:')
-              print('\n'.join(problems))
-              sys.exit(1)
+              print('DIRECTORY MEDIA/PARITY ISSUES:'); print('\n'.join(problems)); sys.exit(1)
           print('BILINGUAL DIRECTORY MEDIA/PARITY AUDIT CLEAN')
           PY
