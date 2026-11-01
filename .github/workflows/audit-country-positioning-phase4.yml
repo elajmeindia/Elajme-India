@@ -27,6 +27,9 @@ jobs:
           assert '/#enquiry' in nigeria
           assert '/assets/css/footer-approved.css' in nigeria
           assert 'lang="ar"' in ar and 'dir="rtl"' in ar
+          assert '/ar/nigeria/treatment-in-india/' in ar
+          assert 'نيجيريا' in ar
           assert '/assets/css/footer-approved.css' in ar
           print('PHASE 4 INTERNATIONAL POSITIONING AUDIT CLEAN')
           PY
+# rerun after bilingual homepage positioning repair 2026-11-01
