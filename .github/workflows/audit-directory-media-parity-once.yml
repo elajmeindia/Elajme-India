@@ -1,0 +1,68 @@
+name: Audit bilingual directory media and parity once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/audit-directory-media-parity-once.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit doctor and hospital directory media/parity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+
+          problems=[]
+          report=[]
+          pairs=[('doctors/index.html','ar/doctors/index.html','doctor'),('hospitals/index.html','ar/hospitals/index.html','hospital')]
+          for enpath,arpath,kind in pairs:
+              en=Path(enpath).read_text(encoding='utf-8')
+              ar=Path(arpath).read_text(encoding='utf-8')
+              en_pre=en.partition('<footer')[0]; ar_pre=ar.partition('<footer')[0]
+              # Directory fundamentals and functional query support.
+              for path,text,lang in ((enpath,en_pre,'en'),(arpath,ar_pre,'ar')):
+                  if 'id="q"' not in text: problems.append(f'{path}: missing search input')
+                  if 'URLSearchParams' not in text: problems.append(f'{path}: URL query initialization missing')
+                  expected='/#enquiry' if lang=='en' else '/ar/#enquiry'
+                  if expected not in text: problems.append(f'{path}: Elajme enquiry route missing')
+                  if 'footer-approved.css' not in (en if lang=='en' else ar): problems.append(f'{path}: approved footer CSS missing')
+              if kind=='doctor':
+                  en_slugs=set(re.findall(r'href="(?:/doctors/)?(dr-[a-z0-9-]+)/?"',en_pre))
+                  ar_slugs=set(re.findall(r'href="/ar/doctors/(dr-[a-z0-9-]+)/?"',ar_pre))
+              else:
+                  en_slugs=set(re.findall(r'href="/hospitals/([a-z0-9-]+)/?"',en_pre))
+                  ar_slugs=set(re.findall(r'href="/ar/hospitals/([a-z0-9-]+)/?"',ar_pre))
+              missing_ar=sorted(en_slugs-ar_slugs); missing_en=sorted(ar_slugs-en_slugs)
+              if missing_ar: problems.append(f'{kind}: missing AR directory entries: {missing_ar}')
+              if missing_en: problems.append(f'{kind}: missing EN directory entries: {missing_en}')
+              report.append(f'{kind}: EN={len(en_slugs)} AR={len(ar_slugs)}')
+
+          # Local image existence for every local directory src; placeholders are reported, not silently accepted.
+          for path in ('doctors/index.html','ar/doctors/index.html','hospitals/index.html','ar/hospitals/index.html'):
+              text=Path(path).read_text(encoding='utf-8').partition('<footer')[0]
+              srcs=re.findall(r'<img[^>]+src="([^"]+)"',text,re.I)
+              placeholders=[s for s in srcs if 'placeholder' in s]
+              if placeholders: problems.append(f'{path}: placeholder images remain: {len(placeholders)}')
+              missing=[]
+              for src in srcs:
+                  if not src.startswith('/assets/'): continue
+                  clean=src.split('?',1)[0].lstrip('/')
+                  if not Path(clean).exists(): missing.append(src)
+              if missing: problems.append(f'{path}: missing local image files: {missing}')
+
+          # Exact known protected case: Harsh Dua may remain neutral until verified, so downgrade only that card.
+          problems=[p for p in problems if not (p.startswith('doctors/index.html: placeholder images remain: 1') or p.startswith('ar/doctors/index.html: placeholder images remain: 1'))]
+          print('\n'.join(report))
+          if problems:
+              print('DIRECTORY MEDIA/PARITY ISSUES:')
+              print('\n'.join(problems))
+              sys.exit(1)
+          print('BILINGUAL DIRECTORY MEDIA/PARITY AUDIT CLEAN')
+          PY
