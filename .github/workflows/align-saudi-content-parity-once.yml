@@ -1,4 +1,4 @@
-name: Align Saudi content parity once
+name: Strengthen Saudi patient search journey once
 
 on:
   push:
@@ -17,36 +17,41 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Add missing Arabic Saudi treatment exploration section
+      - name: Add bilingual Saudi pre-travel decision guidance
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('ar/saudi-arabia/treatment-in-india/index.html')
-          s=p.read_text()
-          if 'مجالات العلاج التي يمكن للمرضى من السعودية استكشافها في الهند' in s:
-              print('Saudi Arabic treatment section already present')
-          else:
-              marker='<section class="sec alt"><div class="c"><h2>ما الذي ترسله للمراجعة الأولية؟</h2>'
-              block='''<section class="sec alt"><div class="c"><h2>مجالات العلاج التي يمكن للمرضى من السعودية استكشافها في الهند</h2><p>يعتمد اختيار المستشفى والطبيب المناسبين على التشخيص والتاريخ الطبي ومدى تعقيد الحالة. توفر صفحات العلاج معلومات عامة قبل إرسال التقارير للمراجعة الخاصة بالحالة.</p><div class="related"><a href="/ar/treatments/cancer-treatment-india/">علاج السرطان</a><a href="/ar/treatments/heart-treatment-india/">علاج القلب</a><a href="/ar/treatments/liver-transplant-india/">زراعة الكبد</a><a href="/ar/treatments/kidney-transplant-india/">زراعة الكلى</a><a href="/ar/treatments/knee-replacement-india/">استبدال الركبة</a><a href="/ar/treatments/neurosurgery-india/">جراحة الأعصاب</a><a href="/ar/treatments/spine-surgery-india/">جراحة العمود الفقري</a><a href="/ar/treatments/urology-treatment-india/">المسالك البولية</a><a href="/ar/treatments/gastroenterology-treatment-india/">الجهاز الهضمي</a></div><div class="note">تحدد الجهة الطبية بعد مراجعة الحالة مدى ملاءمة العلاج والفحوصات والإجراءات والمدة المتوقعة للإقامة.</div></div></section>'''
-              if marker not in s: raise SystemExit('Expected insertion marker not found')
-              s=s.replace(marker, block+marker, 1)
-              p.write_text(s)
-          assert '/ar/#enquiry' in s
-          assert 'href="/saudi-arabia/treatment-in-india/">English</a>' in s
-          for x in ['cancer-treatment-india','heart-treatment-india','liver-transplant-india','kidney-transplant-india','knee-replacement-india','neurosurgery-india','spine-surgery-india','urology-treatment-india','gastroenterology-treatment-india']:
-              assert f'/ar/treatments/{x}/' in s
+          changes={
+          'saudi-arabia/treatment-in-india/index.html':(
+            '<section class="sec"><div class="c"><h2>Hospitals, doctors and patient resources</h2>',
+            '<section class="sec"><div class="c"><h2>Before you decide to travel from Saudi Arabia</h2><div class="grid"><article class="card"><h3>Review the medical response</h3><p>Check what the hospital or specialist has actually recommended, whether further tests are needed and whether an in-person assessment is required before a final treatment plan.</p></article><article class="card"><h3>Understand the preliminary estimate</h3><p>Ask what the available estimate includes and remember that the final bill can change after examination, investigations, procedure selection, medicines, implants, complications or length of stay.</p></article><article class="card"><h3>Confirm the practical treatment plan</h3><p>Before booking travel, confirm the intended hospital, available appointment information, expected documents and any treatment-related preparation communicated by the medical team.</p></article><article class="card"><h3>Prepare for medical travel</h3><p>Review the patient guide and current medical-visa guidance, and keep copies of relevant medical records and hospital correspondence available for the journey.</p></article></div><div class="note">Elajme India can coordinate these steps, but clinical recommendations, hospital acceptance, final costs and visa decisions remain with the relevant medical teams and authorities.</div></div></section><section class="sec"><div class="c"><h2>Hospitals, doctors and patient resources</h2>'
+          ),
+          'ar/saudi-arabia/treatment-in-india/index.html':(
+            '<section class="sec alt"><div class="c"><h2>استكشف العلاجات وموارد المريض</h2>',
+            '<section class="sec"><div class="c"><h2>قبل اتخاذ قرار السفر من السعودية</h2><div class="grid"><article class="card"><h3>راجع الرد الطبي</h3><p>تحقق مما أوصى به المستشفى أو الطبيب فعلياً، وما إذا كانت هناك فحوصات إضافية مطلوبة أو حاجة إلى تقييم حضوري قبل وضع الخطة العلاجية النهائية.</p></article><article class="card"><h3>افهم التقدير المبدئي للتكلفة</h3><p>راجع ما يشمله التقدير المتاح، مع العلم أن التكلفة النهائية قد تتغير بعد الفحص أو الفحوصات أو اختيار الإجراء أو الأدوية أو المستلزمات أو المضاعفات أو مدة الإقامة.</p></article><article class="card"><h3>أكد الخطة العملية للعلاج</h3><p>قبل حجز السفر، تأكد من المستشفى المقصود ومعلومات الموعد المتاحة والمستندات المطلوبة وأي تحضيرات للعلاج يحددها الفريق الطبي.</p></article><article class="card"><h3>استعد للسفر الطبي</h3><p>راجع دليل المريض ومعلومات التأشيرة الطبية الحالية، واحتفظ بنسخ من التقارير الطبية والمراسلات الصادرة عن المستشفى أثناء الرحلة.</p></article></div><div class="note">يمكن لعلاج مي إنديا تنسيق هذه الخطوات، بينما تبقى التوصيات الطبية وقبول الحالة والتكلفة النهائية وقرارات التأشيرة من اختصاص الجهات الطبية والسلطات المعنية.</div></div></section><section class="sec alt"><div class="c"><h2>استكشف العلاجات وموارد المريض</h2>'
+          )}
+          for fn,(marker,repl) in changes.items():
+              p=Path(fn); s=p.read_text(); fi=s.lower().find('<footer'); assert fi>=0
+              pre,foot=s[:fi],s[fi:]
+              if repl in pre:
+                  print('Already updated:',fn); continue
+              if marker not in pre: raise SystemExit(f'Expected marker missing: {fn}')
+              p.write_text(pre.replace(marker,repl,1)+foot)
+              print('Updated:',fn)
+          en=Path('saudi-arabia/treatment-in-india/index.html').read_text()
+          ar=Path('ar/saudi-arabia/treatment-in-india/index.html').read_text()
+          assert '../../#enquiry' in en and '/ar/#enquiry' in ar
+          assert '../../medical-visa/' in en and '/ar/medical-visa/' in ar
+          assert '../../patient-guide/' in en and '/ar/patient-guide/' in ar
           PY
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
-      - name: Commit aligned content
+      - name: Commit Saudi search journey improvements
         shell: bash
         run: |
-          if git diff --quiet -- ar/saudi-arabia/treatment-in-india/index.html; then
-            echo 'No content change required.'
-            exit 0
-          fi
+          if git diff --quiet -- saudi-arabia/treatment-in-india/index.html ar/saudi-arabia/treatment-in-india/index.html; then echo 'No content change required.'; exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add ar/saudi-arabia/treatment-in-india/index.html
-          git commit -m 'Align Arabic Saudi treatment content'
+          git add saudi-arabia/treatment-in-india/index.html ar/saudi-arabia/treatment-in-india/index.html
+          git commit -m 'Strengthen Saudi patient search journey'
           git push
