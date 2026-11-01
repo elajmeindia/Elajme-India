@@ -1,0 +1,51 @@
+name: Fix Arabic homepage country guidance once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-ar-homepage-country-guidance-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Make Arabic country strip international
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('ar/index.html')
+          s=p.read_text()
+          s=s.replace('صفحات مخصصة لمرضى الخليج','صفحات مخصصة للمرضى الدوليين',1)
+          needle='<a class="country" href="/ar/bahrain/treatment-in-india/">البحرين</a>'
+          nigeria='<a class="country" href="/ar/nigeria/treatment-in-india/">نيجيريا</a>'
+          if nigeria not in s:
+              if needle not in s: raise SystemExit('Bahrain country link not found')
+              s=s.replace(needle,needle+nigeria,1)
+          if 'صفحات مخصصة للمرضى الدوليين' not in s or nigeria not in s:
+              raise SystemExit('Arabic international country guidance incomplete')
+          p.write_text(s)
+          print('ARABIC HOMEPAGE COUNTRY GUIDANCE PARITY CLEAN')
+          PY
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+      - name: Commit Arabic homepage parity
+        shell: bash
+        run: |
+          if git diff --quiet -- ar/index.html; then
+            echo 'No change needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ar/index.html
+          git commit -m 'Make Arabic homepage country guidance international'
+          git push origin HEAD:main
