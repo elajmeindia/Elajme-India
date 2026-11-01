@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Audit doctor and hospital directory media/parity
+      - name: Audit doctor and hospital directory media/parity/performance
         shell: bash
         run: |
           set -euo pipefail
@@ -37,38 +37,49 @@ jobs:
                   if expected not in text: problems.append(f'{path}: Elajme enquiry route missing')
                   if 'footer-approved.css' not in full: problems.append(f'{path}: approved footer CSS missing')
               if kind=='doctor':
+                  # Count profile links in both relative and root-relative forms so all active cards are included.
                   en_slugs=set(re.findall(r'href="(?:/doctors/)?(dr-[a-z0-9-]+)/?"',en_pre))
-                  ar_slugs=set(re.findall(r'href="/ar/doctors/(dr-[a-z0-9-]+)/?"',ar_pre))
+                  ar_slugs=set(re.findall(r'href="(?:/ar/doctors/)?(dr-[a-z0-9-]+)/?"',ar_pre))
               else:
-                  en_slugs=set(re.findall(r'href="/hospitals/([a-z0-9-]+)/?"',en_pre))
-                  ar_slugs=set(re.findall(r'href="/ar/hospitals/([a-z0-9-]+)/?"',ar_pre))
+                  en_slugs=set(re.findall(r'href="(?:/hospitals/)?([a-z0-9][a-z0-9-]+)/?"',en_pre))
+                  ar_slugs=set(re.findall(r'href="(?:/ar/hospitals/)?([a-z0-9][a-z0-9-]+)/?"',ar_pre))
               if en_slugs-ar_slugs: problems.append(f'{kind}: missing AR entries: {sorted(en_slugs-ar_slugs)}')
               if ar_slugs-en_slugs: problems.append(f'{kind}: missing EN entries: {sorted(ar_slugs-en_slugs)}')
               report.append(f'{kind}: EN={len(en_slugs)} AR={len(ar_slugs)}')
-          external=[]; placeholders=[]
+          external=[]; placeholders=[]; media_issues=[]
           allowed_anil='https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ'
           allowed_external=[]
           for path in ('doctors/index.html','ar/doctors/index.html','hospitals/index.html','ar/hospitals/index.html'):
               text=Path(path).read_text(encoding='utf-8').partition('<footer')[0]
-              srcs=re.findall(r'<img[^>]+\ssrc="([^"]+)"',text,re.I)
-              for src in srcs:
+              imgs=re.findall(r'<img\b[^>]*>',text,re.I)
+              for tag in imgs:
+                  m=re.search(r'\ssrc="([^"]+)"',tag,re.I)
+                  if not m: continue
+                  src=m.group(1)
                   if src.startswith(('http://','https://')):
                       if path in ('doctors/index.html','ar/doctors/index.html') and src==allowed_anil:
                           allowed_external.append((path,src))
-                      else:
-                          external.append((path,src))
+                      else: external.append((path,src))
                   if 'placeholder' in src.lower(): placeholders.append((path,src))
                   if src.startswith('/assets/'):
                       clean=src.split('?',1)[0].lstrip('/')
                       if not Path(clean).exists(): problems.append(f'{path}: missing local image: {src}')
+                  # Directory cards should defer decoding and below-fold loading.
+                  if 'loading="lazy"' not in tag: media_issues.append((path,src,'missing loading=lazy'))
+                  if 'decoding="async"' not in tag: media_issues.append((path,src,'missing decoding=async'))
+                  # Local assets should carry intrinsic dimensions to reduce layout shift.
+                  if src.startswith('/assets/') and not ('width="' in tag and 'height="' in tag):
+                      media_issues.append((path,src,'missing width/height'))
           if external: problems.append(f'unapproved external directory image dependencies remain: {external}')
           if placeholders: problems.append(f'directory placeholder image srcs remain: {placeholders}')
           if len(allowed_external)!=2: problems.append(f'verified Anil Fortis portrait expected on exactly two bilingual directory cards; found {len(allowed_external)}')
+          if media_issues: problems.append(f'directory media performance issues: {media_issues}')
           print('\n'.join(report))
           print(f'APPROVED VERIFIED FORTIS EXTERNAL IMAGES={len(allowed_external)}')
           print(f'UNAPPROVED EXTERNAL DIRECTORY IMAGES={len(external)}')
           print(f'DIRECTORY PLACEHOLDERS={len(placeholders)}')
+          print(f'DIRECTORY MEDIA PERFORMANCE ISSUES={len(media_issues)}')
           if problems:
-              print('DIRECTORY MEDIA/PARITY ISSUES:'); print('\n'.join(problems)); sys.exit(1)
-          print('BILINGUAL DIRECTORY MEDIA/PARITY AUDIT CLEAN')
+              print('DIRECTORY MEDIA/PARITY/PERFORMANCE ISSUES:'); print('\n'.join(problems)); sys.exit(1)
+          print('BILINGUAL DIRECTORY MEDIA/PARITY/PERFORMANCE AUDIT CLEAN')
           PY
