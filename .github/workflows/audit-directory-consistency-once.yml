@@ -1,0 +1,50 @@
+name: Audit bilingual directory consistency once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-directory-consistency-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit doctor and hospital directory/profile consistency
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+          problems=[]
+          for kind in ('doctors','hospitals'):
+              en_dir=Path(kind)/'index.html'; ar_dir=Path('ar')/kind/'index.html'
+              if not en_dir.exists() or not ar_dir.exists():
+                  problems.append(f'{kind}: bilingual directory missing'); continue
+              ent=en_dir.read_text(encoding='utf-8',errors='ignore'); art=ar_dir.read_text(encoding='utf-8',errors='ignore')
+              en_slugs=set(re.findall(rf'href=["\']/{kind}/([^/"\'#?]+)/?["\'#?]',ent,re.I))
+              ar_slugs=set(re.findall(rf'href=["\']/ar/{kind}/([^/"\'#?]+)/?["\'#?]',art,re.I))
+              active=set()
+              for p in Path(kind).glob('*/index.html'):
+                  t=p.read_text(encoding='utf-8',errors='ignore'); low=t.lower()
+                  if 'noindex' in low or 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low: continue
+                  active.add(p.parent.name)
+              missing_en=active-en_slugs; missing_ar=active-ar_slugs
+              orphan_en=en_slugs-active; orphan_ar=ar_slugs-active
+              if missing_en: problems.append(f'{kind}: active profiles missing from EN directory: {sorted(missing_en)}')
+              if missing_ar: problems.append(f'{kind}: active profiles missing from AR directory: {sorted(missing_ar)}')
+              if orphan_en: problems.append(f'{kind}: EN directory stale/non-active slugs: {sorted(orphan_en)}')
+              if orphan_ar: problems.append(f'{kind}: AR directory stale/non-active slugs: {sorted(orphan_ar)}')
+              if en_slugs != ar_slugs: problems.append(f'{kind}: EN/AR directory slug parity mismatch EN-only={sorted(en_slugs-ar_slugs)} AR-only={sorted(ar_slugs-en_slugs)}')
+              print(f'{kind.upper()} ACTIVE={len(active)} EN_DIRECTORY={len(en_slugs)} AR_DIRECTORY={len(ar_slugs)}')
+          if problems:
+              print('DIRECTORY CONSISTENCY ISSUES:')
+              print('\n'.join(problems)); sys.exit(1)
+          print('BILINGUAL DIRECTORY CONSISTENCY AUDIT CLEAN')
+          PY
