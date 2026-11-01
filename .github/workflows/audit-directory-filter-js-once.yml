@@ -1,0 +1,42 @@
+name: Audit bilingual directory filter JavaScript once
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-directory-filter-js-once.yml'
+      - 'doctors/index.html'
+      - 'ar/doctors/index.html'
+      - 'hospitals/index.html'
+      - 'ar/hospitals/index.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit filter implementation and duplicate handlers
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,sys
+          problems=[]
+          for path in ['doctors/index.html','ar/doctors/index.html','hospitals/index.html','ar/hospitals/index.html']:
+              s=Path(path).read_text(encoding='utf-8',errors='ignore')
+              scripts=re.findall(r'<script\b[^>]*>(.*?)</script>',s,re.I|re.S)
+              filter_scripts=[x for x in scripts if ('URLSearchParams' in x or ('getElementById' in x and "'q'" in x)) and ('card' in x.lower() or 'grid' in x.lower())]
+              url_scripts=[x for x in filter_scripts if 'URLSearchParams' in x]
+              listeners=sum(len(re.findall(r'addEventListener\s*\(\s*[\'\"](?:input|change)[\'\"]',x)) for x in filter_scripts)
+              if 'id="q"' not in s: problems.append(f'{path}: search input missing')
+              if len(url_scripts)!=1: problems.append(f'{path}: expected exactly one query-aware filter script, found {len(url_scripts)}')
+              if len(filter_scripts)>1: problems.append(f'{path}: duplicate filter implementations found ({len(filter_scripts)})')
+              if listeners<1: problems.append(f'{path}: no search/filter event listener detected')
+              if 'new URLSearchParams(location.search)' not in s and 'new URLSearchParams(window.location.search)' not in s:
+                  problems.append(f'{path}: treatment ?q= initialization not detected')
+              print(f'{path}: scripts={len(scripts)} filter_scripts={len(filter_scripts)} query_scripts={len(url_scripts)} listeners={listeners}')
+          if problems:
+              print('DIRECTORY FILTER JS ISSUES:')
+              print('\n'.join(problems)); sys.exit(1)
+          print('BILINGUAL DIRECTORY FILTER JS AUDIT CLEAN')
+          PY
