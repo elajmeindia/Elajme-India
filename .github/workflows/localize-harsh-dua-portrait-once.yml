@@ -22,7 +22,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p assets/images/doctors
-          curl -L --fail --retry 2 --connect-timeout 15 --max-time 60 'https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/styles/doctor_card/public/2026-03/dr-harsh-dua.jpg.webp?itok=IkUcYVSr' -o assets/images/doctors/dr-harsh-dua.webp
+          curl -L --fail --retry 2 --connect-timeout 15 --max-time 60 \
+            -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/156.0.0.0 Safari/537.36' \
+            -e 'https://www.apollohospitals.com/doctors/medical-oncologist/delhi/dr-harsh-dua' \
+            -H 'Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8' \
+            'https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/styles/doctor_card/public/2026-03/dr-harsh-dua.jpg.webp?itok=IkUcYVSr' \
+            -o assets/images/doctors/dr-harsh-dua.webp
           test -s assets/images/doctors/dr-harsh-dua.webp
           file assets/images/doctors/dr-harsh-dua.webp | grep -Eqi 'Web/P|image'
           python3 - <<'PY'
@@ -31,27 +36,20 @@ jobs:
           locked=['assets/css/footer-approved.css','FOOTER-LOCK.md']
           before={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in locked}
           local='/assets/images/doctors/dr-harsh-dua.webp'
-          # Directory cards: replace only the Harsh card placeholder.
           for p in [Path('doctors/index.html'),Path('ar/doctors/index.html')]:
-            s=p.read_text(encoding='utf-8')
-            parts=s.split('<article')
-            out=[parts[0]]
-            found=False
+            s=p.read_text(encoding='utf-8'); parts=s.split('<article'); out=[parts[0]]; found=False
             for part in parts[1:]:
               block='<article'+part
               if 'harsh dua' in block.lower() or 'هارش دوا' in block:
-                block=block.replace('/assets/images/doctors/doctor-placeholder.svg',local)
-                found=True
+                block=block.replace('/assets/images/doctors/doctor-placeholder.svg',local); found=True
               out.append(block)
             if not found: raise SystemExit(f'Harsh card not found: {p}')
             p.write_text(''.join(out),encoding='utf-8')
-          # Profiles: replace fallback portrait with verified local image and update OG image.
-          en=Path('doctors/dr-harsh-dua/index.html'); ar=Path('ar/doctors/dr-harsh-dua/index.html')
-          for p,alt in [(en,'Dr. Harsh Dua'),(ar,'د. هارش دوا')]:
+          for p,alt in [(Path('doctors/dr-harsh-dua/index.html'),'Dr. Harsh Dua'),(Path('ar/doctors/dr-harsh-dua/index.html'),'د. هارش دوا')]:
             s=p.read_text(encoding='utf-8')
             s=re.sub(r'<div class="profile-photo profile-photo-fallback"[^>]*>HD</div>',f'<img class="profile-photo" src="{local}" alt="{alt}" loading="eager" decoding="async" fetchpriority="high">',s)
-            s=re.sub(r'<meta property="og:image" content="[^"]+">',f'<meta property="og:image" content="https://elajmeindia.com/assets/images/doctors/dr-harsh-dua.webp">',s, count=1)
-            s=re.sub(r'<meta property="og:image:alt" content="[^"]+">',f'<meta property="og:image:alt" content="{alt}">',s, count=1)
+            s=re.sub(r'<meta property="og:image" content="[^"]+">',f'<meta property="og:image" content="https://elajmeindia.com/assets/images/doctors/dr-harsh-dua.webp">',s,count=1)
+            s=re.sub(r'<meta property="og:image:alt" content="[^"]+">',f'<meta property="og:image:alt" content="{alt}">',s,count=1)
             s=s.replace('No unverified portrait has been published. Elajme India will use a doctor portrait here only after a stable first-party image asset can be verified for local publication.','The portrait shown on this profile is based on the current first-party Apollo Hospitals doctor image and is stored locally for reliable display.')
             s=s.replace('لم يتم نشر صورة شخصية غير موثقة. تعرض صفحة أبولو الرسمية صورة د. هارش دوا، لكن علاج مي إنديا لن يستخدم صورة الطبيب هنا إلا بعد التحقق من أصل رسمي ثابت يمكن استخدامه محلياً بأمان.','الصورة الشخصية المعروضة في هذا الملف مستندة إلى صورة الطبيب الحالية المنشورة من مستشفيات أبولو، وتم حفظها محلياً لضمان عرضها بشكل موثوق.')
             if local not in s: raise SystemExit(f'Harsh local portrait missing after update: {p}')
