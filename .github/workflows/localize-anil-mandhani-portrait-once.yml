@@ -22,24 +22,37 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p assets/images/doctors
-          curl -L --fail --retry 2 --connect-timeout 15 --max-time 60 'https://www.fortishealthcare.com/drupal-data/doctors/dr-anil-mandhani-4722.jpg' -o assets/images/doctors/dr-anil-mandhani.jpg
+          url='https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ'
+          curl -L --fail --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 90 "$url" -o assets/images/doctors/dr-anil-mandhani.jpg
           test -s assets/images/doctors/dr-anil-mandhani.jpg
-          file assets/images/doctors/dr-anil-mandhani.jpg | grep -Eqi 'JPEG|image'
+          test "$(wc -c < assets/images/doctors/dr-anil-mandhani.jpg)" -gt 5000
+          file assets/images/doctors/dr-anil-mandhani.jpg | grep -Eqi 'JPEG|image data'
           python3 - <<'PY'
           from pathlib import Path
-          import hashlib, re
+          import hashlib
           locked=['assets/css/footer-approved.css','FOOTER-LOCK.md']
           before={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in locked}
+          old='https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ'
           local='/assets/images/doctors/dr-anil-mandhani.jpg'
+          absolute='https://elajmeindia.com/assets/images/doctors/dr-anil-mandhani.jpg'
           pages=[Path('doctors/index.html'),Path('ar/doctors/index.html'),Path('doctors/dr-anil-mandhani/index.html'),Path('ar/doctors/dr-anil-mandhani/index.html')]
           changed=0
           for p in pages:
             if not p.exists(): raise SystemExit(f'Missing expected page: {p}')
             s=p.read_text(encoding='utf-8')
-            n=re.sub(r'https://www\.fortishealthcare\.com/(?:azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879\.jpg\?itok=ZyR0xaHZ|drupal-data/doctors/dr-anil-mandhani-4722\.jpg)',local,s)
+            if old not in s: raise SystemExit(f'Expected verified Fortis portrait URL missing from {p}')
+            n=s.replace(f'<meta property="og:image" content="{old}">',f'<meta property="og:image" content="{absolute}">').replace(old,local)
             if n!=s: changed+=1
             p.write_text(n,encoding='utf-8')
-          if changed < 2: raise SystemExit(f'Expected verified Fortis portrait on multiple pages; changed={changed}')
+          if changed != 4: raise SystemExit(f'Expected all four bilingual surfaces to change; changed={changed}')
+          en=Path('doctors/dr-anil-mandhani/index.html')
+          s=en.read_text(encoding='utf-8')
+          s=s.replace("The portrait is referenced from Fortis Healthcare's first-party doctor imagery. If the external image cannot load, the page automatically falls back to Elajme India's neutral doctor placeholder rather than displaying a broken image.","The portrait was verified against Fortis Healthcare's first-party doctor imagery and is served locally by Elajme India to improve reliability and page performance.")
+          en.write_text(s,encoding='utf-8')
+          for p in pages:
+            s=p.read_text(encoding='utf-8')
+            if old in s: raise SystemExit(f'External Fortis dependency remains in {p}')
+            if local not in s and absolute not in s: raise SystemExit(f'Local portrait missing in {p}')
           for p,h in before.items():
             if hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h: raise SystemExit(f'Locked file changed: {p}')
           print('ANIL MANDHANI VERIFIED PORTRAIT LOCALIZED')
