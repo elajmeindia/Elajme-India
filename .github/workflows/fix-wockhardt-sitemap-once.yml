@@ -1,0 +1,50 @@
+name: Fix Wockhardt bilingual sitemap URLs once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/fix-wockhardt-sitemap-once.yml']
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Repair Wockhardt canonical sitemap entries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('sitemap.xml')
+          s=p.read_text(encoding='utf-8')
+          replacements={
+            'https://elajmeindia.com/hospitals/wockhardt-hospitals-mumbai-central/':'https://elajmeindia.com/hospitals/wockhardt-hospital-mumbai-central/',
+            'https://elajmeindia.com/ar/hospitals/wockhardt-hospitals-mumbai-central/':'https://elajmeindia.com/ar/hospitals/wockhardt-hospital-mumbai-central/'
+          }
+          for old,new in replacements.items():
+              s=s.replace(old,new)
+          for required in replacements.values():
+              if required not in s:
+                  raise SystemExit(f'Missing required sitemap URL: {required}')
+          for stale in replacements:
+              if stale in s:
+                  raise SystemExit(f'Stale sitemap URL remains: {stale}')
+          p.write_text(s,encoding='utf-8')
+          print('WOCKHARDT BILINGUAL SITEMAP URLS CLEAN')
+          PY
+      - name: Commit sitemap repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- sitemap.xml; then
+            echo 'No sitemap change needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add sitemap.xml
+          git commit -m 'Repair Wockhardt bilingual sitemap URLs'
+          git push origin main
