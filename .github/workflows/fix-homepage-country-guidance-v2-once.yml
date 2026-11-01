@@ -1,0 +1,70 @@
+name: Fix homepage country guidance v2 once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-homepage-country-guidance-v2-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Update international country guidance
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text()
+          old_h='Country-specific guidance for patients travelling from the Gulf.'
+          new_h='Country-specific guidance for international patients travelling to India.'
+          old_p='Explore dedicated pages for Saudi Arabia, UAE, Oman, Qatar, Kuwait and Bahrain. Each explains the case-review journey, records to prepare and practical coordination steps.'
+          new_p='Explore dedicated pages for Saudi Arabia, UAE, Oman, Qatar, Kuwait, Bahrain and Nigeria. Each explains the case-review journey, records to prepare and practical coordination steps.'
+          if old_h in s: s=s.replace(old_h,new_h,1)
+          if old_p in s: s=s.replace(old_p,new_p,1)
+          if new_h not in s or new_p not in s:
+              raise SystemExit('Inclusive guidance text not found after replacement')
+          start=s.index(new_h)
+          end=s.find('</section>',start)
+          if end < 0: end=min(len(s),start+5000)
+          section=s[start:end]
+          if '/nigeria/treatment-in-india/' not in section:
+              m=re.search(r'<a\b[^>]*href=["\']/bahrain/treatment-in-india/["\'][^>]*>.*?</a>',section,re.I|re.S)
+              if not m:
+                  raise SystemExit('Bahrain country link not found in guidance section')
+              nigeria='<a href="/nigeria/treatment-in-india/">Nigeria</a>'
+              section=section[:m.end()]+nigeria+section[m.end():]
+              s=s[:start]+section+s[end:]
+          p.write_text(s)
+          check=p.read_text()
+          start=check.index(new_h); end=check.find('</section>',start)
+          section=check[start:end if end>=0 else start+5000]
+          assert old_h not in check
+          assert old_p not in check
+          for slug in ('saudi-arabia','uae','oman','qatar','kuwait','bahrain','nigeria'):
+              assert f'/{slug}/treatment-in-india/' in section, slug
+          print('INCLUSIVE HOMEPAGE COUNTRY GUIDANCE CLEAN')
+          PY
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+      - name: Commit homepage guidance fix
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'No change needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Make homepage country guidance international'
+          git push origin HEAD:main
