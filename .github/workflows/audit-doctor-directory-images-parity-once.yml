@@ -1,0 +1,61 @@
+name: Audit doctor directory images and parity once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-doctor-directory-images-parity-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit doctor directories and profiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          en = Path('doctors/index.html').read_text(encoding='utf-8')
+          ar_path = Path('ar/doctors/index.html')
+          ar = ar_path.read_text(encoding='utf-8') if ar_path.exists() else ''
+
+          cards = re.findall(r'<article class="card".*?</article>', en, re.S)
+          assert cards, 'No English doctor cards found'
+          placeholder=[]; external=[]; missing_profile=[]; missing_ar=[]; enquiry=[]
+          for card in cards:
+              name_m=re.search(r'<h2>(.*?)</h2>',card,re.S)
+              href_m=re.search(r'href="([^"]*dr-[^"]+/)"',card)
+              img_m=re.search(r'<img[^>]+src="([^"]+)"',card)
+              name=re.sub('<.*?>','',name_m.group(1)).strip() if name_m else 'Unknown'
+              href=href_m.group(1) if href_m else None
+              src=img_m.group(1) if img_m else ''
+              if 'doctor-placeholder' in src: placeholder.append(name)
+              if src.startswith('http://') or src.startswith('https://'): external.append((name,src))
+              if href:
+                  slug=href.strip('/').split('/')[-1]
+                  if not Path('doctors',slug,'index.html').exists(): missing_profile.append(name)
+                  if not Path('ar/doctors',slug,'index.html').exists(): missing_ar.append(name)
+              if '/#enquiry' not in card: enquiry.append(name)
+
+          print(f'English doctor cards: {len(cards)}')
+          print('Placeholder images:', placeholder)
+          print('External image dependencies:', [x[0] for x in external])
+          print('Missing English profiles:', missing_profile)
+          print('Missing Arabic profile parity:', missing_ar)
+          print('Cards missing Elajme enquiry:', enquiry)
+          if not ar_path.exists(): print('Arabic doctor directory missing')
+          else: print('Arabic doctor directory present')
+          assert not missing_profile, f'Missing English doctor profiles: {missing_profile}'
+          assert not enquiry, f'Doctor cards bypass/miss Elajme enquiry: {enquiry}'
+          assert 'footer-approved.css' in en, 'English doctor directory missing approved footer CSS'
+          if ar: assert 'footer-approved.css' in ar, 'Arabic doctor directory missing approved footer CSS'
+          print('DOCTOR DIRECTORY AUDIT COMPLETE')
+          PY
