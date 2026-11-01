@@ -1,0 +1,71 @@
+name: Fix homepage country guidance once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-homepage-country-guidance-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Make country guidance inclusive and add Nigeria
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old_h='Country-specific guidance for patients travelling from the Gulf.'
+          new_h='Country-specific guidance for international patients travelling to India.'
+          old_p='Explore dedicated pages for Saudi Arabia, UAE, Oman, Qatar, Kuwait and Bahrain. Each explains the case-review journey, records to prepare and practical coordination steps.'
+          new_p='Explore dedicated pages for Saudi Arabia, UAE, Oman, Qatar, Kuwait, Bahrain and Nigeria. Each explains the case-review journey, records to prepare and practical coordination steps.'
+          if old_h in s:
+              s=s.replace(old_h,new_h,1)
+          elif new_h not in s:
+              raise SystemExit('Country guidance heading marker not found')
+          if old_p in s:
+              s=s.replace(old_p,new_p,1)
+          elif new_p not in s:
+              raise SystemExit('Country guidance paragraph marker not found')
+          # Add Nigeria beside the six country links if this section does not already include it.
+          marker='<a href="/bahrain/treatment-in-india/">Bahrain</a>'
+          nigeria='<a href="/nigeria/treatment-in-india/">Nigeria</a>'
+          hpos=s.find(new_h)
+          if hpos < 0: raise SystemExit('Updated heading missing')
+          window=s[hpos:hpos+3000]
+          if '/nigeria/treatment-in-india/' not in window:
+              rel=window.find(marker)
+              if rel < 0: raise SystemExit('Bahrain link marker not found near guidance section')
+              pos=hpos+rel
+              s=s[:pos]+s[pos:].replace(marker,marker+nigeria,1)
+          p.write_text(s)
+          check=p.read_text()
+          assert new_h in check and new_p in check
+          section=check[check.find(new_h):check.find(new_h)+3000]
+          for x in ['saudi-arabia','uae','oman','qatar','kuwait','bahrain','nigeria']:
+              assert f'/{x}/treatment-in-india/' in section, x
+          assert 'Country-specific guidance for patients travelling from the Gulf.' not in check
+          PY
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+      - name: Commit inclusive country guidance
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'No change needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Include Nigeria in homepage country guidance'
+          git push origin HEAD:main
