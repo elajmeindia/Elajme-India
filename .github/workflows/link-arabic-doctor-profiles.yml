@@ -1,4 +1,4 @@
-name: Strengthen Nanavati Max enquiry conversion path once
+name: Strengthen doctor and treatment directory conversion journeys once
 
 on:
   workflow_dispatch:
@@ -11,70 +11,73 @@ permissions:
   contents: write
 
 jobs:
-  strengthen-nanavati:
+  strengthen-directories:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add bilingual post-enquiry guidance safely
+      - name: Add bilingual decision and enquiry guidance safely
         run: |
-          python - <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
           import hashlib
 
-          footer_css = Path('assets/css/footer-approved.css')
-          footer_lock = Path('FOOTER-LOCK.md')
-          before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in (footer_css, footer_lock)}
+          protected=(Path('assets/css/footer-approved.css'),Path('FOOTER-LOCK.md'))
+          hashes={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in protected}
 
-          changes = {
-            Path('hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html'): (
-              '<h2>Related treatment pages</h2>',
-              '<h2>What happens after you enquire?</h2><p>Send the patient’s medical summary, recent reports, scans and any previous treatment records through the Elajme India enquiry form. We can coordinate the case submission with the relevant hospital team and request an appropriate specialist review or consultation.</p><p>After the medical review, any proposed next steps, appointment availability, preliminary treatment plan, expected stay and cost estimate must be confirmed by the qualified treating team and hospital before travel.</p><p class="links"><a href="/#enquiry">Send reports / start an enquiry</a><a href="/patient-guide/">Read the international patient guide</a></p><h2>Related treatment pages</h2>'
+          jobs={
+            Path('doctors/index.html'):(
+              '<section class="sec"><div class="c"><div class="tools">',
+              '<section class="sec"><div class="c"><div class="notice"><h2>Not sure which specialist fits your case?</h2><p>Send the diagnosis or main medical concern, recent reports and scans, and your country to Elajme India. We can coordinate an initial case review with an appropriate hospital or specialist team. The treating medical team confirms the suitable specialty, doctor availability and medical plan.</p><p><a class="btn" href="/#enquiry">Send your case to Elajme India</a> <a class="outline" href="/patient-guide/">Read the patient guide</a></p></div><div class="tools">'
             ),
-            Path('ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html'): (
-              '<h2>صفحات علاج ذات صلة</h2>',
-              '<h2>ماذا يحدث بعد إرسال الاستفسار؟</h2><p>أرسل الملخص الطبي للمريض والتقارير الحديثة والصور والفحوصات وسجلات العلاج السابقة عبر نموذج الاستفسار لدى علاج مي إنديا. يمكننا تنسيق إرسال الحالة إلى فريق المستشفى المعني وطلب مراجعة من الطبيب المختص المناسب أو تنسيق الاستشارة.</p><p>بعد المراجعة الطبية، يجب أن يؤكد الفريق الطبي المؤهل والمستشفى أي خطوات مقترحة وتوفر الموعد والخطة العلاجية الأولية ومدة الإقامة المتوقعة والتكلفة التقديرية قبل السفر.</p><p class="links"><a href="/ar/#enquiry">إرسال التقارير / بدء الاستفسار</a><a href="/ar/patient-guide/">دليل المريض الدولي</a></p><h2>صفحات علاج ذات صلة</h2>'
+            Path('ar/doctors/index.html'):(
+              '<section class="sec"><div class="c"><div class="grid">',
+              '<section class="sec"><div class="c"><div class="notice"><h2>لست متأكداً من الطبيب أو التخصص المناسب لحالتك؟</h2><p>أرسل التشخيص أو المشكلة الطبية الرئيسية والتقارير والصور الحديثة وبلد الإقامة إلى علاج مي إنديا. يمكننا تنسيق مراجعة أولية للحالة مع مستشفى أو فريق متخصص مناسب. ويؤكد الفريق الطبي المعالج التخصص المناسب وتوفر الطبيب والخطة الطبية.</p><p><a class="btn" href="/ar/#enquiry">أرسل حالتك إلى علاج مي إنديا</a> <a href="/ar/patient-guide/">اقرأ دليل المريض</a></p></div><div class="grid">'
+            ),
+            Path('treatments/index.html'):(
+              '<section class="cta"><div class="c"><h2>Start with your medical information</h2>',
+              '<section class="sec"><div class="c"><h2>What happens after you send your case?</h2><p class="lead">Share the diagnosis or main medical concern, recent reports and scans, previous treatment records and your country. Elajme India can coordinate submission to an appropriate hospital or specialist team for preliminary review. After review, the treating team confirms the relevant specialty, any additional investigations, consultation availability and proposed next steps.</p><div class="related"><a href="/#enquiry">Send your case</a><a href="/patient-guide/">Patient guide</a><a href="/hospitals/">Browse hospitals</a><a href="/doctors/">Browse doctors</a></div><div class="note">Treatment recommendations, acceptance, appointment availability, expected stay and cost estimates remain subject to the treating team and hospital review.</div></div></section><section class="cta"><div class="c"><h2>Start with your medical information</h2>'
+            ),
+            Path('ar/treatments/index.html'):(
+              '<section class="cta"><div class="c"><h2>لست متأكداً من التخصص المناسب؟</h2>',
+              '<section class="sec"><div class="c"><h2>ماذا يحدث بعد إرسال حالتك؟</h2><p class="lead">أرسل التشخيص أو المشكلة الطبية الرئيسية والتقارير والصور الحديثة وسجلات العلاج السابقة وبلد الإقامة. يمكن لعلاج مي إنديا تنسيق إرسال الحالة إلى مستشفى أو فريق متخصص مناسب للمراجعة الأولية. وبعد المراجعة يؤكد الفريق الطبي المعالج التخصص المناسب وأي فحوصات إضافية وتوفر الاستشارة والخطوات المقترحة.</p><div class="related"><a href="/ar/#enquiry">أرسل حالتك</a><a href="/ar/patient-guide/">دليل المريض</a><a href="/ar/hospitals/">المستشفيات</a><a href="/ar/doctors/">الأطباء</a></div><div class="note">تبقى التوصيات العلاجية وقبول الحالة وتوفر الموعد ومدة الإقامة المتوقعة والتكلفة التقديرية خاضعة لمراجعة الفريق الطبي المعالج والمستشفى.</div></div></section><section class="cta"><div class="c"><h2>لست متأكداً من التخصص المناسب؟</h2>'
             )
           }
 
-          for path, (marker, replacement) in changes.items():
-              s = path.read_text(encoding='utf-8')
-              pre, sep, footer = s.partition('<footer')
-              if not sep:
-                  raise SystemExit(f'Footer marker missing: {path}')
-              if 'What happens after you enquire?' in pre or 'ماذا يحدث بعد إرسال الاستفسار؟' in pre:
-                  print(f'Already updated: {path}')
-                  continue
-              if marker not in pre:
-                  raise SystemExit(f'Insertion marker missing: {path}')
-              pre = pre.replace(marker, replacement, 1)
-              path.write_text(pre + sep + footer, encoding='utf-8')
-              print(f'Updated: {path}')
+          for path,(marker,replacement) in jobs.items():
+              s=path.read_text(encoding='utf-8')
+              pre,sep,footer=s.partition('<footer')
+              if not sep: raise SystemExit(f'Footer missing: {path}')
+              duplicate=('Not sure which specialist fits your case?' in pre or 'لست متأكداً من الطبيب أو التخصص المناسب لحالتك؟' in pre or 'What happens after you send your case?' in pre or 'ماذا يحدث بعد إرسال حالتك؟' in pre)
+              if duplicate:
+                  print('Already updated:',path); continue
+              if marker not in pre: raise SystemExit(f'Marker missing: {path}')
+              pre=pre.replace(marker,replacement,1)
+              path.write_text(pre+sep+footer,encoding='utf-8')
+              print('Updated:',path)
 
-          for p, h in before.items():
-              if hashlib.sha256(p.read_bytes()).hexdigest() != h:
+          for p,h in hashes.items():
+              if hashlib.sha256(p.read_bytes()).hexdigest()!=h:
                   raise SystemExit(f'Protected footer file changed: {p}')
           print('Footer lock files unchanged.')
           PY
-      - name: Verify Elajme-only routing and commit
+      - name: Verify bilingual routing and commit
         run: |
-          python - <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
-          checks = {
-            Path('hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html'): ['href="/#enquiry"','href="/patient-guide/"','What happens after you enquire?'],
-            Path('ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html'): ['href="/ar/#enquiry"','href="/ar/patient-guide/"','ماذا يحدث بعد إرسال الاستفسار؟']
+          checks={
+            'doctors/index.html':['Not sure which specialist fits your case?','href="/#enquiry"','href="/patient-guide/"'],
+            'ar/doctors/index.html':['لست متأكداً من الطبيب أو التخصص المناسب لحالتك؟','href="/ar/#enquiry"','href="/ar/patient-guide/"'],
+            'treatments/index.html':['What happens after you send your case?','href="/#enquiry"','href="/patient-guide/"'],
+            'ar/treatments/index.html':['ماذا يحدث بعد إرسال حالتك؟','href="/ar/#enquiry"','href="/ar/patient-guide/"']
           }
-          for p, needles in checks.items():
-              s=p.read_text(encoding='utf-8')
-              for n in needles:
-                  assert n in s, (p,n)
-          print('Bilingual Nanavati conversion path verified.')
+          for f,needles in checks.items():
+              s=Path(f).read_text(encoding='utf-8')
+              for n in needles: assert n in s,(f,n)
+          print('Doctor and treatment directory conversion journeys verified.')
           PY
-          if git diff --quiet; then
-            echo 'No content change required.'
-            exit 0
-          fi
+          if git diff --quiet; then echo 'No content change required.'; exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html
-          git commit -m 'Strengthen Nanavati Max enquiry conversion path'
+          git add doctors/index.html ar/doctors/index.html treatments/index.html ar/treatments/index.html
+          git commit -m 'Strengthen doctor and treatment directory conversion journeys'
           git push
