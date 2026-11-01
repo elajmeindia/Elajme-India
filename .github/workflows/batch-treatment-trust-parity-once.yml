@@ -1,4 +1,4 @@
-name: Surface Nigeria on bilingual homepage once
+name: Align Arabic international hub with GCC and Africa coverage once
 on:
   push:
     branches: [main]
@@ -11,61 +11,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add Nigeria to homepage international market visibility
+      - name: Update Arabic international patient market framing
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import hashlib
-
-          files=['index.html','ar/index.html']
+          p=Path('ar/international-patients/mea/index.html')
+          text=p.read_text(); i=text.lower().find('<footer'); assert i>=0
+          pre,footer=text[:i],text[i:]
           before={q:hashlib.sha256(Path(q).read_bytes()).hexdigest() for q in ['FOOTER-LOCK.md','assets/css/footer-approved.css']}
-          changed=[]
-
-          # English homepage
-          p=Path('index.html'); text=p.read_text(); i=text.lower().find('<footer'); assert i>=0
-          pre,footer=text[:i],text[i:]
-          old='''<div class="country"><span data-en="Bahrain" data-ar="البحرين">Bahrain</span></div></div></section>'''
-          new='''<div class="country"><span data-en="Bahrain" data-ar="البحرين">Bahrain</span></div><div class="country"><a href="nigeria/treatment-in-india/" aria-label="Nigeria patient guide"><span data-en="Nigeria" data-ar="نيجيريا">Nigeria</span></a></div></div></section>'''
-          if new not in pre:
-            assert old in pre, 'English homepage country-strip anchor missing'
+          replacements={
+            'العلاج في الهند لمرضى الخليج والمرضى الدوليين | علاج مي إنديا':'العلاج في الهند لمرضى الخليج وأفريقيا والمرضى الدوليين | علاج مي إنديا',
+            'تنسيق العلاج في الهند للمرضى من السعودية والإمارات وعُمان وقطر والكويت والبحرين ودول أخرى، مع دعم التواصل بالعربية والإنجليزية عبر علاج مي إنديا.':'تنسيق العلاج في الهند للمرضى من السعودية والإمارات وعُمان وقطر والكويت والبحرين ونيجيريا ودول أخرى، مع دعم التواصل بالعربية والإنجليزية عبر علاج مي إنديا.',
+            'العلاج في الهند لمرضى الخليج والمرضى الدوليين':'العلاج في الهند لمرضى الخليج وأفريقيا والمرضى الدوليين',
+            'هل تخطط للعلاج في الهند من إحدى دول الخليج أو من خارج الهند؟':'هل تخطط للعلاج في الهند من الخليج أو أفريقيا أو من خارج الهند؟',
+            'نستقبل استفسارات المرضى من السعودية والإمارات وعُمان وقطر والكويت والبحرين ودول أخرى. قبول الحالة والتوصيات العلاجية يخضعان لمراجعة الجهة الطبية.':'نستقبل استفسارات المرضى من السعودية والإمارات وعُمان وقطر والكويت والبحرين ونيجيريا ودول وأسواق دولية أخرى. قبول الحالة والتوصيات العلاجية يخضعان لمراجعة الجهة الطبية.',
+            'دعم المرضى من دول الخليج':'مسارات المرضى من الخليج وأفريقيا',
+            'يساعد التواصل باللغة العربية في فهم خطوات التنسيق والتقارير والردود والترتيبات العملية. وتبقى القرارات الطبية مسؤولية المستشفى والفريق الطبي المؤهل بشكل مستقل عن دور علاج مي إنديا في التنسيق.':'تدعم علاج مي إنديا المرضى الدوليين عبر اللغات والحدود. يتوفر التنسيق بالعربية والإنجليزية لمرضى الخليج، ويمكن للمرضى من نيجيريا والأسواق الأخرى استخدام مسار مراجعة الحالة وتنسيق رحلة العلاج نفسه. وتبقى القرارات الطبية مسؤولية المستشفى والفريق الطبي المؤهل.'
+          }
+          for old,new in replacements.items():
+            assert old in pre, f'Missing expected text: {old}'
             pre=pre.replace(old,new,1)
-          pre=pre.replace('''"areaServed":["Saudi Arabia","United Arab Emirates","Oman","Qatar","Kuwait","Bahrain"]''','''"areaServed":["Saudi Arabia","United Arab Emirates","Oman","Qatar","Kuwait","Bahrain","Nigeria","Middle East","Africa","International"]''',1)
           updated=pre+footer
-          if updated!=text: p.write_text(updated); changed.append(str(p))
-
-          # Arabic homepage: add Nigeria only when the equivalent Bahrain strip is present.
-          p=Path('ar/index.html'); text=p.read_text(); i=text.lower().find('<footer'); assert i>=0
-          pre,footer=text[:i],text[i:]
-          candidates=[
-            ('<div class="country"><span>البحرين</span></div></div></section>','<div class="country"><span>البحرين</span></div><div class="country"><a href="/ar/nigeria/treatment-in-india/" aria-label="دليل المرضى من نيجيريا"><span>نيجيريا</span></a></div></div></section>'),
-            ('<div class="country"><span data-en="Bahrain" data-ar="البحرين">البحرين</span></div></div></section>','<div class="country"><span data-en="Bahrain" data-ar="البحرين">البحرين</span></div><div class="country"><a href="/ar/nigeria/treatment-in-india/" aria-label="دليل المرضى من نيجيريا"><span data-en="Nigeria" data-ar="نيجيريا">نيجيريا</span></a></div></div></section>')]
-          if '/ar/nigeria/treatment-in-india/' not in pre:
-            for old,new in candidates:
-              if old in pre:
-                pre=pre.replace(old,new,1); break
-            else:
-              # If Arabic homepage uses a different layout, insert a compact country link before the enquiry section.
-              marker='<section class="section enquiry-section"'
-              assert marker in pre, 'Arabic homepage insertion marker missing'
-              block='<section class="section" aria-labelledby="nigeria-market"><div class="container"><div class="section-heading centered"><span class="section-label">المرضى الدوليون</span><h2 id="nigeria-market">تنسيق العلاج للمرضى من نيجيريا</h2><p>يمكن للمرضى والعائلات من نيجيريا مشاركة التقارير الطبية عبر علاج مي إنديا لتنسيق مراجعة الحالة والتواصل مع المستشفيات والتخطيط العملي لرحلة العلاج في الهند.</p><p><a class="button button-secondary" href="/ar/nigeria/treatment-in-india/">دليل المرضى من نيجيريا</a></p></div></div></section>'
-              pre=pre.replace(marker,block+marker,1)
-          pre=pre.replace('''"areaServed":["Saudi Arabia","United Arab Emirates","Oman","Qatar","Kuwait","Bahrain"]''','''"areaServed":["Saudi Arabia","United Arab Emirates","Oman","Qatar","Kuwait","Bahrain","Nigeria","Middle East","Africa","International"]''',1)
-          updated=pre+footer
-          if updated!=text: p.write_text(updated); changed.append(str(p))
-
+          if updated!=text: p.write_text(updated)
           after={q:hashlib.sha256(Path(q).read_bytes()).hexdigest() for q in before}
           assert before==after, 'Locked footer assets changed'
-          for fn in files:
-            t=Path(fn).read_text(); assert 'nigeria/treatment-in-india/' in t.lower(), f'Nigeria link missing: {fn}'
-          print('Changed',changed)
-          print('Footer locks unchanged',after)
+          out=p.read_text()
+          assert 'مسارات المرضى من الخليج وأفريقيا' in out
+          assert '/ar/nigeria/treatment-in-india/' in out
+          print('Arabic international hub aligned; footer locks unchanged')
           PY
-      - name: Commit homepage Nigeria visibility
+      - name: Commit Arabic hub alignment
         run: |
-          if git diff --quiet -- index.html ar/index.html; then exit 0; fi
+          if git diff --quiet -- ar/international-patients/mea/index.html; then exit 0; fi
           git config user.name elajmeindia
           git config user.email shahzadalamnadwi@gmail.com
-          git add index.html ar/index.html
-          git commit -m 'Surface Nigeria on bilingual homepage'
+          git add ar/international-patients/mea/index.html
+          git commit -m 'Align Arabic international hub with GCC and Africa coverage'
           git push
