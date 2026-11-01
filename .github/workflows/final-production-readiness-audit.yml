@@ -1,0 +1,117 @@
+name: Final Elajme production readiness audit
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/final-production-readiness-audit.yml']
+permissions:
+  contents: read
+jobs:
+  final-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify final production readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urlsplit, unquote
+          import re, sys
+
+          problems=[]
+          root=Path('.')
+          html=[p for p in root.rglob('*.html') if '.git' not in p.parts and 'node_modules' not in p.parts]
+          active=[]
+          sitemap=(root/'sitemap.xml').read_text(encoding='utf-8',errors='ignore') if (root/'sitemap.xml').exists() else ''
+
+          def is_alias(t):
+              low=t.lower()
+              return ('http-equiv="refresh"' in low or "http-equiv='refresh'" in low or
+                      bool(re.search(r'<meta\s+name=["\']robots["\'][^>]*noindex',t,re.I)))
+
+          for p in html:
+              t=p.read_text(encoding='utf-8',errors='ignore')
+              if is_alias(t):
+                  if 'footer-approved.css' not in t: problems.append(f'{p}: redirect/noindex alias missing approved footer CSS')
+                  continue
+              active.append(p)
+              low=t.lower()
+              m=re.search(r'<html\b([^>]*)>',t,re.I)
+              attrs=m.group(1) if m else ''
+              lang=re.search(r'\blang=["\']([^"\']+)',attrs,re.I)
+              if not lang: problems.append(f'{p}: html lang missing')
+              if str(p).startswith('ar/'):
+                  if not lang or not lang.group(1).lower().startswith('ar'): problems.append(f'{p}: Arabic lang missing')
+                  if not re.search(r'\bdir=["\']rtl["\']',attrs,re.I): problems.append(f'{p}: Arabic RTL missing')
+              if len(re.findall(r'<h1\b',t,re.I)) != 1: problems.append(f'{p}: expected exactly one H1')
+              if len(re.findall(r'<link\s+[^>]*rel=["\']canonical["\'][^>]*>',t,re.I)) != 1: problems.append(f'{p}: canonical count invalid')
+              if not re.search(r'<title>\s*\S.*?</title>',t,re.I|re.S): problems.append(f'{p}: title missing')
+              desc=(re.search(r'<meta\s+name=["\']description["\'][^>]*content=["\']([^"\']+)',t,re.I) or
+                    re.search(r'<meta\s+content=["\']([^"\']+)["\'][^>]*name=["\']description["\']',t,re.I))
+              if not desc or len(desc.group(1).strip()) < 50: problems.append(f'{p}: meta description missing/short')
+              if 'footer-approved.css' not in t: problems.append(f'{p}: approved footer CSS missing')
+              for tag in re.findall(r'<img\b[^>]*>',t,re.I):
+                  if not re.search(r'\balt=["\'][^"\']*["\']',tag,re.I): problems.append(f'{p}: image missing alt')
+
+              # Patient-facing profile/treatment pages must route through Elajme.
+              if p.name=='index.html' and any(k in p.parts for k in ('doctors','hospitals','treatments')) and p.parent.name not in ('doctors','hospitals','treatments'):
+                  expected='/ar/#enquiry' if str(p).startswith('ar/') else '/#enquiry'
+                  if expected not in t: problems.append(f'{p}: Elajme enquiry route missing')
+              for href in re.findall(r'href=["\']([^"\']+)["\']',t,re.I):
+                  h=href.lower()
+                  if 'vaidam.com' in h or 'ilajindia.com' in h: problems.append(f'{p}: prohibited patient route {href}')
+
+          # Internal links must resolve.
+          checked_links=0
+          for p in html:
+              t=p.read_text(encoding='utf-8',errors='ignore')
+              for href in re.findall(r'href=["\']([^"\']+)["\']',t,re.I):
+                  if not href or href.startswith(('#','mailto:','tel:','javascript:','data:')): continue
+                  u=urlsplit(href)
+                  if u.scheme or u.netloc or not u.path: continue
+                  checked_links+=1
+                  q=Path(unquote(u.path).lstrip('/')) if href.startswith('/') else p.parent/Path(unquote(u.path))
+                  candidates=[q] if q.suffix else [q,q/'index.html']
+                  if not any(c.exists() for c in candidates): problems.append(f'{p}: broken internal link {href}')
+
+          # Sitemap entries must exist and must not be aliases/noindex pages.
+          sitemap_urls=re.findall(r'<loc>([^<]+)</loc>',sitemap)
+          for url in sitemap_urls:
+              path=urlsplit(url).path.strip('/')
+              target=Path(path)/'index.html' if path and not Path(path).suffix else (Path(path) if path else Path('index.html'))
+              if not target.exists(): problems.append(f'sitemap target missing: {url}'); continue
+              t=target.read_text(encoding='utf-8',errors='ignore')
+              if is_alias(t): problems.append(f'alias/noindex URL in sitemap: {url}')
+
+          # Active EN doctor/hospital profiles require reciprocal Arabic counterparts and sitemap coverage.
+          for kind in ('doctors','hospitals'):
+              for p in Path(kind).glob('*/index.html'):
+                  t=p.read_text(encoding='utf-8',errors='ignore')
+                  if is_alias(t): continue
+                  slug=p.parent.name
+                  ar=Path('ar')/kind/slug/'index.html'
+                  if not ar.exists(): problems.append(f'{p}: Arabic counterpart missing'); continue
+                  at=ar.read_text(encoding='utf-8',errors='ignore')
+                  enurl=f'https://elajmeindia.com/{kind}/{slug}/'
+                  arurl=f'https://elajmeindia.com/ar/{kind}/{slug}/'
+                  for page,text in ((p,t),(ar,at)):
+                      if enurl not in text or arurl not in text: problems.append(f'{page}: bilingual canonical/hreflang pair incomplete')
+                  if enurl not in sitemap: problems.append(f'{p}: English profile missing from sitemap')
+                  if arurl not in sitemap: problems.append(f'{ar}: Arabic profile missing from sitemap')
+
+          # Directory query routing must remain functional.
+          for p in (Path('doctors/index.html'),Path('hospitals/index.html'),Path('ar/doctors/index.html'),Path('ar/hospitals/index.html')):
+              t=p.read_text(encoding='utf-8',errors='ignore')
+              if 'id="q"' not in t: problems.append(f'{p}: search input missing')
+              if 'URLSearchParams' not in t: problems.append(f'{p}: query-aware filtering missing')
+
+          print(f'ACTIVE HTML FILES AUDITED: {len(active)}')
+          print(f'INTERNAL LINKS CHECKED: {checked_links}')
+          print(f'SITEMAP URLS CHECKED: {len(sitemap_urls)}')
+          if problems:
+              print('FINAL PRODUCTION READINESS ISSUES:')
+              print('\n'.join(dict.fromkeys(problems)))
+              sys.exit(1)
+          print('ELAJME FINAL PRODUCTION READINESS: CLEAN')
+          PY
