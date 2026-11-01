@@ -1,0 +1,33 @@
+name: Audit SEO pathways phase 3
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-seo-pathways-phase3.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit bilingual treatment pathways
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          slugs=['cancer-treatment-india','heart-treatment-india','knee-replacement-india','neurosurgery-india','urology-treatment-india','gastroenterology-treatment-india','kidney-transplant-india','liver-transplant-india','spine-surgery-india','fertility-ivf-treatment-india','dental-treatment-india','cosmetic-surgery-india','eye-treatment-india','womens-health-gynaecology-india','ent-treatment-india']
+          checked=0
+          for slug in slugs:
+            for prefix in ('','ar/'):
+              p=Path(prefix+'treatments/'+slug+'/index.html'); s=p.read_text(); checked+=1
+              assert s.count('<h1>')==1, p
+              assert 'rel="canonical"' in s, p
+              assert 'hreflang="en"' in s and 'hreflang="ar"' in s and 'hreflang="x-default"' in s, p
+              assert '/assets/css/footer-approved.css' in s, p
+              if prefix:
+                assert 'dir="rtl"' in s and '/ar/#enquiry' in s and '/ar/doctors/?q=' in s and '/ar/hospitals/?q=' in s, p
+              else:
+                assert '/#enquiry' in s and '/doctors/?q=' in s and '/hospitals/?q=' in s, p
+          print('PHASE 3 SEO PATHWAY AUDIT CLEAN:',checked,'pages')
+          PY
