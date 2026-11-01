@@ -54,7 +54,6 @@ jobs:
           for kind,slug,p,ar in active:
               for url in (f'https://elajmeindia.com/{kind}/{slug}/',f'https://elajmeindia.com/ar/{kind}/{slug}/'):
                   if url not in sitemap: problems.append(f'sitemap missing {url}')
-          # Explicitly guard the active Wockhardt profile that was previously missing from sitemap.
           for url in ('https://elajmeindia.com/hospitals/wockhardt-hospital-mumbai-central/','https://elajmeindia.com/ar/hospitals/wockhardt-hospital-mumbai-central/'):
               if url not in sitemap: problems.append(f'sitemap missing {url}')
           print(f'ACTIVE PROFILE SEO/PARITY PAGES CHECKED: {checked}')
