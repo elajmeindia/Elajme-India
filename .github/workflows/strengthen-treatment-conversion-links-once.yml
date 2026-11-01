@@ -1,0 +1,60 @@
+name: Strengthen treatment conversion links once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/strengthen-treatment-conversion-links-once.yml']
+permissions:
+  contents: write
+jobs:
+  strengthen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Strengthen all 15 bilingual treatment journeys
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          slugs=['cancer-treatment-india','heart-treatment-india','knee-replacement-india','neurosurgery-india','urology-treatment-india','gastroenterology-treatment-india','kidney-transplant-india','liver-transplant-india','spine-surgery-india','fertility-ivf-treatment-india','dental-treatment-india','cosmetic-surgery-india','eye-treatment-india','womens-health-gynaecology-india','ent-treatment-india']
+          locked=[Path('assets/css/footer-approved.css'),Path('FOOTER-LOCK.md')]
+          before={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in locked}
+          changed=[]
+          for lang in ('en','ar'):
+            for slug in slugs:
+              p=Path('treatments' if lang=='en' else 'ar/treatments')/slug/'index.html'
+              s=p.read_text(encoding='utf-8'); pre,sep,foot=s.partition('<footer')
+              doctors='../../doctors/' if lang=='en' else '../../../ar/doctors/'
+              hospitals='../../hospitals/' if lang=='en' else '../../../ar/hospitals/'
+              enquiry='/#enquiry' if lang=='en' else '/ar/#enquiry'
+              labels=('Explore relevant doctors','Explore hospitals','Request a medical opinion') if lang=='en' else ('استكشف الأطباء','استكشف المستشفيات','اطلب تنسيق مراجعة طبية')
+              links=f'<a href="{doctors}">{labels[0]}</a><a href="{hospitals}">{labels[1]}</a><a href="{enquiry}">{labels[2]}</a>'
+              # Prefer the existing related-navigation block and add only missing journey destinations.
+              if '<div class="related">' in pre:
+                a=pre.index('<div class="related">'); b=pre.index('</div>',a)
+                block=pre[a:b]
+                add=''
+                if doctors not in block: add+=f'<a href="{doctors}">{labels[0]}</a>'
+                if hospitals not in block: add+=f'<a href="{hospitals}">{labels[1]}</a>'
+                if enquiry not in block: add+=f'<a href="{enquiry}">{labels[2]}</a>'
+                if add: pre=pre[:b]+add+pre[b:]
+              else:
+                marker='<section class="cta">'
+                assert marker in pre, f'{p}: CTA marker missing'
+                pre=pre.replace(marker,f'<section class="sec"><div class="c"><h2>{"Continue your treatment enquiry" if lang=="en" else "تابع استفسارك الطبي"}</h2><div class="related">{links}</div></div></section>{marker}',1)
+              out=pre+sep+foot
+              # Every treatment page must expose both discovery routes plus an Elajme-only conversion route.
+              assert doctors in pre and hospitals in pre and enquiry in pre, f'{p}: journey links incomplete'
+              if out!=s:
+                p.write_text(out,encoding='utf-8'); changed.append(str(p))
+          for p,h in before.items(): assert hashlib.sha256(p.read_bytes()).hexdigest()==h, f'LOCK VIOLATION {p}'
+          print(f'TREATMENT JOURNEY STRENGTHENING CLEAN: {len(changed)} pages updated')
+          PY
+      - name: Commit strengthened treatment journeys
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add treatments ar/treatments
+          git diff --cached --quiet && exit 0
+          git commit -m 'Strengthen bilingual treatment discovery and conversion paths'
+          git push
