@@ -1,0 +1,55 @@
+name: Strengthen hospital directory conversion once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/strengthen-hospital-directory-conversion-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add bilingual hospital directory decision pathway
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          changes = {
+            'hospitals/index.html': (
+              '<section class="sec"><div class="c"><div class="tools">',
+              '<section class="sec"><div class="c"><div class="notice"><h2>Not sure which hospital fits your case?</h2><p>Share your diagnosis or main medical concern, recent reports or scans, and your country with Elajme India. We can coordinate an initial case review with an appropriate hospital or specialist team. The treating team and hospital confirm medical suitability, acceptance, availability and the proposed care pathway.</p><p><a class="btn" href="/#enquiry">Send your case to Elajme India</a> <a class="btn secondary" href="/patient-guide/">Read the patient guide</a></p></div><div class="tools">'
+            ),
+            'ar/hospitals/index.html': (
+              '<section class="sec"><div class="c"><div class="grid">',
+              '<section class="sec"><div class="c"><div class="card" style="margin-bottom:24px"><h2>لست متأكداً أي مستشفى يناسب حالتك؟</h2><p>أرسل التشخيص أو المشكلة الطبية الرئيسية، والتقارير أو الأشعة الحديثة، وبلد الإقامة إلى علاج مي إنديا. يمكننا تنسيق مراجعة أولية للحالة مع مستشفى أو فريق اختصاصي مناسب. ويؤكد الفريق الطبي والمستشفى مدى ملاءمة الحالة وقبولها والتوفر والمسار العلاجي المقترح.</p><p><a class="btn" href="/ar/#enquiry">أرسل حالتك إلى علاج مي إنديا</a> <a href="/ar/patient-guide/">دليل المريض</a></p></div><div class="grid">'
+            )
+          }
+
+          for name,(old,new) in changes.items():
+              p=Path(name); text=p.read_text(encoding='utf-8')
+              pre,sep,footer=text.partition('<footer')
+              if not sep: raise SystemExit(f'Footer missing: {name}')
+              if ('Not sure which hospital fits your case?' in pre or 'لست متأكداً أي مستشفى يناسب حالتك؟' in pre):
+                  print(name, 'already updated'); continue
+              if old not in pre: raise SystemExit(f'Anchor missing: {name}')
+              pre=pre.replace(old,new,1)
+              p.write_text(pre+sep+footer,encoding='utf-8')
+              print('updated',name)
+          PY
+      - name: Verify protected footer files are untouched
+        run: test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+      - name: Commit directory updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add hospitals/index.html ar/hospitals/index.html
+          if git diff --cached --quiet; then echo 'No changes required'; exit 0; fi
+          git commit -m "Strengthen bilingual hospital directory enquiry path"
+          git push
