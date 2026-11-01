@@ -1,0 +1,82 @@
+name: Fix doctor directory image propagation once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-doctor-directory-image-propagation-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Propagate verified local doctor portraits to directories
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, hashlib
+
+          locked = [Path('assets/css/footer-approved.css'), Path('FOOTER-LOCK.md')]
+          before = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in locked if p.exists()}
+
+          enp=Path('doctors/index.html'); arp=Path('ar/doctors/index.html')
+          en=enp.read_text(encoding='utf-8'); ar=arp.read_text(encoding='utf-8')
+
+          assets=Path('assets/images/doctors')
+          local={}
+          for p in assets.iterdir():
+              if p.is_file() and p.name!='doctor-placeholder.svg' and p.suffix.lower() in {'.jpg','.jpeg','.png','.webp'}:
+                  local[p.stem]=f'/assets/images/doctors/{p.name}'
+
+          # Only replace a directory-card image when an exact slug-matched local portrait already exists.
+          # This avoids inventing or misidentifying portraits.
+          def patch(html):
+              cards=re.findall(r'<article class="card".*?</article>', html, re.S)
+              changed=0
+              for card in cards:
+                  m=re.search(r'href="([^"]*dr-([^/"]+)/)"', card)
+                  if not m: continue
+                  slug='dr-'+m.group(2)
+                  src=local.get(slug)
+                  if not src: continue
+                  new=re.sub(r'(<img[^>]+src=")[^"]+("[^>]*>)', lambda x:x.group(1)+src+x.group(2), card, count=1)
+                  if new!=card:
+                      html=html.replace(card,new,1); changed+=1
+              return html,changed
+
+          en,en_changed=patch(en)
+          ar,ar_changed=patch(ar)
+          enp.write_text(en,encoding='utf-8'); arp.write_text(ar,encoding='utf-8')
+
+          # Harsh Dua intentionally remains neutral until an exact first-party portrait is verified.
+          # Never substitute another doctor's image merely to eliminate a placeholder.
+          assert Path('doctors/dr-harsh-dua/index.html').exists()
+
+          after = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in locked if p.exists()}
+          assert before==after, 'Locked footer assets changed'
+          print(f'Updated EN doctor cards: {en_changed}')
+          print(f'Updated AR doctor cards: {ar_changed}')
+          print('Verified local portrait propagation complete; unverified Harsh Dua portrait remains protected.')
+          PY
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- doctors/index.html ar/doctors/index.html; then
+            echo 'No directory image propagation changes needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add doctors/index.html ar/doctors/index.html
+          git commit -m 'Propagate verified local doctor portraits to bilingual directories'
+          git push
