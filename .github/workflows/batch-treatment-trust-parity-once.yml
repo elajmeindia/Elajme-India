@@ -1,4 +1,4 @@
-name: Improve Nigeria patient pages once
+name: Add Nigeria to international patient hub once
 on:
   push:
     branches: [main]
@@ -11,29 +11,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add Nigeria pre-travel guidance
+      - name: Add Nigeria to bilingual international patient hub
+        shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import hashlib
           updates=[
-          ('nigeria/treatment-in-india/index.html','<section class="sec alt"><div class="c"><h2>From Nigeria to treatment in India</h2>','''<section class="sec"><div class="c"><h2>Prepare before travelling from Nigeria</h2><p>Share the available medical records with Elajme India before making travel arrangements. We can coordinate the case-review request and help you understand the available response and practical next steps.</p><div class="grid"><article class="card"><h3>Review the response</h3><p>Check the available hospital feedback and whether more reports or an in-person consultation are requested.</p></article><article class="card"><h3>Review the estimate</h3><p>Any hospital estimate is preliminary and may change after clinical evaluation or additional requirements.</p></article><article class="card"><h3>Prepare documents</h3><p>Keep reports, scans, medicine details, passport documents and available hospital correspondence together.</p></article><article class="card"><h3>Plan the visit</h3><p>Elajme India can help coordinate available appointments and practical treatment-related travel arrangements when required.</p></article></div><div class="related"><a href="../../patient-guide/">Patient guide</a><a href="../../medical-visa/">Medical visa guidance</a><a href="../../treatments/">Treatments</a><a href="../../hospitals/">Hospitals</a><a href="../../doctors/">Doctors</a></div><div class="note">Hospital acceptance, specialist availability, final treatment decisions, costs and visa approval remain subject to the relevant hospital, clinical team and authorities.</div><p><a class="btn" href="/#enquiry">Share reports with Elajme India</a></p></div></section>'''),
-          ('ar/nigeria/treatment-in-india/index.html','<section class="sec"><div class="c"><h2>كيف ننسق رحلة العلاج؟</h2>','''<section class="sec alt"><div class="c"><h2>الاستعداد قبل السفر من نيجيريا</h2><p>شارك التقارير الطبية المتاحة مع علاج مي إنديا قبل ترتيب السفر. يمكننا تنسيق طلب مراجعة الحالة ومساعدتك على فهم الرد المتاح والخطوات العملية التالية.</p><div class="grid"><div class="card"><h3>مراجعة الرد</h3><p>راجع ملاحظات المستشفى المتاحة وما إذا كانت هناك حاجة إلى تقارير إضافية أو استشارة حضورية.</p></div><div class="card"><h3>مراجعة التقدير</h3><p>أي تقدير صادر عن المستشفى يكون أولياً وقد يتغير بعد التقييم السريري أو المتطلبات الإضافية.</p></div><div class="card"><h3>تجهيز المستندات</h3><p>احتفظ بالتقارير وصور الأشعة ومعلومات الأدوية ووثائق جواز السفر ومراسلات المستشفى المتاحة معاً.</p></div><div class="card"><h3>التخطيط للزيارة</h3><p>يمكن لعلاج مي إنديا المساعدة في تنسيق المواعيد المتاحة والترتيبات العملية المرتبطة برحلة العلاج عند الحاجة.</p></div></div><div class="related"><a href="/ar/patient-guide/">دليل المريض</a><a href="/ar/medical-visa/">التأشيرة الطبية</a><a href="/ar/treatments/">العلاجات</a><a href="/ar/hospitals/">المستشفيات</a><a href="/ar/doctors/">الأطباء</a></div><div class="note">يبقى قبول المستشفى وتوفر الطبيب والقرارات العلاجية والتكلفة النهائية والموافقة على التأشيرة خاضعة للجهات المختصة.</div><p><a class="btn" href="/ar/#enquiry">أرسل التقارير إلى علاج مي إنديا</a></p></div></section>''')]
+          ('international-patients/mea/index.html',
+           '<article class="card"><h3>Bahrain</h3><p>Arabic and English coordination for patients from Bahrain considering medical treatment in India.</p><a href="../../bahrain/treatment-in-india/">Bahrain patient guide →</a></article>',
+           '<article class="card"><h3>Bahrain</h3><p>Arabic and English coordination for patients from Bahrain considering medical treatment in India.</p><a href="../../bahrain/treatment-in-india/">Bahrain patient guide →</a></article><article class="card"><h3>Nigeria</h3><p>Case review, hospital communication and treatment-visit coordination for patients and families travelling from Nigeria to India.</p><a href="../../nigeria/treatment-in-india/">Nigeria patient guide →</a></article>'),
+          ('ar/international-patients/mea/index.html',
+           '<article class="card"><h3>البحرين</h3><p>تنسيق بالعربية والإنجليزية للمرضى من البحرين الراغبين في العلاج في الهند.</p><a href="/ar/bahrain/treatment-in-india/">دليل المرضى من البحرين ←</a></article>',
+           '<article class="card"><h3>البحرين</h3><p>تنسيق بالعربية والإنجليزية للمرضى من البحرين الراغبين في العلاج في الهند.</p><a href="/ar/bahrain/treatment-in-india/">دليل المرضى من البحرين ←</a></article><article class="card"><h3>نيجيريا</h3><p>تنسيق مراجعة الحالة والتواصل مع المستشفى ورحلة العلاج للمرضى والعائلات القادمين من نيجيريا إلى الهند.</p><a href="/ar/nigeria/treatment-in-india/">دليل المرضى من نيجيريا ←</a></article>')]
           changed=[]
-          for fn,anchor,block in updates:
+          for fn,old,new in updates:
             p=Path(fn); text=p.read_text(); i=text.lower().find('<footer'); assert i>=0
             pre,footer=text[:i],text[i:]
-            if block not in pre:
-              assert anchor in pre
-              p.write_text(pre.replace(anchor,block+anchor,1)+footer); changed.append(fn)
+            if new not in pre:
+              assert old in pre, f'anchor missing: {fn}'
+              p.write_text(pre.replace(old,new,1)+footer); changed.append(fn)
+          # Explicitly expose Nigeria in metadata/service coverage too.
+          for fn in ['international-patients/mea/index.html','ar/international-patients/mea/index.html']:
+            p=Path(fn); text=p.read_text(); i=text.lower().find('<footer'); pre,footer=text[:i],text[i:]
+            pre=pre.replace('"Bahrain","Middle East","Africa"','"Bahrain","Nigeria","Middle East","Africa"')
+            p.write_text(pre+footer)
           for q in [Path('FOOTER-LOCK.md'),Path('assets/css/footer-approved.css')]: print('LOCK',q,hashlib.sha256(q.read_bytes()).hexdigest())
           print('Changed',changed)
           PY
-      - name: Commit changes
+      - name: Commit Nigeria hub visibility
         run: |
-          if git diff --quiet -- nigeria/treatment-in-india/index.html ar/nigeria/treatment-in-india/index.html; then exit 0; fi
+          if git diff --quiet -- international-patients/mea/index.html ar/international-patients/mea/index.html; then exit 0; fi
           git config user.name elajmeindia
           git config user.email shahzadalamnadwi@gmail.com
-          git add nigeria/treatment-in-india/index.html ar/nigeria/treatment-in-india/index.html
-          git commit -m 'Improve Nigeria patient pathway'
+          git add international-patients/mea/index.html ar/international-patients/mea/index.html
+          git commit -m 'Add Nigeria to international patient hub'
           git push
