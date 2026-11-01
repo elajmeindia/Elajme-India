@@ -1,0 +1,47 @@
+name: Audit Search Console SEO batch
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-search-console-seo-batch.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify priority SEO pages and bilingual safeguards
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          pages = [
+            ('hospitals/kokilaben-dhirubhai-ambani-hospital-mumbai/index.html','en','/#enquiry'),
+            ('hospitals/sir-hn-reliance-foundation-hospital-mumbai/index.html','en','/#enquiry'),
+            ('hospitals/blk-max-super-speciality-hospital-delhi/index.html','en','/#enquiry'),
+            ('doctors/dr-aditya-j-nanavati/index.html','en','/#enquiry'),
+            ('doctors/dr-jayesh-sardhara/index.html','en','/#enquiry'),
+            ('doctors/dr-kaushal-malhan/index.html','en','/#enquiry'),
+            ('ar/doctors/dr-aditya-j-nanavati/index.html','ar','/ar/#enquiry'),
+            ('ar/doctors/dr-jayesh-sardhara/index.html','ar','/ar/#enquiry'),
+            ('ar/doctors/dr-kaushal-malhan/index.html','ar','/ar/#enquiry'),
+          ]
+          for path, lang, enquiry in pages:
+            text=Path(path).read_text()
+            assert '<title>' in text and '<meta name="description"' in text, path
+            assert 'rel="canonical"' in text, path
+            assert 'hreflang="en"' in text and 'hreflang="ar"' in text and 'hreflang="x-default"' in text, path
+            assert text.count('<h1>') == 1, path
+            assert enquiry in text, path
+            assert 'footer-approved.css' in text, path
+            if lang == 'ar':
+              assert 'lang="ar"' in text and 'dir="rtl"' in text, path
+          assert 'Liver Transplant Surgeon in Mumbai' in Path('doctors/dr-aditya-j-nanavati/index.html').read_text()
+          assert 'Neurosurgeon & Spine Surgeon in Mumbai' in Path('doctors/dr-jayesh-sardhara/index.html').read_text()
+          assert 'Knee & Joint Replacement Surgeon in Mumbai' in Path('doctors/dr-kaushal-malhan/index.html').read_text()
+          assert 'جراح زراعة الكبد في مومباي' in Path('ar/doctors/dr-aditya-j-nanavati/index.html').read_text()
+          assert 'جراح أعصاب وعمود فقري في مومباي' in Path('ar/doctors/dr-jayesh-sardhara/index.html').read_text()
+          assert 'جراح استبدال الركبة والمفاصل في مومباي' in Path('ar/doctors/dr-kaushal-malhan/index.html').read_text()
+          print('SEARCH CONSOLE SEO BATCH AUDIT CLEAN: 9 priority pages')
+          PY
