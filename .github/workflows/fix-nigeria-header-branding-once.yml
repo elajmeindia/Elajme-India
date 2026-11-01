@@ -1,0 +1,51 @@
+name: Fix Nigeria header and logo consistency once
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-nigeria-header-branding-once.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Align Nigeria English header with site shell
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('nigeria/treatment-in-india/index.html')
+          s=p.read_text()
+          css='<link rel="stylesheet" href="../../assets/css/international-patients.css"><link rel="stylesheet" href="/assets/css/footer-approved.css?v=1">'
+          css2='<link rel="stylesheet" href="../../assets/css/international-patients.css"><link rel="stylesheet" href="../../assets/css/site-shell.css"><link rel="stylesheet" href="/assets/css/footer-approved.css?v=1">'
+          assert css in s, 'expected Nigeria stylesheet block missing'
+          s=s.replace(css,css2,1)
+          s=s.replace('<body><header class="head"><div class="c nav"><a class="brand" href="../../">Elajme India</a><a href="../../treatments/">Treatments</a><a href="../../hospitals/">Hospitals</a><a href="../../doctors/">Doctors</a><a href="../../patient-guide/">Patient Guide</a><a href="../../ar/nigeria/treatment-in-india/">العربية</a><a class="wa" href="https://wa.me/917488955154?text=Hello%2C%20I%20am%20from%20Nigeria%20and%20would%20like%20help%20with%20treatment%20coordination%20in%20India." target="_blank" rel="noopener">WhatsApp</a></div></header>', '''<body class="site-shell"><header class="shell-header"><div class="shell-container shell-nav"><a class="shell-brand" href="../../" aria-label="Elajme India home"><img src="../../Healthcare%20Travel%20Swoosh%20Emblem.webp" alt="Elajme India logo" decoding="async" width="1305" height="1206"><span class="shell-wordmark"><span class="shell-name">Elajme <b>India</b></span><span class="shell-ar" lang="ar" dir="rtl">علاج مي إنديا</span></span></a><nav class="shell-links" aria-label="Main navigation"><a href="../../">Home</a><a href="../../treatments/">Treatments</a><a href="../../hospitals/">Hospitals</a><a href="../../doctors/">Doctors</a><a href="../../international-patients/mea/" aria-current="page">International Patients</a><a href="../../patient-guide/">Patient Guide</a><a href="../../medical-visa/">Medical Visa</a><a href="../../about/">About</a><a href="../../contact/">Contact</a></nav><div class="shell-actions"><a class="shell-phone" href="tel:+917488955154">+91 74889 55154</a><a class="shell-lang" href="../../ar/nigeria/treatment-in-india/">العربية</a><a class="shell-cta" href="../../#enquiry">Start Your Enquiry</a></div></div></header>''',1)
+          assert 'class="shell-brand"' in s and 'Healthcare%20Travel%20Swoosh%20Emblem.webp' in s
+          assert '<body class="site-shell">' in s
+          assert 'class="head"' not in s
+          p.write_text(s)
+          PY
+      - name: Verify bilingual Nigeria header parity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for f in ['nigeria/treatment-in-india/index.html','ar/nigeria/treatment-in-india/index.html']:
+            s=Path(f).read_text()
+            assert 'site-shell.css' in s, f'{f}: site shell missing'
+            assert 'class="shell-header"' in s, f'{f}: shell header missing'
+            assert 'class="shell-brand"' in s, f'{f}: shell brand missing'
+            assert 'Healthcare%20Travel%20Swoosh%20Emblem.webp' in s, f'{f}: logo missing'
+            assert 'footer-approved.css' in s, f'{f}: approved footer missing'
+          print('NIGERIA HEADER/LOGO PARITY CLEAN')
+          PY
+      - name: Commit fix
+        run: |
+          if git diff --quiet; then echo 'No changes needed'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add nigeria/treatment-in-india/index.html
+          git commit -m 'Align Nigeria page header and logo with site shell'
+          git push
