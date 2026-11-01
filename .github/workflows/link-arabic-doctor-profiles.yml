@@ -1,67 +1,80 @@
-name: Link Arabic doctor profiles
+name: Strengthen Nanavati Max enquiry conversion path once
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - 'ar/doctors/*/index.html'
       - '.github/workflows/link-arabic-doctor-profiles.yml'
 
 permissions:
   contents: write
 
 jobs:
-  link-profiles:
+  strengthen-nanavati:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Link available Arabic doctor profiles and sync sitemap
+      - name: Add bilingual post-enquiry guidance safely
         run: |
           python - <<'PY'
           from pathlib import Path
+          import hashlib
 
-          directory = Path('ar/doctors/index.html')
-          s = directory.read_text(encoding='utf-8')
+          footer_css = Path('assets/css/footer-approved.css')
+          footer_lock = Path('FOOTER-LOCK.md')
+          before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in (footer_css, footer_lock)}
 
-          profile_root = Path('ar/doctors')
-          slugs = sorted(
-              p.parent.name
-              for p in profile_root.glob('*/index.html')
-              if p.parent.name != 'index'
-          )
+          changes = {
+            Path('hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html'): (
+              '<h2>Related treatment pages</h2>',
+              '<h2>What happens after you enquire?</h2><p>Send the patient’s medical summary, recent reports, scans and any previous treatment records through the Elajme India enquiry form. We can coordinate the case submission with the relevant hospital team and request an appropriate specialist review or consultation.</p><p>After the medical review, any proposed next steps, appointment availability, preliminary treatment plan, expected stay and cost estimate must be confirmed by the qualified treating team and hospital before travel.</p><p class="links"><a href="/#enquiry">Send reports / start an enquiry</a><a href="/patient-guide/">Read the international patient guide</a></p><h2>Related treatment pages</h2>'
+            ),
+            Path('ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html'): (
+              '<h2>صفحات علاج ذات صلة</h2>',
+              '<h2>ماذا يحدث بعد إرسال الاستفسار؟</h2><p>أرسل الملخص الطبي للمريض والتقارير الحديثة والصور والفحوصات وسجلات العلاج السابقة عبر نموذج الاستفسار لدى علاج مي إنديا. يمكننا تنسيق إرسال الحالة إلى فريق المستشفى المعني وطلب مراجعة من الطبيب المختص المناسب أو تنسيق الاستشارة.</p><p>بعد المراجعة الطبية، يجب أن يؤكد الفريق الطبي المؤهل والمستشفى أي خطوات مقترحة وتوفر الموعد والخطة العلاجية الأولية ومدة الإقامة المتوقعة والتكلفة التقديرية قبل السفر.</p><p class="links"><a href="/ar/#enquiry">إرسال التقارير / بدء الاستفسار</a><a href="/ar/patient-guide/">دليل المريض الدولي</a></p><h2>صفحات علاج ذات صلة</h2>'
+            )
+          }
 
-          for slug in slugs:
-              english = f'<a href="/doctors/{slug}/">عرض الملف التعريفي بالإنجليزية</a>'
-              bilingual = (f'<a href="/ar/doctors/{slug}/">عرض الملف التعريفي بالعربية</a> · '
-                           f'<a href="/doctors/{slug}/" lang="en" dir="ltr">English profile</a>')
-              s = s.replace(english, bilingual)
+          for path, (marker, replacement) in changes.items():
+              s = path.read_text(encoding='utf-8')
+              pre, sep, footer = s.partition('<footer')
+              if not sep:
+                  raise SystemExit(f'Footer marker missing: {path}')
+              if 'What happens after you enquire?' in pre or 'ماذا يحدث بعد إرسال الاستفسار؟' in pre:
+                  print(f'Already updated: {path}')
+                  continue
+              if marker not in pre:
+                  raise SystemExit(f'Insertion marker missing: {path}')
+              pre = pre.replace(marker, replacement, 1)
+              path.write_text(pre + sep + footer, encoding='utf-8')
+              print(f'Updated: {path}')
 
-          directory.write_text(s, encoding='utf-8')
-
-          sitemap = Path('sitemap.xml')
-          xml = sitemap.read_text(encoding='utf-8')
-          urls = [f'https://elajmeindia.com/ar/doctors/{slug}/' for slug in slugs]
-          missing = [u for u in urls if f'<loc>{u}</loc>' not in xml]
-          if missing:
-              marker = '  <url><loc>https://elajmeindia.com/ar/hospitals/</loc></url>'
-              additions = ''.join(f'  <url><loc>{u}</loc></url>\n' for u in missing)
-              if marker not in xml:
-                  raise SystemExit('Arabic hospital sitemap marker not found')
-              xml = xml.replace(marker, additions + marker, 1)
-              sitemap.write_text(xml, encoding='utf-8')
-
-          print(f'Arabic doctor profiles discovered: {len(slugs)}')
-          print(f'New sitemap URLs added: {len(missing)}')
+          for p, h in before.items():
+              if hashlib.sha256(p.read_bytes()).hexdigest() != h:
+                  raise SystemExit(f'Protected footer file changed: {p}')
+          print('Footer lock files unchanged.')
           PY
-      - name: Commit changes
+      - name: Verify Elajme-only routing and commit
         run: |
+          python - <<'PY'
+          from pathlib import Path
+          checks = {
+            Path('hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html'): ['href="/#enquiry"','href="/patient-guide/"','What happens after you enquire?'],
+            Path('ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html'): ['href="/ar/#enquiry"','href="/ar/patient-guide/"','ماذا يحدث بعد إرسال الاستفسار؟']
+          }
+          for p, needles in checks.items():
+              s=p.read_text(encoding='utf-8')
+              for n in needles:
+                  assert n in s, (p,n)
+          print('Bilingual Nanavati conversion path verified.')
+          PY
           if git diff --quiet; then
-            echo 'Directory and sitemap already synchronized.'
+            echo 'No content change required.'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add ar/doctors/index.html sitemap.xml
-          git commit -m 'Synchronize Arabic doctor directory and sitemap'
+          git add hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html
+          git commit -m 'Strengthen Nanavati Max enquiry conversion path'
           git push
