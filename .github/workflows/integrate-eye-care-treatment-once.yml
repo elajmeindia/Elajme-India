@@ -1,0 +1,56 @@
+name: Integrate eye care treatment coverage once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/integrate-eye-care-treatment-once.yml']
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Integrate bilingual eye care coverage
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re,hashlib
+          footer_css=Path('assets/css/footer-approved.css')
+          footer_lock=Path('FOOTER-LOCK.md')
+          locked={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in (footer_css,footer_lock)}
+          en=Path('treatments/index.html'); s=en.read_text()
+          assert 'eye-treatment-india/' not in s
+          pre,sep,foot=s.partition('<footer')
+          pre=pre.replace('Medical Treatment in India: 12 Specialties | Elajme India','Medical Treatment in India: 13 Specialties | Elajme India').replace('Explore 12 medical treatment areas in India','Explore 13 medical treatment areas in India')
+          marker='</article></div></div></section><section class="sec alt">'
+          card='<article class="card"><h3><a href="eye-treatment-india/">Eye Care &amp; Ophthalmology</a></h3><p>Ophthalmology specialist review and eye-treatment enquiry coordination.</p></article>'
+          assert marker in pre
+          pre=pre.replace(marker,'</article>'+card+'</div></div></section><section class="sec alt">',1)
+          m=re.search(r'<script type="application/ld\+json">(.*?)</script>',pre)
+          data=json.loads(m.group(1)); items=data['mainEntity']['itemListElement']; items.append({'@type':'ListItem','position':13,'name':'Eye Care & Ophthalmology','url':'https://elajmeindia.com/treatments/eye-treatment-india/'})
+          pre=pre[:m.start(1)]+json.dumps(data,separators=(',',':'),ensure_ascii=False)+pre[m.end(1):]
+          en.write_text(pre+sep+foot)
+          ar=Path('ar/treatments/index.html'); s=ar.read_text(); assert 'eye-treatment-india/' not in s
+          pre,sep,foot=s.partition('<footer')
+          marker='</article></div><div class="note">'
+          card='<article class="card"><h3>علاج العيون وطب العيون</h3><p>تنسيق مراجعة حالات العيون والاستفسارات مع فرق طب العيون المتخصصة.</p><a href="eye-treatment-india/">عرض التفاصيل</a></article>'
+          assert marker in pre
+          pre=pre.replace(marker,'</article>'+card+'</div><div class="note">',1)
+          ar.write_text(pre+sep+foot)
+          sm=Path('sitemap.xml'); x=sm.read_text()
+          for u in ['https://elajmeindia.com/treatments/eye-treatment-india/','https://elajmeindia.com/ar/treatments/eye-treatment-india/']:
+              if u not in x: x=x.replace('</urlset>',f'  <url><loc>{u}</loc></url>\n</urlset>')
+          sm.write_text(x)
+          for p,h in locked.items(): assert hashlib.sha256(p.read_bytes()).hexdigest()==h
+          assert 'eye-treatment-india/' in en.read_text() and 'eye-treatment-india/' in ar.read_text()
+          print('EYE CARE DIRECTORY + SITEMAP INTEGRATION CLEAN')
+          PY
+      - name: Commit integration
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add treatments/index.html ar/treatments/index.html sitemap.xml
+          git diff --cached --quiet && exit 0
+          git commit -m 'Integrate bilingual eye care treatment coverage'
+          git push
