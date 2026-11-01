@@ -28,13 +28,19 @@ jobs:
               if not en_dir.exists() or not ar_dir.exists():
                   problems.append(f'{kind}: bilingual directory missing'); continue
               ent=en_dir.read_text(encoding='utf-8',errors='ignore'); art=ar_dir.read_text(encoding='utf-8',errors='ignore')
-              en_slugs=set(re.findall(rf'href=["\']/{kind}/([^/"\'#?]+)/?["\'#?]',ent,re.I))
-              ar_slugs=set(re.findall(rf'href=["\']/ar/{kind}/([^/"\'#?]+)/?["\'#?]',art,re.I))
+              # EN directories may use either root-relative /kind/slug/ links or directory-relative slug/ links.
+              en_slugs=set(re.findall(rf'href=["\']/{kind}/([^/"\'#?]+)/?',ent,re.I))
+              en_slugs.update(re.findall(r'href=["\'](?!/|https?://|#)([^/"\'#?]+)/["\']',ent,re.I))
+              ar_slugs=set(re.findall(rf'href=["\']/ar/{kind}/([^/"\'#?]+)/?',art,re.I))
+              ar_slugs.update(re.findall(r'href=["\'](?!/|https?://|#)([^/"\'#?]+)/["\']',art,re.I))
               active=set()
               for p in Path(kind).glob('*/index.html'):
                   t=p.read_text(encoding='utf-8',errors='ignore'); low=t.lower()
                   if 'noindex' in low or 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low: continue
                   active.add(p.parent.name)
+              # Only profile slugs are relevant; discard incidental relative links.
+              en_slugs &= (active | {p.parent.name for p in Path(kind).glob('*/index.html')})
+              ar_slugs &= (active | {p.parent.name for p in Path(kind).glob('*/index.html')})
               missing_en=active-en_slugs; missing_ar=active-ar_slugs
               orphan_en=en_slugs-active; orphan_ar=ar_slugs-active
               if missing_en: problems.append(f'{kind}: active profiles missing from EN directory: {sorted(missing_en)}')
