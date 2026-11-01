@@ -1,4 +1,4 @@
-name: Strengthen Saudi patient search journey once
+name: Strengthen UAE patient search journey once
 
 on:
   push:
@@ -17,19 +17,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Add bilingual Saudi pre-travel decision guidance
+      - name: Add bilingual UAE pre-travel decision guidance
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           changes={
-          'saudi-arabia/treatment-in-india/index.html':(
-            '<section class="sec"><div class="c"><h2>Hospitals, doctors and patient resources</h2>',
-            '<section class="sec"><div class="c"><h2>Before you decide to travel from Saudi Arabia</h2><div class="grid"><article class="card"><h3>Review the medical response</h3><p>Check what the hospital or specialist has actually recommended, whether further tests are needed and whether an in-person assessment is required before a final treatment plan.</p></article><article class="card"><h3>Understand the preliminary estimate</h3><p>Ask what the available estimate includes and remember that the final bill can change after examination, investigations, procedure selection, medicines, implants, complications or length of stay.</p></article><article class="card"><h3>Confirm the practical treatment plan</h3><p>Before booking travel, confirm the intended hospital, available appointment information, expected documents and any treatment-related preparation communicated by the medical team.</p></article><article class="card"><h3>Prepare for medical travel</h3><p>Review the patient guide and current medical-visa guidance, and keep copies of relevant medical records and hospital correspondence available for the journey.</p></article></div><div class="note">Elajme India can coordinate these steps, but clinical recommendations, hospital acceptance, final costs and visa decisions remain with the relevant medical teams and authorities.</div></div></section><section class="sec"><div class="c"><h2>Hospitals, doctors and patient resources</h2>'
+          'uae/treatment-in-india/index.html':(
+            '<section class="sec alt"><div class="c"><h2>Explore treatment options in India</h2>',
+            '<section class="sec alt"><div class="c"><h2>Before you decide to travel from the UAE</h2><div class="grid"><article class="card"><h3>Review the medical response</h3><p>Check the hospital or specialist response carefully, including whether more reports, tests or an in-person assessment are needed before a final treatment plan can be confirmed.</p></article><article class="card"><h3>Understand the preliminary estimate</h3><p>Review what the available hospital estimate includes. Final charges can change after examination, investigations, procedure selection, medicines, implants, complications or changes in length of stay.</p></article><article class="card"><h3>Confirm the practical plan</h3><p>Before booking travel, confirm the intended hospital, available appointment information, documents requested by the medical team and any preparation communicated for the visit.</p></article><article class="card"><h3>Prepare for medical travel</h3><p>Use the international patient guide and current medical-visa guidance to organise your records, hospital correspondence and practical treatment-visit documents.</p></article></div><div class="note">Elajme India can coordinate these steps, but clinical recommendations, hospital acceptance, final costs and visa decisions remain with the relevant medical teams and authorities.</div></div></section><section class="sec alt"><div class="c"><h2>Explore treatment options in India</h2>'
           ),
-          'ar/saudi-arabia/treatment-in-india/index.html':(
-            '<section class="sec alt"><div class="c"><h2>استكشف العلاجات وموارد المريض</h2>',
-            '<section class="sec"><div class="c"><h2>قبل اتخاذ قرار السفر من السعودية</h2><div class="grid"><article class="card"><h3>راجع الرد الطبي</h3><p>تحقق مما أوصى به المستشفى أو الطبيب فعلياً، وما إذا كانت هناك فحوصات إضافية مطلوبة أو حاجة إلى تقييم حضوري قبل وضع الخطة العلاجية النهائية.</p></article><article class="card"><h3>افهم التقدير المبدئي للتكلفة</h3><p>راجع ما يشمله التقدير المتاح، مع العلم أن التكلفة النهائية قد تتغير بعد الفحص أو الفحوصات أو اختيار الإجراء أو الأدوية أو المستلزمات أو المضاعفات أو مدة الإقامة.</p></article><article class="card"><h3>أكد الخطة العملية للعلاج</h3><p>قبل حجز السفر، تأكد من المستشفى المقصود ومعلومات الموعد المتاحة والمستندات المطلوبة وأي تحضيرات للعلاج يحددها الفريق الطبي.</p></article><article class="card"><h3>استعد للسفر الطبي</h3><p>راجع دليل المريض ومعلومات التأشيرة الطبية الحالية، واحتفظ بنسخ من التقارير الطبية والمراسلات الصادرة عن المستشفى أثناء الرحلة.</p></article></div><div class="note">يمكن لعلاج مي إنديا تنسيق هذه الخطوات، بينما تبقى التوصيات الطبية وقبول الحالة والتكلفة النهائية وقرارات التأشيرة من اختصاص الجهات الطبية والسلطات المعنية.</div></div></section><section class="sec alt"><div class="c"><h2>استكشف العلاجات وموارد المريض</h2>'
+          'ar/uae/treatment-in-india/index.html':(
+            '<section class="sec alt"><div class="c"><h2>استكشف خدمات العلاج في الهند</h2>',
+            '<section class="sec alt"><div class="c"><h2>قبل اتخاذ قرار السفر من الإمارات</h2><div class="grid"><article class="card"><h3>راجع الرد الطبي</h3><p>راجع رد المستشفى أو الطبيب بعناية، بما في ذلك ما إذا كانت هناك حاجة إلى تقارير أو فحوصات إضافية أو تقييم حضوري قبل تأكيد الخطة العلاجية النهائية.</p></article><article class="card"><h3>افهم التقدير المبدئي للتكلفة</h3><p>راجع ما يشمله التقدير المتاح من المستشفى. قد تتغير التكلفة النهائية بعد الفحص أو الفحوصات أو اختيار الإجراء أو الأدوية أو المستلزمات أو المضاعفات أو مدة الإقامة.</p></article><article class="card"><h3>أكد الخطة العملية</h3><p>قبل حجز السفر، تأكد من المستشفى المقصود ومعلومات الموعد المتاحة والمستندات التي يطلبها الفريق الطبي وأي تحضيرات لازمة للزيارة.</p></article><article class="card"><h3>استعد للسفر الطبي</h3><p>استخدم دليل المريض الدولي ومعلومات التأشيرة الطبية الحالية لتنظيم التقارير والمراسلات الصادرة عن المستشفى والمستندات العملية المرتبطة برحلة العلاج.</p></article></div><div class="note">يمكن لعلاج مي إنديا تنسيق هذه الخطوات، بينما تبقى التوصيات الطبية وقبول الحالة والتكلفة النهائية وقرارات التأشيرة من اختصاص الجهات الطبية والسلطات المعنية.</div></div></section><section class="sec alt"><div class="c"><h2>استكشف خدمات العلاج في الهند</h2>'
           )}
           for fn,(marker,repl) in changes.items():
               p=Path(fn); s=p.read_text(); fi=s.lower().find('<footer'); assert fi>=0
@@ -39,19 +39,19 @@ jobs:
               if marker not in pre: raise SystemExit(f'Expected marker missing: {fn}')
               p.write_text(pre.replace(marker,repl,1)+foot)
               print('Updated:',fn)
-          en=Path('saudi-arabia/treatment-in-india/index.html').read_text()
-          ar=Path('ar/saudi-arabia/treatment-in-india/index.html').read_text()
-          assert '../../#enquiry' in en and '/ar/#enquiry' in ar
+          en=Path('uae/treatment-in-india/index.html').read_text()
+          ar=Path('ar/uae/treatment-in-india/index.html').read_text()
+          assert '/#enquiry' in en and '/ar/#enquiry' in ar
           assert '../../medical-visa/' in en and '/ar/medical-visa/' in ar
           assert '../../patient-guide/' in en and '/ar/patient-guide/' in ar
           PY
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
-      - name: Commit Saudi search journey improvements
+      - name: Commit UAE search journey improvements
         shell: bash
         run: |
-          if git diff --quiet -- saudi-arabia/treatment-in-india/index.html ar/saudi-arabia/treatment-in-india/index.html; then echo 'No content change required.'; exit 0; fi
+          if git diff --quiet -- uae/treatment-in-india/index.html ar/uae/treatment-in-india/index.html; then echo 'No content change required.'; exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add saudi-arabia/treatment-in-india/index.html ar/saudi-arabia/treatment-in-india/index.html
-          git commit -m 'Strengthen Saudi patient search journey'
+          git add uae/treatment-in-india/index.html ar/uae/treatment-in-india/index.html
+          git commit -m 'Strengthen UAE patient search journey'
           git push
