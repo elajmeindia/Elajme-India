@@ -17,28 +17,48 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Download verified Fortis portrait and update bilingual pages
+      - name: Capture verified Fortis portrait through browser and update bilingual pages
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p assets/images/doctors
-          url='https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ'
-          curl -L --fail --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 90 "$url" -o assets/images/doctors/dr-anil-mandhani.jpg
-          test -s assets/images/doctors/dr-anil-mandhani.jpg
-          test "$(wc -c < assets/images/doctors/dr-anil-mandhani.jpg)" -gt 5000
-          file assets/images/doctors/dr-anil-mandhani.jpg | grep -Eqi 'JPEG|image data'
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.56.1 --no-save >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+          node <<'JS'
+          const { chromium } = require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:1400,height:1000}});
+            await page.goto('https://www.fortishealthcare.com/doctors/dr-anil-mandhani-4722',{waitUntil:'networkidle',timeout:120000});
+            const candidates=page.locator('img');
+            let target=null;
+            for(let i=0;i<await candidates.count();i++){
+              const img=candidates.nth(i);
+              const src=(await img.getAttribute('src'))||'';
+              const alt=(await img.getAttribute('alt'))||'';
+              if(/dr-anil--mandhani-1879|anil mandhani/i.test(src+' '+alt)){target=img;break;}
+            }
+            if(!target) throw new Error('Verified Anil Mandhani portrait element not found on Fortis profile');
+            await target.scrollIntoViewIfNeeded();
+            await target.screenshot({path:'assets/images/doctors/dr-anil-mandhani.png'});
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
+          test -s assets/images/doctors/dr-anil-mandhani.png
+          test "$(wc -c < assets/images/doctors/dr-anil-mandhani.png)" -gt 5000
+          file assets/images/doctors/dr-anil-mandhani.png | grep -Eqi 'PNG|image data'
           python3 - <<'PY'
           from pathlib import Path
           import hashlib
           locked=['assets/css/footer-approved.css','FOOTER-LOCK.md']
           before={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in locked}
           old='https://www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg?itok=ZyR0xaHZ'
-          local='/assets/images/doctors/dr-anil-mandhani.jpg'
-          absolute='https://elajmeindia.com/assets/images/doctors/dr-anil-mandhani.jpg'
+          local='/assets/images/doctors/dr-anil-mandhani.png'
+          absolute='https://elajmeindia.com/assets/images/doctors/dr-anil-mandhani.png'
           pages=[Path('doctors/index.html'),Path('ar/doctors/index.html'),Path('doctors/dr-anil-mandhani/index.html'),Path('ar/doctors/dr-anil-mandhani/index.html')]
           changed=0
           for p in pages:
-            if not p.exists(): raise SystemExit(f'Missing expected page: {p}')
             s=p.read_text(encoding='utf-8')
             if old not in s: raise SystemExit(f'Expected verified Fortis portrait URL missing from {p}')
             n=s.replace(f'<meta property="og:image" content="{old}">',f'<meta property="og:image" content="{absolute}">').replace(old,local)
@@ -46,8 +66,7 @@ jobs:
             p.write_text(n,encoding='utf-8')
           if changed != 4: raise SystemExit(f'Expected all four bilingual surfaces to change; changed={changed}')
           en=Path('doctors/dr-anil-mandhani/index.html')
-          s=en.read_text(encoding='utf-8')
-          s=s.replace("The portrait is referenced from Fortis Healthcare's first-party doctor imagery. If the external image cannot load, the page automatically falls back to Elajme India's neutral doctor placeholder rather than displaying a broken image.","The portrait was verified against Fortis Healthcare's first-party doctor imagery and is served locally by Elajme India to improve reliability and page performance.")
+          s=en.read_text(encoding='utf-8').replace("The portrait is referenced from Fortis Healthcare's first-party doctor imagery. If the external image cannot load, the page automatically falls back to Elajme India's neutral doctor placeholder rather than displaying a broken image.","The portrait was verified against Fortis Healthcare's first-party doctor profile and is served locally by Elajme India to improve reliability and page performance.")
           en.write_text(s,encoding='utf-8')
           for p in pages:
             s=p.read_text(encoding='utf-8')
@@ -55,11 +74,11 @@ jobs:
             if local not in s and absolute not in s: raise SystemExit(f'Local portrait missing in {p}')
           for p,h in before.items():
             if hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h: raise SystemExit(f'Locked file changed: {p}')
-          print('ANIL MANDHANI VERIFIED PORTRAIT LOCALIZED')
+          print('ANIL MANDHANI VERIFIED PORTRAIT LOCALIZED VIA FORTIS PROFILE')
           PY
       - name: Commit localized portrait
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/images/doctors/dr-anil-mandhani.jpg doctors/index.html ar/doctors/index.html doctors/dr-anil-mandhani/index.html ar/doctors/dr-anil-mandhani/index.html
+          git add assets/images/doctors/dr-anil-mandhani.png doctors/index.html ar/doctors/index.html doctors/dr-anil-mandhani/index.html ar/doctors/dr-anil-mandhani/index.html
           if git diff --cached --quiet; then echo 'No Anil portrait changes required.'; else git commit -m 'Localize verified Dr Anil Mandhani portrait'; git push; fi
