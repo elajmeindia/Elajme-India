@@ -12,48 +12,57 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Fix shared desktop header crowding and WhatsApp readability
+      - name: Match shared desktop header to homepage proportions
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('assets/css/site-shell.css')
           text=p.read_text(encoding='utf-8')
-          marker='/* header-crowding-whatsapp-fix-v2 */'
+          marker='/* homepage-exact-header-parity-v3 */'
           block=r'''
-          /* header-crowding-whatsapp-fix-v2 */
-          @media(min-width:1041px){
-            .shell-container{width:min(1260px,calc(100% - 20px))!important}
-            .shell-nav{gap:8px!important}
-            .shell-links{gap:0!important}
-            .shell-header .shell-links a{padding:10px 6px!important;font-size:11.5px!important}
-            .shell-header .shell-links a[href*="about"]{font-size:11.5px!important}
+          /* homepage-exact-header-parity-v3 */
+          @media(min-width:1181px){
+            .shell-header{height:82px!important;background:rgba(255,255,255,.97)!important;border-bottom:1px solid var(--line)!important;box-shadow:0 5px 24px rgba(18,59,80,.055)!important}
+            .shell-container{width:min(1280px,calc(100% - 24px))!important;margin-inline:auto!important}
+            .shell-nav{gap:12px!important;justify-content:space-between!important}
+            .shell-brand{gap:10px!important}
+            .shell-brand img{width:60px!important;height:60px!important;flex-basis:60px!important}
+            .shell-wordmark{display:flex!important;align-items:flex-start!important;text-align:left!important}
+            .shell-name{font-size:18px!important;font-weight:800!important;line-height:1.05!important}
+            .shell-ar{font-size:12px!important;margin-top:5px!important}
+            .shell-links{gap:6px!important;justify-content:center!important}
+            .shell-header .shell-links a{font-size:12px!important;padding:8px 6px!important;border-radius:8px!important}
+            .shell-header .shell-links a[href*="about"]{font-size:12px!important}
             .shell-header .shell-links a[href*="about"]:after{content:none!important;display:none!important}
-            .shell-actions{gap:6px!important}
-            .shell-phone{font-size:10.5px!important;padding:8px 5px!important}
-            .shell-whatsapp{font-size:11px!important;padding:9px 10px!important;min-width:max-content!important;overflow:visible!important;filter:none!important;opacity:1!important;text-shadow:none!important}
-            .shell-whatsapp span{display:inline-block!important;margin-right:5px!important;font-size:12px!important;line-height:1!important;filter:none!important;opacity:1!important}
-            .shell-lang{padding:9px 10px!important;font-size:11.5px!important}
-            .shell-cta{padding:11px 12px!important}
-            .shell-cta:after{font-size:10.5px!important}
+            .shell-actions{gap:8px!important}
+            .shell-phone{font-size:11px!important;padding:8px 6px!important}
+            .shell-whatsapp{font-size:11px!important;min-height:40px!important;padding:9px 11px!important;min-width:max-content!important;overflow:visible!important;filter:none!important;opacity:1!important;text-shadow:none!important}
+            .shell-whatsapp span{display:inline-block!important;margin-right:5px!important;filter:none!important;opacity:1!important}
+            .shell-lang{font-size:12px!important;padding:9px 11px!important}
+            .shell-cta{min-height:42px!important;padding:11px 14px!important}
+            .shell-cta:after{font-size:11px!important}
           }
           @media(min-width:1041px) and (max-width:1180px){
-            .shell-wordmark{display:none!important}
-            .shell-header .shell-links a{font-size:10.5px!important;padding-inline:5px!important}
-            .shell-whatsapp{font-size:10.5px!important;padding-inline:8px!important}
-            .shell-phone{font-size:10px!important}
+            .shell-container{width:calc(100% - 20px)!important}
+            .shell-nav{gap:6px!important}
+            .shell-brand img{width:48px!important;height:48px!important;flex-basis:48px!important}
+            .shell-name{font-size:15px!important}.shell-ar{font-size:10px!important}
+            .shell-links{gap:0!important}.shell-header .shell-links a{font-size:10.5px!important;padding-inline:4px!important}
+            .shell-header .shell-links a[href*="about"]{font-size:10.5px!important}.shell-header .shell-links a[href*="about"]:after{content:none!important;display:none!important}
+            .shell-actions{gap:5px!important}.shell-phone{font-size:9.5px!important;padding-inline:3px!important}
+            .shell-whatsapp{font-size:10px!important;padding-inline:7px!important;min-width:max-content!important}.shell-lang{font-size:10.5px!important;padding-inline:8px!important}.shell-cta{padding-inline:9px!important}.shell-cta:after{font-size:9.5px!important}
           }
           '''
           if marker not in text:
               p.write_text(text+'\n'+block+'\n',encoding='utf-8')
           PY
-      - name: Verify shared header fix
+      - name: Verify exact shared header parity rules
         run: |
           python3 - <<'PY'
           from pathlib import Path
           css=Path('assets/css/site-shell.css').read_text(encoding='utf-8')
-          assert 'header-crowding-whatsapp-fix-v2' in css
-          assert 'a[href*="about"]:after{content:none!important' in css
-          assert 'min-width:max-content!important' in css
+          for needle in ['homepage-exact-header-parity-v3','width:60px!important','font-size:18px!important','min-width:max-content!important','a[href*="about"]:after{content:none!important']:
+              assert needle in css, needle
           bad=[]; checked=0
           for p in Path('.').rglob('*.html'):
               s=p.as_posix()
@@ -62,11 +71,11 @@ jobs:
               if '<header class="shell-header">' not in t: continue
               checked+=1
               h=t.split('<header class="shell-header">',1)[1].split('</header>',1)[0]
-              for needle in ['WhatsApp Us','About Us','Contact','Start Your Enquiry','+91 74889 55154']:
+              for needle in ['Home','Treatments','Hospitals','Doctors','International Patients','About Us','Contact','WhatsApp Us','العربية','Start Your Enquiry','+91 74889 55154']:
                   if needle not in h: bad.append((s,needle))
           print('English shared headers checked:',checked)
           if bad: raise SystemExit(str(bad))
-          print('HEADER WHATSAPP / CROWDING FIX CLEAN')
+          print('HOMEPAGE HEADER VISUAL PARITY RULES CLEAN')
           PY
           git diff --exit-code -- assets/css/footer-approved.css FOOTER-LOCK.md
       - name: Commit fix
@@ -75,5 +84,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/css/site-shell.css
-          git commit -m 'Fix header crowding and WhatsApp readability'
+          git commit -m 'Match shared headers to homepage proportions'
           git push
