@@ -7,8 +7,12 @@ on:
       - '.github/workflows/audit-directory-consistency-once.yml'
       - 'doctors/index.html'
       - 'ar/doctors/index.html'
+      - 'doctors/**/index.html'
+      - 'ar/doctors/**/index.html'
       - 'hospitals/index.html'
       - 'ar/hospitals/index.html'
+      - 'hospitals/**/index.html'
+      - 'ar/hospitals/**/index.html'
   workflow_dispatch:
 
 permissions:
