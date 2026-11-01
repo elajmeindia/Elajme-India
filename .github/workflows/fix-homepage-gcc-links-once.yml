@@ -1,0 +1,48 @@
+name: Fix homepage GCC patient links once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-homepage-gcc-links-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Link all GCC patient pages on English homepage
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+          old = '''<section class="audience-strip"><div class="container audience-inner"><span class="audience-label">Dedicated GCC patient pages</span><div class="country"><span data-en="Saudi Arabia" data-ar="السعودية">Saudi Arabia</span></div><div class="country"><span data-en="United Arab Emirates" data-ar="الإمارات">United Arab Emirates</span></div><div class="country"><span data-en="Oman" data-ar="عُمان">Oman</span></div><div class="country"><span data-en="Qatar" data-ar="قطر">Qatar</span></div><div class="country"><span data-en="Kuwait" data-ar="الكويت">Kuwait</span></div><div class="country"><span data-en="Bahrain" data-ar="البحرين">Bahrain</span></div><div class="country"><a href="nigeria/treatment-in-india/" aria-label="Nigeria patient guide"><span data-en="Nigeria" data-ar="نيجيريا">Nigeria</span></a></div></div></section>'''
+          new = '''<section class="audience-strip"><div class="container audience-inner"><span class="audience-label">Dedicated patient pages</span><div class="country"><a href="/saudi-arabia/treatment-in-india/"><span data-en="Saudi Arabia" data-ar="السعودية">Saudi Arabia</span></a></div><div class="country"><a href="/uae/treatment-in-india/"><span data-en="United Arab Emirates" data-ar="الإمارات">United Arab Emirates</span></a></div><div class="country"><a href="/oman/treatment-in-india/"><span data-en="Oman" data-ar="عُمان">Oman</span></a></div><div class="country"><a href="/qatar/treatment-in-india/"><span data-en="Qatar" data-ar="قطر">Qatar</span></a></div><div class="country"><a href="/kuwait/treatment-in-india/"><span data-en="Kuwait" data-ar="الكويت">Kuwait</span></a></div><div class="country"><a href="/bahrain/treatment-in-india/"><span data-en="Bahrain" data-ar="البحرين">Bahrain</span></a></div><div class="country"><a href="/nigeria/treatment-in-india/" aria-label="Nigeria patient guide"><span data-en="Nigeria" data-ar="نيجيريا">Nigeria</span></a></div></div></section>'''
+          if old not in s:
+              raise SystemExit('Expected homepage audience strip not found; refusing unsafe edit')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          assert s.count('/saudi-arabia/treatment-in-india/') >= 1
+          assert s.count('/uae/treatment-in-india/') >= 1
+          assert s.count('/oman/treatment-in-india/') >= 1
+          assert s.count('/qatar/treatment-in-india/') >= 1
+          assert s.count('/kuwait/treatment-in-india/') >= 1
+          assert s.count('/bahrain/treatment-in-india/') >= 1
+          PY
+      - name: Commit change
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'No change needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Link GCC patient pages from English homepage'
+          git push origin HEAD:main
