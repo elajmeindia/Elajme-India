@@ -1,0 +1,36 @@
+name: Remove legacy hospital directory filter once
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-legacy-hospital-filter-once.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove legacy English hospital filter only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('hospitals/index.html')
+          s=p.read_text(encoding='utf-8')
+          old="<script>const q=document.getElementById('q'),city=document.getElementById('city'),cards=[...document.querySelectorAll('.card')];function f(){const s=q.value.toLowerCase().trim(),c=city.value;cards.forEach(x=>x.style.display=(!s||x.dataset.search.includes(s))&&(!c||x.dataset.city===c)?'flex':'none')}q.addEventListener('input',f);city.addEventListener('change',f);</script>"
+          assert s.count(old)==1, f'Expected exactly one legacy handler, found {s.count(old)}'
+          assert s.count('<!-- elajme-query-filter-v1 -->')==1, 'Query-aware filter marker missing or duplicated'
+          s=s.replace(old,'')
+          p.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+          git diff -- hospitals/index.html
+      - name: Commit cleanup
+        run: |
+          if git diff --quiet; then echo 'No changes needed'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add hospitals/index.html
+          git commit -m 'Remove duplicate English hospital directory filter handler'
+          git push
