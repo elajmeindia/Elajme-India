@@ -46,9 +46,7 @@ jobs:
               if not pat: continue
               new,n=re.subn(pat,active_header(rel),text,count=1,flags=re.S)
               if n!=1: raise SystemExit(f'header replacement failed: {rel}')
-              # Remove all previous duplicated embedded master-header CSS.
               new=re.sub(r'<style id="elajme-master-header-v\d+">.*?</style>','',new,flags=re.S)
-              # One external stylesheet is the sole source of header dimensions and behavior.
               link='<link rel="stylesheet" href="/assets/css/master-header.css?v=1">'
               if link not in new:
                   new=new.replace('</head>',link+'</head>',1)
@@ -65,10 +63,13 @@ jobs:
           bad=[]; headers=[]
           for req in required:
               t=Path(req).read_text(encoding='utf-8')
+              m=re.search(r'<header class="master-site-header">.*?</header>',t,re.S)
+              if not m:
+                  bad.append((req,'master header missing')); continue
               if t.count('class="master-site-header"')!=1: bad.append((req,'master header count'))
               if t.count('/assets/css/master-header.css?v=1')!=1: bad.append((req,'master stylesheet count'))
-              if 'WhatsApp Us' not in t or 'wa.me/917488955154' not in t: bad.append((req,'WhatsApp mismatch'))
-              if 'How it works' in re.search(r'<header class="master-site-header">.*?</header>',t,re.S).group(0): bad.append((req,'legacy nav leaked'))
+              if 'WhatsApp Us' not in m.group(0) or 'wa.me/917488955154' not in m.group(0): bad.append((req,'WhatsApp mismatch'))
+              if 'How it works' in m.group(0): bad.append((req,'legacy nav leaked'))
           for p in Path('.').rglob('*.html'):
               rel=p.as_posix()
               if rel.startswith(('.git/','.github/','ar/')): continue
@@ -78,11 +79,13 @@ jobs:
               h=re.sub(r' aria-current="page"','',m.group(1))
               headers.append((rel,h))
               if re.search(r'elajme-master-header-v\d+',t): bad.append((rel,'old embedded header css'))
-          base=headers[0][1]
-          for rel,h in headers[1:]:
-              if h!=base: bad.append((rel,'header markup differs from Home'))
+          if not headers: bad.append(('site','no master headers'))
+          else:
+              base=headers[0][1]
+              for rel,h in headers[1:]:
+                  if h!=base: bad.append((rel,'header markup differs from Home'))
           css=Path('assets/css/master-header.css').read_text(encoding='utf-8')
-          for needle in ['height:82px','width:60px!important','min-width:122px','WhatsApp']:
+          for needle in ['height:82px','width:60px!important','min-width:122px','.master-whatsapp']:
               if needle not in css: bad.append(('master-header.css',needle))
           if bad: raise SystemExit(str(bad))
           print('HOME HEADER IS THE SINGLE MASTER:',len(headers),'English pages')
