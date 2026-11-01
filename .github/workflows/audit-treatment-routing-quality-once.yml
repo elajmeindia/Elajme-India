@@ -1,0 +1,57 @@
+name: Audit treatment routing quality once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/audit-treatment-routing-quality-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit 15 bilingual treatment pairs
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, sys
+
+          slugs = [
+            'cancer-treatment-india','heart-treatment-india','knee-replacement-india',
+            'neurosurgery-india','urology-treatment-india','gastroenterology-treatment-india',
+            'kidney-transplant-india','liver-transplant-india','spine-surgery-india',
+            'fertility-ivf-treatment-india','dental-treatment-india','cosmetic-surgery-india',
+            'eye-treatment-india','womens-health-gynaecology-india','ent-treatment-india'
+          ]
+          errors=[]
+          for slug in slugs:
+            for lang, path in [('EN',Path('treatments')/slug/'index.html'),('AR',Path('ar/treatments')/slug/'index.html')]:
+              if not path.exists():
+                errors.append(f'{path}: missing'); continue
+              s=path.read_text(encoding='utf-8')
+              before=s.split('<footer',1)[0]
+              checks={
+                'approved footer css':'footer-approved.css' in s,
+                'doctor route':('/doctors/' in before),
+                'hospital route':('/hospitals/' in before),
+                'Elajme enquiry':(('/#enquiry' in before) if lang=='EN' else ('/ar/#enquiry' in before)),
+                'canonical':'rel="canonical"' in s,
+                'hreflang en':'hreflang="en"' in s,
+                'hreflang ar':'hreflang="ar"' in s,
+                'hreflang x-default':'hreflang="x-default"' in s,
+                'one pre-footer h1':len(re.findall(r'<h1\b',before,re.I))==1,
+              }
+              if lang=='EN': checks['lang en']='lang="en"' in s
+              else:
+                checks['lang ar']='lang="ar"' in s
+                checks['rtl']='dir="rtl"' in s
+              for label,ok in checks.items():
+                if not ok: errors.append(f'{path}: {label} failed')
+          if errors:
+            print('\n'.join(errors)); sys.exit(1)
+          print('TREATMENT ROUTING QUALITY AUDIT CLEAN')
+          print('15 EN/AR pairs verified for doctor + hospital discovery, Elajme enquiry routing, canonical/hreflang, H1 and approved footer CSS.')
