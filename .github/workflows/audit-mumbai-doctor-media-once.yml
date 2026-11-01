@@ -1,0 +1,61 @@
+name: Audit Mumbai doctor media and parity once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/audit-mumbai-doctor-media-once.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit Mumbai and Navi Mumbai doctor cards and profiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+          problems=[]; report=[]
+          en=Path('doctors/index.html').read_text(encoding='utf-8')
+          ar=Path('ar/doctors/index.html').read_text(encoding='utf-8')
+          cards=re.findall(r'<article class="card".*?</article>', en, re.S)
+          target=[]
+          for card in cards:
+              city=re.search(r'data-city="([^"]+)"',card)
+              if not city or city.group(1) not in ('Mumbai','Navi Mumbai'): continue
+              name=(re.search(r'<h2>(.*?)</h2>',card,re.S) or [None,'unknown'])[1]
+              name=re.sub('<.*?>','',name).strip()
+              href=re.search(r'href="(dr-[a-z0-9-]+)/?"',card)
+              img=re.search(r'<img[^>]+src="([^"]+)"',card,re.I)
+              if not href: problems.append(f'{name}: missing EN profile link'); continue
+              slug=href.group(1); src=img.group(1) if img else ''
+              target.append((name,slug,city.group(1),src))
+              ep=Path('doctors')/slug/'index.html'; ap=Path('ar/doctors')/slug/'index.html'
+              if not ep.exists(): problems.append(f'{name}: missing EN profile')
+              if not ap.exists(): problems.append(f'{name}: missing AR profile')
+              if src.startswith('/assets/'):
+                  clean=src.split('?',1)[0].lstrip('/')
+                  if not Path(clean).exists(): problems.append(f'{name}: missing local portrait {src}')
+              elif src.startswith('http'):
+                  problems.append(f'{name}: external portrait dependency {src}')
+              elif 'placeholder' in src or not src:
+                  problems.append(f'{name}: placeholder/missing portrait')
+              if ep.exists():
+                  t=ep.read_text(encoding='utf-8')
+                  if '/#enquiry' not in t: problems.append(f'{name}: EN profile bypasses Elajme enquiry')
+                  if 'footer-approved.css' not in t: problems.append(f'{name}: EN approved footer missing')
+              if ap.exists():
+                  t=ap.read_text(encoding='utf-8')
+                  if '/ar/#enquiry' not in t: problems.append(f'{name}: AR profile bypasses Elajme enquiry')
+                  if 'footer-approved.css' not in t: problems.append(f'{name}: AR approved footer missing')
+              if f'/ar/doctors/{slug}/' not in ar: problems.append(f'{name}: absent from AR directory')
+          print(f'Mumbai/Navi Mumbai doctor cards: {len(target)}')
+          for row in target: print(' | '.join(row))
+          if problems:
+              print('MUMBAI DOCTOR AUDIT ISSUES:')
+              print('\n'.join(problems)); sys.exit(1)
+          print('MUMBAI/NAVI MUMBAI DOCTOR MEDIA/PARITY AUDIT CLEAN')
+          PY
