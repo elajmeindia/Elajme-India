@@ -54,4 +54,5 @@ jobs:
               print('\n'.join(dict.fromkeys(problems)))
               sys.exit(1)
           print('SITEWIDE METADATA/ACCESSIBILITY AUDIT CLEAN')
+          # Production-readiness rerun after links/indexing gate passed.
           PY
