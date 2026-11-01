@@ -1,0 +1,108 @@
+name: Search Console SEO phase 2 once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/search-console-seo-phase2-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Optimize directories and high-impression profiles
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          changes = {
+            'hospitals/index.html': [
+              ('<title>Hospitals in India: Delhi, Mumbai & Navi Mumbai | Elajme India</title>', '<title>Hospitals in India for International Patients | Delhi, Mumbai & Navi Mumbai | Elajme India</title>'),
+              ('<h1>Hospitals in Delhi NCR, Mumbai &amp; Navi Mumbai</h1>', '<h1>Hospitals in India for international patients</h1>')],
+            'doctors/index.html': [
+              ('<title>Specialist Doctors in India for International Patients | Elajme India</title>', '<title>Specialist Doctors in India | International Patient Consultations | Elajme India</title>'),
+              ('<h1>Doctors in Delhi NCR, Mumbai &amp; Navi Mumbai</h1>', '<h1>Specialist doctors in India for international patients</h1>')],
+            'ar/hospitals/index.html': [
+              ('<h1>المستشفيات في الهند</h1>', '<h1>مستشفيات في الهند للمرضى الدوليين</h1>')],
+            'ar/doctors/index.html': [
+              ('<h1>الأطباء والتخصصات في الهند</h1>', '<h1>أطباء متخصصون في الهند للمرضى الدوليين</h1>')],
+            'hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html': [
+              ('<title>Nanavati Max Hospital Mumbai: Specialties & Patient Guide | Elajme India</title>', '<title>Nanavati Max Hospital Mumbai | Specialties & International Patient Guide | Elajme India</title>'),
+              ('<h1>Nanavati Max Super Speciality Hospital</h1>', '<h1>Nanavati Max Super Speciality Hospital, Mumbai</h1>')],
+            'ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html': [
+              ('<h1>مستشفى نانافاتي ماكس التخصصي</h1>', '<h1>مستشفى نانافاتي ماكس التخصصي، مومباي</h1>')],
+            'hospitals/medanta-the-medicity-gurugram/index.html': [
+              ('<title>Medanta – The Medicity Gurugram | Elajme India</title>', '<title>Medanta The Medicity, Gurugram | Specialties & International Patient Guide | Elajme India</title>'),
+              ('<meta name="description" content="Medanta – The Medicity, Gurugram profile for international patients seeking treatment consultation coordination through Elajme India.">', '<meta name="description" content="Medanta The Medicity, Gurugram guide for international patients: major specialties, related doctors and treatments, case review and consultation coordination through Elajme India.">')],
+            'ar/hospitals/medanta-the-medicity-gurugram/index.html': [
+              ('<title>ميدانتا ذا ميديسيتي، غوروغرام | علاج مي إنديا</title>', '<title>ميدانتا ذا ميديسيتي، غوروغرام | التخصصات ودليل المرضى الدوليين | علاج مي إنديا</title>')],
+            'hospitals/indraprastha-apollo-hospital-delhi/index.html': [
+              ('<title>Indraprastha Apollo Hospital, New Delhi | International Patients | Elajme India</title>', '<title>Indraprastha Apollo Hospital, New Delhi | Specialties & International Patient Guide | Elajme India</title>')],
+            'doctors/dr-pushpak-chirmade/index.html': [
+              ('<title>Dr. Pushpak Chirmade | Medical Oncology | Elajme India</title>', '<title>Dr. Pushpak Chirmade | Medical Oncologist, Navi Mumbai | Elajme India</title>')],
+            'ar/doctors/dr-pushpak-chirmade/index.html': [
+              ('<title>د. بوشباك تشيرمادي | طب الأورام | علاج مي إنديا</title>', '<title>د. بوشباك تشيرمادي | استشاري طب الأورام، نافي مومباي | علاج مي إنديا</title>')],
+            'doctors/dr-arvinder-singh-soin/index.html': [
+              ('<title>Dr. Arvinder Singh Soin | Liver Transplant Surgeon | Elajme India</title>', '<title>Dr. Arvinder Singh Soin | Liver Transplant Surgeon, Medanta | Elajme India</title>')],
+            'ar/doctors/dr-arvinder-singh-soin/index.html': [
+              ('<title>د. أرفيندر سينغ سوين | جراح زراعة الكبد | علاج مي إنديا</title>', '<title>د. أرفيندر سينغ سوين | جراح زراعة الكبد في ميدانتا | علاج مي إنديا</title>')],
+            'ar/treatments/heart-treatment-india/index.html': [
+              ('<h1>علاج القلب في الهند للمرضى الدوليين</h1>', '<h1>علاج أمراض القلب في الهند للمرضى الدوليين</h1>')]
+          }
+
+          touched=[]
+          for path, reps in changes.items():
+              p=Path(path); s=p.read_text(); original=s
+              for old,new in reps:
+                  if old not in s:
+                      raise SystemExit(f'Expected text not found in {path}: {old}')
+                  s=s.replace(old,new,1)
+              if s != original:
+                  p.write_text(s); touched.append(path)
+
+          # Keep the first SEO pass bilingual where the English Max heading was strengthened.
+          p=Path('ar/hospitals/max-super-speciality-hospital-saket/index.html'); s=p.read_text()
+          old='<h2>تنسيق المرضى الدوليين</h2>'; new='<h2>تنسيق المرضى الدوليين في مستشفى ماكس ساكيت</h2>'
+          if old in s:
+              p.write_text(s.replace(old,new,1)); touched.append(str(p))
+
+          for f in set(touched):
+              s=Path(f).read_text()
+              assert 'rel="canonical"' in s
+              assert 'hreflang="en"' in s and 'hreflang="ar"' in s and 'hreflang="x-default"' in s
+              assert s.count('<h1>') == 1
+              assert '/assets/css/footer-approved.css' in s
+              if f.startswith('ar/'):
+                  assert 'dir="rtl"' in s and '/ar/#enquiry' in s
+              else:
+                  assert '/#enquiry' in s
+          assert not Path('assets/css/footer-approved.css').read_text() == ''
+          print('SEARCH CONSOLE SEO PHASE 2 CLEAN:', len(set(touched)), 'pages')
+          PY
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+      - name: Commit phase 2 SEO improvements
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No change needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add hospitals/index.html doctors/index.html ar/hospitals/index.html ar/doctors/index.html \
+            hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html ar/hospitals/nanavati-max-super-speciality-hospital-mumbai/index.html \
+            hospitals/medanta-the-medicity-gurugram/index.html ar/hospitals/medanta-the-medicity-gurugram/index.html \
+            hospitals/indraprastha-apollo-hospital-delhi/index.html doctors/dr-pushpak-chirmade/index.html ar/doctors/dr-pushpak-chirmade/index.html \
+            doctors/dr-arvinder-singh-soin/index.html ar/doctors/dr-arvinder-singh-soin/index.html ar/treatments/heart-treatment-india/index.html \
+            ar/hospitals/max-super-speciality-hospital-saket/index.html
+          git commit -m 'Optimize directories and priority profiles from Search Console'
+          git push origin HEAD:main
