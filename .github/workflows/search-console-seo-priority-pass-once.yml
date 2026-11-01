@@ -1,0 +1,81 @@
+name: Search Console SEO priority pass once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/search-console-seo-priority-pass-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Improve high-impression pages safely
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace_once(path, old, new):
+              p=Path(path); s=p.read_text()
+              if old not in s:
+                  raise SystemExit(f'Expected text not found in {path}: {old[:80]}')
+              p.write_text(s.replace(old,new,1))
+
+          # Max Saket: align snippet with the strongest Search Console query while keeping Elajme positioning clear.
+          replace_once('hospitals/max-super-speciality-hospital-saket/index.html',
+            '<title>Max Hospital Saket, Delhi: Specialties & Patient Guide | Elajme India</title>',
+            '<title>Max Hospital Saket, Delhi | Specialties & International Patient Guide | Elajme India</title>')
+          replace_once('hospitals/max-super-speciality-hospital-saket/index.html',
+            '<meta name="description" content="Max Hospital Saket, Delhi information for international patients: major specialties, relevant doctor and treatment links, and consultation coordination through Elajme India.">',
+            '<meta name="description" content="Max Hospital Saket, Delhi guide for international patients: specialties, related doctors and treatments, medical-record review and consultation coordination through Elajme India.">')
+          replace_once('hospitals/max-super-speciality-hospital-saket/index.html',
+            '<h2>International patient coordination</h2>',
+            '<h2>International patient coordination at Max Hospital Saket</h2>')
+
+          # Heart page: reinforce exact treatment intent already earning impressions, without changing clinical claims.
+          replace_once('treatments/heart-treatment-india/index.html',
+            '<meta name="description" content="Heart disease treatment in India for international patients, with cardiology and cardiac-surgery case review and consultation coordination through Elajme India.">',
+            '<meta name="description" content="Heart disease treatment in India for international patients: cardiology and cardiac-surgery case review, hospital options and consultation coordination through Elajme India.">')
+          replace_once('treatments/heart-treatment-india/index.html',
+            '<h1>Heart treatment in India for international patients</h1>',
+            '<h1>Heart disease treatment in India for international patients</h1>')
+
+          # Add contextual cross-link from Max Saket to the heart page if absent from its introductory coordination section.
+          p=Path('hospitals/max-super-speciality-hospital-saket/index.html'); s=p.read_text()
+          marker='<h2>Related treatment pages</h2>'
+          assert marker in s and '../../treatments/heart-treatment-india/' in s
+
+          # Protect core SEO and routing requirements.
+          for f in ['hospitals/max-super-speciality-hospital-saket/index.html','treatments/heart-treatment-india/index.html']:
+              s=Path(f).read_text()
+              assert 'rel="canonical"' in s
+              assert 'hreflang="en"' in s and 'hreflang="ar"' in s and 'hreflang="x-default"' in s
+              assert s.count('<h1>') == 1
+              assert '/#enquiry' in s
+              assert '/assets/css/footer-approved.css' in s
+          assert not Path('assets/css/footer-approved.css').read_text() == ''
+          print('SEARCH CONSOLE SEO PRIORITY PASS CLEAN')
+          PY
+          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+      - name: Commit SEO improvements
+        shell: bash
+        run: |
+          if git diff --quiet -- hospitals/max-super-speciality-hospital-saket/index.html treatments/heart-treatment-india/index.html; then
+            echo 'No change needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add hospitals/max-super-speciality-hospital-saket/index.html treatments/heart-treatment-india/index.html
+          git commit -m 'Optimize priority pages from Search Console signals'
+          git push origin HEAD:main
