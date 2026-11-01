@@ -18,54 +18,63 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Make country guidance inclusive and add Nigeria
+      - name: Make English and Arabic country positioning inclusive
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text()
-          old_h='Country-specific guidance for patients travelling from the Gulf.'
-          new_h='Country-specific guidance for international patients travelling to India.'
-          old_p='Explore dedicated pages for Saudi Arabia, UAE, Oman, Qatar, Kuwait and Bahrain. Each explains the case-review journey, records to prepare and practical coordination steps.'
-          new_p='Explore dedicated pages for Saudi Arabia, UAE, Oman, Qatar, Kuwait, Bahrain and Nigeria. Each explains the case-review journey, records to prepare and practical coordination steps.'
-          if old_h in s:
-              s=s.replace(old_h,new_h,1)
-          elif new_h not in s:
-              raise SystemExit('Country guidance heading marker not found')
-          if old_p in s:
-              s=s.replace(old_p,new_p,1)
-          elif new_p not in s:
-              raise SystemExit('Country guidance paragraph marker not found')
-          # Add Nigeria beside the six country links if this section does not already include it.
-          marker='<a href="/bahrain/treatment-in-india/">Bahrain</a>'
-          nigeria='<a href="/nigeria/treatment-in-india/">Nigeria</a>'
-          hpos=s.find(new_h)
-          if hpos < 0: raise SystemExit('Updated heading missing')
+
+          # English homepage: keep GCC targeting but make the general country block international.
+          p=Path('index.html'); s=p.read_text()
+          replacements={
+            'GCC PATIENT SUPPORT':'INTERNATIONAL PATIENT SUPPORT',
+            'Country-specific guidance for patients travelling from the Gulf.':'Country-specific guidance for international patients travelling to India.',
+            'Explore dedicated pages for Saudi Arabia, UAE, Oman, Qatar, Kuwait and Bahrain. Each explains the case-review journey, records to prepare and practical coordination steps.':'Explore dedicated pages for Saudi Arabia, UAE, Oman, Qatar, Kuwait, Bahrain and Nigeria. Each explains the case-review journey, records to prepare and practical coordination steps.'
+          }
+          for old,new in replacements.items():
+              if old in s: s=s.replace(old,new,1)
+              elif new not in s: raise SystemExit('English marker missing: '+old)
+          hpos=s.find('Country-specific guidance for international patients travelling to India.')
           window=s[hpos:hpos+3000]
-          if '/nigeria/treatment-in-india/' not in window:
-              rel=window.find(marker)
-              if rel < 0: raise SystemExit('Bahrain link marker not found near guidance section')
-              pos=hpos+rel
-              s=s[:pos]+s[pos:].replace(marker,marker+nigeria,1)
+          if 'nigeria/treatment-in-india/' not in window:
+              marker='<a href="bahrain/treatment-in-india/">Bahrain</a>'
+              if marker not in window: raise SystemExit('English Bahrain marker missing')
+              pos=hpos+window.find(marker)
+              s=s[:pos]+s[pos:].replace(marker,marker+'<a href="nigeria/treatment-in-india/">Nigeria</a>',1)
           p.write_text(s)
-          check=p.read_text()
-          assert new_h in check and new_p in check
-          section=check[check.find(new_h):check.find(new_h)+3000]
-          for x in ['saudi-arabia','uae','oman','qatar','kuwait','bahrain','nigeria']:
-              assert f'/{x}/treatment-in-india/' in section, x
-          assert 'Country-specific guidance for patients travelling from the Gulf.' not in check
+
+          # Arabic homepage: metadata should reflect international + Nigeria/Africa positioning.
+          p=Path('ar/index.html'); a=p.read_text()
+          ar_repl={
+            '<title>العلاج في الهند للمرضى الدوليين والخليجيين | علاج مي إنديا</title>':'<title>العلاج في الهند للمرضى الدوليين | علاج مي إنديا</title>',
+            'علاج مي إنديا تنسق رحلة العلاج في الهند للمرضى من السعودية والإمارات وعُمان وقطر والكويت والبحرين وغيرهم، مع دعم بالعربية والإنجليزية.':'علاج مي إنديا تنسق رحلة العلاج في الهند للمرضى الدوليين من دول الخليج ونيجيريا وأفريقيا وغيرها، مع دعم بالعربية والإنجليزية.',
+            'content="العلاج في الهند للمرضى الدوليين والخليجيين | علاج مي إنديا"':'content="العلاج في الهند للمرضى الدوليين | علاج مي إنديا"',
+            '"name":"العلاج في الهند للمرضى الدوليين والخليجيين"':'"name":"العلاج في الهند للمرضى الدوليين"'
+          }
+          for old,new in ar_repl.items():
+              if old in a: a=a.replace(old,new,1)
+              elif new not in a: raise SystemExit('Arabic marker missing: '+old)
+          p.write_text(a)
+
+          # Verify both languages and Nigeria parity.
+          e=Path('index.html').read_text(); a=Path('ar/index.html').read_text()
+          assert 'Country-specific guidance for international patients travelling to India.' in e
+          assert 'Nigeria' in e[e.find('Country-specific guidance'):e.find('Country-specific guidance')+3000]
+          assert 'GCC PATIENT SUPPORT' not in e
+          assert '/ar/nigeria/treatment-in-india/' in a and 'نيجيريا' in a
+          assert 'نيجيريا وأفريقيا' in a
+          assert '/assets/css/footer-approved.css' in e and '/assets/css/footer-approved.css' in a
           PY
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
-      - name: Commit inclusive country guidance
+      - name: Commit bilingual positioning fix
         shell: bash
         run: |
-          if git diff --quiet -- index.html; then
+          if git diff --quiet -- index.html ar/index.html; then
             echo 'No change needed'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html
-          git commit -m 'Include Nigeria in homepage country guidance'
+          git add index.html ar/index.html
+          git commit -m 'Align bilingual homepage with international and Nigeria positioning'
           git push origin HEAD:main
