@@ -1,4 +1,4 @@
-name: Strengthen Oman patient search journey once
+name: Strengthen Qatar patient search journey once
 
 on:
   push:
@@ -17,19 +17,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Add bilingual Oman pre-travel decision guidance
+      - name: Add bilingual Qatar pre-travel decision guidance
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           changes={
-          'oman/treatment-in-india/index.html':(
+          'qatar/treatment-in-india/index.html':(
             '<section class="sec"><div class="c"><h2>Explore treatment options in India</h2>',
-            '<section class="sec"><div class="c"><h2>Before you decide to travel from Oman</h2><div class="grid"><article class="card"><h3>Review the medical response</h3><p>Check what the hospital or specialist has advised, whether more reports or tests are needed and whether an in-person assessment is required before a final treatment plan.</p></article><article class="card"><h3>Understand the preliminary estimate</h3><p>Review what the available hospital estimate includes. Final charges can change after examination, investigations, procedure selection, medicines, implants, complications or length of stay.</p></article><article class="card"><h3>Confirm the practical plan</h3><p>Before booking travel, confirm the intended hospital, available appointment information, requested documents and any treatment-related preparation communicated by the medical team.</p></article><article class="card"><h3>Prepare for medical travel</h3><p>Review the international patient guide and current medical-visa guidance, and keep your medical records and hospital correspondence organised for the journey.</p></article></div><div class="note">Elajme India can coordinate these steps, but clinical recommendations, hospital acceptance, final costs and visa decisions remain with the relevant medical teams and authorities.</div></div></section><section class="sec"><div class="c"><h2>Explore treatment options in India</h2>'
+            '<section class="sec"><div class="c"><h2>Before you decide to travel from Qatar</h2><div class="grid"><article class="card"><h3>Review the medical response</h3><p>Check the hospital or specialist response carefully, including whether more reports, tests or an in-person assessment are needed before a final treatment plan can be confirmed.</p></article><article class="card"><h3>Understand the preliminary estimate</h3><p>Review what the available hospital estimate includes. Final charges can change after examination, investigations, procedure selection, medicines, implants, complications or changes in length of stay.</p></article><article class="card"><h3>Confirm the practical plan</h3><p>Before booking travel, confirm the intended hospital, available appointment information, documents requested by the medical team and any preparation communicated for the visit.</p></article><article class="card"><h3>Prepare for medical travel</h3><p>Use the international patient guide and current medical-visa guidance to organise your records, hospital correspondence and practical treatment-visit documents.</p></article></div><div class="note">Elajme India can coordinate these steps, but clinical recommendations, hospital acceptance, final costs and visa decisions remain with the relevant medical teams and authorities.</div></div></section><section class="sec"><div class="c"><h2>Explore treatment options in India</h2>'
           ),
-          'ar/oman/treatment-in-india/index.html':(
-            '<section class="sec"><div class="c"><h2>استكشف الخيارات قبل الاستفسار</h2>',
-            '<section class="sec"><div class="c"><h2>قبل اتخاذ قرار السفر من عُمان</h2><div class="grid"><article class="card"><h3>راجع الرد الطبي</h3><p>تحقق مما أوصى به المستشفى أو الطبيب، وما إذا كانت هناك حاجة إلى تقارير أو فحوصات إضافية أو تقييم حضوري قبل وضع الخطة العلاجية النهائية.</p></article><article class="card"><h3>افهم التقدير المبدئي للتكلفة</h3><p>راجع ما يشمله التقدير المتاح من المستشفى. قد تتغير التكلفة النهائية بعد الفحص أو الفحوصات أو اختيار الإجراء أو الأدوية أو المستلزمات أو المضاعفات أو مدة الإقامة.</p></article><article class="card"><h3>أكد الخطة العملية</h3><p>قبل حجز السفر، تأكد من المستشفى المقصود ومعلومات الموعد المتاحة والمستندات المطلوبة وأي تحضيرات للعلاج يحددها الفريق الطبي.</p></article><article class="card"><h3>استعد للسفر الطبي</h3><p>راجع دليل المريض الدولي ومعلومات التأشيرة الطبية الحالية، واحتفظ بالتقارير الطبية ومراسلات المستشفى بصورة منظمة أثناء الرحلة.</p></article></div><div class="note">يمكن لعلاج مي إنديا تنسيق هذه الخطوات، بينما تبقى التوصيات الطبية وقبول الحالة والتكلفة النهائية وقرارات التأشيرة من اختصاص الجهات الطبية والسلطات المعنية.</div></div></section><section class="sec"><div class="c"><h2>استكشف الخيارات قبل الاستفسار</h2>'
+          'ar/qatar/treatment-in-india/index.html':(
+            '<section class="sec"><div class="c"><h2>استكشف قبل إرسال الاستفسار</h2>',
+            '<section class="sec"><div class="c"><h2>قبل اتخاذ قرار السفر من قطر</h2><div class="grid"><article class="card"><h3>راجع الرد الطبي</h3><p>راجع رد المستشفى أو الطبيب بعناية، بما في ذلك ما إذا كانت هناك حاجة إلى تقارير أو فحوصات إضافية أو تقييم حضوري قبل تأكيد الخطة العلاجية النهائية.</p></article><article class="card"><h3>افهم التقدير المبدئي للتكلفة</h3><p>راجع ما يشمله التقدير المتاح من المستشفى. قد تتغير التكلفة النهائية بعد الفحص أو الفحوصات أو اختيار الإجراء أو الأدوية أو المستلزمات أو المضاعفات أو مدة الإقامة.</p></article><article class="card"><h3>أكد الخطة العملية</h3><p>قبل حجز السفر، تأكد من المستشفى المقصود ومعلومات الموعد المتاحة والمستندات التي يطلبها الفريق الطبي وأي تحضيرات لازمة للزيارة.</p></article><article class="card"><h3>استعد للسفر الطبي</h3><p>استخدم دليل المريض الدولي ومعلومات التأشيرة الطبية الحالية لتنظيم التقارير ومراسلات المستشفى والمستندات العملية المرتبطة برحلة العلاج.</p></article></div><div class="note">يمكن لعلاج مي إنديا تنسيق هذه الخطوات، بينما تبقى التوصيات الطبية وقبول الحالة والتكلفة النهائية وقرارات التأشيرة من اختصاص الجهات الطبية والسلطات المعنية.</div></div></section><section class="sec"><div class="c"><h2>استكشف قبل إرسال الاستفسار</h2>'
           )}
           for fn,(marker,repl) in changes.items():
               p=Path(fn); s=p.read_text(); fi=s.lower().find('<footer'); assert fi>=0
@@ -39,19 +39,19 @@ jobs:
               if marker not in pre: raise SystemExit(f'Expected marker missing: {fn}')
               p.write_text(pre.replace(marker,repl,1)+foot)
               print('Updated:',fn)
-          en=Path('oman/treatment-in-india/index.html').read_text()
-          ar=Path('ar/oman/treatment-in-india/index.html').read_text()
+          en=Path('qatar/treatment-in-india/index.html').read_text()
+          ar=Path('ar/qatar/treatment-in-india/index.html').read_text()
           assert '../../#enquiry' in en and '/ar/#enquiry' in ar
           assert '../../medical-visa/' in en and '/ar/medical-visa/' in ar
           assert '../../patient-guide/' in en and '/ar/patient-guide/' in ar
           PY
           test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
-      - name: Commit Oman search journey improvements
+      - name: Commit Qatar search journey improvements
         shell: bash
         run: |
-          if git diff --quiet -- oman/treatment-in-india/index.html ar/oman/treatment-in-india/index.html; then echo 'No content change required.'; exit 0; fi
+          if git diff --quiet -- qatar/treatment-in-india/index.html ar/qatar/treatment-in-india/index.html; then echo 'No content change required.'; exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add oman/treatment-in-india/index.html ar/oman/treatment-in-india/index.html
-          git commit -m 'Strengthen Oman patient search journey'
+          git add qatar/treatment-in-india/index.html ar/qatar/treatment-in-india/index.html
+          git commit -m 'Strengthen Qatar patient search journey'
           git push
