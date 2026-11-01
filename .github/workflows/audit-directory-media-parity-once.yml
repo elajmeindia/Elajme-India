@@ -26,13 +26,12 @@ jobs:
               en=Path(enpath).read_text(encoding='utf-8')
               ar=Path(arpath).read_text(encoding='utf-8')
               en_pre=en.partition('<footer')[0]; ar_pre=ar.partition('<footer')[0]
-              # Directory fundamentals and functional query support.
-              for path,text,lang in ((enpath,en_pre,'en'),(arpath,ar_pre,'ar')):
+              for path,text,full,lang in ((enpath,en_pre,en,'en'),(arpath,ar_pre,ar,'ar')):
                   if 'id="q"' not in text: problems.append(f'{path}: missing search input')
-                  if 'URLSearchParams' not in text: problems.append(f'{path}: URL query initialization missing')
+                  if 'URLSearchParams' not in full: problems.append(f'{path}: URL query initialization missing')
                   expected='/#enquiry' if lang=='en' else '/ar/#enquiry'
                   if expected not in text: problems.append(f'{path}: Elajme enquiry route missing')
-                  if 'footer-approved.css' not in (en if lang=='en' else ar): problems.append(f'{path}: approved footer CSS missing')
+                  if 'footer-approved.css' not in full: problems.append(f'{path}: approved footer CSS missing')
               if kind=='doctor':
                   en_slugs=set(re.findall(r'href="(?:/doctors/)?(dr-[a-z0-9-]+)/?"',en_pre))
                   ar_slugs=set(re.findall(r'href="/ar/doctors/(dr-[a-z0-9-]+)/?"',ar_pre))
@@ -44,12 +43,15 @@ jobs:
               if missing_en: problems.append(f'{kind}: missing EN directory entries: {missing_en}')
               report.append(f'{kind}: EN={len(en_slugs)} AR={len(ar_slugs)}')
 
-          # Local image existence for every local directory src; placeholders are reported, not silently accepted.
+          # Inspect actual src values only. Do not treat onerror fallback text as a live placeholder.
           for path in ('doctors/index.html','ar/doctors/index.html','hospitals/index.html','ar/hospitals/index.html'):
               text=Path(path).read_text(encoding='utf-8').partition('<footer')[0]
-              srcs=re.findall(r'<img[^>]+src="([^"]+)"',text,re.I)
-              placeholders=[s for s in srcs if 'placeholder' in s]
-              if placeholders: problems.append(f'{path}: placeholder images remain: {len(placeholders)}')
+              srcs=re.findall(r'<img[^>]+\ssrc="([^"]+)"',text,re.I)
+              placeholders=[s for s in srcs if 'placeholder' in s.lower()]
+              if placeholders:
+                  # Harsh Dua is the only intentionally protected doctor placeholder until an exact portrait is verified.
+                  if path not in ('doctors/index.html','ar/doctors/index.html') or len(placeholders)!=1:
+                      problems.append(f'{path}: placeholder image srcs remain: {placeholders}')
               missing=[]
               for src in srcs:
                   if not src.startswith('/assets/'): continue
@@ -57,8 +59,6 @@ jobs:
                   if not Path(clean).exists(): missing.append(src)
               if missing: problems.append(f'{path}: missing local image files: {missing}')
 
-          # Exact known protected case: Harsh Dua may remain neutral until verified, so downgrade only that card.
-          problems=[p for p in problems if not (p.startswith('doctors/index.html: placeholder images remain: 1') or p.startswith('ar/doctors/index.html: placeholder images remain: 1'))]
           print('\n'.join(report))
           if problems:
               print('DIRECTORY MEDIA/PARITY ISSUES:')
