@@ -1,0 +1,43 @@
+name: Integrate podiatry and wound providers once
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add verified provider pathways
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          edits = {
+            'treatments/podiatry-foot-ankle-care-india/index.html': ('<section class="cta">', '<section class="sec"><div class="c"><h2>Verified foot-care pathway</h2><p class="lead"><a href="/doctors/dr-kulbhushan-attri/">Dr Kulbhushan Attri</a> is an orthopaedic surgeon at <a href="/hospitals/indraprastha-apollo-hospital-delhi/">Indraprastha Apollo Hospital, Delhi</a>. Apollo documents diabetic-foot check-ups, neuropathy assessment, ankle-brachial index and foot pressure/vascular assessment among his expertise. He is not presented as a dedicated podiatrist; the appropriate specialty is confirmed after case review.</p></div></section><section class="cta">'),
+            'ar/treatments/podiatry-foot-ankle-care-india/index.html': ('<section class="cta">', '<section class="sec"><div class="c"><h2>مسار موثق لرعاية القدم</h2><p class="lead"><a href="/ar/doctors/dr-kulbhushan-attri/">د. كولبوشان أتري</a> جراح عظام في <a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">مستشفى إندرابراستا أبولو في دلهي</a>. توثق أبولو ضمن خبرته فحوص القدم السكري وتقييم الأعصاب ومؤشر الكاحل والعضد وتقييم ضغط وتروية القدم. لا نقدمه كاختصاصي مستقل في طب القدم، ويتم تحديد التخصص الأنسب بعد مراجعة الحالة.</p></div></section><section class="cta">'),
+            'treatments/wound-care-hyperbaric-medicine-india/index.html': ('<section class="cta">', '<section class="sec"><div class="c"><h2>Verified hyperbaric medicine pathway</h2><p class="lead"><a href="/doctors/dr-tarun-sahni/">Dr Tarun Sahni</a> is an Internal and Hyperbaric Medicine specialist at <a href="/hospitals/indraprastha-apollo-hospital-delhi/">Indraprastha Apollo Hospital, Delhi</a>. Apollo states that he heads its Hyperbaric Medicine Unit and lists wound healing among his special interests. Apollo’s Advanced Wound Care Centre provides multidisciplinary wound care and hyperbaric oxygen therapy for selected clinical indications.</p></div></section><section class="cta">'),
+            'ar/treatments/wound-care-hyperbaric-medicine-india/index.html': ('<section class="cta">', '<section class="sec"><div class="c"><h2>مسار موثق للطب عالي الضغط</h2><p class="lead"><a href="/ar/doctors/dr-tarun-sahni/">د. تارون ساهني</a> اختصاصي الطب الباطني والطب عالي الضغط في <a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">مستشفى إندرابراستا أبولو في دلهي</a>. تذكر أبولو أنه يرأس وحدة الطب عالي الضغط وأن التئام الجروح من اهتماماته الخاصة. يقدم مركز رعاية الجروح المتقدمة في أبولو رعاية متعددة التخصصات والعلاج بالأكسجين عالي الضغط للحالات التي يحدد الفريق الطبي ملاءمتها.</p></div></section><section class="cta">')
+          }
+          for f,(needle,repl) in edits.items():
+              p=Path(f); s=p.read_text()
+              if repl.split('</h2>')[0] not in s:
+                  if needle not in s: raise SystemExit(f'marker missing: {f}')
+                  p.write_text(s.replace(needle,repl,1))
+          PY
+      - name: Verify protected assets unchanged and provider links present
+        run: |
+          grep -q '/doctors/dr-kulbhushan-attri/' treatments/podiatry-foot-ankle-care-india/index.html
+          grep -q '/ar/doctors/dr-kulbhushan-attri/' ar/treatments/podiatry-foot-ankle-care-india/index.html
+          grep -q '/doctors/dr-tarun-sahni/' treatments/wound-care-hyperbaric-medicine-india/index.html
+          grep -q '/ar/doctors/dr-tarun-sahni/' ar/treatments/wound-care-hyperbaric-medicine-india/index.html
+          test "$(sha1sum assets/css/master-header.css|cut -d' ' -f1)" = 26fcbc9a88dfa959e48e3c079790011d5001fa95
+          test "$(sha1sum assets/css/arabic-master-header.css|cut -d' ' -f1)" = 3e85661d08f9a5ef7d8f586a7c8a38451c78c42e
+          test "$(sha1sum assets/css/mobile-header.css|cut -d' ' -f1)" = e2e1b33e23b0881749c0cc019f622fc793cbce45
+          test "$(sha1sum assets/css/footer-approved.css|cut -d' ' -f1)" = 05faf239dd9cf39a19b41e596f433c99989c1e9b
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments/podiatry-foot-ankle-care-india/index.html ar/treatments/podiatry-foot-ankle-care-india/index.html treatments/wound-care-hyperbaric-medicine-india/index.html ar/treatments/wound-care-hyperbaric-medicine-india/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Connect podiatry and wound care to verified providers'
+          git push
