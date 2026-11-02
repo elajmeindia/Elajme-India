@@ -11,15 +11,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Audit treatment pages for template residue, parity and routing
+      - name: Audit active treatment pages for template residue, parity and routing
         shell: python
         run: |
           from pathlib import Path
           import re, sys
-          en_root=Path('treatments'); ar_root=Path('ar/treatments')
-          en_pages={p.parent.name:p for p in en_root.glob('*/index.html')}
-          ar_pages={p.parent.name:p for p in ar_root.glob('*/index.html')}
+          def active(root):
+            out={}
+            for p in root.glob('*/index.html'):
+              s=p.read_text(encoding='utf-8')
+              if re.search(r'<meta[^>]+http-equiv=["\']refresh["\']',s,re.I):
+                print('Skipping redirect-only route:',p.parent.name)
+                continue
+              out[p.parent.name]=p
+            return out
+          en_pages=active(Path('treatments')); ar_pages=active(Path('ar/treatments'))
           issues=[]
+          if len(en_pages)!=47: issues.append(f'Expected 47 active EN treatment pages, found {len(en_pages)}')
+          if len(ar_pages)!=47: issues.append(f'Expected 47 active AR treatment pages, found {len(ar_pages)}')
           for slug,p in sorted(en_pages.items()):
             if slug not in ar_pages: issues.append(f'Missing Arabic counterpart: {slug}')
             s=p.read_text(encoding='utf-8')
@@ -31,21 +40,25 @@ jobs:
             s=p.read_text(encoding='utf-8')
             if slug!='pediatrics-child-health-india' and re.search(r'(طب الأطفال|الطفل|والد الطفل|الوصي القانوني|سجل التطعيم)',s): issues.append(f'Pediatric residue AR: {slug}')
             if '<h1' not in s.lower(): issues.append(f'Missing H1 AR: {slug}')
-          print(f'English treatment pages: {len(en_pages)}')
-          print(f'Arabic treatment pages: {len(ar_pages)}')
+          print(f'Active English treatment pages: {len(en_pages)}')
+          print(f'Active Arabic treatment pages: {len(ar_pages)}')
           if issues:
             print('\n'.join(issues)); sys.exit(1)
-          print('Treatment-page bilingual/template quality audit clean')
-      - name: Verify directory and sitemap coverage
+          print('Active treatment-page bilingual/template quality audit clean')
+      - name: Verify active directory and sitemap coverage
         shell: python
         run: |
           from pathlib import Path
-          import sys
+          import re,sys
           en=Path('treatments/index.html').read_text(encoding='utf-8')
           ar=Path('ar/treatments/index.html').read_text(encoding='utf-8')
           sm=Path('sitemap.xml').read_text(encoding='utf-8')
-          slugs=sorted(p.parent.name for p in Path('treatments').glob('*/index.html'))
-          issues=[]
+          slugs=[]
+          for p in Path('treatments').glob('*/index.html'):
+            s=p.read_text(encoding='utf-8')
+            if re.search(r'<meta[^>]+http-equiv=["\']refresh["\']',s,re.I): continue
+            slugs.append(p.parent.name)
+          slugs=sorted(slugs); issues=[]
           for slug in slugs:
             if f'{slug}/' not in en: issues.append(f'EN directory missing {slug}')
             if f'{slug}/' not in ar: issues.append(f'AR directory missing {slug}')
@@ -53,6 +66,6 @@ jobs:
             if f'https://elajmeindia.com/ar/treatments/{slug}/' not in sm: issues.append(f'Sitemap AR missing {slug}')
           if issues:
             print('\n'.join(issues)); sys.exit(1)
-          print(f'Directory and sitemap coverage clean for {len(slugs)} treatment routes')
+          print(f'Directory and sitemap coverage clean for {len(slugs)} active treatment routes')
       - name: Protect approved global UI
         run: git diff --exit-code assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md
