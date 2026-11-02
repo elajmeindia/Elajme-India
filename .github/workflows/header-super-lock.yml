@@ -28,8 +28,15 @@ jobs:
                   if n not in c: problems.append('MASTER_CSS_DRIFT '+n)
           if arcss.exists():
               c=arcss.read_text(encoding='utf-8')
-              for n in ['html[lang="ar"] .master-header-inner{direction:ltr!important}','html[lang="ar"] .master-nav{direction:ltr!important}','html[lang="ar"] .master-nav a{direction:rtl!important','.master-phone{direction:ltr!important','.master-whatsapp']:
-                  if n not in c: problems.append('ARABIC_PARITY_DRIFT '+n)
+              checks=[
+                  r'html\[lang="ar"\]\s+\.master-header-inner\s*\{[^}]*direction\s*:\s*ltr\s*!important',
+                  r'html\[lang="ar"\]\s+\.master-nav\s*\{[^}]*direction\s*:\s*ltr\s*!important',
+                  r'html\[lang="ar"\]\s+\.master-nav\s+a\s*\{[^}]*direction\s*:\s*rtl\s*!important',
+                  r'html\[lang="ar"\]\s+\.master-phone\s*\{[^}]*direction\s*:\s*ltr\s*!important',
+                  r'html\[lang="ar"\]\s+\.master-whatsapp\s*\{[^}]*direction\s*:\s*rtl\s*!important',
+              ]
+              for pattern in checks:
+                  if not re.search(pattern,c,re.S): problems.append('ARABIC_PARITY_DRIFT '+pattern)
           ar_sequence=['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا']
           ar_action_sequence=['+91 74889 55154','واتساب','English','ابدأ استفسارك']
           for p in Path('.').rglob('*.html'):
@@ -38,7 +45,6 @@ jobs:
               t=p.read_text(encoding='utf-8',errors='ignore')
               if '<header' not in t: continue
               m=re.search(r'<header class="master-site-header">.*?</header>',t,re.S)
-              # Legacy malformed provider pages are excluded until separately normalized.
               if not m: continue
               h=m.group(0)
               if t.count('class="master-site-header"')!=1: problems.append('HEADER_COUNT '+rel)
