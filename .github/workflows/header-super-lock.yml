@@ -1,4 +1,4 @@
-name: Elajme Approved Header Footer Super Lock
+name: Elajme Mobile Header Footer Super Duper Lock
 on:
   push:
     branches: [main]
@@ -12,15 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Block unapproved English Arabic header footer or mobile CTA drift
+      - name: Block any approved mobile header footer drift
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import hashlib,re,sys
           problems=[]
 
-          # Exact approved production UI snapshots. Any byte-level change fails this gate.
-          # This Super Locks approved EN/AR headers, mobile conversion UI, shared mobile JS and footer.
+          # Byte-level immutable snapshots for every shared file that controls the approved EN/AR mobile chrome.
           locked_hashes={
             'assets/css/master-header.css':'932ce7acbd738f1ea5a71bb0b3913635b647f255',
             'assets/css/arabic-master-header.css':'ca750db9fef35f39930e6137ae5f7b339e0834ae',
@@ -33,79 +32,93 @@ jobs:
               return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
           for path,expected in locked_hashes.items():
               p=Path(path)
-              if not p.exists():
-                  problems.append('LOCKED_FILE_MISSING '+path); continue
+              if not p.exists(): problems.append('LOCKED_FILE_MISSING '+path); continue
               actual=git_blob_sha(p.read_bytes())
-              if actual!=expected:
-                  problems.append(f'UNAPPROVED_LOCKED_FILE_CHANGE {path} expected={expected} actual={actual}')
+              if actual!=expected: problems.append(f'UNAPPROVED_LOCKED_FILE_CHANGE {path} expected={expected} actual={actual}')
 
           js=Path('assets/js/mobile-header.js').read_text(encoding='utf-8',errors='ignore')
           ar_mobile=Path('assets/css/arabic-mobile-header.css').read_text(encoding='utf-8',errors='ignore')
-          required_js=[
+          for token in [
             "enquiry.innerHTML='<span aria-hidden=\"true\">＋</span><span>ابدأ الاستفسار</span>'",
             "wa.innerHTML='<span>واتساب</span>'",
             "wa.className='arabic-mobile-wa-cta'",
-          ]
-          for token in required_js:
+          ]:
               if token not in js: problems.append('MOBILE_CTA_MARKUP_DRIFT '+token)
-          if "◉" in js: problems.append('ARABIC_WHATSAPP_DOT_REINTRODUCED')
-          required_ar_css=[
+          if '◉' in js: problems.append('ARABIC_WHATSAPP_DOT_REINTRODUCED')
+          for token in [
             ".arabic-mobile-wa-cta::before{content:'☎'!important",
             "width:18px!important;height:18px!important;flex:0 0 18px!important",
             "background:#20a86b!important",
             ".arabic-mobile-case-cta::before{content:none!important",
-          ]
-          for token in required_ar_css:
+          ]:
               if token not in ar_mobile: problems.append('ARABIC_MOBILE_CTA_STYLE_DRIFT '+token)
 
           ar_sequence=['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا']
           ar_actions=['+91 74889 55154','واتساب','English','ابدأ استفسارك']
           en_sequence=['Home','Treatments','Hospitals','Doctors','International Patients','About Us','Contact']
           en_actions=['+91 74889 55154','WhatsApp Us','العربية','Start Your Enquiry']
+          footer_links=['Home','Treatments','Hospitals','Doctors','International Patients','Privacy Policy','Terms &amp; Medical Disclaimer']
 
+          checked_headers=checked_footers=0
           for p in Path('.').rglob('*.html'):
               rel=p.as_posix()
               if rel.startswith(('.git/','.github/')) or rel=='404.html': continue
               t=p.read_text(encoding='utf-8',errors='ignore')
-              m=re.search(r'<header class="master-site-header">.*?</header>',t,re.S)
-              if m:
-                  h=m.group(0)
+              is_ar=rel.startswith('ar/')
+
+              # Every master header is locked structurally and must load the shared mobile implementation.
+              if 'class="master-site-header"' in t:
+                  checked_headers+=1
                   if t.count('class="master-site-header"')!=1: problems.append('HEADER_COUNT '+rel)
+                  m=re.search(r'<header class="master-site-header">.*?</header>',t,re.S)
+                  if not m: problems.append('MASTER_HEADER_MARKUP_INVALID '+rel); continue
+                  h=m.group(0)
                   if '/assets/css/master-header.css?v=6' not in t: problems.append('MASTER_HEADER_STYLE '+rel)
+                  if '/assets/css/mobile-header.css?v=3' not in t: problems.append('MOBILE_HEADER_STYLE '+rel)
+                  if '/assets/js/mobile-header.js?v=3' not in t: problems.append('MOBILE_HEADER_SCRIPT '+rel)
+                  if is_ar and '/assets/css/arabic-master-header.css?v=2' not in t: problems.append('AR_HEADER_STYLE '+rel)
+                  if is_ar and '/assets/css/arabic-mobile-header.css' not in t: problems.append('AR_MOBILE_HEADER_STYLE '+rel)
                   if '917488955154' not in h: problems.append('HEADER_CONTACT_ROUTE '+rel)
                   if any(x in h for x in ['How it works','directory-site-header','shell-header']): problems.append('LEGACY_HEADER '+rel)
-                  seq=ar_sequence if rel.startswith('ar/') else en_sequence
-                  acts=ar_actions if rel.startswith('ar/') else en_actions
-                  positions=[]
-                  for x in seq:
-                      pos=h.find(x)
+                  seq=ar_sequence if is_ar else en_sequence
+                  acts=ar_actions if is_ar else en_actions
+                  positions=[h.find(x) for x in seq]
+                  for x,pos in zip(seq,positions):
                       if pos<0: problems.append('HEADER_ITEM_MISSING '+rel+' '+x)
-                      positions.append(pos)
                   if all(x>=0 for x in positions) and positions!=sorted(positions): problems.append('HEADER_ORDER '+rel)
-                  action_positions=[]
-                  for x in acts:
-                      pos=h.find(x)
+                  action_positions=[h.find(x) for x in acts]
+                  for x,pos in zip(acts,action_positions):
                       if pos<0: problems.append('HEADER_ACTION_MISSING '+rel+' '+x)
-                      action_positions.append(pos)
                   if all(x>=0 for x in action_positions) and action_positions!=sorted(action_positions): problems.append('HEADER_ACTION_ORDER '+rel)
-                  if rel.startswith('ar/'):
-                      if '/assets/css/arabic-master-header.css?v=2' not in t: problems.append('AR_HEADER_STYLE '+rel)
+                  if is_ar:
                       if '<bdi>+91 74889 55154</bdi>' not in h: problems.append('AR_PHONE_FORMAT '+rel)
                       if h.count('>تواصل معنا</a>')!=1: problems.append('AR_CONTACT_DUPLICATE '+rel)
 
+              # Every approved footer must use the same shared master CSS and exact structural/link contract.
               if 'class="site-footer"' in t:
+                  checked_footers+=1
+                  if t.count('class="site-footer"')!=1: problems.append('FOOTER_COUNT '+rel)
                   if '/assets/css/footer-approved.css' not in t: problems.append('APPROVED_FOOTER_STYLE_MISSING '+rel)
                   fm=re.search(r'<footer[^>]*class="[^"]*site-footer[^"]*"[^>]*>.*?</footer>',t,re.S)
-                  if not fm: problems.append('FOOTER_MARKUP_INVALID '+rel)
-                  else:
-                      f=fm.group(0)
-                      for cls in ['footer-wrap','footer-top','footer-brand','footer-links','footer-bottom']:
-                          if cls not in f: problems.append('FOOTER_STRUCTURE_DRIFT '+rel+' '+cls)
+                  if not fm: problems.append('FOOTER_MARKUP_INVALID '+rel); continue
+                  f=fm.group(0)
+                  for cls in ['footer-wrap','footer-top','footer-brand','footer-links','footer-bottom']:
+                      if cls not in f: problems.append('FOOTER_STRUCTURE_DRIFT '+rel+' '+cls)
+                  if 'Healthcare%20Travel%20Swoosh%20Emblem' not in f: problems.append('FOOTER_LOGO_DRIFT '+rel)
+                  if 'Elajme India' not in f or 'علاج مي إنديا' not in f: problems.append('FOOTER_BRAND_DRIFT '+rel)
+                  if '© 2026 Elajme India. International patient coordination.' not in f: problems.append('FOOTER_COPYRIGHT_DRIFT '+rel)
+                  if not is_ar:
+                      pos=[f.find(x) for x in footer_links]
+                      for x,n in zip(footer_links,pos):
+                          if n<0: problems.append('FOOTER_LINK_MISSING '+rel+' '+x)
+                      if all(n>=0 for n in pos) and pos!=sorted(pos): problems.append('FOOTER_LINK_ORDER '+rel)
 
-          print('Approved Header/Footer/Mobile CTA Super Lock blocking issues:',len(problems))
+          if checked_headers==0: problems.append('NO_MASTER_HEADERS_CHECKED')
+          if checked_footers==0: problems.append('NO_APPROVED_FOOTERS_CHECKED')
+          print(f'Mobile header/footer Super Duper Lock checked headers={checked_headers} footers={checked_footers} blocking={len(problems)}')
           if problems:
               print('\n'.join(problems))
-              print('\nBLOCKED: Approved English/Arabic desktop/mobile headers, mobile conversion UI, and footers may only change after explicit owner approval and an intentional lock snapshot update.')
+              print('\nBLOCKED: approved mobile headers, footers, mobile conversion CTA, icon treatment or shared implementation changed. Owner approval plus intentional lock snapshot update is required.')
               sys.exit(1)
-          print('ELAJME APPROVED EN/AR DESKTOP + MOBILE HEADER + CONVERSION CTA + FOOTER SUPER LOCK: CLEAN')
+          print('ELAJME EN/AR MOBILE HEADER + FOOTER SUPER DUPER LOCK: CLEAN')
           PY
