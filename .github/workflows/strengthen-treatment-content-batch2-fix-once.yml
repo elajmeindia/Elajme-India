@@ -1,0 +1,75 @@
+name: Strengthen treatment content batch 2 fix once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/strengthen-treatment-content-batch2-fix-once.yml'
+permissions:
+  contents: write
+jobs:
+  strengthen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Strengthen second bilingual treatment batch
+        shell: python
+        run: |
+          from pathlib import Path
+          import sys
+          data={
+          'spine-surgery-india':('Preparing for a spine specialist review','A spine review focuses on the location of symptoms, weakness or numbness, neurological findings, imaging and response to previous treatment. Surgery is only one possible pathway and should not be assumed before specialist assessment.','Send MRI or CT reports and image files where available, recent X-rays, neurological or orthopaedic notes, details of injections or physiotherapy, previous spine procedures and a current medication list.','التحضير لمراجعة اختصاصي العمود الفقري','تركز مراجعة العمود الفقري على موضع الأعراض والضعف أو التنميل والفحص العصبي والصور الطبية والاستجابة للعلاجات السابقة. والجراحة ليست سوى أحد الخيارات الممكنة ولا ينبغي افتراض الحاجة إليها قبل تقييم الطبيب المختص.','أرسل تقارير وملفات الرنين المغناطيسي أو الأشعة المقطعية إن توفرت، والأشعة الحديثة، وتقارير الأعصاب أو العظام، وتفاصيل الحقن أو العلاج الطبيعي، وأي إجراءات سابقة للعمود الفقري، وقائمة الأدوية الحالية.'),
+          'bone-marrow-transplant-india':('Preparing for bone marrow or stem cell transplant review','Transplant assessment depends on the exact blood or marrow disorder, disease status, previous treatment, general health and whether an autologous or donor-based transplant is being considered. Donor matching and eligibility require specialist transplant-centre review.','Send pathology and bone-marrow reports, recent blood counts, treatment and chemotherapy summaries, infection-screening results if available, HLA or donor-testing records already completed and current medicines.','التحضير لمراجعة زراعة نخاع العظم أو الخلايا الجذعية','يعتمد تقييم الزراعة على نوع مرض الدم أو نخاع العظم ومرحلة المرض والعلاجات السابقة والحالة الصحية العامة، وعلى ما إذا كانت الزراعة الذاتية أو من متبرع قيد الدراسة. وتتطلب مطابقة المتبرع والأهلية مراجعة فريق متخصص في مركز الزراعة.','أرسل تقارير علم الأمراض ونخاع العظم، وأحدث تحاليل الدم، وملخصات العلاج والكيماوي، ونتائج فحوص العدوى إن وجدت، وتقارير HLA أو فحوص المتبرع التي أُجريت سابقاً، وقائمة الأدوية الحالية.'),
+          'hematology-blood-disorders-india':('Preparing for a hematology review','Blood disorders range from anaemia and clotting problems to disorders of blood cells and marrow. The required specialist pathway depends on the diagnosis, blood counts, symptoms, previous investigations and whether a malignant or non-malignant condition is suspected.','Send serial blood counts where available, peripheral smear or bone-marrow reports, coagulation tests, pathology or molecular reports, transfusion history, previous treatment summaries and current medicines.','التحضير لمراجعة أمراض الدم','تشمل أمراض الدم حالات متعددة من فقر الدم واضطرابات التخثر إلى أمراض خلايا الدم ونخاع العظم. ويعتمد مسار التقييم على التشخيص ونتائج تعداد الدم والأعراض والفحوص السابقة وما إذا كانت الحالة خبيثة أو غير خبيثة.','أرسل نتائج تعداد الدم المتتابعة إن توفرت، وتقارير لطاخة الدم أو نخاع العظم، وفحوص التخثر، وتقارير علم الأمراض أو الفحوص الجزيئية، وتاريخ نقل الدم، وملخصات العلاج السابق، والأدوية الحالية.'),
+          'fertility-ivf-treatment-india':('Preparing for fertility and IVF review','Fertility assessment is individual to the patient or couple and may include reproductive history, ovarian reserve, semen analysis, uterine or tubal assessment and previous fertility treatment. The treating fertility team determines whether IVF or another pathway is appropriate.','Send previous fertility-clinic notes, hormone and ovarian-reserve tests, semen analysis, ultrasound or tubal studies, records of previous IVF cycles or procedures and relevant medical or surgical history.','التحضير لمراجعة الخصوبة وأطفال الأنابيب','يختلف تقييم الخصوبة حسب المريضة أو الزوجين وقد يشمل التاريخ الإنجابي ومخزون المبيض وتحليل السائل المنوي وتقييم الرحم أو الأنابيب والعلاجات السابقة للخصوبة. ويحدد فريق الخصوبة المعالج مدى ملاءمة أطفال الأنابيب أو أي مسار آخر.','أرسل تقارير عيادة الخصوبة السابقة، وفحوص الهرمونات ومخزون المبيض، وتحليل السائل المنوي، وتقارير السونار أو فحوص الأنابيب، وسجلات دورات أطفال الأنابيب أو الإجراءات السابقة، والتاريخ الطبي أو الجراحي ذي الصلة.'),
+          'bariatric-weight-loss-surgery-india':('Preparing for bariatric surgery review','Bariatric surgery assessment considers body-mass index, obesity-related conditions, previous weight-management efforts, nutrition, medicines and general fitness for surgery. The surgical team determines the appropriate procedure only after individual evaluation.','Send current height and weight, recent blood tests, details of diabetes or other obesity-related conditions, medication list, previous abdominal surgery records and any prior bariatric or weight-management treatment.','التحضير لمراجعة جراحة السمنة','يراعي تقييم جراحة السمنة مؤشر كتلة الجسم والأمراض المرتبطة بالسمنة ومحاولات خفض الوزن السابقة والتغذية والأدوية واللياقة العامة للجراحة. ويحدد الفريق الجراحي الإجراء المناسب فقط بعد تقييم الحالة بصورة فردية.','أرسل الطول والوزن الحاليين، وأحدث تحاليل الدم، وتفاصيل السكري أو الأمراض المرتبطة بالسمنة، وقائمة الأدوية، وتقارير عمليات البطن السابقة، وأي علاج سابق للسمنة أو إدارة الوزن.'),
+          'eye-treatment-india':('Preparing for an ophthalmology review','Eye-care planning depends on the exact diagnosis and the part of the eye affected. Cataract, retinal, corneal, glaucoma and other conditions require different investigations and specialist expertise, so previous eye findings are important for remote review.','Send the ophthalmology diagnosis, recent eye examination notes, visual-acuity findings, OCT or retinal imaging, corneal or glaucoma tests where relevant, previous eye surgery records and current eye medicines.','التحضير لمراجعة طب العيون','يعتمد تخطيط علاج العين على التشخيص الدقيق والجزء المتأثر من العين. وتحتاج حالات الساد والشبكية والقرنية والزرق وغيرها إلى فحوص وخبرات مختلفة، لذلك تفيد نتائج فحوص العين السابقة في المراجعة الأولية.','أرسل تشخيص طبيب العيون، وتقارير فحص العين الحديثة، ونتائج حدة البصر، وتقارير OCT أو صور الشبكية، وفحوص القرنية أو الزرق عند الحاجة، وتقارير عمليات العين السابقة، وأدوية العين الحالية.'),
+          'ent-treatment-india':('Preparing for an ENT specialist review','ENT assessment varies for ear, hearing, nose, sinus, throat, voice and head-and-neck concerns. The specialist may need endoscopy, hearing tests or imaging depending on the symptoms and suspected diagnosis.','Send recent ENT notes, hearing tests or audiograms, endoscopy findings, CT or MRI reports and images where available, pathology reports when relevant, previous ENT surgery records and current medicines.','التحضير لمراجعة اختصاصي الأنف والأذن والحنجرة','يختلف تقييم الأنف والأذن والحنجرة حسب مشكلات الأذن والسمع والأنف والجيوب والحلق والصوت والرأس والعنق. وقد يحتاج الطبيب إلى المنظار أو اختبارات السمع أو التصوير بحسب الأعراض والتشخيص المحتمل.','أرسل تقارير الأنف والأذن والحنجرة الحديثة، واختبارات السمع، ونتائج المنظار، وتقارير وصور الأشعة المقطعية أو الرنين إن توفرت، وتقارير الخزعة عند الحاجة، وسجلات العمليات السابقة، والأدوية الحالية.'),
+          'womens-health-gynaecology-india':('Preparing for a gynaecology review','Gynaecology review depends on the patient’s symptoms, reproductive and menstrual history, imaging, previous procedures and the suspected condition. Benign gynaecology, complex surgery and cancer-related concerns may require different specialist teams.','Send recent gynaecology notes, ultrasound or MRI reports, cervical or pathology results when relevant, previous surgery records, menstrual or reproductive history and a current medication list.','التحضير لمراجعة أمراض النساء','يعتمد تقييم أمراض النساء على الأعراض والتاريخ الإنجابي والدورة الشهرية والصور الطبية والإجراءات السابقة والتشخيص المحتمل. وقد تحتاج الحالات الحميدة أو الجراحات المعقدة أو الحالات المرتبطة بالأورام إلى فرق متخصصة مختلفة.','أرسل تقارير طبيب النساء الحديثة، وتقارير السونار أو الرنين المغناطيسي، ونتائج عنق الرحم أو علم الأمراض عند الحاجة، وتقارير العمليات السابقة، والتاريخ الإنجابي أو الدورة الشهرية، وقائمة الأدوية الحالية.')}
+          changed=[]
+          for slug,v in data.items():
+            for lang in ('en','ar'):
+              p=Path('treatments' if lang=='en' else 'ar/treatments')/slug/'index.html'
+              if not p.exists(): print('Missing',p);sys.exit(1)
+              s=p.read_text(encoding='utf-8')
+              if 'treatment-guidance-batch2' in s: continue
+              if lang=='en':
+                title,body,records=v[0],v[1],v[2]
+                block=f'<section class="sec treatment-guidance-batch2"><div class="c"><h2>{title}</h2><div class="grid"><article class="card"><h3>What the clinical team reviews</h3><p>{body}</p></article><article class="card"><h3>Records that can help</h3><p>{records}</p></article></div><p class="lead">The treating team confirms diagnosis, suitability, investigations and treatment after individual review. Elajme India coordinates case submission and communication and does not replace medical advice.</p></div></section>'
+              else:
+                title,body,records=v[3],v[4],v[5]
+                block=f'<section class="sec treatment-guidance-batch2"><div class="c"><h2>{title}</h2><div class="grid"><article class="card"><h3>ما الذي يراجعه الفريق الطبي؟</h3><p>{body}</p></article><article class="card"><h3>التقارير التي تساعد في المراجعة</h3><p>{records}</p></article></div><p class="lead">يؤكد الفريق الطبي التشخيص ومدى ملاءمة العلاج والفحوص والخطة بعد مراجعة الحالة بصورة فردية. يقتصر دور علاج مي إنديا على تنسيق إرسال الحالة والتواصل ولا يحل محل الاستشارة الطبية.</p></div></section>'
+              marker='<section class="cta">'
+              if marker not in s: print('Missing CTA marker',p);sys.exit(1)
+              p.write_text(s.replace(marker,block+marker,1),encoding='utf-8');changed.append(str(p))
+          print('Strengthened',len(changed),'batch-2 bilingual pages')
+      - name: Verify batch 2 content and routing
+        shell: python
+        run: |
+          from pathlib import Path
+          import sys
+          slugs=['spine-surgery-india','bone-marrow-transplant-india','hematology-blood-disorders-india','fertility-ivf-treatment-india','bariatric-weight-loss-surgery-india','eye-treatment-india','ent-treatment-india','womens-health-gynaecology-india']
+          issues=[]
+          for slug in slugs:
+            for root in (Path('treatments'),Path('ar/treatments')):
+              p=root/slug/'index.html'; s=p.read_text(encoding='utf-8')
+              if s.count('treatment-guidance-batch2')!=1: issues.append(f'Guidance count: {p}')
+              if '/#enquiry' not in s and '/ar/#enquiry' not in s: issues.append(f'No Elajme enquiry route: {p}')
+          if issues: print('\n'.join(issues));sys.exit(1)
+          print('Batch 2 verification passed for 16 bilingual pages')
+      - name: Protect approved global UI
+        shell: bash
+        run: |
+          if git diff --name-only | grep -E '^assets/(css/(master-header|arabic-master-header|mobile-header|arabic-mobile-header|footer-approved)\.css|js/mobile-header\.js)$'; then
+            echo 'Protected header/footer asset changed'; exit 1
+          fi
+      - name: Commit batch 2 strengthening
+        shell: bash
+        run: |
+          if git diff --quiet; then echo 'No changes required'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments
+          git commit -m 'Strengthen second bilingual treatment content batch'
+          git push
