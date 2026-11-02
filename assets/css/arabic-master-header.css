@@ -1,22 +1,23 @@
 /* Elajme India Arabic master-header parity layer.
    English master-header.css remains the visual source of truth.
-   Keep the same physical header layout as English, while Arabic navigation reads RTL. */
+   Keep the same physical header layout as English and preserve the required Arabic link sequence. */
 html[lang="ar"] .master-header-inner{direction:ltr!important}
 html[lang="ar"] .master-brand{margin:0 28px 0 0!important;direction:ltr!important}
 html[lang="ar"] .master-brand-text{align-items:center!important;text-align:center!important}
 html[lang="ar"] .master-brand-main{direction:ltr!important;text-align:center!important}
 html[lang="ar"] .master-brand-ar{display:block!important;width:100%!important;direction:rtl!important;unicode-bidi:isolate!important;text-align:center!important;margin-top:5px!important}
-html[lang="ar"] .master-nav{direction:rtl!important;justify-content:flex-start!important}
-html[lang="ar"] .master-nav a{font-size:12px!important;font-weight:700!important}
+/* Keep DOM order visually unchanged: الرئيسية → العلاجات → المستشفيات → الأطباء → المرضى الدوليون → من نحن → تواصل معنا */
+html[lang="ar"] .master-nav{direction:ltr!important;justify-content:flex-start!important}
+html[lang="ar"] .master-nav a{direction:rtl!important;unicode-bidi:isolate!important;text-align:center!important;font-size:12px!important;font-weight:700!important}
 html[lang="ar"] .master-nav a::before,html[lang="ar"] .master-nav a::after{content:none!important;display:none!important}
 html[lang="ar"] .master-actions{direction:ltr!important}
 html[lang="ar"] .master-phone{direction:ltr!important;unicode-bidi:isolate!important;text-align:left!important}
-html[lang="ar"] .master-whatsapp{font-family:Arial,"Segoe UI",Tahoma,sans-serif!important;font-weight:500!important;letter-spacing:0!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important}
+html[lang="ar"] .master-whatsapp{direction:rtl!important;unicode-bidi:isolate!important;font-family:Arial,"Segoe UI",Tahoma,sans-serif!important;font-weight:500!important;letter-spacing:0!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important}
 html[lang="ar"] .master-whatsapp::before,html[lang="ar"] .master-whatsapp::after{content:none!important;display:none!important}
 html[lang="ar"] .master-lang{direction:ltr!important}
-html[lang="ar"] .master-cta{direction:rtl!important}
+html[lang="ar"] .master-cta{direction:rtl!important;unicode-bidi:isolate!important}
 /* Neutralize legacy shell pseudo-labels that previously duplicated Arabic About/Contact text. */
 html[lang="ar"] .master-site-header .master-nav a[href*="about"],html[lang="ar"] .master-site-header .master-nav a[href*="contact"]{font-size:12px!important}
 html[lang="ar"] .master-site-header .master-nav a[href*="about"]::after,html[lang="ar"] .master-site-header .master-nav a[href*="contact"]::after{content:none!important;display:none!important}
 @media(max-width:1180px) and (min-width:901px){html[lang="ar"] .master-brand{margin-right:8px!important;margin-left:0!important}html[lang="ar"] .master-nav a{font-size:11px!important}}
-@media(max-width:900px){html[lang="ar"] .master-header-inner{direction:ltr!important}html[lang="ar"] .master-brand{margin:0!important}html[lang="ar"] .master-actions{margin-left:auto!important;margin-right:0!important}html[lang="ar"] .master-nav{direction:rtl!important;justify-content:flex-start!important}}
+@media(max-width:900px){html[lang="ar"] .master-header-inner{direction:ltr!important}html[lang="ar"] .master-brand{margin:0!important}html[lang="ar"] .master-actions{margin-left:auto!important;margin-right:0!important}html[lang="ar"] .master-nav{direction:ltr!important;justify-content:flex-start!important}html[lang="ar"] .master-nav a{direction:rtl!important}}
