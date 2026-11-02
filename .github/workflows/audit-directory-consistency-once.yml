@@ -1,5 +1,6 @@
 name: Audit bilingual directory consistency once
 
+# Final verification rerun after media and performance audits.
 on:
   push:
     branches: [main]
