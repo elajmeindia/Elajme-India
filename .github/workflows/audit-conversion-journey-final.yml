@@ -1,0 +1,65 @@
+name: Audit bilingual conversion journey
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit treatment to provider to enquiry journeys
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+
+          roots = [Path('treatments'), Path('hospitals'), Path('doctors'), Path('ar/treatments'), Path('ar/hospitals'), Path('ar/doctors')]
+          files=[]
+          for root in roots:
+              if root.exists(): files += list(root.rglob('index.html'))
+
+          blocking=[]; warnings=[]
+          direct_provider_patterns=[
+              r'href=["\'](?:mailto:|tel:)(?!\+917488955154)',
+              r'href=["\']https?://wa\.me/(?!917488955154)',
+              r'href=["\']https?://api\.whatsapp\.com/(?![^"\']*917488955154)'
+          ]
+          for p in files:
+              s=p.read_text(encoding='utf-8', errors='ignore')
+              low=s.lower()
+              # Skip intentional redirect/noindex shells.
+              if 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low or ('noindex' in low and len(s)<12000):
+                  continue
+              ar=str(p).startswith('ar/')
+              expected='/ar/#enquiry' if ar else '/#enquiry'
+              # Every indexable provider/treatment page should provide an Elajme-owned conversion route.
+              has_enquiry = expected in s or ('917488955154' in s and ('wa.me/' in s or 'tel:+917488955154' in s))
+              if not has_enquiry:
+                  blocking.append(f'MISSING_ELAJME_CONVERSION {p}')
+              for pat in direct_provider_patterns:
+                  if re.search(pat,s,re.I):
+                      blocking.append(f'NON_ELAJME_DIRECT_CONTACT {p}')
+                      break
+              # Provider pages should give users a route back to relevant discovery pages.
+              if '/doctors/' in str(p).replace('\\','/') or '/hospitals/' in str(p).replace('\\','/'):
+                  if 'href="/treatments/' not in s and 'href="/ar/treatments/' not in s:
+                      warnings.append(f'NO_TREATMENT_DISCOVERY_LINK {p}')
+              # Arabic pages should not route their primary enquiry to English home.
+              if ar and re.search(r'href=["\']/#enquiry["\']',s):
+                  blocking.append(f'ARABIC_ENQUIRY_TO_ENGLISH {p}')
+
+          print('BILINGUAL CONVERSION JOURNEY AUDIT')
+          print('Pages checked:',len(files))
+          print('Blocking issues:',len(blocking))
+          print('Review warnings:',len(warnings))
+          for x in blocking: print('BLOCK:',x)
+          for x in warnings: print('WARN:',x)
+          if blocking: sys.exit(1)
+          PY
