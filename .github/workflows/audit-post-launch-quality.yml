@@ -1,5 +1,6 @@
 name: Audit post-launch production quality
 
+# Final production rerun after launch-safety, SEO, media and conversion audits.
 on:
   push:
     branches: [main]
@@ -69,8 +70,6 @@ jobs:
             fi
           done
 
-          # Structured data is required on pages where the site intentionally publishes it.
-          # Directory listing pages remain valid/indexable without forcing unsupported rich-result markup.
           schema_routes=(
             '/'
             '/ar/'
