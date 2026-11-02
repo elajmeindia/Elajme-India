@@ -1,5 +1,6 @@
 name: Audit final SEO indexing and release
 
+# Final post-launch rerun after media and bilingual parity audit.
 on:
   push:
     branches: [main]
@@ -20,12 +21,11 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re, urllib.parse, xml.etree.ElementTree as ET
+          import re, urllib.parse
 
           root=Path('.')
           pages=list(root.rglob('*.html'))
-          blocking=[]; warnings=[]
-          indexable=[]
+          blocking=[]; warnings=[]; indexable=[]
 
           def route_for(p):
               s=p.as_posix()
@@ -41,9 +41,7 @@ jobs:
               return p.is_file() or (p/'index.html').is_file()
 
           for p in pages:
-              text=p.read_text(errors='ignore')
-              low=text.lower()
-              route=route_for(p)
+              text=p.read_text(errors='ignore'); low=text.lower(); route=route_for(p)
               noindex=bool(re.search(r'<meta[^>]+name=["\']robots["\'][^>]+content=["\'][^"\']*noindex',text,re.I))
               redirect=('http-equiv="refresh"' in low or "http-equiv='refresh'" in low)
               if noindex or redirect: continue
@@ -54,49 +52,33 @@ jobs:
               if not title or not title.group(1).strip(): blocking.append(f'MISSING_TITLE {p}')
               if not desc or len(desc.group(1).strip())<50: warnings.append(f'WEAK_DESCRIPTION {p}')
               if not canon: blocking.append(f'MISSING_CANONICAL {p}')
-              else:
-                  c=canon.group(1)
-                  if not c.startswith('https://elajmeindia.com/'): blocking.append(f'BAD_CANONICAL {p}: {c}')
-              # EN/AR pages should advertise both language alternates when a counterpart exists.
+              elif not canon.group(1).startswith('https://elajmeindia.com/'): blocking.append(f'BAD_CANONICAL {p}: {canon.group(1)}')
               is_ar=route.startswith('/ar/') or route=='/ar/'
-              counterpart=None
-              if is_ar:
-                  counterpart=route[3:] or '/'
-              elif route.startswith('/'):
-                  counterpart='/ar'+route
+              counterpart=(route[3:] or '/') if is_ar else '/ar'+route
               if counterpart and exists_route(counterpart):
-                  en=bool(re.search(r'hreflang=["\']en["\']',text,re.I))
-                  ar=bool(re.search(r'hreflang=["\']ar["\']',text,re.I))
-                  xd=bool(re.search(r'hreflang=["\']x-default["\']',text,re.I))
+                  en=bool(re.search(r'hreflang=["\']en["\']',text,re.I)); ar=bool(re.search(r'hreflang=["\']ar["\']',text,re.I)); xd=bool(re.search(r'hreflang=["\']x-default["\']',text,re.I))
                   if not (en and ar): blocking.append(f'HREFLANG_PAIR {p}')
                   if not xd: warnings.append(f'NO_XDEFAULT {p}')
-              # root-relative links should resolve in repository, ignoring assets/anchors.
               for href in re.findall(r'href=["\']([^"\']+)',text,re.I):
                   if href.startswith(('/assets/','/#','/ar/#','#','mailto:','tel:','http://','https://','//')): continue
                   if href.startswith('/') and not exists_route(href): warnings.append(f'UNRESOLVED_LINK {p}: {href}')
 
-          # Sitemap coverage for indexable canonical routes.
           sitemap=root/'sitemap.xml'
           if not sitemap.is_file(): blocking.append('MISSING_SITEMAP sitemap.xml')
           else:
-              st=sitemap.read_text(errors='ignore')
-              locs=set(re.findall(r'<loc>\s*(.*?)\s*</loc>',st,re.I))
+              st=sitemap.read_text(errors='ignore'); locs=set(re.findall(r'<loc>\s*(.*?)\s*</loc>',st,re.I))
               for route in indexable:
-                  # exclude utility html aliases that intentionally canonicalize elsewhere
                   expected='https://elajmeindia.com'+route
                   if expected not in locs and route not in ('/404.html','/privacy.html','/terms.html','/ar/privacy.html','/ar/terms.html'):
                       warnings.append(f'NOT_IN_SITEMAP {route}')
 
           print('FINAL SEO + INDEXING + RELEASE AUDIT')
-          print('HTML pages:',len(pages))
-          print('Indexable pages checked:',len(indexable))
-          print('Blocking issues:',len(blocking))
+          print('HTML pages:',len(pages)); print('Indexable pages checked:',len(indexable)); print('Blocking issues:',len(blocking))
           for x in blocking[:100]: print('BLOCK',x)
           print('Review warnings:',len(warnings))
           for x in warnings[:150]: print('WARN',x)
-          if blocking:
-              raise SystemExit(f'Final release audit found {len(blocking)} blocking issue(s)')
+          if blocking: raise SystemExit(f'Final release audit found {len(blocking)} blocking issue(s)')
           PY
-      - name: Verify locked production assets unchanged
+      - name: Verify all protected production header footer assets unchanged
         run: |
-          test -z "$(git status --porcelain -- assets/css/master-header.css assets/css/arabic-master-header.css assets/css/footer-approved.css FOOTER-LOCK.md)"
+          test -z "$(git status --porcelain -- assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md)"
