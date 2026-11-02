@@ -1,0 +1,88 @@
+name: Audit SEO links media and bilingual parity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.html'
+      - 'assets/images/**'
+      - '.github/workflows/audit-seo-links-media-final.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit SEO metadata internal links bilingual parity and provider media
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urlparse, unquote
+          import re, sys
+
+          problems=[]; warnings=[]
+          pages=[]
+          for p in Path('.').rglob('*.html'):
+              rel=p.as_posix()
+              if rel.startswith(('.git/','.github/')): continue
+              t=p.read_text(encoding='utf-8',errors='ignore')
+              low=t.lower()
+              if 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low: continue
+              pages.append((p,rel,t))
+
+          def route_exists(href):
+              if not href.startswith('/') or href.startswith('//'): return True
+              path=unquote(urlparse(href).path)
+              if path in ('','/'): return Path('index.html').exists()
+              q=Path(path.lstrip('/'))
+              candidates=[q]
+              if q.suffix=='': candidates += [q/'index.html', Path(str(q)+'.html')]
+              return any(x.exists() for x in candidates)
+
+          for p,rel,t in pages:
+              low=t.lower()
+              indexable='noindex' not in low
+              if indexable:
+                  if not re.search(r'<title>[^<]{8,}</title>',t,re.I): problems.append('TITLE '+rel)
+                  if not re.search(r'<meta\s+name=["\']description["\'][^>]+content=["\'][^"\']{40,}["\']',t,re.I): warnings.append('META_DESCRIPTION '+rel)
+                  if 'rel="canonical"' not in t and "rel='canonical'" not in t: warnings.append('CANONICAL '+rel)
+              for href in re.findall(r'href=["\']([^"\']+)',t,re.I):
+                  if href.startswith('/') and not route_exists(href): problems.append('BROKEN_INTERNAL_LINK '+rel+' -> '+href)
+
+          # EN/AR provider directory parity and media coverage.
+          for kind in ('doctors','hospitals'):
+              en=Path(kind)/'index.html'; ar=Path('ar')/kind/'index.html'
+              if not en.exists() or not ar.exists(): problems.append('MISSING_DIRECTORY '+kind); continue
+              ent=en.read_text(encoding='utf-8',errors='ignore'); art=ar.read_text(encoding='utf-8',errors='ignore')
+              en_slugs=set(re.findall(rf'href=["\']/{kind}/([^/"\'#?]+)/?',ent,re.I))
+              ar_slugs=set(re.findall(rf'href=["\']/ar/{kind}/([^/"\'#?]+)/?',art,re.I))
+              profiles={x.parent.name:x for x in Path(kind).glob('*/index.html')}
+              active=set()
+              for slug,x in profiles.items():
+                  tx=x.read_text(encoding='utf-8',errors='ignore').lower()
+                  if 'noindex' in tx or 'http-equiv="refresh"' in tx or "http-equiv='refresh'" in tx: continue
+                  active.add(slug)
+              en_slugs &= set(profiles); ar_slugs &= set(profiles)
+              if en_slugs!=ar_slugs: problems.append(f'{kind.upper()}_EN_AR_PARITY EN-only={sorted(en_slugs-ar_slugs)} AR-only={sorted(ar_slugs-en_slugs)}')
+              if active-en_slugs: problems.append(f'{kind.upper()}_MISSING_EN {sorted(active-en_slugs)}')
+              if active-ar_slugs: problems.append(f'{kind.upper()}_MISSING_AR {sorted(active-ar_slugs)}')
+              for slug in sorted(active):
+                  tx=profiles[slug].read_text(encoding='utf-8',errors='ignore')
+                  imgs=re.findall(r'<img\b[^>]*src=["\']([^"\']+)',tx,re.I)
+                  meaningful=[s for s in imgs if 'Healthcare%20Travel%20Swoosh%20Emblem' not in s and 'logo' not in s.lower()]
+                  if not meaningful: warnings.append(f'{kind.upper()}_PROFILE_MEDIA {slug}')
+                  arp=Path('ar')/kind/slug/'index.html'
+                  if not arp.exists(): problems.append(f'{kind.upper()}_AR_PROFILE_MISSING {slug}')
+
+          print(f'Pages audited: {len(pages)}')
+          print(f'Blocking issues: {len(problems)}')
+          if problems: print('\n'.join(sorted(set(problems))))
+          print(f'Warnings: {len(warnings)}')
+          if warnings: print('\n'.join(sorted(set(warnings))))
+          if problems: sys.exit(1)
+          print('SEO / INTERNAL LINKS / BILINGUAL DIRECTORY / MEDIA AUDIT: CLEAN (warnings are refinement opportunities)')
+          PY
