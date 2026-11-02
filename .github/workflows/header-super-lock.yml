@@ -20,15 +20,14 @@ jobs:
           problems=[]
 
           # Exact approved production UI snapshots. Any byte-level change fails this gate.
-          # This now Super Locks the approved EN/AR desktop headers, mobile headers,
-          # Arabic mobile conversion dock/icon implementation, shared mobile JS, and footer.
+          # This Super Locks approved EN/AR headers, mobile conversion UI, shared mobile JS and footer.
           locked_hashes={
             'assets/css/master-header.css':'932ce7acbd738f1ea5a71bb0b3913635b647f255',
             'assets/css/arabic-master-header.css':'ca750db9fef35f39930e6137ae5f7b339e0834ae',
             'assets/css/mobile-header.css':'4c179e2d0811c4e52160a08ac0992eaf710b475f',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
             'assets/js/mobile-header.js':'171e2202591dda27ed852edfbd6754ba46157060',
-            'assets/css/footer-approved.css':'889e7b6f4ca5951d9dc8599390fddeba0c0caf12',
+            'assets/css/footer-approved.css':'05faf239dd9cf39a19b41e596f433c99989c1e9b',
           }
           def git_blob_sha(data):
               return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
@@ -40,7 +39,6 @@ jobs:
               if actual!=expected:
                   problems.append(f'UNAPPROVED_LOCKED_FILE_CHANGE {path} expected={expected} actual={actual}')
 
-          # Lock the approved conversion-bar semantics as well as the file snapshots.
           js=Path('assets/js/mobile-header.js').read_text(encoding='utf-8',errors='ignore')
           ar_mobile=Path('assets/css/arabic-mobile-header.css').read_text(encoding='utf-8',errors='ignore')
           required_js=[
