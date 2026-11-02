@@ -2,32 +2,34 @@
    English master-header.css remains the visual source of truth.
    Arabic header: logo on the right, then the exact approved Arabic sequence flowing right-to-left across the page. */
 html[lang="ar"] .master-site-header{direction:rtl!important}
-html[lang="ar"] .master-header-inner{direction:rtl!important;flex-direction:row!important}
-html[lang="ar"] .master-brand{margin:0 0 0 28px!important;direction:ltr!important;order:0!important}
+html[lang="ar"] .master-header-inner{direction:rtl!important;flex-direction:row!important;align-items:center!important}
+/* Premium refinement: keep the brand authoritative but slightly more compact beside the Arabic navigation. */
+html[lang="ar"] .master-brand{margin:0 0 0 20px!important;direction:ltr!important;order:0!important;flex:0 0 auto!important}
+html[lang="ar"] .master-brand img{width:56px!important;height:56px!important;object-fit:contain!important}
 html[lang="ar"] .master-brand-text{align-items:center!important;text-align:center!important}
 html[lang="ar"] .master-brand-main{direction:ltr!important;text-align:center!important}
-html[lang="ar"] .master-brand-ar{display:block!important;width:100%!important;direction:rtl!important;unicode-bidi:isolate!important;text-align:center!important;margin-top:5px!important}
+html[lang="ar"] .master-brand-ar{display:block!important;width:100%!important;direction:rtl!important;unicode-bidi:isolate!important;text-align:center!important;margin-top:4px!important}
 /* Exact visible sequence from the logo/right side: الرئيسية → العلاجات → المستشفيات → الأطباء → المرضى الدوليون → من نحن → تواصل معنا */
-html[lang="ar"] .master-nav{direction:rtl!important;flex-direction:row!important;justify-content:flex-start!important;order:1!important}
-html[lang="ar"] .master-nav a{direction:rtl!important;unicode-bidi:isolate!important;text-align:center!important;font-size:12px!important;font-weight:700!important}
+html[lang="ar"] .master-nav{direction:rtl!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;order:1!important;gap:0!important}
+html[lang="ar"] .master-nav a{direction:rtl!important;unicode-bidi:isolate!important;text-align:center!important;font-size:12px!important;font-weight:650!important;line-height:1.25!important;padding:12px 10px!important;white-space:nowrap!important}
 html[lang="ar"] .master-nav a:nth-child(1){order:1!important}
 html[lang="ar"] .master-nav a:nth-child(2){order:2!important}
 html[lang="ar"] .master-nav a:nth-child(3){order:3!important}
 html[lang="ar"] .master-nav a:nth-child(4){order:4!important}
-html[lang="ar"] .master-nav a:nth-child(5){order:5!important}
+html[lang="ar"] .master-nav a:nth-child(5){order:5!important;padding-left:12px!important;padding-right:12px!important}
 html[lang="ar"] .master-nav a:nth-child(6){order:6!important}
 html[lang="ar"] .master-nav a:nth-child(7){order:7!important}
 html[lang="ar"] .master-nav a::before,html[lang="ar"] .master-nav a::after{content:none!important;display:none!important}
-/* Exact continuation from right to left: phone → WhatsApp → English → enquiry */
-html[lang="ar"] .master-actions{direction:rtl!important;flex-direction:row!important;order:2!important}
-html[lang="ar"] .master-phone{direction:ltr!important;unicode-bidi:isolate!important;text-align:left!important;order:1!important}
+/* Exact continuation from right to left: phone → WhatsApp → English → enquiry. */
+html[lang="ar"] .master-actions{direction:rtl!important;flex-direction:row!important;align-items:center!important;order:2!important;gap:8px!important;margin-right:8px!important}
+html[lang="ar"] .master-phone{direction:ltr!important;unicode-bidi:isolate!important;text-align:left!important;order:1!important;font-size:12px!important;font-weight:650!important;letter-spacing:0!important;white-space:nowrap!important;padding:10px 4px!important}
 html[lang="ar"] .master-phone bdi{direction:ltr!important;unicode-bidi:isolate!important}
-html[lang="ar"] .master-whatsapp{direction:rtl!important;unicode-bidi:isolate!important;font-family:Arial,"Segoe UI",Tahoma,sans-serif!important;font-weight:500!important;letter-spacing:0!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;order:2!important}
-html[lang="ar"] .master-lang{direction:ltr!important;order:3!important}
-html[lang="ar"] .master-cta{direction:rtl!important;unicode-bidi:isolate!important;order:4!important}
+html[lang="ar"] .master-whatsapp{direction:rtl!important;unicode-bidi:isolate!important;font-family:Arial,"Segoe UI",Tahoma,sans-serif!important;font-size:12px!important;font-weight:500!important;letter-spacing:0!important;text-shadow:none!important;-webkit-text-stroke:0 transparent!important;order:2!important;min-width:120px!important;height:42px!important;padding:0 15px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important}
+html[lang="ar"] .master-lang{direction:ltr!important;order:3!important;height:42px!important;padding:0 14px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:12px!important;font-weight:650!important}
+html[lang="ar"] .master-cta{direction:rtl!important;unicode-bidi:isolate!important;order:4!important;height:42px!important;padding:0 15px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:12px!important;font-weight:700!important;white-space:nowrap!important}
 html[lang="ar"] .master-whatsapp::before,html[lang="ar"] .master-whatsapp::after{content:none!important;display:none!important}
 /* Neutralize legacy shell pseudo-labels that previously duplicated Arabic About/Contact text. */
 html[lang="ar"] .master-site-header .master-nav a[href*="about"],html[lang="ar"] .master-site-header .master-nav a[href*="contact"]{font-size:12px!important}
 html[lang="ar"] .master-site-header .master-nav a[href*="about"]::after,html[lang="ar"] .master-site-header .master-nav a[href*="contact"]::after{content:none!important;display:none!important}
-@media(max-width:1180px) and (min-width:901px){html[lang="ar"] .master-brand{margin-right:0!important;margin-left:8px!important}html[lang="ar"] .master-nav a{font-size:11px!important}}
-@media(max-width:900px){html[lang="ar"] .master-site-header,html[lang="ar"] .master-header-inner{direction:rtl!important}html[lang="ar"] .master-brand{margin:0!important}html[lang="ar"] .master-actions{margin-right:auto!important;margin-left:0!important;direction:rtl!important}html[lang="ar"] .master-nav{direction:rtl!important;flex-direction:row!important;justify-content:flex-start!important}html[lang="ar"] .master-nav a{direction:rtl!important}}
+@media(max-width:1180px) and (min-width:901px){html[lang="ar"] .master-brand{margin-right:0!important;margin-left:8px!important}html[lang="ar"] .master-brand img{width:52px!important;height:52px!important}html[lang="ar"] .master-nav a{font-size:11px!important;padding-left:7px!important;padding-right:7px!important}html[lang="ar"] .master-actions{gap:6px!important;margin-right:4px!important}html[lang="ar"] .master-whatsapp{min-width:112px!important;padding-left:11px!important;padding-right:11px!important}}
+@media(max-width:900px){html[lang="ar"] .master-site-header,html[lang="ar"] .master-header-inner{direction:rtl!important}html[lang="ar"] .master-brand{margin:0!important}html[lang="ar"] .master-brand img{width:52px!important;height:52px!important}html[lang="ar"] .master-actions{margin-right:auto!important;margin-left:0!important;direction:rtl!important}html[lang="ar"] .master-nav{direction:rtl!important;flex-direction:row!important;justify-content:flex-start!important}html[lang="ar"] .master-nav a{direction:rtl!important}}
