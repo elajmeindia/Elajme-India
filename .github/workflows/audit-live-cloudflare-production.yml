@@ -46,3 +46,5 @@ jobs:
           grep -q 'https://elajmeindia.com/' /tmp/en.html || { echo 'FAIL: English production canonical/domain marker missing'; exit 1; }
           grep -q 'https://elajmeindia.com/ar/' /tmp/ar.html || { echo 'FAIL: Arabic production canonical/domain marker missing'; exit 1; }
           echo 'LIVE CLOUDFLARE PRODUCTION AUDIT PASSED'
+
+# Final verification trigger: 2026-11-02
