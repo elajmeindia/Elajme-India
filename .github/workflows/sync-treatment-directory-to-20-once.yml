@@ -1,0 +1,74 @@
+name: Sync treatment directory to 20 once
+on:
+  push:
+    paths:
+      - '.github/workflows/sync-treatment-directory-to-20-once.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Synchronize directories sitemap and add endocrinology
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          en=Path('treatments/index.html'); s=en.read_text(encoding='utf-8')
+          s=s.replace('Medical Treatment in India: 17 Specialties','Medical Treatment in India: 20 Specialties').replace('Explore 17 medical treatment areas','Explore 20 medical treatment areas')
+          ent='''<article class="card"><h3><a href="ent-treatment-india/">ENT &amp; Ear, Nose and Throat Care</a></h3><p>ENT specialist review and ear, nose, sinus, throat and voice-care enquiry coordination.</p></article>'''
+          cards=ent+'''<article class="card"><h3><a href="bone-marrow-transplant-india/">Bone Marrow &amp; Stem Cell Transplant</a></h3><p>Specialist review and transplant-enquiry coordination for eligible haematology cases.</p></article><article class="card"><h3><a href="bariatric-weight-loss-surgery-india/">Bariatric &amp; Weight-Loss Surgery</a></h3><p>Bariatric and metabolic surgery assessment and enquiry coordination.</p></article><article class="card"><h3><a href="pulmonology-lung-care-india/">Pulmonology &amp; Lung Care</a></h3><p>Respiratory specialist review and lung-care enquiry coordination.</p></article><article class="card"><h3><a href="dermatology-skin-care-india/">Dermatology &amp; Skin Care</a></h3><p>Dermatology specialist review and skin-care enquiry coordination.</p></article><article class="card"><h3><a href="endocrinology-diabetes-care-india/">Endocrinology &amp; Diabetes Care</a></h3><p>Endocrinology review and coordination for diabetes, thyroid and hormonal conditions.</p></article>'''
+          if 'bone-marrow-transplant-india/">Bone Marrow' not in s: s=s.replace(ent,cards)
+          elif 'pulmonology-lung-care-india/">Pulmonology' not in s: s=s.replace('</div></div></section><section class="sec alt">','''<article class="card"><h3><a href="pulmonology-lung-care-india/">Pulmonology &amp; Lung Care</a></h3><p>Respiratory specialist review and lung-care enquiry coordination.</p></article><article class="card"><h3><a href="dermatology-skin-care-india/">Dermatology &amp; Skin Care</a></h3><p>Dermatology specialist review and skin-care enquiry coordination.</p></article><article class="card"><h3><a href="endocrinology-diabetes-care-india/">Endocrinology &amp; Diabetes Care</a></h3><p>Endocrinology review and coordination for diabetes, thyroid and hormonal conditions.</p></article></div></div></section><section class="sec alt">''',1)
+          # structured data positions 18-20
+          needle='''{"@type":"ListItem","position":17,"name":"Bariatric & Weight-Loss Surgery","url":"https://elajmeindia.com/treatments/bariatric-weight-loss-surgery-india/"}'''
+          if '"position":18' not in s:
+            s=s.replace(needle,needle+''',{"@type":"ListItem","position":18,"name":"Pulmonology & Lung Care","url":"https://elajmeindia.com/treatments/pulmonology-lung-care-india/"},{"@type":"ListItem","position":19,"name":"Dermatology & Skin Care","url":"https://elajmeindia.com/treatments/dermatology-skin-care-india/"},{"@type":"ListItem","position":20,"name":"Endocrinology & Diabetes Care","url":"https://elajmeindia.com/treatments/endocrinology-diabetes-care-india/"}''')
+          en.write_text(s,encoding='utf-8')
+
+          ar=Path('ar/treatments/index.html'); a=ar.read_text(encoding='utf-8')
+          bari='''<article class="card"><h3>جراحة السمنة وإنقاص الوزن</h3><p>تنسيق تقييم واستفسارات جراحة السمنة والتمثيل الغذائي مع الفرق المتخصصة.</p><a href="bariatric-weight-loss-surgery-india/">عرض التفاصيل</a></article>'''
+          if 'pulmonology-lung-care-india/' not in a:
+            a=a.replace(bari,bari+'''<article class="card"><h3>أمراض الرئة والجهاز التنفسي</h3><p>تنسيق مراجعة أمراض الرئة والتنفس مع الفرق المتخصصة.</p><a href="pulmonology-lung-care-india/">عرض التفاصيل</a></article><article class="card"><h3>الأمراض الجلدية والعناية بالبشرة</h3><p>تنسيق مراجعة الحالات الجلدية والاستفسارات مع أطباء الجلدية.</p><a href="dermatology-skin-care-india/">عرض التفاصيل</a></article><article class="card"><h3>الغدد الصماء والسكري</h3><p>تنسيق مراجعة حالات السكري والغدة الدرقية والاضطرابات الهرمونية.</p><a href="endocrinology-diabetes-care-india/">عرض التفاصيل</a></article>''')
+          ar.write_text(a,encoding='utf-8')
+
+          # Build specialty 20 from the approved treatment-page shell already in production.
+          base=Path('treatments/bariatric-weight-loss-surgery-india/index.html').read_text(encoding='utf-8')
+          e=base.replace('Bariatric Surgery in India | International Patients | Elajme India','Endocrinology & Diabetes Care in India | Elajme India').replace('Bariatric and weight-loss surgery enquiry coordination in India for international patients, with specialist review through Elajme India.','Endocrinology and diabetes-care enquiry coordination in India for international patients, including thyroid and hormonal conditions, through Elajme India.').replace('bariatric-weight-loss-surgery-india','endocrinology-diabetes-care-india').replace('Bariatric surgery coordination','Endocrinology coordination').replace('Bariatric and weight-loss surgery in India for international patients','Endocrinology and diabetes care in India for international patients').replace('Elajme India helps international patients coordinate bariatric and metabolic surgery enquiries with appropriate specialist teams in India. Suitability for surgery and the procedure choice require individual medical assessment.','Elajme India helps international patients coordinate endocrinology enquiries with appropriate specialist teams in India for diabetes, thyroid disorders and other hormonal conditions. Diagnosis and treatment planning require individual medical assessment.').replace('Eligibility assessment','Clinical assessment').replace('The bariatric team evaluates weight history, BMI, obesity-related conditions, previous weight-management efforts and overall health.','The specialist reviews symptoms, diagnosis, previous treatment, relevant laboratory results and overall medical history.').replace('Procedure planning','Diabetes and metabolic care').replace('The treating surgeon determines whether surgery is appropriate and discusses suitable options based on the patient’s clinical profile.','For diabetes and metabolic conditions, the treating team determines appropriate investigations and an individualized management plan.').replace('Nutrition and follow-up','Thyroid and hormonal care').replace('Dietary assessment, lifestyle preparation and long-term follow-up are important parts of bariatric care and are planned by the treating team.','Thyroid, pituitary, adrenal and other hormonal concerns are assessed according to the patient’s symptoms, examination and test results.').replace('Useful information may include height and weight, BMI if known, medical history, diabetes or blood-pressure records, sleep-apnoea information, previous weight-loss treatment, recent blood tests, imaging where relevant and current medicines.','Useful records may include recent blood tests, glucose and HbA1c results, thyroid or hormone tests, relevant imaging, previous diagnoses, treatment history and current medicines.').replace('Start a bariatric surgery enquiry','Start an endocrinology enquiry')
+          Path('treatments/endocrinology-diabetes-care-india').mkdir(parents=True,exist_ok=True); Path('treatments/endocrinology-diabetes-care-india/index.html').write_text(e,encoding='utf-8')
+
+          abase=Path('ar/treatments/bariatric-weight-loss-surgery-india/index.html').read_text(encoding='utf-8')
+          ae=abase.replace('جراحة السمنة في الهند للمرضى الدوليين | علاج مي إنديا','علاج الغدد الصماء والسكري في الهند | علاج مي إنديا').replace('تنسيق استفسارات جراحة السمنة وإنقاص الوزن في الهند للمرضى الدوليين مع مراجعة الفرق المتخصصة عبر علاج مي إنديا.','تنسيق استفسارات الغدد الصماء والسكري واضطرابات الغدة الدرقية والهرمونات في الهند للمرضى الدوليين عبر علاج مي إنديا.').replace('bariatric-weight-loss-surgery-india','endocrinology-diabetes-care-india').replace('جراحة السمنة وإنقاص الوزن في الهند للمرضى الدوليين','علاج الغدد الصماء والسكري في الهند للمرضى الدوليين').replace('تساعد علاج مي إنديا المرضى الدوليين في تنسيق استفسارات جراحة السمنة والتمثيل الغذائي مع الفرق المتخصصة المناسبة في الهند. تتطلب ملاءمة الجراحة واختيار الإجراء تقييماً طبياً فردياً.','تساعد علاج مي إنديا المرضى الدوليين في تنسيق استفسارات السكري واضطرابات الغدة الدرقية وغيرها من الحالات الهرمونية مع الفرق المتخصصة المناسبة في الهند. يعتمد التشخيص وخطة العلاج على التقييم الطبي الفردي.').replace('تقييم الأهلية','التقييم السريري').replace('يقيّم فريق السمنة تاريخ الوزن ومؤشر كتلة الجسم والأمراض المرتبطة بالسمنة والمحاولات السابقة لإنقاص الوزن والحالة الصحية العامة.','يراجع الطبيب الأعراض والتشخيص والعلاجات السابقة ونتائج التحاليل ذات الصلة والتاريخ الطبي العام.').replace('اختيار الإجراء','رعاية السكري والتمثيل الغذائي').replace('يحدد الجراح المعالج ما إذا كانت الجراحة مناسبة ويناقش الخيارات الملائمة وفق الحالة السريرية للمريض.','يحدد الفريق المعالج الفحوصات المناسبة وخطة الرعاية الفردية لحالات السكري واضطرابات التمثيل الغذائي.').replace('التغذية والمتابعة','الغدة الدرقية والهرمونات').replace('يعد التقييم الغذائي والاستعداد لتغيير نمط الحياة والمتابعة طويلة المدى أجزاء مهمة من رعاية جراحة السمنة.','تُقيّم اضطرابات الغدة الدرقية والنخامية والكظرية وغيرها من الاضطرابات الهرمونية وفق الأعراض والفحوصات والنتائج المخبرية.').replace('يمكن إرسال الطول والوزن ومؤشر كتلة الجسم إن كان معروفاً والتاريخ الطبي وتقارير السكري أو ضغط الدم ومعلومات انقطاع النفس أثناء النوم ومحاولات إنقاص الوزن السابقة والتحاليل الحديثة والأدوية الحالية.','يمكن إرسال تحاليل الدم الحديثة ونتائج السكر التراكمي ووظائف الغدة الدرقية أو الهرمونات والصور الطبية ذات الصلة والتشخيصات السابقة وسجل العلاج والأدوية الحالية.').replace('ابدأ استفسار جراحة السمنة','ابدأ استفسار الغدد الصماء والسكري')
+          Path('ar/treatments/endocrinology-diabetes-care-india').mkdir(parents=True,exist_ok=True); Path('ar/treatments/endocrinology-diabetes-care-india/index.html').write_text(ae,encoding='utf-8')
+
+          sm=Path('sitemap.xml'); x=sm.read_text(encoding='utf-8')
+          slugs=['bone-marrow-transplant-india','bariatric-weight-loss-surgery-india','pulmonology-lung-care-india','dermatology-skin-care-india','endocrinology-diabetes-care-india']
+          add=''
+          for slug in slugs:
+            for prefix in ('/treatments/','/ar/treatments/'):
+              url='https://elajmeindia.com'+prefix+slug+'/'
+              if url not in x: add+=f'  <url><loc>{url}</loc></url>\n'
+          x=x.replace('</urlset>',add+'</urlset>'); sm.write_text(x,encoding='utf-8')
+      - name: Verify all 20 visible and paired
+        run: |
+          for p in bone-marrow-transplant-india bariatric-weight-loss-surgery-india pulmonology-lung-care-india dermatology-skin-care-india endocrinology-diabetes-care-india; do
+            test -f "treatments/$p/index.html"
+            test -f "ar/treatments/$p/index.html"
+            grep -q "$p/" treatments/index.html
+            grep -q "$p/" ar/treatments/index.html
+            grep -q "https://elajmeindia.com/treatments/$p/" sitemap.xml
+            grep -q "https://elajmeindia.com/ar/treatments/$p/" sitemap.xml
+          done
+          grep -q '20 Specialties' treatments/index.html
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments sitemap.xml
+          git commit -m 'Synchronize 20 bilingual treatment specialties'
+          git push
