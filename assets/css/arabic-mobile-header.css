@@ -24,15 +24,15 @@
   [dir="rtl"] .shell-header .shell-links a:hover,[dir="rtl"] .shell-header .shell-links a:focus-visible,[dir="rtl"] .shell-header .shell-links a[aria-current="page"]{background:#f3faf9!important;color:#146b68!important}
   [dir="rtl"] .shell-header .shell-links a[href*="/about/"]::after,[dir="rtl"] .shell-header .shell-links a[href*="/contact/"]::after{content:none!important;display:none!important}
 
-  /* Match the approved English mobile conversion dock. */
+  /* Match the approved English mobile conversion dock. Icons are supplied by the existing mobile CTA markup/styles; do not generate duplicates here. */
   [dir="rtl"] body{padding-bottom:92px!important}
   [dir="rtl"] .arabic-mobile-conversion-bar{position:fixed!important;z-index:9998!important;left:14px!important;right:14px!important;bottom:10px!important;box-sizing:border-box!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;padding:5px!important;background:rgba(255,255,255,.96)!important;border:1px solid #dfe8ea!important;border-radius:17px!important;box-shadow:0 10px 28px rgba(9,47,59,.14)!important;direction:rtl!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important}
   [dir="rtl"] .arabic-mobile-conversion-bar a{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;min-height:52px!important;padding:11px 14px!important;border-radius:13px!important;text-decoration:none!important;font-size:15px!important;font-weight:800!important;line-height:1.2!important;white-space:nowrap!important;box-shadow:none!important;transition:transform .12s ease,filter .15s ease!important}
   [dir="rtl"] .arabic-mobile-conversion-bar a:active{transform:scale(.985)!important}
   [dir="rtl"] .arabic-mobile-case-cta{background:#123b50!important;color:#fff!important}
-  [dir="rtl"] .arabic-mobile-case-cta::before{content:'+'!important;display:inline-grid!important;place-items:center!important;font:400 26px/1 Arial,sans-serif!important;color:#fff!important;margin-inline-end:1px!important}
+  [dir="rtl"] .arabic-mobile-case-cta::before{content:none!important;display:none!important}
   [dir="rtl"] .arabic-mobile-wa-cta{background:#eaf8ef!important;color:#13864a!important}
-  [dir="rtl"] .arabic-mobile-wa-cta::before{content:'☎'!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:22px!important;height:22px!important;flex:0 0 22px!important;border-radius:50%!important;background:#20ad67!important;color:#fff!important;font:700 14px/1 Arial,sans-serif!important;transform:rotate(-18deg)!important;box-sizing:border-box!important}
+  [dir="rtl"] .arabic-mobile-wa-cta::before{content:none!important;display:none!important}
   [dir="rtl"] .shell-header.arabic-mobile-menu-open~main~.arabic-mobile-conversion-bar{display:none!important}
 
   /* Arabic floating chat parity: English-style button positioned in the clear left side of the RTL hero. */
@@ -50,7 +50,5 @@
   [dir="rtl"] .shell-header .shell-links a{height:46px!important;min-height:46px!important;max-height:46px!important;padding:0 12px!important;font-size:12.5px!important}
   [dir="rtl"] .arabic-mobile-conversion-bar{left:12px!important;right:12px!important;bottom:9px!important;padding:4px!important;gap:6px!important;border-radius:16px!important}
   [dir="rtl"] .arabic-mobile-conversion-bar a{min-height:50px!important;font-size:14px!important;padding:9px 8px!important;border-radius:12px!important}
-  [dir="rtl"] .arabic-mobile-case-cta::before{font-size:24px!important}
-  [dir="rtl"] .arabic-mobile-wa-cta::before{width:21px!important;height:21px!important;flex-basis:21px!important;font-size:13px!important}
   html[lang="ar"] .master-mobile-whatsapp::after{left:18px!important;right:auto!important;top:318px!important;width:54px!important;height:54px!important;background-size:30px 30px!important}
 }
