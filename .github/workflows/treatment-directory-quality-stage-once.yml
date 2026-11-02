@@ -16,7 +16,7 @@ jobs:
         run: |
           from pathlib import Path
           import re, sys
-          markers=('priority-treatment-guidance','treatment-guidance-batch2','treatment-guidance-batch3','treatment-guidance-batch4','treatment-guidance-batch5','treatment-guidance-final')
+          markers=('priority-treatment-guidance','treatment-guidance-batch2','treatment-guidance-batch3','treatment-guidance-batch4','treatment-guidance-batch5','treatment-guidance-batch6','treatment-guidance-final')
           def active(root):
             out={}
             for p in root.glob('*/index.html'):
@@ -44,7 +44,8 @@ jobs:
               if expected not in s: issues.append(f'Missing Elajme enquiry CTA {lang}: {slug}')
               if re.search(r'https?://wa\.me/(?!917488955154)',s,re.I): issues.append(f'Provider WhatsApp leakage {lang}: {slug}')
               if re.search(r'href=["\']tel:(?!\+917488955154)',s,re.I): issues.append(f'Provider phone leakage {lang}: {slug}')
-              if re.search(r'\b(guaranteed|100% success|cure guaranteed)\b',s,re.I): issues.append(f'Risky guarantee language {lang}: {slug}')
+              # Flag affirmative outcome promises, but do not flag safety disclaimers such as "does not guarantee outcomes".
+              if re.search(r'\b(100% success|guaranteed cure|guaranteed (?:treatment )?(?:success|outcome|recovery)|cure guaranteed)\b',s,re.I): issues.append(f'Risky guarantee language {lang}: {slug}')
               if re.search(r'\b(lorem ipsum|placeholder|coming soon)\b',s,re.I): issues.append(f'Placeholder content {lang}: {slug}')
               if lang=='AR' and ('dir="rtl"' not in s or 'lang="ar"' not in s): issues.append(f'Arabic RTL/lang missing: {slug}')
               if slug!='pediatrics-child-health-india':
