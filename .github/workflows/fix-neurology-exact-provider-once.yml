@@ -1,0 +1,38 @@
+name: Fix Neurology Exact Provider Once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/fix-neurology-exact-provider-once.yml']
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace adjacent neurosurgery pathway with exact neurology provider
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('treatments/neurology-treatment-india/index.html')
+          s=p.read_text()
+          old='<a href="/doctors/dr-aditya-gupta/">Dr. Aditya Gupta · Neurosurgery, neuro-oncology &amp; CNS radiosurgery</a><a href="/hospitals/artemis-hospital-gurugram/">Artemis Hospital Gurugram · Neurosciences</a>'
+          new='<a href="/doctors/dr-vinit-suri/">Dr. Vinit Suri · Neurology</a><a href="/hospitals/indraprastha-apollo-hospital-delhi/">Indraprastha Apollo Hospital, Delhi · Neurosciences</a>'
+          assert old in s
+          p.write_text(s.replace(old,new))
+          p=Path('ar/treatments/neurology-treatment-india/index.html')
+          s=p.read_text()
+          old='<a href="/ar/doctors/dr-aditya-gupta/">د. أديتيا غوبتا · جراحة الأعصاب وأورام الأعصاب والجراحة الإشعاعية للجهاز العصبي المركزي</a><a href="/ar/hospitals/artemis-hospital-gurugram/">مستشفى أرتيمس، غوروغرام · علوم الأعصاب</a>'
+          new='<a href="/ar/doctors/dr-vinit-suri/">د. فينيت سوري · طب الأعصاب</a><a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">مستشفى إندرابراستا أبولو، دلهي · علوم الأعصاب</a>'
+          assert old in s
+          p.write_text(s.replace(old,new))
+          PY
+      - name: Verify and commit
+        run: |
+          grep -q '/doctors/dr-vinit-suri/' treatments/neurology-treatment-india/index.html
+          grep -q '/ar/doctors/dr-vinit-suri/' ar/treatments/neurology-treatment-india/index.html
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments/neurology-treatment-india/index.html ar/treatments/neurology-treatment-india/index.html
+          git commit -m 'Connect neurology treatment to exact neurologist' || exit 0
+          git push
