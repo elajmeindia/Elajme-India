@@ -1,0 +1,69 @@
+name: Audit doctor hospital media parity once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-media-parity-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit doctor hospital media and EN AR parity
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, urllib.parse
+
+          root=Path('.')
+          pages=list(root.rglob('*.html'))
+          target=[p for p in pages if any(x in p.as_posix().lower() for x in ('doctor','hospital'))]
+          missing=[]; placeholders=[]; no_alt=[]; no_dims=[]; pairs=[]
+
+          for page in target:
+              text=page.read_text(errors='ignore')
+              for tag in re.findall(r'<img\b[^>]*>',text,flags=re.I):
+                  m=re.search(r'\bsrc=["\']([^"\']+)',tag,flags=re.I)
+                  if not m: continue
+                  src=m.group(1); low=src.lower(); tlow=tag.lower()
+                  clean=urllib.parse.unquote(src.split('?',1)[0].split('#',1)[0])
+                  if not clean.startswith(('http://','https://','//','data:')):
+                      f=root/clean.lstrip('/')
+                      if not f.is_file(): missing.append((page.as_posix(),src))
+                  if any(k in low for k in ('placeholder','default-doctor','default-hospital','avatar-default','image-placeholder')):
+                      placeholders.append((page.as_posix(),src))
+                  am=re.search(r'\balt=["\']([^"\']*)',tag,flags=re.I)
+                  if not am or not am.group(1).strip(): no_alt.append((page.as_posix(),src))
+                  if 'width=' not in tlow or 'height=' not in tlow: no_dims.append((page.as_posix(),src))
+
+          en=[p for p in target if not p.as_posix().startswith('ar/')]
+          for p in en:
+              ar=root/'ar'/p
+              if p.as_posix().startswith('ar/'): continue
+              # Only require parity where an Arabic counterpart directory already exists.
+              if (root/'ar'/p.parent).exists() and not ar.exists(): pairs.append((p.as_posix(),ar.as_posix()))
+
+          print(f'Doctor/hospital HTML pages audited: {len(target)}')
+          print(f'Missing local image files: {len(missing)}')
+          for x in missing[:100]: print('MISSING_IMAGE',*x)
+          print(f'Placeholder-like image references: {len(placeholders)}')
+          for x in placeholders[:100]: print('PLACEHOLDER',*x)
+          print(f'Images missing alt text: {len(no_alt)}')
+          for x in no_alt[:100]: print('NO_ALT',*x)
+          print(f'Images missing dimensions: {len(no_dims)}')
+          for x in no_dims[:100]: print('NO_DIMS',*x)
+          print(f'Potential EN pages missing AR counterpart: {len(pairs)}')
+          for x in pairs[:100]: print('NO_AR_PAIR',*x)
+          if missing or placeholders:
+              raise SystemExit('Media audit found missing or placeholder doctor/hospital images')
+          PY
+      - name: Verify protected header footer files are untouched
+        run: |
+          test -z "$(git status --porcelain -- assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css)"
