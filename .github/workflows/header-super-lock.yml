@@ -1,4 +1,4 @@
-name: Elajme Mobile Header Footer Super Duper Lock
+name: Elajme Desktop Mobile Header Footer Super Duper Lock
 on:
   push:
     branches: [main]
@@ -8,18 +8,18 @@ on:
 permissions:
   contents: read
 jobs:
-  approved-ui-super-lock:
+  approved-ui-super-duper-lock:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Block any approved mobile header footer drift
+      - name: Block any approved desktop or mobile header footer drift
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import hashlib,re,sys
           problems=[]
 
-          # Byte-level immutable snapshots for every shared file that controls the approved EN/AR mobile chrome.
+          # Immutable approved EN/AR desktop + mobile header/footer implementation snapshots.
           locked_hashes={
             'assets/css/master-header.css':'932ce7acbd738f1ea5a71bb0b3913635b647f255',
             'assets/css/arabic-master-header.css':'ca750db9fef35f39930e6137ae5f7b339e0834ae',
@@ -36,11 +36,21 @@ jobs:
               actual=git_blob_sha(p.read_bytes())
               if actual!=expected: problems.append(f'UNAPPROVED_LOCKED_FILE_CHANGE {path} expected={expected} actual={actual}')
 
-          js=Path('assets/js/mobile-header.js').read_text(encoding='utf-8',errors='ignore')
+          master=Path('assets/css/master-header.css').read_text(encoding='utf-8',errors='ignore')
+          ar_master=Path('assets/css/arabic-master-header.css').read_text(encoding='utf-8',errors='ignore')
           mobile=Path('assets/css/mobile-header.css').read_text(encoding='utf-8',errors='ignore')
           ar_mobile=Path('assets/css/arabic-mobile-header.css').read_text(encoding='utf-8',errors='ignore')
+          js=Path('assets/js/mobile-header.js').read_text(encoding='utf-8',errors='ignore')
+
+          # Desktop invariants.
+          for token in ['height:82px!important','max-width:1320px!important','.master-nav{display:flex!important','.master-actions{display:flex!important','.master-cta{display:inline-flex!important']:
+              if token not in master: problems.append('DESKTOP_EN_HEADER_STYLE_DRIFT '+token)
+          for token in ['html[lang="ar"] .master-header-inner{direction:rtl!important','html[lang="ar"] .master-nav{direction:rtl!important','html[lang="ar"] .master-actions{direction:rtl!important']:
+              if token not in ar_master: problems.append('DESKTOP_AR_HEADER_STYLE_DRIFT '+token)
           if '.master-mobile-controls,.arabic-mobile-conversion-bar{display:none!important}' not in mobile:
               problems.append('DESKTOP_MOBILE_CONTROLS_GUARD_REMOVED')
+
+          # Mobile CTA invariants.
           for token in [
             "enquiry.innerHTML='<span aria-hidden=\"true\">＋</span><span>ابدأ الاستفسار</span>'",
             "wa.innerHTML='<span>واتساب</span>'",
@@ -116,10 +126,10 @@ jobs:
 
           if checked_headers==0: problems.append('NO_MASTER_HEADERS_CHECKED')
           if checked_footers==0: problems.append('NO_APPROVED_FOOTERS_CHECKED')
-          print(f'Mobile header/footer Super Duper Lock checked headers={checked_headers} footers={checked_footers} blocking={len(problems)}')
+          print(f'Desktop + mobile header/footer Super Duper Lock checked headers={checked_headers} footers={checked_footers} blocking={len(problems)}')
           if problems:
               print('\n'.join(problems))
-              print('\nBLOCKED: approved mobile headers, footers, mobile conversion CTA, icon treatment or shared implementation changed. Owner approval plus intentional lock snapshot update is required.')
+              print('\nBLOCKED: approved English/Arabic desktop or mobile header/footer UI changed. Owner approval plus an intentional lock snapshot update is required.')
               sys.exit(1)
-          print('ELAJME EN/AR MOBILE HEADER + FOOTER SUPER DUPER LOCK: CLEAN')
+          print('ELAJME EN/AR DESKTOP + MOBILE HEADER + FOOTER SUPER DUPER LOCK: CLEAN')
           PY
