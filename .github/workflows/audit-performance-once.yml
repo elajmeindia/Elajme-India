@@ -1,6 +1,6 @@
 name: Audit site performance once
 
-# Final verification rerun after conversion journey QA.
+# Final verification rerun after locked responsive production QA and post-launch quality pass.
 on:
   push:
     branches: [main]
