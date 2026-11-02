@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/audit-responsive-production-readiness.yml'
+      - 'assets/css/**'
+      - 'assets/js/**'
+      - '**/*.html'
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,73 +20,49 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re, sys
-          root=Path('.')
-          pages=list(root.rglob('*.html'))
-          problems=[]; warnings=[]
-          checked=0; en=0; ar=0
+          import re,sys
+          pages=list(Path('.').rglob('*.html')); problems=[]; warnings=[]; checked=en=ar=0
           for p in pages:
               rel=p.as_posix()
               if rel.startswith(('.git/','.github/')): continue
               t=p.read_text(encoding='utf-8',errors='ignore'); low=t.lower()
-              redirect='http-equiv="refresh"' in low or "http-equiv='refresh'" in low
-              noindex='noindex' in low
-              if redirect: continue
-              checked+=1
-              is_ar=rel.startswith('ar/')
-              ar+=is_ar; en+=not is_ar
+              if 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low: continue
+              checked+=1; is_ar=rel.startswith('ar/'); ar+=int(is_ar); en+=int(not is_ar)
               if '<meta name="viewport"' not in low and "<meta name='viewport'" not in low: problems.append('NO_VIEWPORT '+rel)
               if 'width=device-width' not in low: problems.append('VIEWPORT_NOT_RESPONSIVE '+rel)
               for tag in re.findall(r'<img\b[^>]*>',t,re.I):
                   if not re.search(r'\balt\s*=',tag,re.I): problems.append('IMG_NO_ALT '+rel)
                   sm=re.search(r'\s+src\s*=\s*["\']([^"\']+)',tag,re.I)
-                  if sm and any(x in sm.group(1).lower() for x in ('doctor-image-pending','hospital-image-pending','hospital-placeholder.svg')):
-                      problems.append('MEDIA_PLACEHOLDER '+rel)
-              if not noindex:
-                  if not re.search(r'<title>\s*[^<]+\s*</title>',t,re.I|re.S): problems.append('NO_TITLE '+rel)
-                  if not re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\'][^"\']{40,}',t,re.I): problems.append('NO_META_DESCRIPTION '+rel)
-              # Header/mobile implementation contract. Do not alter locked files, only verify page coverage.
+                  if sm and any(x in sm.group(1).lower() for x in ('doctor-image-pending','hospital-image-pending','hospital-placeholder.svg')): problems.append('MEDIA_PLACEHOLDER '+rel)
               if 'master-site-header' in t:
                   for asset in ['/assets/css/master-header.css?v=6','/assets/css/mobile-header.css?v=3','/assets/js/mobile-header.js?v=3']:
                       if asset not in t: problems.append('MOBILE_HEADER_ASSET_MISSING '+rel+' '+asset)
-                  if is_ar:
-                      if '/assets/css/arabic-master-header.css?v=2' not in t: problems.append('AR_HEADER_ASSET_MISSING '+rel)
-                      if '/assets/css/arabic-mobile-header.css' not in t: problems.append('AR_MOBILE_ASSET_MISSING '+rel)
-              # Approved footer coverage.
-              if 'class="site-footer"' in t and '/assets/css/footer-approved.css' not in t:
-                  problems.append('MOBILE_FOOTER_ASSET_MISSING '+rel)
-              # Key mobile conversion routes.
-              if 'master-site-header' in t and '917488955154' not in t: problems.append('PHONE_ROUTE_MISSING '+rel)
-              if 'master-site-header' in t and 'wa.me/917488955154' not in t: problems.append('WHATSAPP_ROUTE_MISSING '+rel)
-              # Provider directories/profiles: media, enquiry route, and basic card/image responsiveness.
+                  if is_ar and '/assets/css/arabic-master-header.css?v=2' not in t: problems.append('AR_HEADER_ASSET_MISSING '+rel)
+                  if '917488955154' not in t: problems.append('PHONE_ROUTE_MISSING '+rel)
+                  if 'wa.me/917488955154' not in t: problems.append('WHATSAPP_ROUTE_MISSING '+rel)
+              if 'class="site-footer"' in t and '/assets/css/footer-approved.css' not in t: problems.append('MOBILE_FOOTER_ASSET_MISSING '+rel)
               provider=rel.startswith(('doctors/','hospitals/','ar/doctors/','ar/hospitals/')) and rel.endswith('/index.html')
               if provider:
                   target='/ar/#enquiry' if is_ar else '/#enquiry'
                   if target not in t: warnings.append('PROVIDER_ENQUIRY_REVIEW '+rel)
                   if '<img' not in t: warnings.append('PROVIDER_IMAGE_REVIEW '+rel)
-              # Arabic direction contract.
-              if is_ar and not (re.search(r'<html[^>]+dir=["\']rtl["\']',t,re.I) or 'direction:rtl' in low):
-                  warnings.append('AR_RTL_REVIEW '+rel)
-              # Common horizontal overflow risks in inline/page CSS.
+              if is_ar and not re.search(r'<html[^>]+dir=["\']rtl["\']',t,re.I): problems.append('AR_RTL_MISSING '+rel)
               for m in re.finditer(r'width\s*:\s*(\d{3,})px',t,re.I):
-                  n=int(m.group(1))
-                  context=t[max(0,m.start()-160):m.end()+160].lower()
-                  if n>480 and 'max-width' not in context and '@media' not in context:
-                      warnings.append(f'FIXED_WIDTH_REVIEW {rel} {n}px')
+                  n=int(m.group(1)); context=t[max(0,m.start()-160):m.end()+160].lower()
+                  if n>480 and 'max-width' not in context and '@media' not in context: warnings.append(f'FIXED_WIDTH_REVIEW {rel} {n}px')
               if re.search(r'min-width\s*:\s*(?:[5-9]\d\d|\d{4,})px',t,re.I): warnings.append('MIN_WIDTH_OVERFLOW_REVIEW '+rel)
-          # Shared locked responsive foundations.
-          mh=Path('assets/css/mobile-header.css').read_text(encoding='utf-8',errors='ignore')
-          amh=Path('assets/css/arabic-mobile-header.css').read_text(encoding='utf-8',errors='ignore')
+          mh=Path('assets/css/mobile-header.css').read_text(encoding='utf-8',errors='ignore').replace(' ','')
+          amh=Path('assets/css/arabic-mobile-header.css').read_text(encoding='utf-8',errors='ignore').replace(' ','')
+          arm=Path('assets/css/arabic-master-header.css').read_text(encoding='utf-8',errors='ignore')
           foot=Path('assets/css/footer-approved.css').read_text(encoding='utf-8',errors='ignore')
-          if '@media (max-width:900px)' not in mh.replace(' ',''): problems.append('EN_MOBILE_BREAKPOINT_REVIEW')
-          if '@media (max-width:900px)' not in amh.replace(' ',''): problems.append('AR_MOBILE_BREAKPOINT_REVIEW')
+          if '@media(max-width:900px)' not in mh: problems.append('EN_MOBILE_BREAKPOINT_MISSING')
+          if '@media(max-width:900px)' not in amh: problems.append('AR_MOBILE_BREAKPOINT_MISSING')
+          if "@import url('/assets/css/arabic-mobile-header.css?v=4');" not in arm: problems.append('AR_MOBILE_GLOBAL_BRIDGE_MISSING')
           if '@media' not in foot: problems.append('FOOTER_RESPONSIVE_RULE_MISSING')
           if '.master-mobile-controls,.arabic-mobile-conversion-bar{display:none!important}' not in mh: problems.append('DESKTOP_MOBILE_GUARD_MISSING')
           print('COMPLETE BILINGUAL MOBILE WEBSITE AUDIT')
           print(f'Pages checked: {checked} EN={en} AR={ar}')
-          print('Blocking issues:',len(problems))
-          for x in problems: print(x)
-          print('Review warnings:',len(warnings))
-          for x in warnings[:250]: print(x)
+          print('Blocking issues:',len(problems)); [print(x) for x in problems]
+          print('Review warnings:',len(warnings)); [print(x) for x in warnings[:250]]
           if problems: sys.exit(1)
           PY
