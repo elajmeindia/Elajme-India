@@ -1,0 +1,44 @@
+name: Remove obsolete hospital placeholder fallbacks once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-hospital-placeholder-fallbacks-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Remove obsolete placeholder fallback handlers
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('hospitals/index.html')
+          t=p.read_text(encoding='utf-8')
+          old=' onerror="this.onerror=null;this.src=\'/assets/images/hospitals/hospital-placeholder.svg\'"'
+          count=t.count(old)
+          print('Placeholder fallback handlers found:', count)
+          if count != 20:
+              raise SystemExit(f'Expected exactly 20 handlers, found {count}; refusing unsafe edit')
+          t=t.replace(old,'')
+          p.write_text(t,encoding='utf-8')
+          print('Removed:', count)
+      - name: Commit fix
+        run: |
+          if git diff --quiet -- hospitals/index.html; then
+            echo 'No change required'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add hospitals/index.html
+          git commit -m 'Remove obsolete hospital placeholder fallbacks'
+          git push
