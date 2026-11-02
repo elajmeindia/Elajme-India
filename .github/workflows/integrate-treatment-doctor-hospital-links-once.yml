@@ -1,0 +1,74 @@
+name: Integrate treatment doctor hospital links once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/integrate-treatment-doctor-hospital-links-once.yml'
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add safe treatment discovery links
+        shell: python
+        run: |
+          from pathlib import Path
+          changed=[]
+          for root,arabic in [(Path('treatments'),False),(Path('ar/treatments'),True)]:
+            for p in root.glob('*/index.html'):
+              if p.parent.name=='index': continue
+              s=p.read_text(encoding='utf-8')
+              if 'http-equiv="refresh"' in s.lower(): continue
+              if 'data-treatment-care-links="1"' in s: continue
+              if arabic:
+                block='''<section class="sec" data-treatment-care-links="1"><div class="c"><h2>استكشف الأطباء والمستشفيات</h2><p class="lead">يمكنك استعراض دليل علاج مي إنديا للأطباء والمستشفيات. يعتمد اختيار الطبيب أو المستشفى المناسب للحالة على مراجعة التقارير الطبية والتخصص المطلوب وتقييم الجهة المعالجة.</p><div class="related"><a href="/ar/doctors/">استعرض الأطباء</a><a href="/ar/hospitals/">استعرض المستشفيات</a><a href="/ar/#enquiry">اطلب تنسيق حالتك عبر علاج مي إنديا</a></div></div></section>'''
+                marker='<section class="cta">'
+              else:
+                block='''<section class="sec" data-treatment-care-links="1"><div class="c"><h2>Explore doctors and hospitals</h2><p class="lead">Browse Elajme India’s doctor and hospital directories. The appropriate doctor or hospital for an individual case depends on the medical records, required specialty and the treating provider’s assessment.</p><div class="related"><a href="/doctors/">Browse doctors</a><a href="/hospitals/">Explore hospitals</a><a href="/#enquiry">Request case coordination through Elajme India</a></div></div></section>'''
+                marker='<section class="cta">'
+              if marker in s:
+                s=s.replace(marker,block+marker,1)
+                p.write_text(s,encoding='utf-8'); changed.append(str(p))
+          print(f'Integrated discovery links into {len(changed)} active treatment pages')
+      - name: Verify bilingual treatment integration and Elajme-only routing
+        shell: python
+        run: |
+          from pathlib import Path
+          import sys,re
+          issues=[]; counts=[]
+          for root,arabic in [(Path('treatments'),False),(Path('ar/treatments'),True)]:
+            n=0
+            for p in root.glob('*/index.html'):
+              s=p.read_text(encoding='utf-8')
+              if 'http-equiv="refresh"' in s.lower(): continue
+              if p.parent.name=='pediatrics-child-health-india' or '<h1' in s.lower():
+                if 'data-treatment-care-links="1"' not in s: issues.append(f'Missing care links: {p}')
+                if arabic:
+                  for x in ['/ar/doctors/','/ar/hospitals/','/ar/#enquiry']:
+                    if x not in s: issues.append(f'Missing {x}: {p}')
+                else:
+                  for x in ['/doctors/','/hospitals/','/#enquiry']:
+                    if x not in s: issues.append(f'Missing {x}: {p}')
+                # no direct provider contact leakage
+                for m in re.findall(r'href="([^"]+)"',s):
+                  if (m.startswith('tel:') or 'wa.me/' in m or 'api.whatsapp.com' in m) and '917488955154' not in m:
+                    issues.append(f'Non-Elajme contact: {p} {m}')
+                n+=1
+            counts.append(n)
+          print('Integrated active pages EN/AR:',counts)
+          if issues:
+            print('\n'.join(issues));sys.exit(1)
+      - name: Protect approved global UI
+        run: git diff --exit-code assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md
+      - name: Commit integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments
+          git diff --cached --quiet && exit 0
+          git commit -m 'Connect treatment pages to doctor and hospital discovery'
+          git push
