@@ -1,0 +1,70 @@
+name: Add treatment specialties 36 and 37 once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/add-treatment-specialties-36-37-once.yml'
+permissions:
+  contents: write
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add rehabilitation and infectious diseases bilingual specialties
+        shell: python
+        run: |
+          from pathlib import Path
+          en_base=Path('treatments/pediatrics-child-health-india/index.html').read_text(encoding='utf-8')
+          ar_base=Path('ar/treatments/pediatrics-child-health-india/index.html').read_text(encoding='utf-8')
+          specs=[
+            ('rehabilitation-physical-medicine-india','Rehabilitation & Physical Medicine','Rehabilitation care coordination','Rehabilitation and physical medicine in India for international patients','rehabilitation and physical medicine conditions','إعادة التأهيل والطب الطبيعي','إعادة التأهيل والطب الطبيعي في الهند للمرضى الدوليين','إعادة التأهيل والطب الطبيعي'),
+            ('infectious-diseases-treatment-india','Infectious Diseases & Tropical Medicine','Infectious disease care coordination','Infectious diseases and tropical medicine in India for international patients','infectious and tropical medicine conditions','الأمراض المعدية وطب المناطق الحارة','علاج الأمراض المعدية وطب المناطق الحارة في الهند للمرضى الدوليين','الأمراض المعدية وطب المناطق الحارة')]
+          for slug,title,ey,h1,condition,artitle,arh1,arcondition in specs:
+            e=en_base.replace('Pediatrics & Child Health in India | Elajme India',f'{title} in India | Elajme India').replace('pediatrics-child-health-india',slug).replace('Pediatric care coordination',ey).replace('Pediatrics and child health in India for international patients',h1).replace('pediatric and child-health enquiries',f'{title.lower()} enquiries').replace('individual pediatric assessment','individual specialist assessment').replace('Pediatric assessment','Specialist assessment').replace('The pediatric team reviews the child’s symptoms, diagnosis, growth and development, previous treatment and relevant medical history.',f'The specialist team reviews symptoms, diagnosis, previous treatment, relevant investigations and medical history for {condition}.').replace('Specialist pediatric care','Condition-specific care').replace('Depending on the condition, the child may be reviewed by general pediatrics or an appropriate pediatric subspecialty team.','Depending on the condition, additional investigations or multidisciplinary specialist review may be recommended by the treating team.').replace('Family-centred follow-up','Treatment and follow-up').replace('The treating team explains investigations, treatment and follow-up requirements to the child’s parent or legal guardian.','The treating team determines appropriate investigations, treatment options and follow-up according to the individual clinical assessment.').replace('the child’s diagnosis, age, growth information, recent pediatric notes, blood tests, imaging, discharge summaries, vaccination history when relevant, previous treatment and current medicines','the diagnosis, recent specialist notes, blood tests, imaging or other relevant investigations, previous treatment and current medicines').replace('Start a pediatric care enquiry',f'Start a {title.lower()} enquiry')
+            Path('treatments',slug).mkdir(parents=True,exist_ok=True); Path('treatments',slug,'index.html').write_text(e,encoding='utf-8')
+            a=ar_base.replace('طب الأطفال وصحة الطفل في الهند | علاج مي إنديا',f'{artitle} في الهند | علاج مي إنديا').replace('pediatrics-child-health-india',slug).replace('طب الأطفال وصحة الطفل في الهند للمرضى الدوليين',arh1).replace('استفسارات طب الأطفال وصحة الطفل',f'استفسارات {arcondition}').replace('تقييماً فردياً من طبيب الأطفال','تقييماً طبياً فردياً من الطبيب المختص').replace('تقييم طب الأطفال','التقييم التخصصي').replace('يراجع فريق طب الأطفال أعراض الطفل وتشخيصه ونموه وتطوره والعلاج السابق والتاريخ الطبي ذي الصلة.',f'يراجع الفريق المختص الأعراض والتشخيص والعلاجات السابقة والفحوصات والتاريخ الطبي المرتبط بـ{arcondition}.').replace('الرعاية التخصصية للأطفال','الرعاية حسب الحالة').replace('قد يحتاج الطفل، حسب الحالة، إلى مراجعة طب الأطفال العام أو أحد تخصصات طب الأطفال الفرعية المناسبة.','قد تتطلب الحالة فحوصات إضافية أو مراجعة متعددة التخصصات وفق تقييم الفريق المعالج.').replace('المتابعة مع الأسرة','العلاج والمتابعة').replace('يشرح الفريق المعالج الفحوصات والعلاج والمتابعة المطلوبة لوالد الطفل أو الوصي القانوني.','يحدد الفريق المعالج الفحوصات وخيارات العلاج والمتابعة المناسبة وفق التقييم السريري الفردي.').replace('تشخيص الطفل وعمره ومعلومات النمو وتقارير طب الأطفال الحديثة وتحاليل الدم والصور الطبية وملخصات الخروج وسجل التطعيم عند الحاجة والعلاجات السابقة والأدوية الحالية','التشخيص والتقارير التخصصية الحديثة وتحاليل الدم والصور أو الفحوصات ذات الصلة والعلاجات السابقة والأدوية الحالية').replace('ابدأ استفسار رعاية الأطفال',f'ابدأ استفسار {arcondition}')
+            Path('ar/treatments',slug).mkdir(parents=True,exist_ok=True); Path('ar/treatments',slug,'index.html').write_text(a,encoding='utf-8')
+          en=Path('treatments/index.html'); s=en.read_text(encoding='utf-8').replace('35 Specialties','37 Specialties').replace('35 medical treatment areas','37 medical treatment areas')
+          if '"position":36' not in s:
+            import re
+            m=list(re.finditer(r'\{"@type":"ListItem","position":35,[^}]+\}',s))
+            if not m: raise SystemExit('position 35 structured item not found')
+            pos=m[-1].end(); extra=''.join([f',{{"@type":"ListItem","position":{i},"name":"{title}","url":"https://elajmeindia.com/treatments/{slug}/"}}' for i,(slug,title,*_) in enumerate(specs,36)]); s=s[:pos]+extra+s[pos:]
+          marker='</div></div></section><section class="sec alt">'; cards=''.join([f'<article class="card"><h3><a href="{slug}/">{title}</a></h3><p>{title} specialist review and international-patient enquiry coordination.</p></article>' for slug,title,*_ in specs])
+          if 'rehabilitation-physical-medicine-india/' not in s: s=s.replace(marker,cards+marker,1)
+          en.write_text(s,encoding='utf-8')
+          ar=Path('ar/treatments/index.html'); a=ar.read_text(encoding='utf-8'); amarker='</div><div class="note">'; acards=''.join([f'<article class="card"><h3>{artitle}</h3><p>تنسيق المراجعة التخصصية والاستفسارات للمرضى الدوليين.</p><a href="{slug}/">عرض التفاصيل</a></article>' for slug,_,_,_,_,artitle,_,_ in specs])
+          if 'rehabilitation-physical-medicine-india/' not in a: a=a.replace(amarker,acards+amarker,1)
+          ar.write_text(a,encoding='utf-8')
+          sm=Path('sitemap.xml'); x=sm.read_text(encoding='utf-8'); add=''
+          for slug,*_ in specs:
+            for prefix in ('/treatments/','/ar/treatments/'):
+              u='https://elajmeindia.com'+prefix+slug+'/'
+              if u not in x: add+=f'  <url><loc>{u}</loc></url>\n'
+          sm.write_text(x.replace('</urlset>',add+'</urlset>'),encoding='utf-8')
+      - name: Verify specialties 36 and 37
+        run: |
+          for p in rehabilitation-physical-medicine-india infectious-diseases-treatment-india; do
+            test -f "treatments/$p/index.html"
+            test -f "ar/treatments/$p/index.html"
+            grep -q "$p/" treatments/index.html
+            grep -q "$p/" ar/treatments/index.html
+            grep -q "https://elajmeindia.com/treatments/$p/" sitemap.xml
+            grep -q "https://elajmeindia.com/ar/treatments/$p/" sitemap.xml
+          done
+          grep -q '37 Specialties' treatments/index.html
+          grep -q '"position":37' treatments/index.html
+          ! grep -Eiq 'pediatric|child|parent|guardian' treatments/rehabilitation-physical-medicine-india/index.html
+          ! grep -Eiq 'pediatric|child|parent|guardian' treatments/infectious-diseases-treatment-india/index.html
+          git diff --exit-code assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments sitemap.xml
+          git diff --cached --quiet && exit 0
+          git commit -m 'Expand bilingual treatment directory to 37 specialties'
+          git push
