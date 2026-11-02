@@ -20,9 +20,7 @@ jobs:
           import sys
           # Only map combinations explicitly represented in current Elajme directories.
           maps={
-            'cancer-treatment-india':([
-              ('Prof. (Dr.) Atul Sharma','/doctors/dr-atul-sharma/'),('Dr. Ankur Bahl','/doctors/dr-ankur-bahl/'),('Dr. Ashok Kumar Vaid','/doctors/dr-ashok-kumar-vaid/')],
-              [('Max Super Speciality Hospital, Saket','/hospitals/max-super-speciality-hospital-saket/'),('BLK-Max Super Speciality Hospital','/hospitals/blk-max-super-speciality-hospital-delhi/'),('Fortis Memorial Research Institute','/hospitals/fortis-memorial-research-institute-gurugram/')]),
+            'cancer-treatment-india':([('Prof. (Dr.) Atul Sharma','/doctors/dr-atul-sharma/'),('Dr. Ankur Bahl','/doctors/dr-ankur-bahl/'),('Dr. Ashok Kumar Vaid','/doctors/dr-ashok-kumar-vaid/')],[('Max Super Speciality Hospital, Saket','/hospitals/max-super-speciality-hospital-saket/'),('BLK-Max Super Speciality Hospital','/hospitals/blk-max-super-speciality-hospital-delhi/'),('Fortis Memorial Research Institute','/hospitals/fortis-memorial-research-institute-gurugram/')]),
             'heart-treatment-india':([('Dr. Viveka Kumar','/doctors/dr-viveka-kumar/'),('Dr. Naresh Trehan','/doctors/dr-naresh-trehan/')],[('Fortis Escorts Heart Institute','/hospitals/fortis-escorts-heart-institute-delhi/'),('Medanta – The Medicity','/hospitals/medanta-the-medicity-gurugram/'),('Max Super Speciality Hospital, Saket','/hospitals/max-super-speciality-hospital-saket/')]),
             'knee-replacement-india':([('Dr. Ashok Rajgopal','/doctors/dr-ashok-rajgopal/')],[('Medanta – The Medicity','/hospitals/medanta-the-medicity-gurugram/')]),
             'neurosurgery-india':([('Dr. Aditya Gupta','/doctors/dr-aditya-gupta/')],[('Artemis Hospital','/hospitals/artemis-hospital-gurugram/'),('BLK-Max Super Speciality Hospital','/hospitals/blk-max-super-speciality-hospital-delhi/')]),
@@ -36,23 +34,18 @@ jobs:
           for slug,(docs,hosps) in maps.items():
             for lang in ('en','ar'):
               p=Path('treatments' if lang=='en' else 'ar/treatments')/slug/'index.html'
-              if not p.exists():
-                print('Skip absent route',p); continue
+              if not p.exists(): print('Skip absent route',p); continue
               s=p.read_text(encoding='utf-8')
               if 'specialty-specific-discovery' in s: continue
               if lang=='en':
-                d=''.join(f'<li><a href="{u}">{n}</a></li>' for n,u in docs)
-                h=''.join(f'<li><a href="{u}">{n}</a></li>' for n,u in hosps)
+                d=''.join(f'<li><a href="{u}">{n}</a></li>' for n,u in docs); h=''.join(f'<li><a href="{u}">{n}</a></li>' for n,u in hosps)
                 block=f'<section class="sec specialty-specific-discovery"><div class="c"><h2>Relevant specialists and hospitals in the Elajme directory</h2><p class="lead">These directory profiles match this specialty based on the specialties currently listed by Elajme India. Final doctor availability, hospital suitability and treatment planning are confirmed only after case review.</p><div class="grid"><article class="card"><h3>Specialists to explore</h3><ul>{d}</ul></article><article class="card"><h3>Hospitals to explore</h3><ul>{h}</ul></article><article class="card"><h3>Need help choosing?</h3><p>Send your diagnosis and recent reports to Elajme India. We can coordinate an appropriate case review without routing you to a provider directly.</p><p><a href="/#enquiry">Start your Elajme enquiry</a></p></article></div></div></section>'
               else:
-                d=''.join(f'<li><a href="/ar{u}">{ar_names.get(n,n)}</a></li>' for n,u in docs)
-                h=''.join(f'<li><a href="/ar{u}">{ar_names.get(n,n)}</a></li>' for n,u in hosps)
+                d=''.join(f'<li><a href="/ar{u}">{ar_names.get(n,n)}</a></li>' for n,u in docs); h=''.join(f'<li><a href="/ar{u}">{ar_names.get(n,n)}</a></li>' for n,u in hosps)
                 block=f'<section class="sec specialty-specific-discovery"><div class="c"><h2>أطباء ومستشفيات ذات صلة في دليل علاج مي إنديا</h2><p class="lead">تتوافق هذه الملفات مع التخصص وفق المعلومات المدرجة حالياً في دليل علاج مي إنديا. يتم تأكيد توفر الطبيب وملاءمة المستشفى وخطة العلاج فقط بعد مراجعة الحالة.</p><div class="grid"><article class="card"><h3>أطباء يمكن استعراضهم</h3><ul>{d}</ul></article><article class="card"><h3>مستشفيات يمكن استعراضها</h3><ul>{h}</ul></article><article class="card"><h3>هل تحتاج مساعدة في الاختيار؟</h3><p>أرسل التشخيص والتقارير الحديثة إلى علاج مي إنديا، ويمكننا تنسيق مراجعة مناسبة للحالة دون تحويل الاستفسار مباشرة إلى مقدم الخدمة.</p><p><a href="/ar/#enquiry">ابدأ استفسارك عبر علاج مي إنديا</a></p></article></div></div></section>'
               marker='<section class="cta">'
-              if marker not in s:
-                print('Missing CTA marker',p);sys.exit(1)
-              s=s.replace(marker,block+marker,1)
-              p.write_text(s,encoding='utf-8');changed.append(str(p))
+              if marker not in s: print('Missing CTA marker',p);sys.exit(1)
+              p.write_text(s.replace(marker,block+marker,1),encoding='utf-8'); changed.append(str(p))
           print('Changed',len(changed),'pages')
       - name: Verify mapped profile links and Elajme routing
         shell: python
@@ -66,23 +59,13 @@ jobs:
               if 'specialty-specific-discovery' not in s: continue
               count+=1
               for href in re.findall(r'href="([^"]+)"',s):
-                if href.startswith('/doctors/'):
+                if href.startswith('/doctors/') or href.startswith('/hospitals/') or href.startswith('/ar/doctors/') or href.startswith('/ar/hospitals/'):
                   q=Path(href.strip('/')+'/index.html')
-                  if not q.exists(): issues.append(f'Broken doctor link {p}: {href}')
-                elif href.startswith('/hospitals/'):
-                  q=Path(href.strip('/')+'/index.html')
-                  if not q.exists(): issues.append(f'Broken hospital link {p}: {href}')
-                elif href.startswith('/ar/doctors/'):
-                  q=Path(href.strip('/')+'/index.html')
-                  if not q.exists(): issues.append(f'Broken Arabic doctor link {p}: {href}')
-                elif href.startswith('/ar/hospitals/'):
-                  q=Path(href.strip('/')+'/index.html')
-                  if not q.exists(): issues.append(f'Broken Arabic hospital link {p}: {href}')
+                  if not q.exists(): issues.append(f'Broken profile link {p}: {href}')
               block=s.split('specialty-specific-discovery',1)[1].split('<section class="cta">',1)[0]
               if 'wa.me/' in block or 'tel:' in block: issues.append(f'Direct provider contact in specialty block: {p}')
           if count<2: issues.append('No specialty-specific pages integrated')
-          if issues:
-            print('\n'.join(issues));sys.exit(1)
+          if issues: print('\n'.join(issues));sys.exit(1)
           print('Verified specialty-specific discovery on',count,'bilingual pages')
       - name: Protect approved global UI
         run: git diff --exit-code assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md
