@@ -1,0 +1,43 @@
+name: Connect bariatric provider once
+on:
+  push:
+    paths:
+      - '.github/workflows/connect-bariatric-provider-once.yml'
+permissions:
+  contents: write
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Connect EN and AR bariatric pages
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          files = [
+            ('treatments/bariatric-weight-loss-surgery-india/index.html', '/doctors/dr-aloy-j-mukherjee/', '/hospitals/indraprastha-apollo-hospital-delhi/', 'Dr. Aloy J Mukherjee · Bariatric & general surgery', 'Indraprastha Apollo Hospital · Bariatric care', '/#enquiry', 'Request case coordination through Elajme India'),
+            ('ar/treatments/bariatric-weight-loss-surgery-india/index.html', '/ar/doctors/dr-aloy-j-mukherjee/', '/ar/hospitals/indraprastha-apollo-hospital-delhi/', 'د. ألوي ج. موخرجي · جراحة السمنة والجراحة العامة', 'مستشفى إندرابراستا أبولو · رعاية جراحة السمنة', '/ar/#enquiry', 'اطلب تنسيق حالتك عبر علاج مي إنديا')
+          ]
+          for fn, doctor, hospital, dl, hl, enquiry, el in files:
+            p=Path(fn); s=p.read_text()
+            marker='<section class="sec" data-treatment-care-links="1">'
+            a=s.index(marker); b=s.index('</section>', a)+len('</section>')
+            if fn.startswith('ar/'):
+              block=f'''<section class="sec" data-treatment-care-links="1"><div class="c"><h2>طبيب ومستشفى مرتبطان بجراحة السمنة</h2><p class="lead">للحالات التي قد تكون جراحة السمنة مناسبة لها، يمكن لعلاج مي إنديا تنسيق مراجعة التقارير مع طبيب وفريق مستشفى ذوي صلة بالتخصص. يظل اختيار الإجراء ومدى الملاءمة خاضعين للتقييم الطبي الفردي.</p><div class="related"><a href="{doctor}">{dl}</a><a href="{hospital}">{hl}</a><a href="/ar/doctors/">استعرض المزيد من الأطباء</a><a href="/ar/hospitals/">استعرض المزيد من المستشفيات</a><a href="{enquiry}">{el}</a></div></div></section>'''
+            else:
+              block=f'''<section class="sec" data-treatment-care-links="1"><div class="c"><h2>Verified bariatric doctor and hospital pathway</h2><p class="lead">For cases where bariatric surgery may be appropriate, Elajme India can coordinate record review with a doctor and hospital team relevant to bariatric care. Procedure choice and suitability remain subject to individual medical assessment.</p><div class="related"><a href="{doctor}">{dl}</a><a href="{hospital}">{hl}</a><a href="/doctors/">Browse more doctors</a><a href="/hospitals/">Explore more hospitals</a><a href="{enquiry}">{el}</a></div></div></section>'''
+            p.write_text(s[:a]+block+s[b:])
+          PY
+          grep -q '/doctors/dr-aloy-j-mukherjee/' treatments/bariatric-weight-loss-surgery-india/index.html
+          grep -q '/ar/doctors/dr-aloy-j-mukherjee/' ar/treatments/bariatric-weight-loss-surgery-india/index.html
+          grep -q '/hospitals/indraprastha-apollo-hospital-delhi/' treatments/bariatric-weight-loss-surgery-india/index.html
+          grep -q '/ar/hospitals/indraprastha-apollo-hospital-delhi/' ar/treatments/bariatric-weight-loss-surgery-india/index.html
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments/bariatric-weight-loss-surgery-india/index.html ar/treatments/bariatric-weight-loss-surgery-india/index.html
+          git diff --cached --quiet || git commit -m 'Connect bariatric treatment to verified provider profiles'
+          git push
