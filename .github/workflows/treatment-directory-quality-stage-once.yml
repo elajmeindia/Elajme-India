@@ -11,11 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Audit active treatment pages for template residue, parity and routing
+      - name: Audit all 47 bilingual treatment routes and content safeguards
         shell: python
         run: |
           from pathlib import Path
           import re, sys
+          markers=('priority-treatment-guidance','treatment-guidance-batch2','treatment-guidance-batch3','treatment-guidance-batch4','treatment-guidance-batch5','treatment-guidance-final')
           def active(root):
             out={}
             for p in root.glob('*/index.html'):
@@ -29,22 +30,31 @@ jobs:
           issues=[]
           if len(en_pages)!=47: issues.append(f'Expected 47 active EN treatment pages, found {len(en_pages)}')
           if len(ar_pages)!=47: issues.append(f'Expected 47 active AR treatment pages, found {len(ar_pages)}')
-          for slug,p in sorted(en_pages.items()):
-            if slug not in ar_pages: issues.append(f'Missing Arabic counterpart: {slug}')
-            s=p.read_text(encoding='utf-8')
-            if slug!='pediatrics-child-health-india' and re.search(r'\b(pediatric|child|parent|guardian|vaccination)\b',s,re.I): issues.append(f'Pediatric residue EN: {slug}')
-            if '<h1' not in s.lower(): issues.append(f'Missing H1 EN: {slug}')
-            if 'elajmeindia.com' not in s: issues.append(f'Missing Elajme production reference EN: {slug}')
-          for slug,p in sorted(ar_pages.items()):
-            if slug not in en_pages: issues.append(f'Missing English counterpart: {slug}')
-            s=p.read_text(encoding='utf-8')
-            if slug!='pediatrics-child-health-india' and re.search(r'(طب الأطفال|الطفل|والد الطفل|الوصي القانوني|سجل التطعيم)',s): issues.append(f'Pediatric residue AR: {slug}')
-            if '<h1' not in s.lower(): issues.append(f'Missing H1 AR: {slug}')
+          if set(en_pages)!=set(ar_pages): issues.append('EN/AR active slug sets differ')
+          for lang,pages in [('EN',en_pages),('AR',ar_pages)]:
+            for slug,p in sorted(pages.items()):
+              s=p.read_text(encoding='utf-8'); low=s.lower()
+              if not any(m in s for m in markers): issues.append(f'Missing strengthening marker {lang}: {slug}')
+              if '<h1' not in low: issues.append(f'Missing H1 {lang}: {slug}')
+              if '<title>' not in low: issues.append(f'Missing title {lang}: {slug}')
+              if 'rel="canonical"' not in low: issues.append(f'Missing canonical {lang}: {slug}')
+              if 'hreflang="en"' not in low or 'hreflang="ar"' not in low: issues.append(f'Missing hreflang pair {lang}: {slug}')
+              if 'elajmeindia.com' not in s: issues.append(f'Missing production reference {lang}: {slug}')
+              expected='/ar/#enquiry' if lang=='AR' else '/#enquiry'
+              if expected not in s: issues.append(f'Missing Elajme enquiry CTA {lang}: {slug}')
+              if re.search(r'https?://wa\.me/(?!917488955154)',s,re.I): issues.append(f'Provider WhatsApp leakage {lang}: {slug}')
+              if re.search(r'href=["\']tel:(?!\+917488955154)',s,re.I): issues.append(f'Provider phone leakage {lang}: {slug}')
+              if re.search(r'\b(guaranteed|100% success|cure guaranteed)\b',s,re.I): issues.append(f'Risky guarantee language {lang}: {slug}')
+              if re.search(r'\b(lorem ipsum|placeholder|coming soon)\b',s,re.I): issues.append(f'Placeholder content {lang}: {slug}')
+              if lang=='AR' and ('dir="rtl"' not in s or 'lang="ar"' not in s): issues.append(f'Arabic RTL/lang missing: {slug}')
+              if slug!='pediatrics-child-health-india':
+                if lang=='EN' and re.search(r'\b(pediatric|child|parent|guardian|vaccination)\b',s,re.I): issues.append(f'Pediatric residue EN: {slug}')
+                if lang=='AR' and re.search(r'(طب الأطفال|الطفل|والد الطفل|الوصي القانوني|سجل التطعيم)',s): issues.append(f'Pediatric residue AR: {slug}')
           print(f'Active English treatment pages: {len(en_pages)}')
           print(f'Active Arabic treatment pages: {len(ar_pages)}')
           if issues:
             print('\n'.join(issues)); sys.exit(1)
-          print('Active treatment-page bilingual/template quality audit clean')
+          print('47-specialty bilingual content and safety audit clean')
       - name: Verify active directory and sitemap coverage
         shell: python
         run: |
@@ -67,5 +77,21 @@ jobs:
           if issues:
             print('\n'.join(issues)); sys.exit(1)
           print(f'Directory and sitemap coverage clean for {len(slugs)} active treatment routes')
-      - name: Protect approved global UI
-        run: git diff --exit-code assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md
+      - name: Verify approved header and footer lock hashes
+        shell: python
+        run: |
+          from pathlib import Path
+          import hashlib,sys
+          expected={
+            'assets/css/master-header.css':'26fcbc9a88dfa959e48e3c079790011d5001fa95',
+            'assets/css/arabic-master-header.css':'3e85661d08f9a5ef7d8f586a7c8a38451c78c42e',
+            'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
+            'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
+            'assets/js/mobile-header.js':'171e2202591dda27ed852edfbd6754ba46157060',
+            'assets/css/footer-approved.css':'05faf239dd9cf39a19b41e596f433c99989c1e9b'}
+          bad=[]
+          for path,want in expected.items():
+            got=hashlib.sha1((f'blob {Path(path).stat().st_size}\0').encode()+Path(path).read_bytes()).hexdigest()
+            if got!=want: bad.append(f'Protected asset hash mismatch: {path} {got}')
+          if bad: print('\n'.join(bad)); sys.exit(1)
+          print('Approved header/footer lock hashes verified')
