@@ -61,22 +61,20 @@ jobs:
             fetch "$route" "$page"
             grep -qi '<html' "$page" || { echo "FAIL ${route}: no HTML document"; exit 1; }
             grep -Eqi '<title>[^<]+' "$page" || { echo "FAIL ${route}: missing title"; exit 1; }
-            grep -Eqi '<meta[^>]+name=["'"']description["'"'][^>]+content=["'"'][^"'"']+' "$page" || { echo "FAIL ${route}: missing meta description"; exit 1; }
-            grep -Eqi '<link[^>]+rel=["'"']canonical["'"'][^>]+href=["'"']https://elajmeindia\.com/' "$page" || { echo "FAIL ${route}: missing production canonical"; exit 1; }
-            grep -Eqi '<meta[^>]+name=["'"']robots["'"'][^>]+content=["'"'][^"'"']*index' "$page" || { echo "FAIL ${route}: missing indexable robots meta"; exit 1; }
+            grep -Eqi '<meta[^>]+name="description"[^>]+content="[^"]+' "$page" || { echo "FAIL ${route}: missing meta description"; exit 1; }
+            grep -Eqi '<link[^>]+rel="canonical"[^>]+href="https://elajmeindia\.com/' "$page" || { echo "FAIL ${route}: missing production canonical"; exit 1; }
+            grep -Eqi '<meta[^>]+name="robots"[^>]+content="[^"]*index' "$page" || { echo "FAIL ${route}: missing indexable robots meta"; exit 1; }
             grep -qi 'application/ld+json' "$page" || { echo "FAIL ${route}: missing JSON-LD structured data"; exit 1; }
             if grep -Eqi 'github\.io/Elajme-India|localhost|127\.0\.0\.1' "$page"; then
               echo "FAIL ${route}: stale non-production URL found"; exit 1
             fi
           done
 
-          # Homepage language alternates must be reciprocal and production-safe.
-          grep -Eqi 'hreflang=["'"']en["'"'][^>]+href=["'"']https://elajmeindia\.com/' "$work/_.html" || { echo 'FAIL: English homepage missing EN hreflang'; exit 1; }
-          grep -Eqi 'hreflang=["'"']ar["'"'][^>]+href=["'"']https://elajmeindia\.com/ar/' "$work/_.html" || { echo 'FAIL: English homepage missing AR hreflang'; exit 1; }
-          grep -Eqi 'hreflang=["'"']en["'"'][^>]+href=["'"']https://elajmeindia\.com/' "$work/_ar_.html" || { echo 'FAIL: Arabic homepage missing EN hreflang'; exit 1; }
-          grep -Eqi 'hreflang=["'"']ar["'"'][^>]+href=["'"']https://elajmeindia\.com/ar/' "$work/_ar_.html" || { echo 'FAIL: Arabic homepage missing AR hreflang'; exit 1; }
+          grep -Eqi 'hreflang="en"[^>]+href="https://elajmeindia\.com/' "$work/_.html" || { echo 'FAIL: English homepage missing EN hreflang'; exit 1; }
+          grep -Eqi 'hreflang="ar"[^>]+href="https://elajmeindia\.com/ar/' "$work/_.html" || { echo 'FAIL: English homepage missing AR hreflang'; exit 1; }
+          grep -Eqi 'hreflang="en"[^>]+href="https://elajmeindia\.com/' "$work/_ar_.html" || { echo 'FAIL: Arabic homepage missing EN hreflang'; exit 1; }
+          grep -Eqi 'hreflang="ar"[^>]+href="https://elajmeindia\.com/ar/' "$work/_ar_.html" || { echo 'FAIL: Arabic homepage missing AR hreflang'; exit 1; }
 
-          # Every sitemap URL must resolve successfully and remain on the production host.
           python3 - "$work/sitemap.xml" > "$work/urls.txt" <<'PY'
           import sys, xml.etree.ElementTree as ET
           root = ET.parse(sys.argv[1]).getroot()
