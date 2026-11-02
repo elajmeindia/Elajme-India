@@ -1,6 +1,6 @@
 name: Audit final SEO indexing and release
 
-# Final post-launch rerun after media and bilingual parity audit.
+# Final sitemap, indexability and structured SEO rerun after internal-link validation.
 on:
   push:
     branches: [main]
