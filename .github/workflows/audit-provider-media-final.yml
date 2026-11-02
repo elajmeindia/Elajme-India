@@ -1,0 +1,95 @@
+name: Audit final provider media parity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'doctors/**'
+      - 'hospitals/**'
+      - 'ar/doctors/**'
+      - 'ar/hospitals/**'
+      - 'assets/images/doctors/**'
+      - 'assets/images/hospitals/**'
+      - '.github/workflows/audit-provider-media-final.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit provider media
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, sys
+
+          roots = [Path('doctors'), Path('hospitals'), Path('ar/doctors'), Path('ar/hospitals')]
+          blocking=[]
+          warnings=[]
+          checked=0
+          media={}
+
+          def skip(html):
+              low=html.lower()
+              return 'noindex' in low or ('http-equiv="refresh"' in low) or ("http-equiv='refresh'" in low)
+
+          def imgs(html):
+              out=[]
+              for tag in re.findall(r'<img\b[^>]*>', html, flags=re.I):
+                  m=re.search(r'\bsrc=["\']([^"\']+)', tag, flags=re.I)
+                  if not m: continue
+                  src=m.group(1)
+                  if 'Healthcare%20Travel%20Swoosh%20Emblem' in src or 'Healthcare Travel Swoosh Emblem' in src:
+                      continue
+                  out.append((src,tag))
+              return out
+
+          for root in roots:
+              if not root.exists(): continue
+              for p in root.rglob('index.html'):
+                  html=p.read_text(encoding='utf-8',errors='ignore')
+                  if skip(html): continue
+                  checked+=1
+                  rel=p.as_posix()
+                  found=imgs(html)
+                  # Provider profiles/directories should have meaningful media somewhere in page content.
+                  if not found:
+                      blocking.append(f'NO_PROVIDER_IMAGE {rel}')
+                      continue
+                  sources=[]
+                  for src,tag in found:
+                      sources.append(src)
+                      low=src.lower()
+                      if any(x in low for x in ['placeholder','default-doctor','default-hospital','dummy','no-image']):
+                          blocking.append(f'PLACEHOLDER {rel} -> {src}')
+                      if src.startswith('/assets/'):
+                          local=Path(src.lstrip('/').split('?',1)[0])
+                          if not local.exists():
+                              blocking.append(f'MISSING_LOCAL {rel} -> {src}')
+                      if not re.search(r'\balt=["\'][^"\']+["\']',tag,re.I):
+                          warnings.append(f'MISSING_ALT {rel} -> {src}')
+                      if not (re.search(r'\bwidth=["\']?\d+',tag,re.I) and re.search(r'\bheight=["\']?\d+',tag,re.I)):
+                          warnings.append(f'MISSING_DIMENSIONS {rel} -> {src}')
+                  media[rel]=sources
+
+          # EN/AR counterpart media parity. Compare normalized provider media filenames/URLs.
+          for rel,sources in list(media.items()):
+              if rel.startswith('ar/'): continue
+              ar='ar/'+rel
+              if ar not in media: continue
+              def norm(xs):
+                  return {x.split('?',1)[0].rstrip('/') for x in xs}
+              if norm(sources) != norm(media[ar]):
+                  warnings.append(f'EN_AR_MEDIA_MISMATCH {rel} <> {ar} :: {sources} <> {media[ar]}')
+
+          print(f'Provider pages checked: {checked}')
+          print(f'Blocking issues: {len(blocking)}')
+          for x in blocking: print(x)
+          print(f'Review warnings: {len(warnings)}')
+          for x in warnings: print(x)
+          if blocking:
+              sys.exit(1)
