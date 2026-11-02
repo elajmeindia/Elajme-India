@@ -1,0 +1,38 @@
+name: Connect endocrinology provider once
+on:
+  push:
+    paths:
+      - '.github/workflows/connect-endocrinology-provider-once.yml'
+permissions:
+  contents: write
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Connect EN and AR endocrinology pages
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          replacements = {
+            'treatments/endocrinology-diabetes-care-india/index.html': (
+              '<h2>Explore doctors and hospitals</h2><p class="lead">Browse Elajme India’s doctor and hospital directories. The appropriate doctor or hospital for an individual case depends on the medical records, required specialty and the treating provider’s assessment.</p><div class="related"><a href="/doctors/">Browse doctors</a><a href="/hospitals/">Explore hospitals</a><a href="/#enquiry">Request case coordination through Elajme India</a></div>',
+              '<h2>Verified endocrinology doctor and hospital pathway</h2><p class="lead">For diabetes, thyroid and other endocrine concerns, Elajme India can coordinate record review with Dr. Saptarshi Bhattacharya and the endocrinology team at Indraprastha Apollo Hospitals, Delhi. Doctor association, availability and suitability are reconfirmed for each case.</p><div class="related"><a href="/doctors/dr-saptarshi-bhattacharya/">Dr. Saptarshi Bhattacharya · Endocrinology &amp; Diabetes Care</a><a href="/hospitals/indraprastha-apollo-hospital-delhi/">Indraprastha Apollo Hospital · Endocrinology</a><a href="/doctors/">Browse more doctors</a><a href="/hospitals/">Explore more hospitals</a><a href="/#enquiry">Request case coordination through Elajme India</a></div>'
+            ),
+            'ar/treatments/endocrinology-diabetes-care-india/index.html': (
+              '<h2>استكشف الأطباء والمستشفيات</h2><p class="lead">يمكنك استعراض دليل علاج مي إنديا للأطباء والمستشفيات. يعتمد اختيار الطبيب أو المستشفى المناسب للحالة على مراجعة التقارير الطبية والتخصص المطلوب وتقييم الجهة المعالجة.</p><div class="related"><a href="/ar/doctors/">استعرض الأطباء</a><a href="/ar/hospitals/">استعرض المستشفيات</a><a href="/ar/#enquiry">اطلب تنسيق حالتك عبر علاج مي إنديا</a></div>',
+              '<h2>طبيب ومستشفى موثقان للغدد الصماء والسكري</h2><p class="lead">لحالات السكري والغدة الدرقية وغيرها من اضطرابات الغدد الصماء، يمكن لعلاج مي إنديا تنسيق مراجعة التقارير مع د. سابتارشي بهاتاشاريا وفريق الغدد الصماء في مستشفى إندرابراستا أبولو، دلهي. يتم إعادة تأكيد ارتباط الطبيب وتوفره ومدى ملاءمته لكل حالة.</p><div class="related"><a href="/ar/doctors/dr-saptarshi-bhattacharya/">د. سابتارشي بهاتاشاريا · الغدد الصماء والسكري</a><a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">مستشفى إندرابراستا أبولو · الغدد الصماء</a><a href="/ar/doctors/">استعرض المزيد من الأطباء</a><a href="/ar/hospitals/">استعرض المزيد من المستشفيات</a><a href="/ar/#enquiry">اطلب تنسيق حالتك عبر علاج مي إنديا</a></div>'
+            )
+          }
+          for fn,(old,new) in replacements.items():
+              p=Path(fn); s=p.read_text()
+              if old not in s: raise SystemExit(f'marker missing: {fn}')
+              p.write_text(s.replace(old,new,1))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments/endocrinology-diabetes-care-india/index.html ar/treatments/endocrinology-diabetes-care-india/index.html
+          git commit -m 'Connect endocrinology treatment to verified provider profiles'
+          git push
