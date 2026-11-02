@@ -23,9 +23,9 @@ jobs:
           locked_hashes={
             'assets/css/master-header.css':'932ce7acbd738f1ea5a71bb0b3913635b647f255',
             'assets/css/arabic-master-header.css':'ca750db9fef35f39930e6137ae5f7b339e0834ae',
+            'assets/css/mobile-header.css':'4c179e2d0811c4e52160a08ac0992eaf710b475f',
             'assets/css/footer-approved.css':'889e7b6f4ca5951d9dc8599390fddeba0c0caf12',
           }
-          # Git blob SHA-1 = sha1("blob <len>\\0" + bytes), matching GitHub content SHA.
           def git_blob_sha(data):
               return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
           for path,expected in locked_hashes.items():
@@ -45,8 +45,6 @@ jobs:
               rel=p.as_posix()
               if rel.startswith(('.git/','.github/')) or rel=='404.html': continue
               t=p.read_text(encoding='utf-8',errors='ignore')
-
-              # Header lock applies wherever approved master header exists.
               m=re.search(r'<header class="master-site-header">.*?</header>',t,re.S)
               if m:
                   h=m.group(0)
@@ -73,7 +71,6 @@ jobs:
                       if '<bdi>+91 74889 55154</bdi>' not in h: problems.append('AR_PHONE_FORMAT '+rel)
                       if h.count('>تواصل معنا</a>')!=1: problems.append('AR_CONTACT_DUPLICATE '+rel)
 
-              # Footer lock applies wherever approved footer exists.
               if 'class="site-footer"' in t:
                   if '/assets/css/footer-approved.css' not in t: problems.append('APPROVED_FOOTER_STYLE_MISSING '+rel)
                   fm=re.search(r'<footer[^>]*class="[^"]*site-footer[^"]*"[^>]*>.*?</footer>',t,re.S)
@@ -88,5 +85,5 @@ jobs:
               print('\n'.join(problems))
               print('\nBLOCKED: English/Arabic approved headers and footers may only change after explicit owner approval and the lock snapshot is intentionally updated.')
               sys.exit(1)
-          print('ELAJME APPROVED EN/AR HEADER + FOOTER SUPER LOCK: CLEAN')
+          print('ELAJME APPROVED EN/AR DESKTOP + MOBILE HEADER + FOOTER SUPER LOCK: CLEAN')
           PY
