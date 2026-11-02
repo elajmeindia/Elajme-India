@@ -1,4 +1,4 @@
-name: Elajme Bilingual Header Super Lock
+name: Elajme Approved Header Footer Super Lock
 on:
   push:
     branches: [main]
@@ -8,70 +8,85 @@ on:
 permissions:
   contents: read
 jobs:
-  header-super-lock:
+  approved-ui-super-lock:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Protect approved English header and exact Arabic header sequence
+      - name: Block unapproved English Arabic header or footer drift
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re,sys
+          import hashlib,re,sys
           problems=[]
-          master=Path('assets/css/master-header.css')
-          arcss=Path('assets/css/arabic-master-header.css')
-          if not master.exists(): problems.append('MISSING master-header.css')
-          if not arcss.exists(): problems.append('MISSING arabic-master-header.css')
-          if master.exists():
-              c=master.read_text(encoding='utf-8')
-              for n in ['height:82px!important','width:60px!important','.master-whatsapp','font-weight:500!important','min-width:122px!important']:
-                  if n not in c: problems.append('MASTER_CSS_DRIFT '+n)
-          if arcss.exists():
-              c=arcss.read_text(encoding='utf-8')
-              checks=[
-                  r'html\[lang="ar"\]\s+\.master-header-inner\s*\{[^}]*direction\s*:\s*ltr\s*!important',
-                  r'html\[lang="ar"\]\s+\.master-nav\s*\{[^}]*direction\s*:\s*ltr\s*!important',
-                  r'html\[lang="ar"\]\s+\.master-nav\s+a\s*\{[^}]*direction\s*:\s*rtl\s*!important',
-                  r'html\[lang="ar"\]\s+\.master-phone\s*\{[^}]*direction\s*:\s*ltr\s*!important',
-                  r'html\[lang="ar"\]\s+\.master-whatsapp\s*\{[^}]*direction\s*:\s*rtl\s*!important',
-              ]
-              for pattern in checks:
-                  if not re.search(pattern,c,re.S): problems.append('ARABIC_PARITY_DRIFT '+pattern)
+
+          # Exact approved production CSS snapshots. Any byte-level change fails this gate.
+          locked_hashes={
+            'assets/css/master-header.css':'932ce7acbd738f1ea5a71bb0b3913635b647f255',
+            'assets/css/arabic-master-header.css':'ca750db9fef35f39930e6137ae5f7b339e0834ae',
+            'assets/css/footer-approved.css':'889e7b6f4ca5951d9dc8599390fddeba0c0caf12',
+          }
+          # Git blob SHA-1 = sha1("blob <len>\\0" + bytes), matching GitHub content SHA.
+          def git_blob_sha(data):
+              return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+          for path,expected in locked_hashes.items():
+              p=Path(path)
+              if not p.exists():
+                  problems.append('LOCKED_FILE_MISSING '+path); continue
+              actual=git_blob_sha(p.read_bytes())
+              if actual!=expected:
+                  problems.append(f'UNAPPROVED_LOCKED_FILE_CHANGE {path} expected={expected} actual={actual}')
+
           ar_sequence=['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا']
-          ar_action_sequence=['+91 74889 55154','واتساب','English','ابدأ استفسارك']
+          ar_actions=['+91 74889 55154','واتساب','English','ابدأ استفسارك']
+          en_sequence=['Home','Treatments','Hospitals','Doctors','International Patients','About Us','Contact']
+          en_actions=['+91 74889 55154','WhatsApp Us','العربية','Start Your Enquiry']
+
           for p in Path('.').rglob('*.html'):
               rel=p.as_posix()
               if rel.startswith(('.git/','.github/')) or rel=='404.html': continue
               t=p.read_text(encoding='utf-8',errors='ignore')
-              if '<header' not in t: continue
+
+              # Header lock applies wherever approved master header exists.
               m=re.search(r'<header class="master-site-header">.*?</header>',t,re.S)
-              if not m: continue
-              h=m.group(0)
-              if t.count('class="master-site-header"')!=1: problems.append('HEADER_COUNT '+rel)
-              if '/assets/css/master-header.css?v=6' not in t: problems.append('MASTER_STYLE_MISSING '+rel)
-              if any(x in h for x in ['How it works','directory-site-header','shell-header']): problems.append('LEGACY_HEADER '+rel)
-              if '917488955154' not in h: problems.append('CONTACT_ROUTE '+rel)
-              if rel.startswith('ar/'):
-                  if '/assets/css/arabic-master-header.css?v=2' not in t: problems.append('AR_STYLE_MISSING '+rel)
+              if m:
+                  h=m.group(0)
+                  if t.count('class="master-site-header"')!=1: problems.append('HEADER_COUNT '+rel)
+                  if '/assets/css/master-header.css?v=6' not in t: problems.append('MASTER_HEADER_STYLE '+rel)
+                  if '917488955154' not in h: problems.append('HEADER_CONTACT_ROUTE '+rel)
+                  if any(x in h for x in ['How it works','directory-site-header','shell-header']): problems.append('LEGACY_HEADER '+rel)
+                  seq=ar_sequence if rel.startswith('ar/') else en_sequence
+                  acts=ar_actions if rel.startswith('ar/') else en_actions
                   positions=[]
-                  for x in ar_sequence:
-                      pos=h.find('>'+x+'</a>')
-                      if pos<0: problems.append('AR_HEADER_MISSING '+rel+' '+x)
-                      positions.append(pos)
-                  if all(x>=0 for x in positions) and positions!=sorted(positions): problems.append('AR_NAV_ORDER '+rel)
-                  action_positions=[]
-                  for x in ar_action_sequence:
+                  for x in seq:
                       pos=h.find(x)
-                      if pos<0: problems.append('AR_ACTION_MISSING '+rel+' '+x)
+                      if pos<0: problems.append('HEADER_ITEM_MISSING '+rel+' '+x)
+                      positions.append(pos)
+                  if all(x>=0 for x in positions) and positions!=sorted(positions): problems.append('HEADER_ORDER '+rel)
+                  action_positions=[]
+                  for x in acts:
+                      pos=h.find(x)
+                      if pos<0: problems.append('HEADER_ACTION_MISSING '+rel+' '+x)
                       action_positions.append(pos)
-                  if all(x>=0 for x in action_positions) and action_positions!=sorted(action_positions): problems.append('AR_ACTION_ORDER '+rel)
-                  if '<bdi>+91 74889 55154</bdi>' not in h: problems.append('AR_PHONE_FORMAT '+rel)
-                  if h.count('>تواصل معنا</a>')!=1: problems.append('AR_CONTACT_DUPLICATE '+rel)
-              else:
-                  for x in ['Home','Treatments','Hospitals','Doctors','International Patients','About Us','Contact','WhatsApp Us','العربية','Start Your Enquiry']:
-                      if x not in h: problems.append('EN_HEADER_DRIFT '+rel+' '+x)
-          print('Header Super Lock blocking issues:',len(problems))
+                  if all(x>=0 for x in action_positions) and action_positions!=sorted(action_positions): problems.append('HEADER_ACTION_ORDER '+rel)
+                  if rel.startswith('ar/'):
+                      if '/assets/css/arabic-master-header.css?v=2' not in t: problems.append('AR_HEADER_STYLE '+rel)
+                      if '<bdi>+91 74889 55154</bdi>' not in h: problems.append('AR_PHONE_FORMAT '+rel)
+                      if h.count('>تواصل معنا</a>')!=1: problems.append('AR_CONTACT_DUPLICATE '+rel)
+
+              # Footer lock applies wherever approved footer exists.
+              if 'class="site-footer"' in t:
+                  if '/assets/css/footer-approved.css' not in t: problems.append('APPROVED_FOOTER_STYLE_MISSING '+rel)
+                  fm=re.search(r'<footer[^>]*class="[^"]*site-footer[^"]*"[^>]*>.*?</footer>',t,re.S)
+                  if not fm: problems.append('FOOTER_MARKUP_INVALID '+rel)
+                  else:
+                      f=fm.group(0)
+                      for cls in ['footer-wrap','footer-top','footer-brand','footer-links','footer-bottom']:
+                          if cls not in f: problems.append('FOOTER_STRUCTURE_DRIFT '+rel+' '+cls)
+
+          print('Approved Header/Footer Super Lock blocking issues:',len(problems))
           if problems:
-              print('\n'.join(problems)); sys.exit(1)
-          print('ELAJME BILINGUAL MASTER HEADER SUPER LOCK: CLEAN')
+              print('\n'.join(problems))
+              print('\nBLOCKED: English/Arabic approved headers and footers may only change after explicit owner approval and the lock snapshot is intentionally updated.')
+              sys.exit(1)
+          print('ELAJME APPROVED EN/AR HEADER + FOOTER SUPER LOCK: CLEAN')
           PY
