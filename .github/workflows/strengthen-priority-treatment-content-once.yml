@@ -1,0 +1,81 @@
+name: Strengthen priority treatment content once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/strengthen-priority-treatment-content-once.yml'
+permissions:
+  contents: write
+jobs:
+  strengthen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Strengthen priority bilingual treatment content
+        shell: python
+        run: |
+          from pathlib import Path
+          import re,sys
+          data={
+          'cancer-treatment-india':('Cancer treatment planning in India','Cancer care can involve medical oncology, surgical oncology, radiation oncology, pathology and imaging. The right sequence depends on the cancer type, stage, prior treatment and the patient’s overall condition.','For an international case review, send the pathology or biopsy report, recent imaging, treatment summary, current medicines and any recent blood tests. This helps the reviewing team understand the diagnosis before recommending next steps.','تخطيط علاج السرطان في الهند','قد تشمل رعاية السرطان طب الأورام والعلاج الجراحي والإشعاعي وعلم الأمراض والتصوير الطبي. ويعتمد ترتيب العلاج المناسب على نوع السرطان ومرحلته والعلاجات السابقة والحالة العامة للمريض.','لمراجعة الحالة دولياً، أرسل تقرير الخزعة أو علم الأمراض، وأحدث صور الأشعة، وملخص العلاجات السابقة، والأدوية الحالية، وأحدث تحاليل الدم إن وجدت.'),
+          'heart-treatment-india':('Planning cardiac care in India','Cardiac care may involve cardiology, interventional cardiology or cardiac surgery depending on the diagnosis. Decisions are based on symptoms, heart function, angiography or other investigations, previous procedures and associated medical conditions.','Useful records can include an ECG, echocardiogram, angiography or CT reports, recent blood tests, medication list and a short history of previous cardiac procedures.','تخطيط رعاية القلب في الهند','قد تشمل رعاية القلب طب القلب أو القسطرة التداخلية أو جراحة القلب بحسب التشخيص. ويعتمد القرار على الأعراض ووظيفة القلب ونتائج القسطرة أو الفحوص الأخرى والإجراءات السابقة والحالات الصحية المصاحبة.','من المفيد إرسال تخطيط القلب، والإيكو، وتقارير القسطرة أو الأشعة المقطعية، وأحدث التحاليل، وقائمة الأدوية، وملخص أي إجراءات قلبية سابقة.'),
+          'knee-replacement-india':('Planning knee replacement care in India','Knee replacement is considered after an orthopaedic assessment of pain, mobility, joint damage and response to non-surgical treatment. The surgeon determines whether partial or total replacement is appropriate after reviewing the patient and imaging.','Send recent standing knee X-rays or other available imaging, orthopaedic notes, details of previous injections or surgery, current medicines and relevant medical conditions.','تخطيط جراحة استبدال مفصل الركبة في الهند','يتم النظر في استبدال مفصل الركبة بعد تقييم آلام المفصل والحركة ودرجة التلف والاستجابة للعلاجات غير الجراحية. ويحدد جراح العظام مدى ملاءمة الاستبدال الجزئي أو الكامل بعد مراجعة الحالة والصور.','أرسل أحدث أشعة للركبة أثناء الوقوف أو أي صور متاحة، وتقارير طبيب العظام، وتفاصيل الحقن أو العمليات السابقة، والأدوية الحالية، والحالات الصحية المهمة.'),
+          'neurosurgery-india':('Planning neurosurgical care in India','Neurosurgical evaluation depends on the exact condition, neurological symptoms, imaging findings and previous treatment. Brain, spine and nerve conditions can require different specialist teams, so a diagnosis-specific review is important before travel.','Send MRI or CT reports and, where possible, the image files, along with neurological notes, previous surgery or biopsy reports, current medicines and a summary of symptoms.','تخطيط رعاية جراحة الأعصاب في الهند','يعتمد تقييم جراحة الأعصاب على التشخيص الدقيق والأعراض العصبية ونتائج التصوير والعلاجات السابقة. وقد تتطلب حالات الدماغ والعمود الفقري والأعصاب فرقاً مختلفة، لذلك من المهم مراجعة الحالة حسب التشخيص قبل السفر.','أرسل تقارير الرنين المغناطيسي أو الأشعة المقطعية وملفات الصور إن أمكن، مع تقارير الأعصاب أو العمليات أو الخزعات السابقة، والأدوية الحالية، وملخص الأعراض.'),
+          'kidney-transplant-india':('Planning a kidney transplant evaluation in India','Kidney transplant evaluation involves the recipient’s kidney disease, general medical fitness and transplant-specific testing. Donor evaluation is a separate clinical and legal process, and eligibility must be confirmed by the treating transplant centre under applicable rules.','For an initial review, send the kidney diagnosis, dialysis history, recent kidney-function and blood reports, relevant imaging, medical history and any available donor information requested by the transplant team.','تخطيط تقييم زراعة الكلى في الهند','يشمل تقييم زراعة الكلى مرض الكلى لدى المتلقي واللياقة الصحية العامة والفحوص الخاصة بالزراعة. أما تقييم المتبرع فهو عملية طبية وقانونية منفصلة، ويجب أن يؤكد مركز الزراعة أهلية الحالة وفق الأنظمة المعمول بها.','للمراجعة الأولية، أرسل تشخيص مرض الكلى، وتاريخ الغسيل الكلوي، وأحدث تحاليل وظائف الكلى والدم، والصور ذات الصلة، والتاريخ الطبي، وأي معلومات عن المتبرع يطلبها فريق الزراعة.'),
+          'liver-transplant-india':('Planning a liver transplant evaluation in India','Liver transplant assessment considers the underlying liver disease, severity, complications, general fitness and transplant-specific criteria. Donor suitability and legal documentation are assessed separately by the transplant programme.','Send recent liver-function tests, INR and blood counts, imaging, endoscopy or biopsy reports when available, current medicines, hospital summaries and any transplant evaluation already completed.','تخطيط تقييم زراعة الكبد في الهند','يراعي تقييم زراعة الكبد سبب مرض الكبد ودرجة شدته ومضاعفاته واللياقة الصحية العامة ومعايير الزراعة الخاصة. ويتم تقييم ملاءمة المتبرع والمستندات القانونية بشكل منفصل ضمن برنامج الزراعة.','أرسل أحدث تحاليل وظائف الكبد وINR وصورة الدم، وتقارير الأشعة والمنظار أو الخزعة إن وجدت، والأدوية الحالية، وملخصات المستشفى، وأي تقييم سابق للزراعة.'),
+          'urology-treatment-india':('Planning urology care in India','Urology covers conditions affecting the urinary tract and male reproductive system. Treatment may be medical, endoscopic, minimally invasive or surgical depending on the diagnosis, imaging, kidney function and previous treatment.','Useful records include ultrasound, CT or MRI reports, urine and kidney-function tests, pathology reports when relevant, previous procedure notes and a current medication list.','تخطيط رعاية المسالك البولية في الهند','يشمل طب المسالك البولية أمراض الجهاز البولي وبعض حالات الجهاز التناسلي لدى الرجال. وقد يكون العلاج دوائياً أو بالمنظار أو بتقنيات محدودة التدخل أو جراحياً بحسب التشخيص والصور ووظائف الكلى والعلاجات السابقة.','من المفيد إرسال تقارير الموجات فوق الصوتية أو الأشعة المقطعية أو الرنين، وتحاليل البول ووظائف الكلى، وتقارير علم الأمراض عند الحاجة، وتقارير الإجراءات السابقة، وقائمة الأدوية الحالية.'),
+          'gastroenterology-treatment-india':('Planning gastroenterology care in India','Gastroenterology assessment depends on symptoms, the suspected organ involved and previous investigations. Some cases are managed medically, while others may need endoscopy, advanced imaging, interventional procedures or surgical review.','Send recent blood tests, ultrasound or CT/MRI reports, endoscopy or colonoscopy reports, biopsy results when available, current medicines and a concise symptom history.','تخطيط رعاية الجهاز الهضمي في الهند','يعتمد تقييم أمراض الجهاز الهضمي على الأعراض والعضو المشتبه به والفحوص السابقة. وقد تعالج بعض الحالات بالأدوية، بينما قد تحتاج حالات أخرى إلى المنظار أو التصوير المتقدم أو إجراءات تداخلية أو تقييم جراحي.','أرسل أحدث تحاليل الدم، وتقارير الموجات فوق الصوتية أو الأشعة المقطعية أو الرنين، وتقارير المنظار أو القولون، ونتائج الخزعة إن وجدت، والأدوية الحالية، وملخص الأعراض.')}
+          changed=[]
+          for slug,v in data.items():
+            for lang in ('en','ar'):
+              p=Path('treatments' if lang=='en' else 'ar/treatments')/slug/'index.html'
+              if not p.exists(): print('Missing',p);sys.exit(1)
+              s=p.read_text(encoding='utf-8')
+              if 'priority-treatment-guidance' in s: continue
+              if lang=='en':
+                title,body,records=v[0],v[1],v[2]
+                block=f'<section class="sec priority-treatment-guidance"><div class="c"><h2>{title}</h2><div class="grid"><article class="card"><h3>How the case is assessed</h3><p>{body}</p></article><article class="card"><h3>Records to prepare for review</h3><p>{records}</p></article></div><p class="lead">Treatment recommendations, timelines and suitability can only be confirmed by the treating clinical team after reviewing the individual case. Elajme India coordinates the enquiry and case-review process and does not replace medical advice.</p></div></section>'
+              else:
+                title,body,records=v[3],v[4],v[5]
+                block=f'<section class="sec priority-treatment-guidance"><div class="c"><h2>{title}</h2><div class="grid"><article class="card"><h3>كيف يتم تقييم الحالة؟</h3><p>{body}</p></article><article class="card"><h3>التقارير المطلوبة للمراجعة</h3><p>{records}</p></article></div><p class="lead">لا يمكن تأكيد التوصيات العلاجية أو المدة أو ملاءمة العلاج إلا بعد مراجعة الحالة الفردية من الفريق الطبي المعالج. يقوم علاج مي إنديا بتنسيق الاستفسار ومراجعة الحالة ولا يحل محل الاستشارة الطبية.</p></div></section>'
+              marker='<section class="specialty-specific-discovery"'
+              if marker not in s:
+                marker='<section class="sec specialty-specific-discovery"'
+              if marker not in s: print('Missing discovery marker',p);sys.exit(1)
+              s=s.replace(marker,block+marker,1)
+              p.write_text(s,encoding='utf-8');changed.append(str(p))
+          print('Strengthened',len(changed),'priority bilingual pages')
+      - name: Verify unique content and safe routing
+        shell: python
+        run: |
+          from pathlib import Path
+          import re,sys
+          issues=[];seen_en=set();seen_ar=set();count=0
+          for root,lang in ((Path('treatments'),'en'),(Path('ar/treatments'),'ar')):
+            for p in root.glob('*/index.html'):
+              s=p.read_text(encoding='utf-8')
+              if 'priority-treatment-guidance' not in s: continue
+              count+=1
+              block=s.split('priority-treatment-guidance',1)[1].split('specialty-specific-discovery',1)[0]
+              plain=re.sub(r'<[^>]+>',' ',block); plain=' '.join(plain.split())
+              if len(plain)<350: issues.append(f'Thin guidance: {p}')
+              key=plain[:180]
+              seen=seen_en if lang=='en' else seen_ar
+              if key in seen: issues.append(f'Duplicate guidance opening: {p}')
+              seen.add(key)
+              if 'wa.me/' in block or 'tel:' in block: issues.append(f'Direct contact in guidance: {p}')
+          if count!=16: issues.append(f'Expected 16 strengthened pages, found {count}')
+          if issues: print('\n'.join(issues));sys.exit(1)
+          print('Priority treatment content verification passed for',count,'pages')
+      - name: Protect approved global UI
+        run: git diff --exit-code assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md
+      - name: Commit content strengthening
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments
+          git commit -m 'Strengthen priority bilingual treatment content'
+          git push
