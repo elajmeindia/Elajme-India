@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/audit-live-cloudflare-production.yml'
+      - '_redirects'
   workflow_dispatch:
 
 permissions:
@@ -26,7 +27,8 @@ jobs:
             '/treatments/'
             '/hospitals/'
             '/doctors/'
-            '/international-patients/'
+            '/international-patients/mea/'
+            '/ar/international-patients/mea/'
             '/patient-guide/'
             '/ar/patient-guide/'
           )
@@ -35,6 +37,12 @@ jobs:
             code=$(curl -L --retry 3 --retry-delay 2 --connect-timeout 15 --max-time 30 -sS -o /tmp/page.html -w '%{http_code}' "${base}${route}")
             test "$code" = '200' || { echo "FAIL ${route}: HTTP ${code}"; exit 1; }
             grep -qi '<html' /tmp/page.html || { echo "FAIL ${route}: no HTML document"; exit 1; }
+          done
+
+          for route in '/international-patients/' '/ar/international-patients/'; do
+            echo "Checking redirect ${base}${route}"
+            code=$(curl -L --retry 3 --retry-delay 2 --connect-timeout 15 --max-time 30 -sS -o /tmp/page.html -w '%{http_code}' "${base}${route}")
+            test "$code" = '200' || { echo "FAIL redirect ${route}: final HTTP ${code}"; exit 1; }
           done
 
           curl -L --retry 3 --connect-timeout 15 --max-time 30 -fsS "$base/" -o /tmp/en.html
@@ -46,5 +54,3 @@ jobs:
           grep -q 'https://elajmeindia.com/' /tmp/en.html || { echo 'FAIL: English production canonical/domain marker missing'; exit 1; }
           grep -q 'https://elajmeindia.com/ar/' /tmp/ar.html || { echo 'FAIL: Arabic production canonical/domain marker missing'; exit 1; }
           echo 'LIVE CLOUDFLARE PRODUCTION AUDIT PASSED'
-
-# Final verification trigger: 2026-11-02
