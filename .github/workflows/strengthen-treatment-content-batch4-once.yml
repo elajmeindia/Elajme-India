@@ -1,0 +1,71 @@
+name: Strengthen treatment content batch 4 once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/strengthen-treatment-content-batch4-once.yml'
+permissions:
+  contents: write
+jobs:
+  strengthen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Strengthen fourth bilingual treatment batch
+        shell: python
+        run: |
+          from pathlib import Path
+          import sys
+          data={
+          'physical-medicine-rehabilitation-india':('Preparing for rehabilitation review','Rehabilitation planning depends on the underlying illness or injury, current mobility and function, neurological or musculoskeletal deficits, pain, previous surgery and the patient’s practical recovery goals.','Send the main diagnosis, recent specialist notes, surgery or hospital-discharge summaries, relevant imaging, current mobility or functional limitations, previous physiotherapy or rehabilitation records and current medicines.','التحضير لمراجعة التأهيل الطبي','يعتمد تخطيط التأهيل على المرض أو الإصابة الأساسية ومستوى الحركة والوظيفة الحالي والضعف العصبي أو العضلي الهيكلي والألم والعمليات السابقة وأهداف التعافي العملية للمريض.','أرسل التشخيص الرئيسي، وتقارير الأطباء الحديثة، وملخصات العمليات أو الخروج من المستشفى، والصور الطبية ذات الصلة، وحدود الحركة أو الوظيفة الحالية، وسجلات العلاج الطبيعي أو التأهيل السابق، والأدوية الحالية.'),
+          'psychiatry-mental-health-india':('Preparing for a mental-health specialist review','Mental-health assessment is individual and considers current symptoms, duration, effect on daily life, previous diagnoses, medicines, therapy history, sleep, substance use where relevant and physical-health factors.','Send previous psychiatry or psychology notes if available, current and previous medicines with response or side effects, relevant medical records, a concise symptom history and details of previous admissions or therapy when applicable.','التحضير لمراجعة الصحة النفسية','يكون تقييم الصحة النفسية فردياً ويراعي الأعراض الحالية ومدتها وتأثيرها في الحياة اليومية والتشخيصات السابقة والأدوية والعلاج النفسي والنوم واستخدام المواد عند الحاجة والعوامل الصحية الجسدية.','أرسل تقارير الطب النفسي أو علم النفس السابقة إن وجدت، والأدوية الحالية والسابقة ومدى الاستجابة أو الآثار الجانبية، والتقارير الطبية ذات الصلة، وملخصاً لتاريخ الأعراض، وتفاصيل الدخول للمستشفى أو العلاج النفسي السابق عند الحاجة.'),
+          'infectious-diseases-treatment-india':('Preparing for an infectious-disease review','Infectious-disease assessment depends on the suspected organism or source, duration and severity of illness, cultures or molecular tests, imaging, immune status, travel or exposure history and response to previous antimicrobial treatment.','Send culture, PCR or other microbiology results, recent blood tests, imaging reports, hospital or infectious-disease notes, previous antibiotic or antiviral treatment details, relevant exposure or travel history and current medicines.','التحضير لمراجعة الأمراض المعدية','يعتمد تقييم الأمراض المعدية على الميكروب أو مصدر العدوى المحتمل ومدة المرض وشدته ونتائج المزارع أو الفحوص الجزيئية والصور والحالة المناعية وتاريخ السفر أو التعرض والاستجابة للعلاجات المضادة للعدوى.','أرسل نتائج المزارع أو PCR أو فحوص الأحياء الدقيقة الأخرى، وأحدث تحاليل الدم، وتقارير الأشعة، وتقارير المستشفى أو الأمراض المعدية، وتفاصيل المضادات الحيوية أو الفيروسية السابقة، وتاريخ السفر أو التعرض ذي الصلة، والأدوية الحالية.'),
+          'pain-management-treatment-india':('Preparing for a pain-management review','Pain assessment considers the location, duration and character of pain, the underlying diagnosis, neurological or musculoskeletal findings, imaging, previous procedures and the response and safety of earlier medicines.','Send the diagnosis and pain history, relevant MRI, CT or X-ray reports, specialist notes, details of injections or procedures, previous pain medicines and their effect, physiotherapy records and current medicines.','التحضير لمراجعة علاج الألم','يراعي تقييم الألم موضعه ومدته وطبيعته والتشخيص الأساسي والنتائج العصبية أو العضلية الهيكلية والصور الطبية والإجراءات السابقة ومدى الاستجابة للأدوية السابقة وسلامتها.','أرسل التشخيص وتاريخ الألم، وتقارير الرنين أو الأشعة المقطعية أو الأشعة العادية ذات الصلة، وتقارير الأطباء، وتفاصيل الحقن أو الإجراءات السابقة، وأدوية الألم السابقة وتأثيرها، وسجلات العلاج الطبيعي، والأدوية الحالية.'),
+          'geriatric-medicine-india':('Preparing for a geriatric-medicine review','Older adults may have several interacting medical conditions, medicines and functional concerns. Review considers the main current problem together with mobility, cognition, nutrition, falls, daily activities and the overall medication burden.','Send a concise medical history, recent discharge or specialist summaries, current diagnoses, complete medication list, recent blood tests, relevant imaging and information about mobility, memory, falls or daily-care needs.','التحضير لمراجعة طب كبار السن','قد تكون لدى كبار السن عدة أمراض وأدوية ومشكلات وظيفية متداخلة. ويراعي التقييم المشكلة الحالية الرئيسية إلى جانب الحركة والإدراك والتغذية والسقوط والأنشطة اليومية والعبء الدوائي الكلي.','أرسل ملخصاً للتاريخ الطبي، وتقارير الخروج أو الأطباء الحديثة، والتشخيصات الحالية، وقائمة كاملة بالأدوية، وأحدث التحاليل، والصور ذات الصلة، ومعلومات عن الحركة أو الذاكرة أو السقوط أو احتياجات الرعاية اليومية.'),
+          'interventional-radiology-treatment-india':('Preparing for an interventional-radiology review','Interventional radiology uses image-guided procedures for selected vascular, tumour-related and other conditions. Suitability depends on the exact diagnosis, anatomy, imaging, previous treatment, kidney function, bleeding risk and the proposed clinical goal.','Send the diagnosis, recent CT, MRI, ultrasound or angiography reports and image files where available, specialist recommendations, previous procedure or surgery summaries, kidney-function and blood-count tests and current medicines including blood thinners.','التحضير لمراجعة الأشعة التداخلية','تستخدم الأشعة التداخلية إجراءات موجهة بالتصوير لبعض أمراض الأوعية والأورام وحالات أخرى مختارة. وتعتمد الملاءمة على التشخيص الدقيق والتشريح والصور والعلاج السابق ووظائف الكلى وخطر النزيف والهدف الطبي من الإجراء.','أرسل التشخيص، وتقارير وملفات الأشعة المقطعية أو الرنين أو السونار أو تصوير الأوعية الحديثة إن توفرت، وتوصيات الأطباء، وملخصات الإجراءات أو العمليات السابقة، وفحوص وظائف الكلى وصورة الدم، والأدوية الحالية بما فيها مميعات الدم.'),
+          'thoracic-chest-surgery-india':('Preparing for a thoracic-surgery review','Thoracic-surgery assessment may involve the lungs, pleura, mediastinum, chest wall or oesophagus. Planning depends on the diagnosis, imaging, pathology when relevant, lung and cardiac fitness and previous treatment.','Send recent chest CT or PET-CT reports and images, pathology or biopsy reports where relevant, pulmonary-function tests, cardiology or anaesthesia assessments if completed, previous treatment summaries and current medicines.','التحضير لمراجعة جراحة الصدر','قد يشمل تقييم جراحة الصدر الرئتين أو غشاء الجنب أو المنصف أو جدار الصدر أو المريء. ويعتمد التخطيط على التشخيص والصور ونتائج الخزعة عند الحاجة وكفاءة الرئة والقلب والعلاجات السابقة.','أرسل أحدث تقارير وصور الأشعة المقطعية للصدر أو PET-CT، وتقارير الخزعة أو علم الأمراض عند الحاجة، واختبارات وظائف الرئة، وتقييم القلب أو التخدير إن أُجري، وملخصات العلاج السابق، والأدوية الحالية.'),
+          'colorectal-surgery-india':('Preparing for a colorectal-surgery review','Colorectal assessment depends on the exact bowel or rectal condition, symptoms, endoscopy, imaging, pathology when relevant and previous abdominal or pelvic treatment. Surgical need and approach are confirmed only after specialist review.','Send colonoscopy or endoscopy reports, CT or MRI reports and images, pathology or biopsy results when relevant, previous abdominal-surgery records, recent blood tests and current medicines.','التحضير لمراجعة جراحة القولون والمستقيم','يعتمد تقييم القولون والمستقيم على المرض الدقيق والأعراض والمنظار والصور ونتائج علم الأمراض عند الحاجة والعلاجات السابقة للبطن أو الحوض. ولا تتأكد الحاجة إلى الجراحة أو نوعها إلا بعد مراجعة الطبيب المختص.','أرسل تقارير منظار القولون أو الجهاز الهضمي، وتقارير وصور الأشعة المقطعية أو الرنين، ونتائج الخزعة أو علم الأمراض عند الحاجة، وتقارير عمليات البطن السابقة، وأحدث تحاليل الدم، والأدوية الحالية.')}
+          changed=[]
+          for slug,v in data.items():
+            for lang in ('en','ar'):
+              p=Path('treatments' if lang=='en' else 'ar/treatments')/slug/'index.html'
+              if not p.exists(): print('Missing',p);sys.exit(1)
+              s=p.read_text(encoding='utf-8')
+              if 'treatment-guidance-batch4' in s: continue
+              if lang=='en': title,body,records=v[0],v[1],v[2]; block=f'<section class="sec treatment-guidance-batch4"><div class="c"><h2>{title}</h2><div class="grid"><article class="card"><h3>What the clinical team reviews</h3><p>{body}</p></article><article class="card"><h3>Records that can help</h3><p>{records}</p></article></div><p class="lead">The treating team confirms diagnosis, suitability, investigations and treatment after individual review. Elajme India coordinates case submission and communication and does not replace medical advice.</p></div></section>'
+              else: title,body,records=v[3],v[4],v[5]; block=f'<section class="sec treatment-guidance-batch4"><div class="c"><h2>{title}</h2><div class="grid"><article class="card"><h3>ما الذي يراجعه الفريق الطبي؟</h3><p>{body}</p></article><article class="card"><h3>التقارير التي تساعد في المراجعة</h3><p>{records}</p></article></div><p class="lead">يؤكد الفريق الطبي التشخيص ومدى ملاءمة العلاج والفحوص والخطة بعد مراجعة الحالة بصورة فردية. يقتصر دور علاج مي إنديا على تنسيق إرسال الحالة والتواصل ولا يحل محل الاستشارة الطبية.</p></div></section>'
+              marker='<section class="cta">'
+              if marker not in s: print('Missing CTA marker',p);sys.exit(1)
+              p.write_text(s.replace(marker,block+marker,1),encoding='utf-8');changed.append(str(p))
+          print('Strengthened',len(changed),'batch-4 bilingual pages')
+      - name: Verify and protect
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          slugs=['physical-medicine-rehabilitation-india','psychiatry-mental-health-india','infectious-diseases-treatment-india','pain-management-treatment-india','geriatric-medicine-india','interventional-radiology-treatment-india','thoracic-chest-surgery-india','colorectal-surgery-india']
+          for slug in slugs:
+            for root in ('treatments','ar/treatments'):
+              p=Path(root)/slug/'index.html'; s=p.read_text(encoding='utf-8')
+              if s.count('treatment-guidance-batch4') != 1: print('Bad guidance block',p);sys.exit(1)
+              if 'wa.me/' in s or 'tel:' in s:
+                # Global Elajme header contact is allowed. Block provider-contact leakage only outside approved Elajme number.
+                for token in ('wa.me/','tel:'):
+                  for part in s.split(token)[1:]:
+                    target=part.split('"',1)[0]
+                    if '917488955154' not in target: print('Non-Elajme contact',p,target);sys.exit(1)
+          print('Batch 4 verification passed')
+          PY
+          git diff --exit-code HEAD -- assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css
+      - name: Commit batch 4 strengthening
+        shell: bash
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments
+          git commit -m 'Strengthen fourth bilingual treatment content batch'
+          git push
