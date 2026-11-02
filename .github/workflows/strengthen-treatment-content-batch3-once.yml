@@ -1,0 +1,67 @@
+name: Strengthen treatment content batch 3 once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/strengthen-treatment-content-batch3-once.yml'
+permissions:
+  contents: write
+jobs:
+  strengthen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Strengthen third bilingual treatment batch
+        shell: python
+        run: |
+          from pathlib import Path
+          import sys
+          data={
+          'pulmonology-lung-treatment-india':('Preparing for a pulmonology review','Respiratory assessment depends on symptoms, lung function, imaging, oxygen needs, previous infections and the suspected lung or airway condition. The reviewing team may request additional testing before confirming a care pathway.','Send recent chest X-ray or CT reports and images, pulmonary-function tests, oxygen or saturation records when relevant, bronchoscopy or pathology reports if available, previous treatment summaries and current medicines.','التحضير لمراجعة أمراض الصدر والرئة','يعتمد تقييم أمراض الصدر على الأعراض ووظائف الرئة والصور الطبية والحاجة إلى الأكسجين والالتهابات السابقة والتشخيص المحتمل للرئة أو مجرى التنفس. وقد يطلب الفريق فحوصاً إضافية قبل تأكيد مسار الرعاية.','أرسل أحدث أشعة الصدر أو تقارير وصور الأشعة المقطعية، واختبارات وظائف الرئة، وقراءات الأكسجين عند الحاجة، وتقارير المنظار أو علم الأمراض إن وجدت، وملخصات العلاج السابق، والأدوية الحالية.'),
+          'dermatology-skin-treatment-india':('Preparing for a dermatology review','Skin conditions can be inflammatory, infectious, autoimmune, pigment-related or tumour-related. A useful review depends on the appearance and distribution of the condition, duration, previous diagnoses, medicines and any biopsy or laboratory findings.','Send clear recent photographs of the affected area where appropriate, dermatology notes, biopsy or laboratory reports, allergy or medication history, previous treatments and a list of current medicines or topical products.','التحضير لمراجعة الأمراض الجلدية','قد تكون الأمراض الجلدية التهابية أو معدية أو مناعية أو مرتبطة بالتصبغ أو الأورام. وتعتمد المراجعة المفيدة على شكل الحالة وتوزعها ومدتها والتشخيصات السابقة والأدوية ونتائج الخزعة أو المختبر إن وجدت.','أرسل صوراً حديثة وواضحة للمنطقة المصابة عند ملاءمة ذلك، وتقارير طبيب الجلدية، ونتائج الخزعة أو المختبر، وتاريخ الحساسية أو الأدوية، والعلاجات السابقة، وقائمة الأدوية أو المستحضرات الموضعية الحالية.'),
+          'endocrinology-diabetes-care-india':('Preparing for an endocrinology review','Endocrine care may involve diabetes, thyroid, adrenal, pituitary, metabolic or other hormonal conditions. Assessment depends on symptoms, laboratory trends, imaging when relevant, medicines and previous specialist findings.','Send recent blood tests relevant to the condition, glucose and HbA1c records for diabetes, thyroid or hormone results where applicable, imaging reports, previous endocrinology notes and a current medication list.','التحضير لمراجعة الغدد الصماء','قد تشمل رعاية الغدد الصماء السكري والغدة الدرقية والكظرية والنخامية واضطرابات الأيض أو الهرمونات الأخرى. ويعتمد التقييم على الأعراض واتجاه نتائج التحاليل والصور عند الحاجة والأدوية والتقييمات السابقة.','أرسل أحدث التحاليل المرتبطة بالحالة، وسجلات السكر وHbA1c لمرضى السكري، ونتائج الغدة الدرقية أو الهرمونات عند الحاجة، وتقارير الأشعة، وتقارير الغدد السابقة، وقائمة الأدوية الحالية.'),
+          'pediatrics-child-health-india':('Preparing for a paediatric specialist review','Children require age-appropriate assessment based on growth, development, symptoms, previous diagnoses, vaccinations, medicines and the specific organ system involved. The appropriate paediatric subspecialty depends on the individual concern.','Send the child’s age, weight and main concern, recent paediatric notes, growth or developmental information when relevant, laboratory and imaging reports, previous admissions or procedures, vaccination information and current medicines.','التحضير لمراجعة اختصاصي الأطفال','يحتاج الأطفال إلى تقييم مناسب للعمر يعتمد على النمو والتطور والأعراض والتشخيصات السابقة والتطعيمات والأدوية والجهاز المتأثر. ويختلف التخصص الدقيق في طب الأطفال حسب المشكلة الفردية.','أرسل عمر الطفل ووزنه والمشكلة الرئيسية، وتقارير طبيب الأطفال الحديثة، ومعلومات النمو أو التطور عند الحاجة، ونتائج التحاليل والأشعة، وتقارير الدخول للمستشفى أو الإجراءات السابقة، ومعلومات التطعيمات، والأدوية الحالية.'),
+          'nephrology-kidney-care-india':('Preparing for a nephrology review','Kidney-care assessment depends on kidney function, urine findings, blood pressure, imaging, the cause and duration of kidney disease and whether dialysis is required. Transplant assessment is a separate pathway when relevant.','Send recent creatinine and kidney-function tests, urine reports, electrolytes and blood counts, blood-pressure records, ultrasound or other kidney imaging, dialysis history if applicable and current medicines.','التحضير لمراجعة أمراض الكلى','يعتمد تقييم أمراض الكلى على وظائف الكلى ونتائج البول وضغط الدم والصور الطبية وسبب ومدة المرض وما إذا كان المريض يحتاج إلى الغسيل. أما تقييم الزراعة فهو مسار منفصل عند الحاجة.','أرسل أحدث تحاليل الكرياتينين ووظائف الكلى، وتحاليل البول والأملاح وصورة الدم، وسجلات ضغط الدم، والسونار أو صور الكلى الأخرى، وتاريخ الغسيل إن وجد، وقائمة الأدوية الحالية.'),
+          'rheumatology-autoimmune-care-india':('Preparing for a rheumatology review','Rheumatology assessment considers the pattern and duration of joint or systemic symptoms, examination findings, inflammatory markers, autoimmune tests, imaging and response to previous medicines. Diagnosis can require correlation across several investigations.','Send rheumatology notes, ESR or CRP and relevant autoimmune tests, recent blood counts and organ-function tests, X-rays or other imaging, previous treatment history and current immunosuppressive or other medicines.','التحضير لمراجعة أمراض الروماتيزم والمناعة','يراعي تقييم الروماتيزم نمط ومدة أعراض المفاصل أو الأعراض العامة ونتائج الفحص ومؤشرات الالتهاب وفحوص المناعة والصور والاستجابة للأدوية السابقة. وقد يتطلب التشخيص الربط بين عدة فحوص.','أرسل تقارير الروماتيزم، وESR أو CRP وفحوص المناعة ذات الصلة، وأحدث صورة دم ووظائف الأعضاء، والأشعة أو الصور الأخرى، وتاريخ العلاج السابق، والأدوية المثبطة للمناعة أو الأدوية الحالية.'),
+          'neurology-treatment-india':('Preparing for a neurology review','Neurological assessment depends on the exact symptoms, neurological examination, timing and progression, imaging, electrical studies when relevant and previous diagnoses or treatment. Different conditions may require different neurological subspecialties.','Send neurology notes, MRI or CT reports and image files where possible, EEG or nerve-conduction studies when relevant, previous admission or procedure summaries, laboratory results and current medicines.','التحضير لمراجعة طب الأعصاب','يعتمد تقييم الأعصاب على الأعراض الدقيقة والفحص العصبي وتوقيت الأعراض وتطورها والصور الطبية والفحوص الكهربائية عند الحاجة والتشخيصات أو العلاجات السابقة. وقد تحتاج الحالات المختلفة إلى تخصصات عصبية فرعية مختلفة.','أرسل تقارير طبيب الأعصاب، وتقارير وملفات الرنين أو الأشعة المقطعية إن أمكن، وتخطيط الدماغ أو فحوص توصيل الأعصاب عند الحاجة، وملخصات الدخول للمستشفى أو الإجراءات السابقة، ونتائج التحاليل، والأدوية الحالية.'),
+          'vascular-surgery-india':('Preparing for a vascular surgery review','Vascular assessment depends on whether the concern involves arteries, veins or circulation, the severity of symptoms, ultrasound or angiographic imaging, medical risk factors and previous procedures. Treatment may be medical, endovascular or surgical after specialist review.','Send Doppler ultrasound, CT angiography or other vascular imaging reports and images where available, details of wounds or circulation symptoms, previous vascular procedures, relevant blood tests and current medicines including blood thinners.','التحضير لمراجعة جراحة الأوعية الدموية','يعتمد تقييم الأوعية على ما إذا كانت المشكلة في الشرايين أو الأوردة أو الدورة الدموية، وشدة الأعراض، ونتائج الدوبلر أو تصوير الأوعية، وعوامل الخطورة والإجراءات السابقة. وقد يكون العلاج دوائياً أو بالقسطرة أو جراحياً بعد تقييم الطبيب.','أرسل تقارير وصور الدوبلر أو الأشعة المقطعية للأوعية أو أي تصوير وعائي متاح، وتفاصيل الجروح أو أعراض ضعف الدورة الدموية، والإجراءات السابقة للأوعية، والتحاليل ذات الصلة، وقائمة الأدوية الحالية بما فيها مميعات الدم.')}
+          changed=[]
+          for slug,v in data.items():
+            for lang in ('en','ar'):
+              p=Path('treatments' if lang=='en' else 'ar/treatments')/slug/'index.html'
+              if not p.exists(): print('Missing',p);sys.exit(1)
+              s=p.read_text(encoding='utf-8')
+              if 'treatment-guidance-batch3' in s: continue
+              if lang=='en': title,body,records=v[0],v[1],v[2]; block=f'<section class="sec treatment-guidance-batch3"><div class="c"><h2>{title}</h2><div class="grid"><article class="card"><h3>What the clinical team reviews</h3><p>{body}</p></article><article class="card"><h3>Records that can help</h3><p>{records}</p></article></div><p class="lead">The treating team confirms diagnosis, suitability, investigations and treatment after individual review. Elajme India coordinates case submission and communication and does not replace medical advice.</p></div></section>'
+              else: title,body,records=v[3],v[4],v[5]; block=f'<section class="sec treatment-guidance-batch3"><div class="c"><h2>{title}</h2><div class="grid"><article class="card"><h3>ما الذي يراجعه الفريق الطبي؟</h3><p>{body}</p></article><article class="card"><h3>التقارير التي تساعد في المراجعة</h3><p>{records}</p></article></div><p class="lead">يؤكد الفريق الطبي التشخيص ومدى ملاءمة العلاج والفحوص والخطة بعد مراجعة الحالة بصورة فردية. يقتصر دور علاج مي إنديا على تنسيق إرسال الحالة والتواصل ولا يحل محل الاستشارة الطبية.</p></div></section>'
+              marker='<section class="cta">'
+              if marker not in s: print('Missing CTA marker',p);sys.exit(1)
+              p.write_text(s.replace(marker,block+marker,1),encoding='utf-8');changed.append(str(p))
+          print('Strengthened',len(changed),'batch-3 bilingual pages')
+      - name: Verify and protect
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          slugs=['pulmonology-lung-treatment-india','dermatology-skin-treatment-india','endocrinology-diabetes-care-india','pediatrics-child-health-india','nephrology-kidney-care-india','rheumatology-autoimmune-care-india','neurology-treatment-india','vascular-surgery-india']
+          issues=[]
+          for slug in slugs:
+            for root in (Path('treatments'),Path('ar/treatments')):
+              p=root/slug/'index.html'; s=p.read_text(encoding='utf-8')
+              if s.count('treatment-guidance-batch3')!=1: issues.append(str(p))
+          if issues: print('Guidance verification failed:',*issues,sep='\n');sys.exit(1)
+          print('Batch 3 verification passed for 16 bilingual pages')
+          PY
+          if git diff --name-only | grep -E '^assets/(css/(master-header|arabic-master-header|mobile-header|arabic-mobile-header|footer-approved)\.css|js/mobile-header\.js)$'; then echo 'Protected UI changed'; exit 1; fi
+      - name: Commit batch 3 strengthening
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments
+          git diff --cached --quiet && exit 0
+          git commit -m 'Strengthen third bilingual treatment content batch'
+          git push
