@@ -1,6 +1,6 @@
 name: Audit site performance once
 
-# Final verification rerun after doctor/hospital media parity cleanup.
+# Final verification rerun after doctor/hospital media parity cleanup. Rerun 2026-11-02.
 on:
   push:
     branches: [main]
