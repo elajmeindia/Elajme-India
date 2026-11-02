@@ -64,10 +64,25 @@ jobs:
             grep -Eqi '<meta[^>]+name="description"[^>]+content="[^"]+' "$page" || { echo "FAIL ${route}: missing meta description"; exit 1; }
             grep -Eqi '<link[^>]+rel="canonical"[^>]+href="https://elajmeindia\.com/' "$page" || { echo "FAIL ${route}: missing production canonical"; exit 1; }
             grep -Eqi '<meta[^>]+name="robots"[^>]+content="[^"]*index' "$page" || { echo "FAIL ${route}: missing indexable robots meta"; exit 1; }
-            grep -qi 'application/ld+json' "$page" || { echo "FAIL ${route}: missing JSON-LD structured data"; exit 1; }
             if grep -Eqi 'github\.io/Elajme-India|localhost|127\.0\.0\.1' "$page"; then
               echo "FAIL ${route}: stale non-production URL found"; exit 1
             fi
+          done
+
+          # Structured data is required on pages where the site intentionally publishes it.
+          # Directory listing pages remain valid/indexable without forcing unsupported rich-result markup.
+          schema_routes=(
+            '/'
+            '/ar/'
+            '/treatments/'
+            '/international-patients/mea/'
+            '/ar/international-patients/mea/'
+            '/patient-guide/'
+            '/ar/patient-guide/'
+          )
+          for route in "${schema_routes[@]}"; do
+            safe=$(printf '%s' "$route" | tr '/:' '__')
+            grep -qi 'application/ld+json' "$work/${safe}.html" || { echo "FAIL ${route}: missing expected JSON-LD structured data"; exit 1; }
           done
 
           grep -Eqi 'hreflang="en"[^>]+href="https://elajmeindia\.com/' "$work/_.html" || { echo 'FAIL: English homepage missing EN hreflang'; exit 1; }
