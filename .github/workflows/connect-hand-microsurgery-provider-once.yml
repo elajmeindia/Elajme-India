@@ -1,0 +1,36 @@
+name: Connect Hand Microsurgery Provider Once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/connect-hand-microsurgery-provider-once.yml']
+permissions:
+  contents: write
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Connect EN and AR provider pathways
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('treatments/hand-microsurgery-india/index.html')
+          s=p.read_text()
+          old='<div class="related"><a href="/doctors/">Browse doctors</a><a href="/hospitals/">Explore hospitals</a><a href="/#enquiry">Request case coordination through Elajme India</a></div>'
+          new='<div class="related"><a href="/doctors/dr-hardeep-singh/">Dr Hardeep Singh · Hand &amp; Reconstructive Microsurgery</a><a href="/hospitals/indraprastha-apollo-hospital-delhi/">Indraprastha Apollo Hospital, Delhi</a><a href="/doctors/">Browse doctors</a><a href="/hospitals/">Explore hospitals</a><a href="/#enquiry">Request case coordination through Elajme India</a></div><p class="lead">For hand and microsurgical cases, Elajme India can coordinate review with Dr Hardeep Singh, whom Apollo lists as a Plastic, Oncoplastic and Reconstructive Microsurgeon with specific microvascular and hand surgery expertise. Current association, availability and suitability for each case are reconfirmed before coordination.</p>'
+          assert old in s
+          p.write_text(s.replace(old,new,1))
+          p=Path('ar/treatments/hand-microsurgery-india/index.html')
+          s=p.read_text()
+          old='<div class="related"><a href="/ar/doctors/">استعرض الأطباء</a><a href="/ar/hospitals/">استعرض المستشفيات</a><a href="/ar/#enquiry">اطلب تنسيق حالتك عبر علاج مي إنديا</a></div>'
+          new='<div class="related"><a href="/ar/doctors/dr-hardeep-singh/">د. هارديب سينغ · جراحة اليد والجراحة المجهرية الترميمية</a><a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">مستشفى إندرابراستا أبولو، دلهي</a><a href="/ar/doctors/">استعرض الأطباء</a><a href="/ar/hospitals/">استعرض المستشفيات</a><a href="/ar/#enquiry">اطلب تنسيق حالتك عبر علاج مي إنديا</a></div><p class="lead">يمكن لعلاج مي إنديا تنسيق مراجعة حالات جراحة اليد والجراحة المجهرية مع د. هارديب سينغ، الذي تدرجه أبولو كاختصاصي في الجراحة التجميلية والترميمية والجراحة المجهرية مع خبرة محددة في جراحة اليد والأوعية الدقيقة. يتم تأكيد الارتباط والتوافر وملاءمة الحالة قبل التنسيق.</p>'
+          assert old in s
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit treatment integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments/hand-microsurgery-india/index.html ar/treatments/hand-microsurgery-india/index.html
+          git diff --cached --quiet || git commit -m 'Connect hand microsurgery to Dr Hardeep Singh'
+          git push
