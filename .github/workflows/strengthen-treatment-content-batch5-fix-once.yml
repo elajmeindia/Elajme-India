@@ -1,0 +1,67 @@
+name: Strengthen treatment content batch 5 fix once
+on:
+  push:
+    paths: ['.github/workflows/strengthen-treatment-content-batch5-fix-once.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  strengthen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Strengthen fifth bilingual treatment batch with corrected slug
+        shell: python
+        run: |
+          from pathlib import Path
+          import sys
+          data={
+          'dental-treatment-india':('Preparing for a dental review','Dental planning depends on the exact teeth and gum condition, bite, bone support, infection, previous dental work and whether restorative, implant, orthodontic or surgical care is being considered.','Send recent dental X-rays or CBCT when available, clear photographs if appropriate, previous dental notes, implant or crown details, relevant medical conditions and a current medicine list.','التحضير لمراجعة علاج الأسنان','يعتمد تخطيط علاج الأسنان على حالة الأسنان واللثة والإطباق ودعم العظام والالتهابات والعلاجات السابقة وما إذا كانت الخطة ترميمية أو زراعة أو تقويمية أو جراحية.','أرسل أحدث أشعة الأسنان أو CBCT إن توفرت، وصوراً واضحة عند ملاءمتها، وتقارير الأسنان السابقة، وتفاصيل الزرعات أو التركيبات، والحالات الطبية ذات الصلة، وقائمة الأدوية الحالية.'),
+          'cosmetic-surgery-india':('Preparing for plastic and reconstructive surgery review','Plastic and reconstructive surgery assessment depends on the patient’s goal, anatomy, previous surgery or injury, scars, general health and whether the purpose is reconstruction, functional improvement or cosmetic change.','Send the main concern and treatment goal, relevant photographs where appropriate, previous operation notes, imaging when relevant, medical history, smoking status and current medicines.','التحضير لمراجعة جراحة التجميل والترميم','يعتمد تقييم جراحة التجميل والترميم على هدف المريض والتشريح والعمليات أو الإصابات السابقة والندبات والصحة العامة وما إذا كان الهدف ترميمياً أو وظيفياً أو تجميلياً.','أرسل المشكلة الرئيسية والهدف من العلاج، وصوراً مناسبة عند الحاجة، وتقارير العمليات السابقة، والصور الطبية ذات الصلة، والتاريخ الطبي، وحالة التدخين، والأدوية الحالية.'),
+          'oral-maxillofacial-surgery-india':('Preparing for an oral and maxillofacial review','Assessment may involve the jaws, face, mouth, teeth or temporomandibular joint. Planning depends on the diagnosis, dental and facial imaging, bite, pathology when relevant and previous dental or facial procedures.','Send panoramic dental X-rays, CBCT or CT reports and images where available, dental notes, biopsy or pathology reports if relevant, previous surgery records and current medicines.','التحضير لمراجعة جراحة الفم والوجه والفكين','قد يشمل التقييم الفكين والوجه والفم والأسنان أو مفصل الفك. ويعتمد التخطيط على التشخيص وصور الأسنان والوجه والإطباق ونتائج علم الأمراض عند الحاجة والإجراءات السابقة.','أرسل أشعة الأسنان البانورامية وCBCT أو تقارير وصور الأشعة المقطعية إن توفرت، وتقارير الأسنان، ونتائج الخزعة أو علم الأمراض عند الحاجة، وتقارير العمليات السابقة، والأدوية الحالية.'),
+          'breast-surgery-care-india':('Preparing for a breast-surgery review','Breast-surgery assessment depends on whether the concern is benign, suspicious or cancer-related, together with examination findings, breast imaging, pathology and previous treatment. The appropriate pathway is confirmed after specialist review.','Send mammography, ultrasound or breast MRI reports and images where available, biopsy and pathology results, previous breast-surgery or oncology notes, relevant blood tests and current medicines.','التحضير لمراجعة جراحة الثدي','يعتمد تقييم جراحة الثدي على ما إذا كانت المشكلة حميدة أو مشتبه بها أو مرتبطة بالسرطان، إلى جانب نتائج الفحص وصور الثدي وعلم الأمراض والعلاج السابق. ويحدد الطبيب المسار المناسب بعد المراجعة.','أرسل تقارير وصور الماموغرام أو السونار أو رنين الثدي إن توفرت، ونتائج الخزعة وعلم الأمراض، وتقارير جراحة الثدي أو الأورام السابقة، والتحاليل ذات الصلة، والأدوية الحالية.'),
+          'hand-microsurgery-india':('Preparing for a hand and microsurgery review','Hand and microsurgery planning considers injury or disease of bone, tendon, nerve, vessel and soft tissue, together with hand function, sensation, circulation, imaging and previous repair or rehabilitation.','Send X-ray, CT or MRI reports and images where relevant, nerve-conduction studies if available, injury and operation records, photographs when appropriate, rehabilitation notes and current medicines.','التحضير لمراجعة جراحة اليد والجراحة المجهرية','يراعي تخطيط جراحة اليد والجراحة المجهرية إصابات أو أمراض العظام والأوتار والأعصاب والأوعية والأنسجة الرخوة إلى جانب وظيفة اليد والإحساس والدورة الدموية والصور والإصلاح أو التأهيل السابق.','أرسل تقارير وصور الأشعة أو الأشعة المقطعية أو الرنين عند الحاجة، وفحوص توصيل الأعصاب إن توفرت، وتقارير الإصابة والعمليات، وصوراً مناسبة عند الحاجة، وسجلات التأهيل، والأدوية الحالية.'),
+          'sleep-medicine-india':('Preparing for a sleep-medicine review','Sleep assessment depends on the main problem, sleep pattern, daytime symptoms, breathing during sleep, medical conditions, medicines and previous sleep testing. Some patients may need a formal sleep study before treatment is planned.','Send previous sleep-study results if available, ENT or respiratory notes where relevant, a summary of sleep and daytime symptoms, CPAP or other device information, medical history and current medicines.','التحضير لمراجعة طب النوم','يعتمد تقييم النوم على المشكلة الرئيسية ونمط النوم وأعراض النهار والتنفس أثناء النوم والحالات الطبية والأدوية وفحوص النوم السابقة. وقد يحتاج بعض المرضى إلى دراسة نوم رسمية قبل وضع خطة العلاج.','أرسل نتائج دراسة النوم السابقة إن وجدت، وتقارير الأنف والأذن والحنجرة أو الصدر عند الحاجة، وملخصاً لأعراض النوم والنهار، ومعلومات جهاز CPAP أو الأجهزة الأخرى، والتاريخ الطبي، والأدوية الحالية.'),
+          'clinical-genetics-genomic-medicine-india':('Preparing for a clinical-genetics review','Genetic assessment starts with the clinical question, personal and family history, examination findings and any previous genetic or laboratory testing. The specialist decides whether further testing and counselling are appropriate.','Send the main diagnosis or concern, a three-generation family history if known, previous genetic test reports, relevant pathology or laboratory results, specialist notes and records of affected relatives when available.','التحضير لمراجعة الوراثة السريرية','يبدأ تقييم الوراثة بالسؤال الطبي والتاريخ الشخصي والعائلي ونتائج الفحص وأي فحوص وراثية أو مخبرية سابقة. ويحدد الاختصاصي مدى الحاجة إلى فحوص إضافية واستشارة وراثية.','أرسل التشخيص أو المشكلة الرئيسية، وتاريخاً عائلياً لثلاثة أجيال إن أمكن، وتقارير الفحوص الوراثية السابقة، ونتائج المختبر أو علم الأمراض ذات الصلة، وتقارير الأطباء، وسجلات الأقارب المصابين إن توفرت.'),
+          'sports-medicine-india':('Preparing for a sports-medicine review','Sports-medicine assessment considers the injury mechanism, activity level, pain and instability, examination findings, imaging, previous treatment and the patient’s goal for safe return to activity or sport.','Send injury details, X-ray, ultrasound or MRI reports and images where relevant, orthopaedic or physiotherapy notes, previous injections or surgery records, rehabilitation progress and current medicines.','التحضير لمراجعة الطب الرياضي','يراعي تقييم الطب الرياضي آلية الإصابة ومستوى النشاط والألم أو عدم الثبات ونتائج الفحص والصور والعلاج السابق وهدف المريض للعودة الآمنة إلى النشاط أو الرياضة.','أرسل تفاصيل الإصابة، وتقارير وصور الأشعة أو السونار أو الرنين عند الحاجة، وتقارير العظام أو العلاج الطبيعي، وتفاصيل الحقن أو العمليات السابقة، وتقدم التأهيل، والأدوية الحالية.')}
+          changed=[]
+          for slug,v in data.items():
+            for lang in ('en','ar'):
+              p=Path('treatments' if lang=='en' else 'ar/treatments')/slug/'index.html'
+              if not p.exists(): print('Missing',p);sys.exit(1)
+              s=p.read_text(encoding='utf-8')
+              if 'treatment-guidance-batch5' in s: continue
+              if lang=='en': title,body,records=v[:3]; block=f'<section class="sec treatment-guidance-batch5"><div class="c"><h2>{title}</h2><div class="grid"><article class="card"><h3>What the clinical team reviews</h3><p>{body}</p></article><article class="card"><h3>Records that can help</h3><p>{records}</p></article></div><p class="lead">The treating team confirms diagnosis, suitability, investigations and treatment after individual review. Elajme India coordinates case submission and communication and does not replace medical advice.</p></div></section>'
+              else: title,body,records=v[3:]; block=f'<section class="sec treatment-guidance-batch5"><div class="c"><h2>{title}</h2><div class="grid"><article class="card"><h3>ما الذي يراجعه الفريق الطبي؟</h3><p>{body}</p></article><article class="card"><h3>التقارير التي تساعد في المراجعة</h3><p>{records}</p></article></div><p class="lead">يؤكد الفريق الطبي التشخيص ومدى ملاءمة العلاج والفحوص والخطة بعد مراجعة الحالة بصورة فردية. يقتصر دور علاج مي إنديا على تنسيق إرسال الحالة والتواصل ولا يحل محل الاستشارة الطبية.</p></div></section>'
+              marker='<section class="cta">'
+              if marker not in s: print('Missing CTA marker',p);sys.exit(1)
+              p.write_text(s.replace(marker,block+marker,1),encoding='utf-8');changed.append(str(p))
+          print('Strengthened',len(changed),'batch-5 bilingual pages')
+      - name: Verify and protect
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          slugs=['dental-treatment-india','cosmetic-surgery-india','oral-maxillofacial-surgery-india','breast-surgery-care-india','hand-microsurgery-india','sleep-medicine-india','clinical-genetics-genomic-medicine-india','sports-medicine-india']
+          for slug in slugs:
+            for root in ('treatments','ar/treatments'):
+              p=Path(root)/slug/'index.html'; s=p.read_text(encoding='utf-8')
+              if s.count('treatment-guidance-batch5') != 1: print('Bad block',p);sys.exit(1)
+              for token in ('wa.me/','tel:'):
+                for part in s.split(token)[1:]:
+                  target=part.split('"',1)[0]
+                  if '917488955154' not in target: print('Non-Elajme contact',p,target);sys.exit(1)
+          print('Batch 5 verification passed')
+          PY
+          git diff --exit-code HEAD -- assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css
+      - name: Commit batch 5 strengthening
+        shell: bash
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments
+          git commit -m 'Strengthen fifth bilingual treatment content batch'
+          git push
