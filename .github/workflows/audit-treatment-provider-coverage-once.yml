@@ -21,6 +21,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          from urllib.parse import urljoin, urlparse
           import re, sys
 
           root=Path('.')
@@ -34,6 +35,21 @@ jobs:
           def hrefs(text):
               return re.findall(r'\bhref=["\']([^"\']+)', text, re.I)
 
+          def provider_links(text, page_url, lang='en'):
+              docs=set(); hosps=set()
+              dp='/ar/doctors/' if lang=='ar' else '/doctors/'
+              hp='/ar/hospitals/' if lang=='ar' else '/hospitals/'
+              for raw in hrefs(text):
+                  u=urlparse(urljoin(page_url, raw))
+                  path=u.path
+                  for prefix,bucket in ((dp,docs),(hp,hosps)):
+                      if path.startswith(prefix):
+                          tail=path[len(prefix):].strip('/')
+                          # Count only individual provider profile routes, never directory/search links.
+                          if tail and '/' not in tail:
+                              bucket.add(tail)
+              return sorted(docs), sorted(hosps)
+
           en={p.parent.name:p for p in (root/'treatments').glob('*/index.html') if not redirect(p.read_text(encoding='utf-8',errors='ignore'))}
           ar={p.parent.name:p for p in (root/'ar'/'treatments').glob('*/index.html') if not redirect(p.read_text(encoding='utf-8',errors='ignore'))}
           if len(en)!=47 or len(ar)!=47:
@@ -44,9 +60,7 @@ jobs:
           counts={'A':0,'B':0,'C':0,'D':0}
           for slug,page in sorted(en.items()):
               text=page.read_text(encoding='utf-8',errors='ignore')
-              links=hrefs(text)
-              docs=sorted({h.split('/doctors/',1)[1].split('/',1)[0] for h in links if h.startswith('/doctors/') and h.split('/doctors/',1)[1]})
-              hosps=sorted({h.split('/hospitals/',1)[1].split('/',1)[0] for h in links if h.startswith('/hospitals/') and h.split('/hospitals/',1)[1]})
+              docs,hosps=provider_links(text, f'https://elajmeindia.com/treatments/{slug}/', 'en')
               if docs and hosps: grade='A'
               elif hosps: grade='B'
               elif docs: grade='C'
@@ -57,11 +71,9 @@ jobs:
               ap=ar.get(slug)
               if ap:
                   at=ap.read_text(encoding='utf-8',errors='ignore')
-                  al=hrefs(at)
-                  adocs=sorted({h.split('/ar/doctors/',1)[1].split('/',1)[0] for h in al if h.startswith('/ar/doctors/') and h.split('/ar/doctors/',1)[1]})
-                  ahosps=sorted({h.split('/ar/hospitals/',1)[1].split('/',1)[0] for h in al if h.startswith('/ar/hospitals/') and h.split('/ar/hospitals/',1)[1]})
-                  if bool(docs)!=bool(adocs) or bool(hosps)!=bool(ahosps):
-                      problems.append(f'{slug}: EN/AR provider-link type mismatch EN doctors={len(docs)} hospitals={len(hosps)} AR doctors={len(adocs)} hospitals={len(ahosps)}')
+                  adocs,ahosps=provider_links(at, f'https://elajmeindia.com/ar/treatments/{slug}/', 'ar')
+                  if set(docs)!=set(adocs) or set(hosps)!=set(ahosps):
+                      problems.append(f'{slug}: EN/AR provider mismatch EN doctors={docs} hospitals={hosps} AR doctors={adocs} hospitals={ahosps}')
 
           print(f'ACTIVE TREATMENTS EN={len(en)} AR={len(ar)}')
           print('COVERAGE CLASSIFICATION: A=doctor+hospital, B=hospital-only, C=doctor-only, D=no specific provider')
