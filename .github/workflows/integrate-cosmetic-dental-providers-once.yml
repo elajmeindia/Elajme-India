@@ -1,0 +1,36 @@
+name: Integrate cosmetic and dental providers once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/integrate-cosmetic-dental-providers-once.yml'
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Add verified provider links
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          changes = {
+            'treatments/cosmetic-surgery-india/index.html': ('<section class="sec" data-treatment-care-links="1">', '<section class="sec" data-verified-provider="1"><div class="c"><h2>Verified cosmetic and plastic surgery specialist</h2><p class="lead"><a href="/doctors/dr-anup-dhir/">Dr Anup Dhir</a> is listed by Apollo Hospitals under Cosmetology &amp; Plastic Surgery in Delhi, with cosmetic and reconstructive plastic-surgery practice. <a href="/hospitals/indraprastha-apollo-hospital-delhi/">Indraprastha Apollo Hospital, Delhi</a> is an established Elajme India hospital pathway. Association, availability and procedure suitability are reconfirmed for each case.</p><div class="related"><a href="/doctors/dr-anup-dhir/">View Dr Anup Dhir</a><a href="/hospitals/indraprastha-apollo-hospital-delhi/">View hospital</a><a href="/#enquiry">Request coordination through Elajme India</a></div></div></section><section class="sec" data-treatment-care-links="1">'),
+            'ar/treatments/cosmetic-surgery-india/index.html': ('<section class="sec" data-treatment-care-links="1">', '<section class="sec" data-verified-provider="1"><div class="c"><h2>اختصاصي موثق في جراحة التجميل والبلاستيك</h2><p class="lead"><a href="/ar/doctors/dr-anup-dhir/">د. أنوب دير</a> مدرج لدى مستشفيات أبولو ضمن جراحة التجميل والبلاستيك في دلهي، وتشمل ممارسته الجراحة التجميلية والترميمية. ويرتبط المسار أيضاً بـ <a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">مستشفى إندرابراستا أبولو، دلهي</a>. يتم إعادة تأكيد ارتباط الطبيب وتوفره ومدى ملاءمة الإجراء لكل حالة.</p><div class="related"><a href="/ar/doctors/dr-anup-dhir/">د. أنوب دير</a><a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">المستشفى</a><a href="/ar/#enquiry">اطلب التنسيق عبر علاج مي إنديا</a></div></div></section><section class="sec" data-treatment-care-links="1">'),
+            'treatments/dental-treatment-india/index.html': ('<section class="sec" data-treatment-care-links="1">', '<section class="sec" data-verified-provider="1"><div class="c"><h2>Verified dentistry specialist</h2><p class="lead"><a href="/doctors/dr-adosh-lall/">Prof. Dr Adosh Lall</a> is listed by Apollo Hospitals as a Dentistry specialist and Senior Consultant at Indraprastha Apollo Hospital, with documented work in restorative dentistry, dental implants and specialized gum-related care. <a href="/hospitals/indraprastha-apollo-hospital-delhi/">Indraprastha Apollo Hospital, Delhi</a> is linked for provider discovery. Availability and treatment suitability are reconfirmed for each case.</p><div class="related"><a href="/doctors/dr-adosh-lall/">View Dr Adosh Lall</a><a href="/hospitals/indraprastha-apollo-hospital-delhi/">View hospital</a><a href="/#enquiry">Request coordination through Elajme India</a></div></div></section><section class="sec" data-treatment-care-links="1">'),
+            'ar/treatments/dental-treatment-india/index.html': ('<section class="sec" data-treatment-care-links="1">', '<section class="sec" data-verified-provider="1"><div class="c"><h2>اختصاصي موثق في طب الأسنان</h2><p class="lead"><a href="/ar/doctors/dr-adosh-lall/">البروفيسور د. أدوش لال</a> مدرج لدى مستشفيات أبولو ضمن طب الأسنان ويعمل استشارياً أول في مستشفى إندرابراستا أبولو، مع خبرة موثقة في طب الأسنان الترميمي وزراعة الأسنان ورعاية اللثة المتخصصة. يرتبط المسار بـ <a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">مستشفى إندرابراستا أبولو، دلهي</a>. يتم إعادة تأكيد التوفر ومدى ملاءمة العلاج لكل حالة.</p><div class="related"><a href="/ar/doctors/dr-adosh-lall/">د. أدوش لال</a><a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">المستشفى</a><a href="/ar/#enquiry">اطلب التنسيق عبر علاج مي إنديا</a></div></div></section><section class="sec" data-treatment-care-links="1">')
+          }
+          for path,(needle,repl) in changes.items():
+              p=Path(path); s=p.read_text()
+              if 'data-verified-provider="1"' in s: continue
+              if needle not in s: raise SystemExit(f'marker missing: {path}')
+              p.write_text(s.replace(needle,repl,1))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments/cosmetic-surgery-india/index.html ar/treatments/cosmetic-surgery-india/index.html treatments/dental-treatment-india/index.html ar/treatments/dental-treatment-india/index.html
+          git diff --cached --quiet || git commit -m 'Connect cosmetic and dental treatments to verified providers'
+          git push
