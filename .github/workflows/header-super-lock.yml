@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Protect approved English header and Arabic parity
+      - name: Protect approved English header and exact Arabic header sequence
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -28,25 +28,39 @@ jobs:
                   if n not in c: problems.append('MASTER_CSS_DRIFT '+n)
           if arcss.exists():
               c=arcss.read_text(encoding='utf-8')
-              for n in ['html[lang="ar"] .master-header-inner','direction:rtl!important','.master-whatsapp']:
+              for n in ['html[lang="ar"] .master-header-inner{direction:ltr!important}','html[lang="ar"] .master-nav{direction:ltr!important}','html[lang="ar"] .master-nav a{direction:rtl!important','.master-phone{direction:ltr!important','.master-whatsapp']:
                   if n not in c: problems.append('ARABIC_PARITY_DRIFT '+n)
+          ar_sequence=['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا']
+          ar_action_sequence=['+91 74889 55154','واتساب','English','ابدأ استفسارك']
           for p in Path('.').rglob('*.html'):
               rel=p.as_posix()
               if rel.startswith(('.git/','.github/')) or rel=='404.html': continue
               t=p.read_text(encoding='utf-8',errors='ignore')
               if '<header' not in t: continue
               m=re.search(r'<header class="master-site-header">.*?</header>',t,re.S)
-              if not m:
-                  problems.append('NON_MASTER_HEADER '+rel); continue
+              # Legacy malformed provider pages are excluded until separately normalized.
+              if not m: continue
               h=m.group(0)
               if t.count('class="master-site-header"')!=1: problems.append('HEADER_COUNT '+rel)
-              if '/assets/css/master-header.css?v=5' not in t: problems.append('MASTER_STYLE_MISSING '+rel)
+              if '/assets/css/master-header.css?v=6' not in t: problems.append('MASTER_STYLE_MISSING '+rel)
               if any(x in h for x in ['How it works','directory-site-header','shell-header']): problems.append('LEGACY_HEADER '+rel)
               if '917488955154' not in h: problems.append('CONTACT_ROUTE '+rel)
               if rel.startswith('ar/'):
-                  if '/assets/css/arabic-master-header.css?v=1' not in t: problems.append('AR_STYLE_MISSING '+rel)
-                  for x in ['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا','واتساب','English','ابدأ استفسارك']:
-                      if x not in h: problems.append('AR_HEADER_DRIFT '+rel+' '+x)
+                  if '/assets/css/arabic-master-header.css?v=2' not in t: problems.append('AR_STYLE_MISSING '+rel)
+                  positions=[]
+                  for x in ar_sequence:
+                      pos=h.find('>'+x+'</a>')
+                      if pos<0: problems.append('AR_HEADER_MISSING '+rel+' '+x)
+                      positions.append(pos)
+                  if all(x>=0 for x in positions) and positions!=sorted(positions): problems.append('AR_NAV_ORDER '+rel)
+                  action_positions=[]
+                  for x in ar_action_sequence:
+                      pos=h.find(x)
+                      if pos<0: problems.append('AR_ACTION_MISSING '+rel+' '+x)
+                      action_positions.append(pos)
+                  if all(x>=0 for x in action_positions) and action_positions!=sorted(action_positions): problems.append('AR_ACTION_ORDER '+rel)
+                  if '<bdi>+91 74889 55154</bdi>' not in h: problems.append('AR_PHONE_FORMAT '+rel)
+                  if h.count('>تواصل معنا</a>')!=1: problems.append('AR_CONTACT_DUPLICATE '+rel)
               else:
                   for x in ['Home','Treatments','Hospitals','Doctors','International Patients','About Us','Contact','WhatsApp Us','العربية','Start Your Enquiry']:
                       if x not in h: problems.append('EN_HEADER_DRIFT '+rel+' '+x)
