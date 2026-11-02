@@ -1,0 +1,61 @@
+name: Audit bilingual master header coverage
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.html'
+      - 'assets/css/master-header.css'
+      - 'assets/css/arabic-master-header.css'
+      - '.github/workflows/audit-master-header-coverage-final.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit indexable EN and AR pages for approved master header
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          issues=[]
+          checked=0
+          for p in Path('.').rglob('*.html'):
+              if '.git' in p.parts:
+                  continue
+              s=p.read_text(encoding='utf-8', errors='ignore')
+              low=s.lower()
+              # Ignore intentional redirect/noindex shells.
+              if 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low:
+                  continue
+              if re.search(r'<meta[^>]+name=["\']robots["\'][^>]+content=["\'][^"\']*noindex', low):
+                  continue
+              checked += 1
+              is_ar = p.parts and p.parts[0] == 'ar'
+              expected = '/assets/css/arabic-master-header.css' if is_ar else '/assets/css/master-header.css'
+              if expected not in s:
+                  issues.append(f'MISSING_MASTER_CSS {p} expected {expected}')
+              if is_ar:
+                  html_tag=re.search(r'<html\b[^>]*>', s, re.I)
+                  tag=html_tag.group(0).lower() if html_tag else ''
+                  if 'lang="ar"' not in tag and "lang='ar'" not in tag:
+                      issues.append(f'AR_LANG {p}')
+                  if 'dir="rtl"' not in tag and "dir='rtl'" not in tag:
+                      issues.append(f'AR_DIR {p}')
+                  if '+91 74889 55154' in s and '<bdi>+91 74889 55154</bdi>' not in s:
+                      issues.append(f'AR_PHONE_BDI {p}')
+
+          print(f'Indexable HTML pages checked: {checked}')
+          print(f'Blocking issues: {len(issues)}')
+          for x in issues:
+              print(x)
+          if issues:
+              raise SystemExit(1)
+          print('BILINGUAL MASTER HEADER COVERAGE PASSED')
+          PY
