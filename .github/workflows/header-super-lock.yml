@@ -18,8 +18,9 @@ jobs:
           from pathlib import Path
           import hashlib,re,sys
           problems=[]
+          # Approved baseline after the verified bilingual mobile-header repair.
           locked_hashes={
-            'assets/css/master-header.css':'932ce7acbd738f1ea5a71bb0b3913635b647f255',
+            'assets/css/master-header.css':'26fcbc9a88dfa959e48e3c079790011d5001fa95',
             'assets/css/arabic-master-header.css':'3e85661d08f9a5ef7d8f586a7c8a38451c78c42e',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
@@ -32,21 +33,30 @@ jobs:
               if not p.exists(): problems.append('LOCKED_FILE_MISSING '+path); continue
               actual=git_blob_sha(p.read_bytes())
               if actual!=expected: problems.append(f'UNAPPROVED_LOCKED_FILE_CHANGE {path} expected={expected} actual={actual}')
+
           master=Path('assets/css/master-header.css').read_text(encoding='utf-8',errors='ignore')
           ar_master=Path('assets/css/arabic-master-header.css').read_text(encoding='utf-8',errors='ignore')
           mobile=Path('assets/css/mobile-header.css').read_text(encoding='utf-8',errors='ignore')
           ar_mobile=Path('assets/css/arabic-mobile-header.css').read_text(encoding='utf-8',errors='ignore')
           js=Path('assets/js/mobile-header.js').read_text(encoding='utf-8',errors='ignore')
+
           for token in ['height:82px!important','max-width:1320px!important','.master-nav{display:flex!important','.master-actions{display:flex!important','.master-cta{display:inline-flex!important']:
               if token not in master: problems.append('DESKTOP_EN_HEADER_STYLE_DRIFT '+token)
+          # These rules are the critical regression guard that prevents desktop actions/nav
+          # from reappearing beside the dedicated mobile controls.
+          for token in ['@media(max-width:900px)', '.master-actions{display:none!important}', '.master-site-header .master-header-inner>.master-nav{display:none!important}', 'height:72px!important', 'flex-wrap:nowrap!important']:
+              if token not in master: problems.append('MOBILE_MASTER_CASCADE_GUARD_DRIFT '+token)
           for token in ['html[lang="ar"] .master-header-inner{direction:rtl!important','html[lang="ar"] .master-nav{direction:rtl!important','html[lang="ar"] .master-actions{direction:rtl!important',"@import url('/assets/css/arabic-mobile-header.css?v=4');"]:
               if token not in ar_master: problems.append('AR_HEADER_STYLE_DRIFT '+token)
           if '.master-mobile-controls,.arabic-mobile-conversion-bar{display:none!important}' not in mobile: problems.append('DESKTOP_MOBILE_CONTROLS_GUARD_REMOVED')
+          for token in ['.master-actions{display:none!important}', '.master-mobile-controls{display:flex!important', '.master-site-header .master-header-inner>.master-nav{display:none!important']:
+              if token not in mobile: problems.append('MOBILE_SINGLE_ROW_GUARD_DRIFT '+token)
           for token in ["enquiry.innerHTML='<span aria-hidden=\"true\">＋</span><span>ابدأ الاستفسار</span>'","wa.innerHTML='<span>واتساب</span>'","wa.className='arabic-mobile-wa-cta'"]:
               if token not in js: problems.append('MOBILE_CTA_MARKUP_DRIFT '+token)
           if '◉' in js: problems.append('ARABIC_WHATSAPP_DOT_REINTRODUCED')
           for token in [".arabic-mobile-wa-cta::before{content:'☎'!important","width:18px!important;height:18px!important;flex:0 0 18px!important","background:#20a86b!important",".arabic-mobile-case-cta::before{content:none!important"]:
               if token not in ar_mobile: problems.append('ARABIC_MOBILE_CTA_STYLE_DRIFT '+token)
+
           ar_sequence=['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا']
           ar_actions=['+91 74889 55154','واتساب','English','ابدأ استفسارك']
           en_sequence=['Home','Treatments','Hospitals','Doctors','International Patients','About Us','Contact']
@@ -66,7 +76,12 @@ jobs:
                   if '/assets/css/master-header.css?v=6' not in t: problems.append('MASTER_HEADER_STYLE '+rel)
                   if '/assets/css/mobile-header.css?v=3' not in t: problems.append('MOBILE_HEADER_STYLE '+rel)
                   if '/assets/js/mobile-header.js?v=3' not in t: problems.append('MOBILE_HEADER_SCRIPT '+rel)
+                  if t.count('/assets/css/master-header.css?v=6')!=1: problems.append('MASTER_HEADER_STYLE_DUPLICATE '+rel)
+                  if t.count('/assets/css/mobile-header.css?v=3')!=1: problems.append('MOBILE_HEADER_STYLE_DUPLICATE '+rel)
+                  if t.count('/assets/js/mobile-header.js?v=3')!=1: problems.append('MOBILE_HEADER_SCRIPT_DUPLICATE '+rel)
                   if is_ar and '/assets/css/arabic-master-header.css?v=2' not in t: problems.append('AR_HEADER_STYLE '+rel)
+                  if h.count('class="master-actions"')!=1: problems.append('MASTER_ACTIONS_COUNT '+rel)
+                  if h.count('class="master-lang"')!=1: problems.append('MASTER_LANGUAGE_COUNT '+rel)
                   if '917488955154' not in h: problems.append('HEADER_CONTACT_ROUTE '+rel)
                   if any(x in h for x in ['How it works','directory-site-header','shell-header']): problems.append('LEGACY_HEADER '+rel)
                   seq=ar_sequence if is_ar else en_sequence; acts=ar_actions if is_ar else en_actions
@@ -85,6 +100,7 @@ jobs:
                   checked_footers+=1
                   if t.count('class="site-footer"')!=1: problems.append('FOOTER_COUNT '+rel)
                   if '/assets/css/footer-approved.css' not in t: problems.append('APPROVED_FOOTER_STYLE_MISSING '+rel)
+                  if t.count('/assets/css/footer-approved.css')!=1: problems.append('APPROVED_FOOTER_STYLE_DUPLICATE '+rel)
                   fm=re.search(r'<footer[^>]*class="[^"]*site-footer[^"]*"[^>]*>.*?</footer>',t,re.S)
                   if not fm: problems.append('FOOTER_MARKUP_INVALID '+rel); continue
                   f=fm.group(0)
