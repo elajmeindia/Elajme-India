@@ -1,0 +1,77 @@
+name: Install bilingual mobile header once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/install-mobile-header-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install mobile header assets on indexable master-header pages
+        shell: python
+        run: |
+          from pathlib import Path
+          css='<link rel="stylesheet" href="/assets/css/mobile-header.css?v=1">'
+          js='<script src="/assets/js/mobile-header.js?v=1" defer></script>'
+          changed=[]
+          for p in Path('.').rglob('*.html'):
+              s=p.as_posix()
+              if s.startswith('.git/'):
+                  continue
+              t=p.read_text(encoding='utf-8',errors='ignore')
+              low=t.lower()
+              if 'master-site-header' not in t or 'noindex' in low or 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low:
+                  continue
+              old=t
+              if '/assets/css/mobile-header.css' not in t:
+                  if '</head>' not in t.lower():
+                      raise SystemExit(f'No closing head in {s}')
+                  pos=t.lower().rfind('</head>')
+                  t=t[:pos]+css+t[pos:]
+              if '/assets/js/mobile-header.js' not in t:
+                  if '</body>' not in t.lower():
+                      raise SystemExit(f'No closing body in {s}')
+                  pos=t.lower().rfind('</body>')
+                  t=t[:pos]+js+t[pos:]
+              if t!=old:
+                  p.write_text(t,encoding='utf-8')
+                  changed.append(s)
+          print('Pages updated:',len(changed))
+          if not changed:
+              print('No changes required')
+      - name: Verify installation
+        shell: python
+        run: |
+          from pathlib import Path
+          bad=[]; checked=0
+          for p in Path('.').rglob('*.html'):
+              t=p.read_text(encoding='utf-8',errors='ignore'); low=t.lower()
+              if 'master-site-header' not in t or 'noindex' in low or 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low: continue
+              checked+=1
+              if t.count('/assets/css/mobile-header.css')!=1 or t.count('/assets/js/mobile-header.js')!=1:
+                  bad.append(p.as_posix())
+          print('Master-header pages checked:',checked)
+          print('Installation issues:',len(bad))
+          for x in bad: print(x)
+          if bad: raise SystemExit(1)
+      - name: Commit installation
+        run: |
+          if git diff --quiet -- '*.html'; then
+            echo 'No HTML changes required'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add '*.html' '**/*.html'
+          git commit -m 'Install bilingual mobile header controls sitewide'
+          git push
