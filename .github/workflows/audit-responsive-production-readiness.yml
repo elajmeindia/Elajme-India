@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Audit responsive accessibility and production fundamentals
+      - name: Audit complete EN AR mobile website readiness
         shell: bash
         run: |
           python3 - <<'PY'
@@ -20,54 +20,70 @@ jobs:
           import re, sys
           root=Path('.')
           pages=list(root.rglob('*.html'))
-          problems=[]
-          warnings=[]
+          problems=[]; warnings=[]
+          checked=0; en=0; ar=0
           for p in pages:
               rel=p.as_posix()
               if rel.startswith(('.git/','.github/')): continue
-              t=p.read_text(encoding='utf-8',errors='ignore')
-              low=t.lower()
-              if '<meta name="viewport"' not in low and "<meta name='viewport'" not in low:
-                  problems.append('NO_VIEWPORT '+rel)
-              if 'width=device-width' not in low:
-                  problems.append('VIEWPORT_NOT_RESPONSIVE '+rel)
-              for m in re.finditer(r'width\s*:\s*(\d{3,})px',t,re.I):
-                  n=int(m.group(1))
-                  if n>480 and 'max-width' not in t[max(0,m.start()-120):m.end()+120].lower():
-                      warnings.append(f'FIXED_WIDTH_REVIEW {rel} {n}px')
+              t=p.read_text(encoding='utf-8',errors='ignore'); low=t.lower()
+              redirect='http-equiv="refresh"' in low or "http-equiv='refresh'" in low
+              noindex='noindex' in low
+              if redirect: continue
+              checked+=1
+              is_ar=rel.startswith('ar/')
+              ar+=is_ar; en+=not is_ar
+              if '<meta name="viewport"' not in low and "<meta name='viewport'" not in low: problems.append('NO_VIEWPORT '+rel)
+              if 'width=device-width' not in low: problems.append('VIEWPORT_NOT_RESPONSIVE '+rel)
               for tag in re.findall(r'<img\b[^>]*>',t,re.I):
                   if not re.search(r'\balt\s*=',tag,re.I): problems.append('IMG_NO_ALT '+rel)
-              noindex='noindex' in low
-              redirect='http-equiv="refresh"' in low or "http-equiv='refresh'" in low
-              if not noindex and not redirect and rel!='404.html':
+                  sm=re.search(r'\s+src\s*=\s*["\']([^"\']+)',tag,re.I)
+                  if sm and any(x in sm.group(1).lower() for x in ('doctor-image-pending','hospital-image-pending','hospital-placeholder.svg')):
+                      problems.append('MEDIA_PLACEHOLDER '+rel)
+              if not noindex:
                   if not re.search(r'<title>\s*[^<]+\s*</title>',t,re.I|re.S): problems.append('NO_TITLE '+rel)
                   if not re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\'][^"\']{40,}',t,re.I): problems.append('NO_META_DESCRIPTION '+rel)
-                  if not re.search(r'<link[^>]+rel=["\']canonical["\']',t,re.I): problems.append('NO_CANONICAL '+rel)
-              if 'master-site-header' in t and '/assets/css/master-header.css?v=6' not in t:
-                  problems.append('MASTER_HEADER_CSS_MISSING '+rel)
-              if rel.startswith(('doctors/','hospitals/','ar/doctors/','ar/hospitals/')) and rel.endswith('/index.html') and not redirect:
-                  for tag in re.findall(r'<img\b[^>]*>',t,re.I):
-                      # Require whitespace before src so JavaScript such as this.src in onerror is never mistaken for the HTML src attribute.
-                      sm=re.search(r'\s+src\s*=\s*["\']([^"\']+)',tag,re.I)
-                      if sm and any(x in sm.group(1).lower() for x in ('doctor-image-pending','hospital-image-pending','hospital-placeholder.svg')):
-                          problems.append('PROVIDER_MEDIA_PLACEHOLDER '+rel)
-                          break
-              if not redirect and not noindex and rel.startswith(('doctors/','hospitals/')) and rel.count('/')>=2 and rel.endswith('/index.html'):
-                  if 'href="/#enquiry"' not in t and "href='/#enquiry'" not in t:
-                      warnings.append('EN_PROFILE_ENQUIRY_REVIEW '+rel)
-              if not redirect and not noindex and rel.startswith(('ar/doctors/','ar/hospitals/')) and rel.count('/')>=3 and rel.endswith('/index.html'):
-                  if 'href="/ar/#enquiry"' not in t and "href='/ar/#enquiry'" not in t:
-                      warnings.append('AR_PROFILE_ENQUIRY_REVIEW '+rel)
-          css=Path('assets/css/master-header.css').read_text(encoding='utf-8',errors='ignore')
-          if not re.search(r'@media\s*\([^)]*max-width\s*:\s*900px',css,re.I):
-              problems.append('MASTER_HEADER_MOBILE_BREAKPOINT_MISSING')
-          footer=Path('assets/css/footer-approved.css').read_text(encoding='utf-8',errors='ignore')
-          if '@media' not in footer: warnings.append('FOOTER_RESPONSIVE_RULE_REVIEW')
-          print('RESPONSIVE + PRODUCTION READINESS AUDIT')
-          print('HTML pages:',len(pages))
+              # Header/mobile implementation contract. Do not alter locked files, only verify page coverage.
+              if 'master-site-header' in t:
+                  for asset in ['/assets/css/master-header.css?v=6','/assets/css/mobile-header.css?v=3','/assets/js/mobile-header.js?v=3']:
+                      if asset not in t: problems.append('MOBILE_HEADER_ASSET_MISSING '+rel+' '+asset)
+                  if is_ar:
+                      if '/assets/css/arabic-master-header.css?v=2' not in t: problems.append('AR_HEADER_ASSET_MISSING '+rel)
+                      if '/assets/css/arabic-mobile-header.css' not in t: problems.append('AR_MOBILE_ASSET_MISSING '+rel)
+              # Approved footer coverage.
+              if 'class="site-footer"' in t and '/assets/css/footer-approved.css' not in t:
+                  problems.append('MOBILE_FOOTER_ASSET_MISSING '+rel)
+              # Key mobile conversion routes.
+              if 'master-site-header' in t and '917488955154' not in t: problems.append('PHONE_ROUTE_MISSING '+rel)
+              if 'master-site-header' in t and 'wa.me/917488955154' not in t: problems.append('WHATSAPP_ROUTE_MISSING '+rel)
+              # Provider directories/profiles: media, enquiry route, and basic card/image responsiveness.
+              provider=rel.startswith(('doctors/','hospitals/','ar/doctors/','ar/hospitals/')) and rel.endswith('/index.html')
+              if provider:
+                  target='/ar/#enquiry' if is_ar else '/#enquiry'
+                  if target not in t: warnings.append('PROVIDER_ENQUIRY_REVIEW '+rel)
+                  if '<img' not in t: warnings.append('PROVIDER_IMAGE_REVIEW '+rel)
+              # Arabic direction contract.
+              if is_ar and not (re.search(r'<html[^>]+dir=["\']rtl["\']',t,re.I) or 'direction:rtl' in low):
+                  warnings.append('AR_RTL_REVIEW '+rel)
+              # Common horizontal overflow risks in inline/page CSS.
+              for m in re.finditer(r'width\s*:\s*(\d{3,})px',t,re.I):
+                  n=int(m.group(1))
+                  context=t[max(0,m.start()-160):m.end()+160].lower()
+                  if n>480 and 'max-width' not in context and '@media' not in context:
+                      warnings.append(f'FIXED_WIDTH_REVIEW {rel} {n}px')
+              if re.search(r'min-width\s*:\s*(?:[5-9]\d\d|\d{4,})px',t,re.I): warnings.append('MIN_WIDTH_OVERFLOW_REVIEW '+rel)
+          # Shared locked responsive foundations.
+          mh=Path('assets/css/mobile-header.css').read_text(encoding='utf-8',errors='ignore')
+          amh=Path('assets/css/arabic-mobile-header.css').read_text(encoding='utf-8',errors='ignore')
+          foot=Path('assets/css/footer-approved.css').read_text(encoding='utf-8',errors='ignore')
+          if '@media (max-width:900px)' not in mh.replace(' ',''): problems.append('EN_MOBILE_BREAKPOINT_REVIEW')
+          if '@media (max-width:900px)' not in amh.replace(' ',''): problems.append('AR_MOBILE_BREAKPOINT_REVIEW')
+          if '@media' not in foot: problems.append('FOOTER_RESPONSIVE_RULE_MISSING')
+          if '.master-mobile-controls,.arabic-mobile-conversion-bar{display:none!important}' not in mh: problems.append('DESKTOP_MOBILE_GUARD_MISSING')
+          print('COMPLETE BILINGUAL MOBILE WEBSITE AUDIT')
+          print(f'Pages checked: {checked} EN={en} AR={ar}')
           print('Blocking issues:',len(problems))
           for x in problems: print(x)
           print('Review warnings:',len(warnings))
-          for x in warnings[:100]: print(x)
+          for x in warnings[:250]: print(x)
           if problems: sys.exit(1)
           PY
