@@ -4,6 +4,10 @@
 /index.html / 301
 /ar/index.html /ar/ 301
 
+# Canonical International Patients landing routes.
+/international-patients/ /international-patients/mea/ 301
+/ar/international-patients/ /ar/international-patients/mea/ 301
+
 # Preserve SEO equity from a legacy orthopaedic treatment URL that Google discovered.
 /treatments/orthopedic-treatment-india/ /treatments/knee-replacement-india/ 301
 
