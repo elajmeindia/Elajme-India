@@ -1,4 +1,4 @@
-name: Add treatment specialties 32 and 33 once
+name: Fix treatment directory and add specialties 32 and 33 once
 on:
   workflow_dispatch:
   push:
@@ -13,46 +13,46 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Add nephrology and ophthalmology bilingual specialties
+      - name: Repair visible directory and add two distinct bilingual specialties
         shell: python
         run: |
           from pathlib import Path
           en_base=Path('treatments/pediatrics-child-health-india/index.html').read_text(encoding='utf-8')
           ar_base=Path('ar/treatments/pediatrics-child-health-india/index.html').read_text(encoding='utf-8')
-          specs=[
-            ('nephrology-kidney-treatment-india','Nephrology & Kidney Care','Kidney care coordination','Nephrology and kidney treatment in India for international patients','kidney and nephrology conditions','أمراض الكلى','علاج أمراض الكلى في الهند للمرضى الدوليين','أمراض الكلى'),
-            ('ophthalmology-eye-treatment-india','Ophthalmology & Eye Care','Eye care coordination','Ophthalmology and eye treatment in India for international patients','eye and ophthalmology conditions','طب وجراحة العيون','علاج أمراض وجراحة العيون في الهند للمرضى الدوليين','أمراض العيون')]
-          for slug,title,ey,h1,condition,artitle,arh1,arcondition in specs:
+          new=[
+            ('interventional-radiology-treatment-india','Interventional Radiology','Interventional radiology coordination','Interventional radiology treatment in India for international patients','conditions considered for image-guided interventional procedures','الأشعة التداخلية','العلاج بالأشعة التداخلية في الهند للمرضى الدوليين','الأشعة التداخلية'),
+            ('thoracic-chest-surgery-india','Thoracic & Chest Surgery','Thoracic surgery coordination','Thoracic and chest surgery in India for international patients','thoracic and chest conditions','جراحة الصدر','جراحة الصدر في الهند للمرضى الدوليين','جراحة الصدر')]
+          for slug,title,ey,h1,condition,artitle,arh1,arcondition in new:
             e=en_base.replace('Pediatrics & Child Health in India | Elajme India',f'{title} in India | Elajme India').replace('Pediatric and child-health enquiry coordination in India for international patients, with specialist review arranged through Elajme India.',f'{title} enquiry coordination in India for international patients, with specialist review arranged through Elajme India.').replace('pediatrics-child-health-india',slug).replace('Pediatric care coordination',ey).replace('Pediatrics and child health in India for international patients',h1).replace('pediatric and child-health enquiries',f'{title.lower()} enquiries').replace('individual pediatric assessment','individual specialist assessment').replace('Pediatric assessment','Specialist assessment').replace('The pediatric team reviews the child’s symptoms, diagnosis, growth and development, previous treatment and relevant medical history.',f'The specialist team reviews symptoms, diagnosis, previous treatment, relevant investigations and medical history for {condition}.').replace('Specialist pediatric care','Condition-specific care').replace('Depending on the condition, the child may be reviewed by general pediatrics or an appropriate pediatric subspecialty team.','Depending on the condition, additional investigations or multidisciplinary specialist review may be recommended by the treating team.').replace('Family-centred follow-up','Treatment and follow-up').replace('The treating team explains investigations, treatment and follow-up requirements to the child’s parent or legal guardian.','The treating team determines appropriate investigations, treatment options and follow-up according to the individual clinical assessment.').replace('the child’s diagnosis, age, growth information, recent pediatric notes, blood tests, imaging, discharge summaries, vaccination history when relevant, previous treatment and current medicines','the diagnosis, recent specialist notes, blood tests, imaging or other relevant investigations, previous treatment and current medicines').replace('Start a pediatric care enquiry',f'Start a {title.lower()} enquiry')
             Path('treatments',slug).mkdir(parents=True,exist_ok=True); Path('treatments',slug,'index.html').write_text(e,encoding='utf-8')
             a=ar_base.replace('طب الأطفال وصحة الطفل في الهند | علاج مي إنديا',f'{artitle} في الهند | علاج مي إنديا').replace('pediatrics-child-health-india',slug).replace('طب الأطفال وصحة الطفل في الهند للمرضى الدوليين',arh1).replace('استفسارات طب الأطفال وصحة الطفل',f'استفسارات {arcondition}').replace('تقييماً فردياً من طبيب الأطفال','تقييماً طبياً فردياً من الطبيب المختص').replace('تقييم طب الأطفال','التقييم التخصصي').replace('يراجع فريق طب الأطفال أعراض الطفل وتشخيصه ونموه وتطوره والعلاج السابق والتاريخ الطبي ذي الصلة.',f'يراجع الفريق المختص الأعراض والتشخيص والعلاجات السابقة والفحوصات والتاريخ الطبي المرتبط بـ{arcondition}.').replace('الرعاية التخصصية للأطفال','الرعاية حسب الحالة').replace('قد يحتاج الطفل، حسب الحالة، إلى مراجعة طب الأطفال العام أو أحد تخصصات طب الأطفال الفرعية المناسبة.','قد تتطلب الحالة فحوصات إضافية أو مراجعة متعددة التخصصات وفق تقييم الفريق المعالج.').replace('المتابعة مع الأسرة','العلاج والمتابعة').replace('يشرح الفريق المعالج الفحوصات والعلاج والمتابعة المطلوبة لوالد الطفل أو الوصي القانوني.','يحدد الفريق المعالج الفحوصات وخيارات العلاج والمتابعة المناسبة وفق التقييم السريري الفردي.').replace('تشخيص الطفل وعمره ومعلومات النمو وتقارير طب الأطفال الحديثة وتحاليل الدم والصور الطبية وملخصات الخروج وسجل التطعيم عند الحاجة والعلاجات السابقة والأدوية الحالية','التشخيص والتقارير التخصصية الحديثة وتحاليل الدم والصور أو الفحوصات ذات الصلة والعلاجات السابقة والأدوية الحالية').replace('ابدأ استفسار رعاية الأطفال',f'ابدأ استفسار {arcondition}')
             Path('ar/treatments',slug).mkdir(parents=True,exist_ok=True); Path('ar/treatments',slug,'index.html').write_text(a,encoding='utf-8')
+          all_tail=[
+            ('nephrology-kidney-care-india','Nephrology & Kidney Care','أمراض الكلى ورعاية الكلى'),('rheumatology-autoimmune-care-india','Rheumatology & Autoimmune Care','الروماتيزم وأمراض المناعة الذاتية'),('hematology-blood-disorders-india','Hematology & Blood Disorders','أمراض الدم'),('vascular-surgery-india','Vascular Surgery & Vein Care','جراحة الأوعية الدموية'),('neurology-treatment-india','Neurology & Neurological Care','طب الأعصاب'),('physical-medicine-rehabilitation-india','Physical Medicine & Rehabilitation','الطب الطبيعي وإعادة التأهيل'),('psychiatry-mental-health-india','Psychiatry & Mental Health','الطب النفسي والصحة النفسية'),('infectious-diseases-treatment-india','Infectious Diseases','الأمراض المعدية'),('pain-management-treatment-india','Pain Management','علاج الألم'),('geriatric-medicine-india','Geriatric Medicine & Elderly Care','طب المسنين ورعاية كبار السن'),('interventional-radiology-treatment-india','Interventional Radiology','الأشعة التداخلية'),('thoracic-chest-surgery-india','Thoracic & Chest Surgery','جراحة الصدر')]
           en=Path('treatments/index.html'); s=en.read_text(encoding='utf-8').replace('31 Specialties','33 Specialties').replace('31 medical treatment areas','33 medical treatment areas')
-          anchor='{"@type":"ListItem","position":31,"name":"Geriatric Medicine & Elderly Care","url":"https://elajmeindia.com/treatments/geriatric-medicine-elderly-care-india/"}'
+          anchor='{"@type":"ListItem","position":31,"name":"Geriatric Medicine & Elderly Care","url":"https://elajmeindia.com/treatments/geriatric-medicine-india/"}'
           if '"position":32' not in s:
-            extra=''.join([f',{{"@type":"ListItem","position":{i},"name":"{title}","url":"https://elajmeindia.com/treatments/{slug}/"}}' for i,(slug,title,*_) in enumerate(specs,32)])
-            s=s.replace(anchor,anchor+extra)
+            s=s.replace(anchor,anchor+',{"@type":"ListItem","position":32,"name":"Interventional Radiology","url":"https://elajmeindia.com/treatments/interventional-radiology-treatment-india/"},{"@type":"ListItem","position":33,"name":"Thoracic & Chest Surgery","url":"https://elajmeindia.com/treatments/thoracic-chest-surgery-india/"}')
           marker='</div></div></section><section class="sec alt">'
-          cards=''.join([f'<article class="card"><h3><a href="{slug}/">{title}</a></h3><p>{title} specialist review and international-patient enquiry coordination.</p></article>' for slug,title,*_ in specs])
-          if 'nephrology-kidney-treatment-india/' not in s: s=s.replace(marker,cards+marker,1)
-          en.write_text(s,encoding='utf-8')
+          cards=''.join(f'<article class="card"><h3><a href="{slug}/">{title}</a></h3><p>{title} specialist review and international-patient enquiry coordination.</p></article>' for slug,title,_ in all_tail if f'href="{slug}/"' not in s)
+          s=s.replace(marker,cards+marker,1); en.write_text(s,encoding='utf-8')
           ar=Path('ar/treatments/index.html'); a=ar.read_text(encoding='utf-8'); amarker='</div><div class="note">'
-          acards=''.join([f'<article class="card"><h3>{artitle}</h3><p>تنسيق المراجعة التخصصية والاستفسارات للمرضى الدوليين.</p><a href="{slug}/">عرض التفاصيل</a></article>' for slug,_,_,_,_,artitle,_,_ in specs])
-          if 'nephrology-kidney-treatment-india/' not in a: a=a.replace(amarker,acards+amarker,1)
-          ar.write_text(a,encoding='utf-8')
+          acards=''.join(f'<article class="card"><h3>{artitle}</h3><p>تنسيق المراجعة التخصصية والاستفسارات للمرضى الدوليين.</p><a href="{slug}/">عرض التفاصيل</a></article>' for slug,_,artitle in all_tail if f'href="{slug}/"' not in a)
+          a=a.replace(amarker,acards+amarker,1); ar.write_text(a,encoding='utf-8')
           sm=Path('sitemap.xml'); x=sm.read_text(encoding='utf-8'); add=''
-          for slug,*_ in specs:
+          for slug,*_ in new:
             for prefix in ('/treatments/','/ar/treatments/'):
               u='https://elajmeindia.com'+prefix+slug+'/'
               if u not in x: add+=f'  <url><loc>{u}</loc></url>\n'
           sm.write_text(x.replace('</urlset>',add+'</urlset>'),encoding='utf-8')
-      - name: Verify specialties 32 and 33
+      - name: Verify all visible cards 22 through 33 and new pages
         run: |
-          for p in nephrology-kidney-treatment-india ophthalmology-eye-treatment-india; do
-            test -f "treatments/$p/index.html"
-            test -f "ar/treatments/$p/index.html"
-            grep -q "$p/" treatments/index.html
-            grep -q "$p/" ar/treatments/index.html
+          for p in nephrology-kidney-care-india rheumatology-autoimmune-care-india hematology-blood-disorders-india vascular-surgery-india neurology-treatment-india physical-medicine-rehabilitation-india psychiatry-mental-health-india infectious-diseases-treatment-india pain-management-treatment-india geriatric-medicine-india interventional-radiology-treatment-india thoracic-chest-surgery-india; do
+            grep -q "href=\"$p/\"" treatments/index.html
+            grep -q "href=\"$p/\"" ar/treatments/index.html
+          done
+          for p in interventional-radiology-treatment-india thoracic-chest-surgery-india; do
+            test -f "treatments/$p/index.html"; test -f "ar/treatments/$p/index.html"
             grep -q "https://elajmeindia.com/treatments/$p/" sitemap.xml
             grep -q "https://elajmeindia.com/ar/treatments/$p/" sitemap.xml
           done
@@ -65,5 +65,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add treatments ar/treatments sitemap.xml
           git diff --cached --quiet && exit 0
-          git commit -m 'Expand bilingual treatment directory to 33 specialties'
+          git commit -m 'Repair visible treatment directory and expand to 33 specialties'
           git push
