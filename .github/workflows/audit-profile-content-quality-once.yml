@@ -1,0 +1,103 @@
+name: Audit doctor hospital profile content quality once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-profile-content-quality-once.yml'
+      - 'doctors/**/index.html'
+      - 'ar/doctors/**/index.html'
+      - 'hospitals/**/index.html'
+      - 'ar/hospitals/**/index.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit bilingual profile quality and internal connections
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+
+          root=Path('.')
+          problems=[]
+          report=[]
+
+          def redirect(text):
+              low=text.lower()
+              return 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low
+
+          def hrefs(text):
+              return re.findall(r'\bhref=["\']([^"\']+)', text, re.I)
+
+          for kind in ('doctors','hospitals'):
+              en_pages={p.parent.name:p for p in (root/kind).glob('*/index.html') if not redirect(p.read_text(encoding='utf-8',errors='ignore'))}
+              ar_pages={p.parent.name:p for p in (root/'ar'/kind).glob('*/index.html') if not redirect(p.read_text(encoding='utf-8',errors='ignore'))}
+              if set(en_pages)!=set(ar_pages):
+                  problems.append(f'{kind}: active EN/AR profile mismatch EN-only={sorted(set(en_pages)-set(ar_pages))} AR-only={sorted(set(ar_pages)-set(en_pages))}')
+
+              for slug,p in en_pages.items():
+                  for lang,page in [('EN',p),('AR',ar_pages.get(slug))]:
+                      if page is None: continue
+                      text=page.read_text(encoding='utf-8',errors='ignore')
+                      low=text.lower(); links=hrefs(text)
+                      expected='/#enquiry' if lang=='EN' else '/ar/#enquiry'
+                      other_prefix='/hospitals/' if kind=='doctors' else '/doctors/'
+                      if lang=='AR': other_prefix='/ar'+other_prefix
+                      treatment_prefix='/treatments/' if lang=='EN' else '/ar/treatments/'
+
+                      checks={
+                          'title':'<title>' in low and '</title>' in low,
+                          'description':'name="description"' in low or "name='description'" in low,
+                          'canonical':'rel="canonical"' in low or "rel='canonical'" in low,
+                          'hreflang-en':'hreflang="en"' in low or "hreflang='en'" in low,
+                          'hreflang-ar':'hreflang="ar"' in low or "hreflang='ar'" in low,
+                          'h1':'<h1' in low,
+                          'enquiry':expected in text,
+                          'approved-footer':'footer-approved.css' in text,
+                      }
+                      if lang=='AR': checks['rtl']='dir="rtl"' in low or "dir='rtl'" in low
+                      for label,ok in checks.items():
+                          if not ok: problems.append(f'{page}: missing {label}')
+
+                      if not any(h.startswith(treatment_prefix) for h in links):
+                          problems.append(f'{page}: no related treatment link')
+                      if not any(h.startswith(other_prefix) for h in links):
+                          problems.append(f'{page}: no related {"hospital" if kind=="doctors" else "doctor"} link')
+
+                      if any(x in low for x in ('lorem ipsum','coming soon','to be updated','dummy text')):
+                          problems.append(f'{page}: placeholder/incomplete copy')
+
+                      active=text.split('<footer',1)[0]
+                      for h in hrefs(active):
+                          hl=h.lower()
+                          if ('wa.me/' in hl or hl.startswith('tel:')) and '7488955154' not in hl:
+                              problems.append(f'{page}: non-Elajme contact route {h}')
+
+              report.append(f'{kind.upper()} EN={len(en_pages)} AR={len(ar_pages)}')
+
+          print('\n'.join(report))
+          if problems:
+              print('PROFILE QUALITY ISSUES:')
+              print('\n'.join(problems))
+              sys.exit(1)
+          print('BILINGUAL DOCTOR/HOSPITAL PROFILE QUALITY AUDIT CLEAN')
+          PY
+      - name: Verify protected header footer assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object assets/css/master-header.css)" = "26fcbc9a88dfa959e48e3c079790011d5001fa95"
+          test "$(git hash-object assets/css/arabic-master-header.css)" = "3e85661d08f9a5ef7d8f586a7c8a38451c78c42e"
+          test "$(git hash-object assets/css/mobile-header.css)" = "e2e1b33e23b0881749c0cc019f622fc793cbce45"
+          test "$(git hash-object assets/css/arabic-mobile-header.css)" = "19af6f197ce194a9c9c043c8e22c5703a8c86ced"
+          test "$(git hash-object assets/js/mobile-header.js)" = "171e2202591dda27ed852edfbd6754ba46157060"
+          test "$(git hash-object assets/css/footer-approved.css)" = "05faf239dd9cf39a19b41e596f433c99989c1e9b"
