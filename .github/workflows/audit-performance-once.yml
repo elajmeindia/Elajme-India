@@ -1,6 +1,6 @@
 name: Audit site performance once
 
-# Final verification rerun after image optimization and accessibility cleanup.
+# Final verification rerun after conversion journey QA.
 on:
   push:
     branches: [main]
