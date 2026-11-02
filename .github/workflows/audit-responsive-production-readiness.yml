@@ -45,15 +45,13 @@ jobs:
                   if not re.search(r'<link[^>]+rel=["\']canonical["\']',t,re.I): problems.append('NO_CANONICAL '+rel)
               if 'master-site-header' in t and '/assets/css/master-header.css?v=6' not in t:
                   problems.append('MASTER_HEADER_CSS_MISSING '+rel)
-              # Only flag an actual provider image src that points to a pending/placeholder asset.
-              # A verified image may legitimately use the generic placeholder only as an onerror fallback.
               if rel.startswith(('doctors/','hospitals/','ar/doctors/','ar/hospitals/')) and rel.endswith('/index.html') and not redirect:
                   for tag in re.findall(r'<img\b[^>]*>',t,re.I):
-                      sm=re.search(r'\bsrc\s*=\s*["\']([^"\']+)',tag,re.I)
+                      # Require whitespace before src so JavaScript such as this.src in onerror is never mistaken for the HTML src attribute.
+                      sm=re.search(r'\s+src\s*=\s*["\']([^"\']+)',tag,re.I)
                       if sm and any(x in sm.group(1).lower() for x in ('doctor-image-pending','hospital-image-pending','hospital-placeholder.svg')):
                           problems.append('PROVIDER_MEDIA_PLACEHOLDER '+rel)
                           break
-              # Only canonical provider profiles need Elajme-owned enquiry CTAs. Legacy noindex redirects are excluded.
               if not redirect and not noindex and rel.startswith(('doctors/','hospitals/')) and rel.count('/')>=2 and rel.endswith('/index.html'):
                   if 'href="/#enquiry"' not in t and "href='/#enquiry'" not in t:
                       warnings.append('EN_PROFILE_ENQUIRY_REVIEW '+rel)
