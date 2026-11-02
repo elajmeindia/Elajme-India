@@ -1,0 +1,31 @@
+name: Integrate Palliative Provider Once
+on:
+  push:
+    paths: ['.github/workflows/integrate-palliative-provider-once.yml']
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add verified provider links EN and AR
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          files=[
+            ('treatments/palliative-supportive-care-india/index.html','<section class="sec provider-match"><div class="c"><h2>Verified supportive-care pathway</h2><p class="lead"><a href="/doctors/dr-saveena-gulati-raheja/">Dr Saveena Gulati Raheja</a> is a Medical Oncologist at <a href="/hospitals/indraprastha-apollo-hospital-delhi/">Indraprastha Apollo Hospital, Delhi</a>. Apollo documents her supportive-oncology work, palliative-care certification and experience establishing a palliative-care unit. Her primary specialty remains Medical Oncology, so the appropriate palliative or multidisciplinary team is reconfirmed for every case.</p><div class="related"><a href="/doctors/dr-saveena-gulati-raheja/">View doctor profile</a><a href="/hospitals/indraprastha-apollo-hospital-delhi/">View hospital</a><a href="/#enquiry">Request coordination through Elajme India</a></div></div></section>'),
+            ('ar/treatments/palliative-supportive-care-india/index.html','<section class="sec provider-match"><div class="c"><h2>مسار رعاية داعمة موثّق</h2><p class="lead"><a href="/ar/doctors/dr-saveena-gulati-raheja/">د. سافينا غولاتي راهيجا</a> اختصاصية في الأورام الطبية في <a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">مستشفى إندرابراستا أبولو، دلهي</a>. توثق أبولو خبرتها في الرعاية الداعمة لمرضى الأورام وشهاداتها في الرعاية التلطيفية وخبرتها في إنشاء وحدة للرعاية التلطيفية. يبقى تخصصها الأساسي الأورام الطبية، لذلك تتم إعادة تأكيد الطبيب والفريق الأنسب لكل حالة بعد مراجعة التقارير.</p><div class="related"><a href="/ar/doctors/dr-saveena-gulati-raheja/">ملف الطبيبة</a><a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">المستشفى</a><a href="/ar/#enquiry">اطلب التنسيق عبر علاج مي إنديا</a></div></div></section>')]
+          for fn,block in files:
+            p=Path(fn); s=p.read_text()
+            if 'provider-match' not in s:
+              s=s.replace('<section class="cta">',block+'<section class="cta">')
+              p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add treatments/palliative-supportive-care-india/index.html ar/treatments/palliative-supportive-care-india/index.html
+          git diff --cached --quiet || git commit -m 'Connect palliative supportive care to verified provider'
+          git push
