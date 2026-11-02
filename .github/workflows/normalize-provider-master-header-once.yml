@@ -1,0 +1,65 @@
+name: Normalize legacy provider pages to approved master header
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/normalize-provider-master-header-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Add approved master header styles to legacy indexable provider pages
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          changed=[]
+          for root in ('doctors','hospitals','ar/doctors','ar/hospitals'):
+              base=Path(root)
+              if not base.exists():
+                  continue
+              for p in base.rglob('index.html'):
+                  s=p.read_text(encoding='utf-8', errors='ignore')
+                  low=s.lower()
+                  if 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low:
+                      continue
+                  if re.search(r'<meta[^>]+name=["\']robots["\'][^>]+content=["\'][^"\']*noindex', low):
+                      continue
+                  is_ar=p.parts[0]=='ar'
+                  css='/assets/css/arabic-master-header.css?v=2' if is_ar else '/assets/css/master-header.css?v=6'
+                  marker='/assets/css/arabic-master-header.css' if is_ar else '/assets/css/master-header.css'
+                  if marker in s:
+                      continue
+                  link=f'  <link rel="stylesheet" href="{css}">\n'
+                  if '</head>' not in s:
+                      print('SKIP_NO_HEAD', p)
+                      continue
+                  s=s.replace('</head>', link+'</head>', 1)
+                  p.write_text(s, encoding='utf-8')
+                  changed.append(str(p))
+
+          print('Provider pages normalized:', len(changed))
+          for p in changed:
+              print(p)
+          PY
+      - name: Commit normalized provider header coverage
+        run: |
+          if git diff --quiet; then
+            echo 'No provider header normalization required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add doctors hospitals ar/doctors ar/hospitals
+          git commit -m 'Normalize provider pages to approved master header'
+          git push
