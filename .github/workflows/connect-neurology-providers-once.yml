@@ -1,0 +1,71 @@
+name: Connect verified neurology providers once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/connect-neurology-providers-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Connect bilingual neurology pages to verified neuroscience provider profiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          pairs = [
+            (
+              Path('treatments/neurology-treatment-india/index.html'),
+              '<div class="related"><a href="/doctors/">Browse doctors</a><a href="/hospitals/">Explore hospitals</a><a href="/#enquiry">Request case coordination through Elajme India</a></div>',
+              '<div class="related"><a href="/doctors/dr-aditya-gupta/">Dr. Aditya Gupta · Neurosurgery, neuro-oncology &amp; CNS radiosurgery</a><a href="/hospitals/artemis-hospital-gurugram/">Artemis Hospital Gurugram · Neurosciences</a><a href="/doctors/">Browse more doctors</a><a href="/hospitals/">Explore more hospitals</a><a href="/#enquiry">Request case coordination through Elajme India</a></div>'
+            ),
+            (
+              Path('ar/treatments/neurology-treatment-india/index.html'),
+              '<div class="related"><a href="/ar/doctors/">استعرض الأطباء</a><a href="/ar/hospitals/">استعرض المستشفيات</a><a href="/ar/#enquiry">اطلب تنسيق حالتك عبر علاج مي إنديا</a></div>',
+              '<div class="related"><a href="/ar/doctors/dr-aditya-gupta/">د. أديتيا غوبتا · جراحة الأعصاب وأورام الأعصاب والجراحة الإشعاعية للجهاز العصبي المركزي</a><a href="/ar/hospitals/artemis-hospital-gurugram/">مستشفى أرتيمس، غوروغرام · علوم الأعصاب</a><a href="/ar/doctors/">استعرض المزيد من الأطباء</a><a href="/ar/hospitals/">استعرض المزيد من المستشفيات</a><a href="/ar/#enquiry">اطلب تنسيق حالتك عبر علاج مي إنديا</a></div>'
+            )
+          ]
+          for path, old, new in pairs:
+              text=path.read_text(encoding='utf-8')
+              if new in text:
+                  continue
+              if old not in text:
+                  raise SystemExit(f'Expected generic provider block not found in {path}')
+              path.write_text(text.replace(old,new,1), encoding='utf-8')
+
+          en=Path('treatments/neurology-treatment-india/index.html').read_text(encoding='utf-8')
+          ar=Path('ar/treatments/neurology-treatment-india/index.html').read_text(encoding='utf-8')
+          for needle in ['/doctors/dr-aditya-gupta/','/hospitals/artemis-hospital-gurugram/','href="/#enquiry"']:
+              if needle not in en: raise SystemExit(f'EN missing {needle}')
+          for needle in ['/ar/doctors/dr-aditya-gupta/','/ar/hospitals/artemis-hospital-gurugram/','href="/ar/#enquiry"']:
+              if needle not in ar: raise SystemExit(f'AR missing {needle}')
+          PY
+          test "$(git hash-object assets/css/master-header.css)" = "26fcbc9a88dfa959e48e3c079790011d5001fa95"
+          test "$(git hash-object assets/css/arabic-master-header.css)" = "3e85661d08f9a5ef7d8f586a7c8a38451c78c42e"
+          test "$(git hash-object assets/css/mobile-header.css)" = "e2e1b33e23b0881749c0cc019f622fc793cbce45"
+          test "$(git hash-object assets/css/arabic-mobile-header.css)" = "19af6f197ce194a9c9c043c8e22c5703a8c86ced"
+          test "$(git hash-object assets/js/mobile-header.js)" = "171e2202591dda27ed852edfbd6754ba46157060"
+          test "$(git hash-object assets/css/footer-approved.css)" = "05faf239dd9cf39a19b41e596f433c99989c1e9b"
+      - name: Commit provider links
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'No changes required.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments/neurology-treatment-india/index.html ar/treatments/neurology-treatment-india/index.html
+          git commit -m 'Connect neurology to verified provider profiles'
+          git push origin main
