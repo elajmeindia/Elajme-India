@@ -1,5 +1,6 @@
 name: Audit doctor hospital media parity once
 
+# Final media/parity rerun after conversion and SEO cleanup.
 on:
   push:
     branches: [main]
@@ -47,7 +48,6 @@ jobs:
           for p in en:
               ar=root/'ar'/p
               if p.as_posix().startswith('ar/'): continue
-              # Only require parity where an Arabic counterpart directory already exists.
               if (root/'ar'/p.parent).exists() and not ar.exists(): pairs.append((p.as_posix(),ar.as_posix()))
 
           print(f'Doctor/hospital HTML pages audited: {len(target)}')
