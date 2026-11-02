@@ -23,11 +23,16 @@
   [dir="rtl"] .shell-header .shell-links a:last-child{border-bottom:0!important}
   [dir="rtl"] .shell-header .shell-links a:hover,[dir="rtl"] .shell-header .shell-links a:focus-visible,[dir="rtl"] .shell-header .shell-links a[aria-current="page"]{background:#f3faf9!important;color:#146b68!important}
   [dir="rtl"] .shell-header .shell-links a[href*="/about/"]::after,[dir="rtl"] .shell-header .shell-links a[href*="/contact/"]::after{content:none!important;display:none!important}
-  [dir="rtl"] body{padding-bottom:76px!important}
-  [dir="rtl"] .arabic-mobile-conversion-bar{position:fixed!important;z-index:9998!important;left:0!important;right:0!important;bottom:0!important;box-sizing:border-box!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px!important;padding:8px 10px calc(8px + env(safe-area-inset-bottom))!important;background:rgba(255,255,255,.97)!important;border-top:1px solid #dbe5e8!important;box-shadow:0 -6px 20px rgba(9,47,59,.10)!important;direction:rtl!important}
-  [dir="rtl"] .arabic-mobile-conversion-bar a{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;min-height:48px!important;padding:10px 12px!important;border-radius:12px!important;text-decoration:none!important;font-size:14px!important;font-weight:800!important;line-height:1.2!important}
+
+  /* Match the approved English mobile conversion dock: inset floating white tray, equal buttons, stronger visual hierarchy. */
+  [dir="rtl"] body{padding-bottom:92px!important}
+  [dir="rtl"] .arabic-mobile-conversion-bar{position:fixed!important;z-index:9998!important;left:14px!important;right:14px!important;bottom:10px!important;box-sizing:border-box!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;padding:5px!important;background:rgba(255,255,255,.96)!important;border:1px solid #dfe8ea!important;border-radius:17px!important;box-shadow:0 10px 28px rgba(9,47,59,.14)!important;direction:rtl!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important}
+  [dir="rtl"] .arabic-mobile-conversion-bar a{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;min-height:52px!important;padding:11px 14px!important;border-radius:13px!important;text-decoration:none!important;font-size:15px!important;font-weight:800!important;line-height:1.2!important;white-space:nowrap!important;box-shadow:none!important;transition:transform .12s ease,filter .15s ease!important}
+  [dir="rtl"] .arabic-mobile-conversion-bar a:active{transform:scale(.985)!important}
   [dir="rtl"] .arabic-mobile-case-cta{background:#123b50!important;color:#fff!important}
+  [dir="rtl"] .arabic-mobile-case-cta::before{content:'+'!important;display:inline-grid!important;place-items:center!important;font:400 26px/1 Arial,sans-serif!important;color:#fff!important;margin-inline-end:1px!important}
   [dir="rtl"] .arabic-mobile-wa-cta{background:#eaf8ef!important;color:#13864a!important}
+  [dir="rtl"] .arabic-mobile-wa-cta::before{content:''!important;display:block!important;width:21px!important;height:21px!important;flex:0 0 21px!important;border-radius:50%!important;background-color:#20ad67!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23fff' d='M16 5.5A10.2 10.2 0 0 0 7.2 20.9L5.5 26.5l5.8-1.5A10.3 10.3 0 1 0 16 5.5Zm5.9 14.7c-.25.7-1.45 1.3-2 1.38-.52.05-1.18.08-1.9-.15-.44-.14-1-.33-1.72-.64-3.03-1.31-5-4.38-5.15-4.58-.15-.2-1.23-1.64-1.23-3.13 0-1.5.78-2.23 1.06-2.54.28-.3.61-.38.82-.38h.59c.19 0 .44-.07.69.53.25.6.85 2.08.93 2.23.08.15.13.33.03.53-.1.2-.15.33-.3.5-.15.18-.32.39-.46.52-.15.15-.3.31-.13.61.18.3.78 1.28 1.67 2.07 1.15 1.02 2.12 1.34 2.42 1.49.3.15.48.13.66-.08.18-.2.76-.89.96-1.2.2-.3.4-.25.68-.15.28.1 1.77.84 2.07.99.3.15.5.23.58.35.08.13.08.73-.17 1.43Z'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:center!important;background-size:17px 17px!important}
   [dir="rtl"] .shell-header.arabic-mobile-menu-open~main~.arabic-mobile-conversion-bar{display:none!important}
 
   /* Arabic floating chat parity: English-style button positioned in the clear left side of the RTL hero. */
@@ -43,6 +48,9 @@
   [dir="rtl"] .shell-header .shell-lang{min-height:38px!important;padding:6px 8px!important;font-size:10px!important}
   [dir="rtl"] .shell-header.arabic-mobile-menu-open .shell-links{grid-auto-rows:46px!important}
   [dir="rtl"] .shell-header .shell-links a{height:46px!important;min-height:46px!important;max-height:46px!important;padding:0 12px!important;font-size:12.5px!important}
-  [dir="rtl"] .arabic-mobile-conversion-bar a{min-height:46px!important;font-size:13px!important;padding:9px 8px!important}
+  [dir="rtl"] .arabic-mobile-conversion-bar{left:12px!important;right:12px!important;bottom:9px!important;padding:4px!important;gap:6px!important;border-radius:16px!important}
+  [dir="rtl"] .arabic-mobile-conversion-bar a{min-height:50px!important;font-size:14px!important;padding:9px 8px!important;border-radius:12px!important}
+  [dir="rtl"] .arabic-mobile-case-cta::before{font-size:24px!important}
+  [dir="rtl"] .arabic-mobile-wa-cta::before{width:20px!important;height:20px!important;flex-basis:20px!important;background-size:16px 16px!important}
   html[lang="ar"] .master-mobile-whatsapp::after{left:18px!important;right:auto!important;top:318px!important;width:54px!important;height:54px!important;background-size:30px 30px!important}
 }
