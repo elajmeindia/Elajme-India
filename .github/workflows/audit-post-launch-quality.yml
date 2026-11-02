@@ -1,0 +1,105 @@
+name: Audit post-launch production quality
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-post-launch-quality.yml'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - '_redirects'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  post-launch-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify SEO, indexability, links, schema and production quality
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://elajmeindia.com'
+          work="$(mktemp -d)"
+
+          fetch() {
+            local route="$1" out="$2"
+            local code
+            code=$(curl -L --retry 3 --retry-delay 2 --connect-timeout 15 --max-time 30 -sS -o "$out" -w '%{http_code}' "${base}${route}")
+            test "$code" = '200' || { echo "FAIL ${route}: HTTP ${code}"; exit 1; }
+          }
+
+          fetch '/robots.txt' "$work/robots.txt"
+          grep -Eqi '^User-agent:[[:space:]]*\*' "$work/robots.txt" || { echo 'FAIL: robots.txt missing User-agent: *'; exit 1; }
+          grep -Eqi 'Sitemap:[[:space:]]*https://elajmeindia\.com/sitemap\.xml' "$work/robots.txt" || { echo 'FAIL: robots.txt missing production sitemap'; exit 1; }
+
+          fetch '/sitemap.xml' "$work/sitemap.xml"
+          grep -q '<urlset' "$work/sitemap.xml" || { echo 'FAIL: sitemap is not a URL set'; exit 1; }
+          grep -q '<loc>https://elajmeindia.com/' "$work/sitemap.xml" || { echo 'FAIL: sitemap missing production URLs'; exit 1; }
+          if grep -Eq 'github\.io|localhost|127\.0\.0\.1' "$work/sitemap.xml"; then
+            echo 'FAIL: sitemap contains non-production host'; exit 1
+          fi
+
+          routes=(
+            '/'
+            '/ar/'
+            '/treatments/'
+            '/hospitals/'
+            '/doctors/'
+            '/international-patients/mea/'
+            '/ar/international-patients/mea/'
+            '/patient-guide/'
+            '/ar/patient-guide/'
+          )
+
+          for route in "${routes[@]}"; do
+            safe=$(printf '%s' "$route" | tr '/:' '__')
+            page="$work/${safe}.html"
+            fetch "$route" "$page"
+            grep -qi '<html' "$page" || { echo "FAIL ${route}: no HTML document"; exit 1; }
+            grep -Eqi '<title>[^<]+' "$page" || { echo "FAIL ${route}: missing title"; exit 1; }
+            grep -Eqi '<meta[^>]+name=["'"']description["'"'][^>]+content=["'"'][^"'"']+' "$page" || { echo "FAIL ${route}: missing meta description"; exit 1; }
+            grep -Eqi '<link[^>]+rel=["'"']canonical["'"'][^>]+href=["'"']https://elajmeindia\.com/' "$page" || { echo "FAIL ${route}: missing production canonical"; exit 1; }
+            grep -Eqi '<meta[^>]+name=["'"']robots["'"'][^>]+content=["'"'][^"'"']*index' "$page" || { echo "FAIL ${route}: missing indexable robots meta"; exit 1; }
+            grep -qi 'application/ld+json' "$page" || { echo "FAIL ${route}: missing JSON-LD structured data"; exit 1; }
+            if grep -Eqi 'github\.io/Elajme-India|localhost|127\.0\.0\.1' "$page"; then
+              echo "FAIL ${route}: stale non-production URL found"; exit 1
+            fi
+          done
+
+          # Homepage language alternates must be reciprocal and production-safe.
+          grep -Eqi 'hreflang=["'"']en["'"'][^>]+href=["'"']https://elajmeindia\.com/' "$work/_.html" || { echo 'FAIL: English homepage missing EN hreflang'; exit 1; }
+          grep -Eqi 'hreflang=["'"']ar["'"'][^>]+href=["'"']https://elajmeindia\.com/ar/' "$work/_.html" || { echo 'FAIL: English homepage missing AR hreflang'; exit 1; }
+          grep -Eqi 'hreflang=["'"']en["'"'][^>]+href=["'"']https://elajmeindia\.com/' "$work/_ar_.html" || { echo 'FAIL: Arabic homepage missing EN hreflang'; exit 1; }
+          grep -Eqi 'hreflang=["'"']ar["'"'][^>]+href=["'"']https://elajmeindia\.com/ar/' "$work/_ar_.html" || { echo 'FAIL: Arabic homepage missing AR hreflang'; exit 1; }
+
+          # Every sitemap URL must resolve successfully and remain on the production host.
+          python3 - "$work/sitemap.xml" > "$work/urls.txt" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          root = ET.parse(sys.argv[1]).getroot()
+          ns = {'s': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          for node in root.findall('.//s:loc', ns):
+              if node.text:
+                  print(node.text.strip())
+          PY
+
+          count=0
+          while IFS= read -r url; do
+            [ -n "$url" ] || continue
+            case "$url" in
+              https://elajmeindia.com/*) ;;
+              *) echo "FAIL: sitemap URL outside production host: $url"; exit 1 ;;
+            esac
+            code=$(curl -L --retry 2 --retry-delay 1 --connect-timeout 12 --max-time 25 -sS -o /dev/null -w '%{http_code}' "$url")
+            case "$code" in
+              2??) ;;
+              *) echo "FAIL: sitemap URL $url returned $code"; exit 1 ;;
+            esac
+            count=$((count+1))
+          done < "$work/urls.txt"
+          test "$count" -gt 0 || { echo 'FAIL: no sitemap URLs found'; exit 1; }
+
+          echo "POST-LAUNCH QUALITY AUDIT PASSED: checked $count sitemap URLs"
