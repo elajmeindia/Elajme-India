@@ -48,6 +48,12 @@ jobs:
                       if expected not in txt: problems.append(f'{path}: Elajme enquiry route missing')
                       directory=('/ar/' if lang=='ar' else '/')+kind+'/'
                       if directory not in txt: problems.append(f'{path}: directory backlink missing')
+                      expected_lang=('/'+kind+'/'+slug+'/') if lang=='ar' else ('/ar/'+kind+'/'+slug+'/')
+                      lang_links=re.findall(r'<a\b[^>]*class="[^"]*\bmaster-lang\b[^"]*"[^>]*href="([^"]+)"',txt,re.I)
+                      if len(lang_links) != 1:
+                          problems.append(f'{path}: expected exactly one master language switch, found {len(lang_links)}')
+                      elif lang_links[0] != expected_lang:
+                          problems.append(f'{path}: language switch wrong ({lang_links[0]} != {expected_lang})')
                       if lang=='ar' and ('lang="ar"' not in txt or 'dir="rtl"' not in txt): problems.append(f'{path}: Arabic lang/RTL missing')
                       if lang=='en' and 'lang="en"' not in txt: problems.append(f'{path}: English lang missing')
           sitemap=Path('sitemap.xml').read_text(encoding='utf-8') if Path('sitemap.xml').exists() else ''
@@ -62,5 +68,5 @@ jobs:
           if problems:
               print('PROFILE SEO/PARITY ISSUES:'); print('\n'.join(problems)); sys.exit(1)
           print('BILINGUAL PROFILE SEO/PARITY AUDIT CLEAN')
-          # audit trigger: Wockhardt redirect aliases repaired 2026-11-01
+          # audit trigger: exact profile language switches added 2026-11-03
           PY
