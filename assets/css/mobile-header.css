@@ -1,33 +1,50 @@
 /* Mobile-only header layer. Desktop master header remains untouched. */
 @media (max-width:900px){
-  .master-site-header{overflow:visible!important}
-  .master-header-inner{position:relative!important;width:100%!important;min-height:68px!important;padding:8px 14px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;flex-wrap:nowrap!important;gap:8px!important}
-  .master-brand{margin:0!important;min-width:0!important;max-width:48%!important;gap:7px!important}
+  .master-site-header{overflow:visible!important;height:72px!important;min-height:72px!important;max-height:72px!important}
+  .master-header-inner{position:relative!important;width:100%!important;height:72px!important;min-height:72px!important;max-height:72px!important;padding:7px 14px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;flex-wrap:nowrap!important;gap:7px!important;box-sizing:border-box!important}
+  .master-brand{margin:0!important;min-width:0!important;max-width:43%!important;gap:7px!important;flex:0 1 auto!important}
   .master-brand img{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;min-height:44px!important;max-height:44px!important;flex:0 0 44px!important}
+  .master-brand-text{min-width:0!important}
   .master-brand-main{font-size:15px!important}
   .master-brand-ar{font-size:9px!important;margin-top:3px!important}
   .master-actions{display:none!important}
-  .master-mobile-controls{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:6px!important;margin-left:auto!important;direction:ltr!important;flex:0 0 auto!important}
+  .master-mobile-controls{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:5px!important;margin-left:auto!important;direction:ltr!important;flex:0 0 auto!important}
   .master-mobile-control{width:40px!important;height:40px!important;min-width:40px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border:1px solid #dce5e7!important;border-radius:10px!important;background:#fff!important;color:#123b50!important;text-decoration:none!important;padding:0!important;box-sizing:border-box!important;font:700 18px/1 Arial,sans-serif!important;box-shadow:none!important}
   .master-mobile-control svg{width:20px!important;height:20px!important;display:block!important;fill:none!important;stroke:currentColor!important;stroke-width:2!important;stroke-linecap:round!important;stroke-linejoin:round!important}
   .master-mobile-whatsapp{color:#126c45!important;background:#f2fbf6!important;border-color:#b8e2ca!important}
-  .master-mobile-lang{width:auto!important;min-width:54px!important;padding:0 9px!important;font-size:12px!important;font-weight:700!important}
+  .master-mobile-lang{width:auto!important;min-width:58px!important;padding:0 9px!important;font-size:12px!important;font-weight:700!important}
   .master-mobile-menu{cursor:pointer!important;color:#123b50!important}
-  .master-nav{display:none!important;position:absolute!important;z-index:1002!important;top:100%!important;left:0!important;right:0!important;width:100%!important;max-height:calc(100vh - 76px)!important;overflow-y:auto!important;overflow-x:hidden!important;background:#fff!important;border-top:1px solid #e4e8e9!important;border-bottom:1px solid #e4e8e9!important;box-shadow:0 12px 24px rgba(18,59,80,.12)!important;padding:8px 14px 14px!important;margin:0!important;flex-direction:column!important;align-items:stretch!important;gap:2px!important;white-space:normal!important}
+  .master-nav{display:none!important;position:fixed!important;z-index:1002!important;top:72px!important;left:0!important;right:0!important;width:100vw!important;height:auto!important;max-height:calc(100dvh - 72px)!important;overflow-y:auto!important;overflow-x:hidden!important;background:#fff!important;border-top:1px solid #e4e8e9!important;border-bottom:1px solid #e4e8e9!important;box-shadow:0 12px 24px rgba(18,59,80,.12)!important;padding:10px 18px 14px!important;margin:0!important;box-sizing:border-box!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:2px!important;white-space:normal!important}
   .master-site-header.mobile-menu-open .master-nav{display:flex!important}
-  .master-nav a{display:flex!important;width:100%!important;min-height:44px!important;align-items:center!important;padding:10px 8px!important;font-size:14px!important;border-radius:8px!important;box-sizing:border-box!important}
+  .master-nav a{display:flex!important;width:100%!important;min-height:46px!important;align-items:center!important;justify-content:flex-start!important;padding:10px 12px!important;font-size:14px!important;line-height:1.3!important;border-radius:8px!important;box-sizing:border-box!important;text-align:left!important}
+  .master-nav a:hover,.master-nav a[aria-current="page"]{background:#e8f6f3!important;color:#146b68!important}
   body.mobile-menu-open{overflow:hidden!important}
 }
-@media (max-width:390px){
-  .master-header-inner{padding-left:10px!important;padding-right:10px!important;gap:5px!important}
-  .master-brand{max-width:44%!important;gap:5px!important}
+@media (max-width:430px){
+  .master-header-inner{padding-left:10px!important;padding-right:10px!important;gap:4px!important}
+  .master-brand{max-width:42%!important;gap:5px!important}
   .master-brand img{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important;min-height:40px!important;max-height:40px!important;flex-basis:40px!important}
   .master-brand-main{font-size:14px!important}
   .master-mobile-controls{gap:4px!important}
-  .master-mobile-control{width:37px!important;height:37px!important;min-width:37px!important}
-  .master-mobile-lang{width:auto!important;min-width:49px!important;padding:0 7px!important;font-size:11px!important}
+  .master-mobile-control{width:38px!important;height:38px!important;min-width:38px!important}
+  .master-mobile-lang{width:auto!important;min-width:54px!important;padding:0 7px!important;font-size:11px!important}
 }
-html[lang="ar"] .master-mobile-controls{margin-left:0!important;margin-right:auto!important;direction:rtl!important}
-html[lang="ar"] .master-mobile-lang{direction:ltr!important}
-html[lang="ar"] .master-nav{direction:rtl!important;text-align:right!important}
-html[lang="ar"] .master-nav a{justify-content:flex-start!important;text-align:right!important;direction:rtl!important}
+@media (max-width:360px){
+  .master-brand-main{font-size:13px!important}
+  .master-brand-ar{font-size:8px!important}
+  .master-mobile-control{width:36px!important;height:36px!important;min-width:36px!important}
+  .master-mobile-lang{min-width:49px!important;padding:0 5px!important}
+}
+@media (max-width:900px){
+  html[lang="ar"] .master-header-inner{direction:rtl!important;flex-direction:row!important}
+  html[lang="ar"] .master-brand{order:1!important;margin:0!important;max-width:43%!important;direction:ltr!important}
+  html[lang="ar"] .master-brand img{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;min-height:44px!important;max-height:44px!important}
+  html[lang="ar"] .master-mobile-controls{order:2!important;margin-left:0!important;margin-right:auto!important;direction:rtl!important;flex-direction:row-reverse!important}
+  html[lang="ar"] .master-mobile-lang{direction:ltr!important}
+  html[lang="ar"] .master-nav{direction:rtl!important;text-align:right!important;padding-left:18px!important;padding-right:18px!important}
+  html[lang="ar"] .master-nav a{justify-content:flex-start!important;text-align:right!important;direction:rtl!important;width:100%!important;order:initial!important;padding:10px 12px!important;font-size:14px!important}
+}
+@media (max-width:430px){
+  html[lang="ar"] .master-brand{max-width:42%!important}
+  html[lang="ar"] .master-brand img{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important;min-height:40px!important;max-height:40px!important}
+}
