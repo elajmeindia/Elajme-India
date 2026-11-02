@@ -1,0 +1,56 @@
+name: Connect verified colorectal providers once
+on:
+  push:
+    paths:
+      - '.github/workflows/connect-colorectal-providers-once.yml'
+permissions:
+  contents: write
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Connect bilingual colorectal pages to verified GI provider profiles
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          pages = {
+            'treatments/colorectal-surgery-india/index.html': (
+              '<div class="related"><a href="/doctors/">Browse doctors</a><a href="/hospitals/">Explore hospitals</a><a href="/#enquiry">Request case coordination through Elajme India</a></div>',
+              '<div class="related"><a href="/doctors/dr-arvind-kumar-khurana/">Dr. Arvind Kumar Khurana · Gastroenterology &amp; GI endoscopy</a><a href="/doctors/dr-amit-gharat/">Dr. Amit Gharat · Gastroenterology, hepatology &amp; GI endoscopy</a><a href="/hospitals/fortis-memorial-research-institute-gurugram/">Fortis Memorial Research Institute, Gurugram · Gastroenterology &amp; liver sciences</a><a href="/hospitals/apollo-hospitals-navi-mumbai/">Apollo Hospitals Navi Mumbai · Gastroenterology pathway</a><a href="/doctors/">Browse more doctors</a><a href="/hospitals/">Explore more hospitals</a><a href="/#enquiry">Request case coordination through Elajme India</a></div>'
+            ),
+            'ar/treatments/colorectal-surgery-india/index.html': (
+              '<div class="related"><a href="/ar/doctors/">استعرض الأطباء</a><a href="/ar/hospitals/">استعرض المستشفيات</a><a href="/ar/#enquiry">اطلب تنسيق حالتك عبر علاج مي إنديا</a></div>',
+              '<div class="related"><a href="/ar/doctors/dr-arvind-kumar-khurana/">د. أرفيند كومار خورانا · أمراض الجهاز الهضمي والمناظير</a><a href="/ar/doctors/dr-amit-gharat/">د. أميت غارات · أمراض الجهاز الهضمي والكبد والمناظير</a><a href="/ar/hospitals/fortis-memorial-research-institute-gurugram/">فورتيس ميموريال، غوروغرام · أمراض الجهاز الهضمي وعلوم الكبد</a><a href="/ar/hospitals/apollo-hospitals-navi-mumbai/">مستشفى أبولو نافي مومباي · مسار أمراض الجهاز الهضمي</a><a href="/ar/doctors/">استعرض المزيد من الأطباء</a><a href="/ar/hospitals/">استعرض المزيد من المستشفيات</a><a href="/ar/#enquiry">اطلب تنسيق حالتك عبر علاج مي إنديا</a></div>'
+            )
+          }
+          for path,(old,new) in pages.items():
+            p=Path(path); s=p.read_text()
+            if old not in s:
+              raise SystemExit(f'Expected provider discovery block not found: {path}')
+            p.write_text(s.replace(old,new,1))
+          PY
+      - name: Verify bilingual provider parity and protected assets
+        run: |
+          grep -q '/doctors/dr-arvind-kumar-khurana/' treatments/colorectal-surgery-india/index.html
+          grep -q '/doctors/dr-amit-gharat/' treatments/colorectal-surgery-india/index.html
+          grep -q '/hospitals/fortis-memorial-research-institute-gurugram/' treatments/colorectal-surgery-india/index.html
+          grep -q '/hospitals/apollo-hospitals-navi-mumbai/' treatments/colorectal-surgery-india/index.html
+          grep -q '/ar/doctors/dr-arvind-kumar-khurana/' ar/treatments/colorectal-surgery-india/index.html
+          grep -q '/ar/doctors/dr-amit-gharat/' ar/treatments/colorectal-surgery-india/index.html
+          grep -q '/ar/hospitals/fortis-memorial-research-institute-gurugram/' ar/treatments/colorectal-surgery-india/index.html
+          grep -q '/ar/hospitals/apollo-hospitals-navi-mumbai/' ar/treatments/colorectal-surgery-india/index.html
+          test "$(git hash-object assets/css/master-header.css)" = "26fcbc9a88dfa959e48e3c079790011d5001fa95"
+          test "$(git hash-object assets/css/arabic-master-header.css)" = "3e85661d08f9a5ef7d8f586a7c8a38451c78c42e"
+          test "$(git hash-object assets/css/mobile-header.css)" = "e2e1b33e23b0881749c0cc019f622fc793cbce45"
+          test "$(git hash-object assets/css/arabic-mobile-header.css)" = "19af6f197ce194a9c9c043c8e22c5703a8c86ced"
+          test "$(git hash-object assets/js/mobile-header.js)" = "171e2202591dda27ed852edfbd6754ba46157060"
+          test "$(git hash-object assets/css/footer-approved.css)" = "05faf239dd9cf39a19b41e596f433c99989c1e9b"
+      - name: Commit provider links
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments/colorectal-surgery-india/index.html ar/treatments/colorectal-surgery-india/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Connect colorectal care to verified GI provider profiles'
+          git push
