@@ -1,0 +1,107 @@
+name: Fix treatment template residue once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-treatment-template-residue-once.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Remove pediatric template residue from non-pediatric treatment pages
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          ped='pediatrics-child-health-india'
+          changed=[]
+          en_repls=[
+            (r'Pediatric and child-health enquiry coordination in India for international patients, with specialist review arranged through Elajme India\.', 'International patient enquiry coordination in India, with specialist review arranged through Elajme India.'),
+            (r'Pediatric and child-health', 'Specialist'),
+            (r'pediatric and child-health', 'specialist'),
+            (r'Pediatric', 'Specialist'),
+            (r'pediatric', 'specialist'),
+            (r"child’s", "patient’s"),
+            (r"child's", "patient's"),
+            (r'\bchild\b', 'patient'),
+            (r'\bChild\b', 'Patient'),
+            (r'\bparents\b', 'patients and families'),
+            (r'\bParents\b', 'Patients and families'),
+            (r'\bparent\b', 'patient'),
+            (r'\bParent\b', 'Patient'),
+            (r'\bguardian\b', 'caregiver'),
+            (r'\bGuardian\b', 'Caregiver'),
+            (r'\bvaccination\b', 'relevant preventive-care'),
+            (r'\bVaccination\b', 'Relevant preventive-care'),
+          ]
+          ar_repls=[
+            ('يعتمد التشخيص والفحوصات وخطة العلاج على تقييم طبي فردي للطفل.', 'يعتمد التشخيص والفحوصات وخطة العلاج على تقييم طبي فردي للمريض.'),
+            ('تقييم الطفل', 'تقييم المريض'),
+            ('أعراض الطفل', 'أعراض المريض'),
+            ('تشخيصه ونموه وتطوره', 'تشخيصه وتاريخه الطبي'),
+            ('فريق طب الأطفال', 'الفريق الطبي المختص'),
+            ('طب الأطفال العام أو أحد التخصصات الدقيقة المناسبة للأطفال', 'التخصص الطبي المناسب أو أحد التخصصات الدقيقة ذات الصلة'),
+            ('لوالدي الطفل أو وليه القانوني', 'للمريض أو من يرافقه'),
+            ('عمر الطفل والتشخيص ومعلومات النمو وتقارير طبيب الأطفال والتحاليل والصور الطبية وملخصات الخروج وسجل التطعيم عند الحاجة', 'التشخيص والتاريخ الطبي وتقارير الاختصاصيين والتحاليل والصور الطبية وملخصات الخروج والفحوصات ذات الصلة'),
+            ('ابدأ استفسار طب الأطفال', 'ابدأ استفسارك الطبي'),
+            ('طب الأطفال', 'الفريق الطبي المختص'),
+            ('الأطفال', 'المرضى'),
+            ('الطفل', 'المريض'),
+            ('والد الطفل', 'المرافق'),
+            ('الوصي القانوني', 'المرافق المسؤول'),
+            ('سجل التطعيم', 'السجل الطبي ذي الصلة'),
+          ]
+          for root, repls in [(Path('treatments'),en_repls),(Path('ar/treatments'),ar_repls)]:
+            for p in root.glob('*/index.html'):
+              if p.parent.name==ped: continue
+              s=p.read_text(encoding='utf-8')
+              # Preserve redirect-only legacy pages. They are not active bilingual specialty pages.
+              if 'http-equiv="refresh"' in s.lower(): continue
+              old=s
+              for a,b in repls:
+                if root.name=='treatments': s=re.sub(a,b,s)
+                else: s=s.replace(a,b)
+              if s!=old:
+                p.write_text(s,encoding='utf-8')
+                changed.append(str(p))
+          print(f'Cleaned {len(changed)} treatment pages')
+          for p in changed: print(p)
+      - name: Verify active bilingual parity and residue removal
+        shell: python
+        run: |
+          from pathlib import Path
+          import re,sys
+          ped='pediatrics-child-health-india'
+          def active(root):
+            out={}
+            for p in Path(root).glob('*/index.html'):
+              s=p.read_text(encoding='utf-8')
+              if 'http-equiv="refresh"' not in s.lower(): out[p.parent.name]=(p,s)
+            return out
+          en=active('treatments'); ar=active('ar/treatments'); issues=[]
+          for slug,(p,s) in en.items():
+            if slug not in ar: issues.append(f'Missing active Arabic counterpart: {slug}')
+            if slug!=ped and re.search(r'\b(pediatric|child|parent|guardian|vaccination)\b',s,re.I): issues.append(f'EN residue: {slug}')
+          for slug,(p,s) in ar.items():
+            if slug not in en: issues.append(f'Missing active English counterpart: {slug}')
+            if slug!=ped and re.search(r'(طب الأطفال|الطفل|والد الطفل|الوصي القانوني|سجل التطعيم)',s): issues.append(f'AR residue: {slug}')
+          print(f'Active EN={len(en)} AR={len(ar)}')
+          if issues:
+            print('\n'.join(issues));sys.exit(1)
+          print('Active bilingual treatment parity and template-residue check clean')
+      - name: Protect approved global UI
+        run: git diff --exit-code assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md
+      - name: Commit fixes
+        run: |
+          if git diff --quiet; then echo 'No content fixes needed'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments
+          git commit -m 'Clean treatment template residue and bilingual parity'
+          git push
