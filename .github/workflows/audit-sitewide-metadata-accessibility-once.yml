@@ -1,4 +1,6 @@
 name: Audit sitewide metadata and accessibility once
+
+# Final production-readiness rerun after sitemap, indexability and bilingual SEO gate passed.
 on:
   push:
     branches: [main]
@@ -54,5 +56,7 @@ jobs:
               print('\n'.join(dict.fromkeys(problems)))
               sys.exit(1)
           print('SITEWIDE METADATA/ACCESSIBILITY AUDIT CLEAN')
-          # Production-readiness rerun after links/indexing gate passed.
           PY
+      - name: Verify protected production UI assets remain untouched
+        run: |
+          test -z "$(git status --porcelain -- assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md)"
