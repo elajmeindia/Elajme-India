@@ -1,5 +1,6 @@
 name: Audit final launch safety
 
+# Final production safety rerun after metadata and accessibility gate passed.
 on:
   push:
     branches: [main]
@@ -33,14 +34,12 @@ jobs:
               if 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low:
                   continue
               ar=p.as_posix().startswith('ar/')
-              # Block provider-direct contact leakage. Elajme owns the patient journey.
               for href in re.findall(r'href=["\']([^"\']+)',s,re.I):
                   h=href.lower()
                   if h.startswith(('tel:','https://wa.me/','http://wa.me/','https://api.whatsapp.com/','http://api.whatsapp.com/')):
                       digits=''.join(re.findall(r'\d',href))
                       if digits and owned_phone not in digits:
                           blocking.append(f'NON_ELAJME_CONTACT {p}: {href}')
-              # Forms must not post insecurely or to obvious third-party provider endpoints.
               for tag in re.findall(r'<form\b[^>]*>',s,re.I):
                   m=re.search(r'action=["\']([^"\']*)',tag,re.I)
                   if m:
@@ -49,24 +48,23 @@ jobs:
                           blocking.append(f'INSECURE_FORM_ACTION {p}: {action}')
                   if 'method="get"' in tag.lower() or "method='get'" in tag.lower():
                       warnings.append(f'GET_FORM_REVIEW {p}')
-              # No mixed-content resource loads on HTTPS production.
               if re.search(r'(?:src|href)=["\']http://',s,re.I):
                   blocking.append(f'MIXED_CONTENT {p}')
-              # Privacy should be reachable where forms collect patient details.
               if '<form' in low and 'privacy' not in low:
                   warnings.append(f'FORM_WITHOUT_PRIVACY_REFERENCE {p}')
-              # Arabic enquiry routes should remain Arabic.
               if ar and re.search(r'href=["\']/#enquiry["\']',s,re.I):
                   blocking.append(f'AR_ENQUIRY_TO_EN_HOME {p}')
 
-          # Baseline public-policy files.
           if not (root/'privacy.html').is_file(): warnings.append('MISSING_EN_PRIVACY_PAGE')
           if not (root/'ar/privacy.html').is_file(): warnings.append('MISSING_AR_PRIVACY_PAGE')
           if not (root/'robots.txt').is_file(): blocking.append('MISSING_ROBOTS_TXT')
           if not (root/'sitemap.xml').is_file(): blocking.append('MISSING_SITEMAP')
 
-          # Flag common accidental secrets in deployable text files without printing values.
-          secret_patterns=[r'BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY',r'(?i)aws_secret_access_key\s*[=:]',r'(?i)api[_-]?key\s*[=:]\s*["\'][A-Za-z0-9_\-]{20,}']
+          secret_patterns=[
+              r'BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY',
+              r'(?i)aws_secret_access_key\s*[=:]',
+              r"(?i)api[_-]?key\s*[=:]\s*[\"'][A-Za-z0-9_-]{20,}"
+          ]
           for p in root.rglob('*'):
               if not p.is_file() or '.git' in p.parts or p.suffix.lower() not in {'.html','.js','.json','.yml','.yaml','.txt','.md','.env'}: continue
               try: t=p.read_text(errors='ignore')
@@ -83,4 +81,4 @@ jobs:
           PY
       - name: Verify approved header footer baseline remains untouched
         run: |
-          test -z "$(git status --porcelain -- assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css)"
+          test -z "$(git status --porcelain -- assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md)"
