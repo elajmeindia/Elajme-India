@@ -1,0 +1,45 @@
+name: Cache bust mobile header v3 once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/cache-bust-mobile-header-v3-once.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Force mobile header v3 on all indexable master-header pages
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          changed=[]; checked=0
+          for p in Path('.').rglob('*.html'):
+              s=p.as_posix(); t=p.read_text(encoding='utf-8',errors='ignore'); low=t.lower()
+              if s.startswith('.git/') or 'master-site-header' not in t or 'noindex' in low or 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low: continue
+              checked+=1; old=t
+              t=re.sub(r'/assets/css/mobile-header\.css(?:\?v=\d+)?','/assets/css/mobile-header.css?v=3',t)
+              t=re.sub(r'/assets/js/mobile-header\.js(?:\?v=\d+)?','/assets/js/mobile-header.js?v=3',t)
+              if t!=old:
+                  p.write_text(t,encoding='utf-8'); changed.append(s)
+          print('Checked:',checked,'Changed:',len(changed))
+          bad=[]
+          for p in Path('.').rglob('*.html'):
+              t=p.read_text(encoding='utf-8',errors='ignore'); low=t.lower()
+              if 'master-site-header' in t and 'noindex' not in low and 'http-equiv="refresh"' not in low and "http-equiv='refresh'" not in low:
+                  if t.count('/assets/css/mobile-header.css?v=3')!=1 or t.count('/assets/js/mobile-header.js?v=3')!=1: bad.append(p.as_posix())
+          print('Bad:',len(bad))
+          if bad:
+              print('\n'.join(bad)); raise SystemExit(1)
+      - name: Commit cache bust
+        run: |
+          if git diff --quiet -- '*.html'; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add '*.html' '**/*.html'
+          git commit -m 'Load mobile header v3 sitewide'
+          git push
