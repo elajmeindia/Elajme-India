@@ -1,0 +1,76 @@
+name: Audit responsive and production readiness
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-responsive-production-readiness.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit responsive accessibility and production fundamentals
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys, urllib.parse
+          root=Path('.')
+          pages=list(root.rglob('*.html'))
+          problems=[]
+          warnings=[]
+          for p in pages:
+              rel=p.as_posix()
+              if rel.startswith(('.git/','.github/')): continue
+              t=p.read_text(encoding='utf-8',errors='ignore')
+              low=t.lower()
+              if '<meta name="viewport"' not in low and "<meta name='viewport'" not in low:
+                  problems.append('NO_VIEWPORT '+rel)
+              if 'width=device-width' not in low:
+                  problems.append('VIEWPORT_NOT_RESPONSIVE '+rel)
+              # Flag fixed-width inline/content declarations likely to overflow narrow screens.
+              for m in re.finditer(r'width\s*:\s*(\d{3,})px',t,re.I):
+                  n=int(m.group(1))
+                  if n>480 and 'max-width' not in t[max(0,m.start()-120):m.end()+120].lower():
+                      warnings.append(f'FIXED_WIDTH_REVIEW {rel} {n}px')
+              # Images should never be missing alt. Empty alt is allowed for decorative images.
+              for tag in re.findall(r'<img\b[^>]*>',t,re.I):
+                  if not re.search(r'\balt\s*=',tag,re.I): problems.append('IMG_NO_ALT '+rel)
+              # Indexable pages need core SEO metadata.
+              noindex='noindex' in low
+              redirect='http-equiv="refresh"' in low or "http-equiv='refresh'" in low
+              if not noindex and not redirect and rel!='404.html':
+                  if not re.search(r'<title>\s*[^<]+\s*</title>',t,re.I|re.S): problems.append('NO_TITLE '+rel)
+                  if not re.search(r'<meta[^>]+name=["\']description["\'][^>]+content=["\'][^"\']{40,}',t,re.I): problems.append('NO_META_DESCRIPTION '+rel)
+                  if not re.search(r'<link[^>]+rel=["\']canonical["\']',t,re.I): problems.append('NO_CANONICAL '+rel)
+              # Approved master header must retain mobile breakpoint in its locked stylesheet, not page hacks.
+              if 'master-site-header' in t and '/assets/css/master-header.css?v=6' not in t:
+                  problems.append('MASTER_HEADER_CSS_MISSING '+rel)
+              # Provider profile images should be responsive and real, not pending placeholders.
+              if rel.startswith(('doctors/','hospitals/','ar/doctors/','ar/hospitals/')) and rel.endswith('/index.html'):
+                  if any(x in low for x in ('doctor-image-pending','hospital-image-pending','hospital-placeholder.svg')):
+                      problems.append('PROVIDER_MEDIA_PLACEHOLDER '+rel)
+              # Enquiry routing must remain Elajme-owned on provider profiles.
+              if rel.startswith(('doctors/','hospitals/')) and rel.count('/')>=2 and rel.endswith('/index.html'):
+                  if 'href="/#enquiry"' not in t and "href='/#enquiry'" not in t:
+                      warnings.append('EN_PROFILE_ENQUIRY_REVIEW '+rel)
+              if rel.startswith(('ar/doctors/','ar/hospitals/')) and rel.count('/')>=3 and rel.endswith('/index.html'):
+                  if 'href="/ar/#enquiry"' not in t and "href='/ar/#enquiry'" not in t:
+                      warnings.append('AR_PROFILE_ENQUIRY_REVIEW '+rel)
+          # Locked master CSS must contain mobile behavior.
+          css=Path('assets/css/master-header.css').read_text(encoding='utf-8',errors='ignore')
+          if not re.search(r'@media\s*\([^)]*max-width\s*:\s*900px',css,re.I):
+              problems.append('MASTER_HEADER_MOBILE_BREAKPOINT_MISSING')
+          footer=Path('assets/css/footer-approved.css').read_text(encoding='utf-8',errors='ignore')
+          if '@media' not in footer: warnings.append('FOOTER_RESPONSIVE_RULE_REVIEW')
+          print('RESPONSIVE + PRODUCTION READINESS AUDIT')
+          print('HTML pages:',len(pages))
+          print('Blocking issues:',len(problems))
+          for x in problems: print(x)
+          print('Review warnings:',len(warnings))
+          for x in warnings[:100]: print(x)
+          if problems: sys.exit(1)
+          PY
