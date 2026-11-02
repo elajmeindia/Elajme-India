@@ -29,6 +29,10 @@
   [dir="rtl"] .arabic-mobile-case-cta{background:#123b50!important;color:#fff!important}
   [dir="rtl"] .arabic-mobile-wa-cta{background:#eaf8ef!important;color:#13864a!important}
   [dir="rtl"] .shell-header.arabic-mobile-menu-open~main~.arabic-mobile-conversion-bar{display:none!important}
+
+  /* Arabic floating chat parity: reuse the existing WhatsApp control so no duplicate route or script is required. */
+  html[lang="ar"] .master-mobile-whatsapp::after{content:'•••'!important;position:fixed!important;z-index:997!important;right:18px!important;left:auto!important;top:318px!important;width:54px!important;height:54px!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;background:#178f89!important;color:#fff!important;font:900 16px/1 Arial,sans-serif!important;letter-spacing:1px!important;box-shadow:0 10px 26px rgba(18,59,80,.18)!important;pointer-events:none!important}
+  html[lang="ar"] body.mobile-menu-open .master-mobile-whatsapp::after{display:none!important}
 }
 @media (max-width:560px){
   [dir="rtl"] .shell-header .shell-nav{width:calc(100% - 20px)!important;min-height:64px!important;gap:6px 8px!important}
@@ -40,4 +44,5 @@
   [dir="rtl"] .shell-header.arabic-mobile-menu-open .shell-links{grid-auto-rows:46px!important}
   [dir="rtl"] .shell-header .shell-links a{height:46px!important;min-height:46px!important;max-height:46px!important;padding:0 12px!important;font-size:12.5px!important}
   [dir="rtl"] .arabic-mobile-conversion-bar a{min-height:46px!important;font-size:13px!important;padding:9px 8px!important}
+  html[lang="ar"] .master-mobile-whatsapp::after{right:18px!important;top:318px!important;width:54px!important;height:54px!important}
 }
