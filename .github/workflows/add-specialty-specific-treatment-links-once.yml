@@ -1,0 +1,96 @@
+name: Add specialty specific treatment links once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/add-specialty-specific-treatment-links-once.yml'
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Add verified specialty-specific doctor and hospital links to major treatments
+        shell: python
+        run: |
+          from pathlib import Path
+          import sys
+          # Only map combinations explicitly represented in current Elajme directories.
+          maps={
+            'cancer-treatment-india':([
+              ('Prof. (Dr.) Atul Sharma','/doctors/dr-atul-sharma/'),('Dr. Ankur Bahl','/doctors/dr-ankur-bahl/'),('Dr. Ashok Kumar Vaid','/doctors/dr-ashok-kumar-vaid/')],
+              [('Max Super Speciality Hospital, Saket','/hospitals/max-super-speciality-hospital-saket/'),('BLK-Max Super Speciality Hospital','/hospitals/blk-max-super-speciality-hospital-delhi/'),('Fortis Memorial Research Institute','/hospitals/fortis-memorial-research-institute-gurugram/')]),
+            'heart-treatment-india':([('Dr. Viveka Kumar','/doctors/dr-viveka-kumar/'),('Dr. Naresh Trehan','/doctors/dr-naresh-trehan/')],[('Fortis Escorts Heart Institute','/hospitals/fortis-escorts-heart-institute-delhi/'),('Medanta – The Medicity','/hospitals/medanta-the-medicity-gurugram/'),('Max Super Speciality Hospital, Saket','/hospitals/max-super-speciality-hospital-saket/')]),
+            'knee-replacement-india':([('Dr. Ashok Rajgopal','/doctors/dr-ashok-rajgopal/')],[('Medanta – The Medicity','/hospitals/medanta-the-medicity-gurugram/')]),
+            'neurosurgery-india':([('Dr. Aditya Gupta','/doctors/dr-aditya-gupta/')],[('Artemis Hospital','/hospitals/artemis-hospital-gurugram/'),('BLK-Max Super Speciality Hospital','/hospitals/blk-max-super-speciality-hospital-delhi/')]),
+            'urology-treatment-india':([('Dr. Anant Kumar','/doctors/dr-anant-kumar/'),('Dr. Anil Mandhani','/doctors/dr-anil-mandhani/')],[('Max Super Speciality Hospital, Saket','/hospitals/max-super-speciality-hospital-saket/'),('Fortis Memorial Research Institute','/hospitals/fortis-memorial-research-institute-gurugram/')]),
+            'kidney-transplant-india':([('Dr. Anant Kumar','/doctors/dr-anant-kumar/'),('Dr. Anil Mandhani','/doctors/dr-anil-mandhani/')],[('Max Super Speciality Hospital, Saket','/hospitals/max-super-speciality-hospital-saket/'),('Fortis Memorial Research Institute','/hospitals/fortis-memorial-research-institute-gurugram/')]),
+            'liver-transplant-india':([('Dr. Arvinder Singh Soin','/doctors/dr-arvinder-singh-soin/'),('Dr. Abhideep Chaudhary','/doctors/dr-abhideep-chaudhary/')],[('Medanta – The Medicity','/hospitals/medanta-the-medicity-gurugram/'),('BLK-Max Super Speciality Hospital','/hospitals/blk-max-super-speciality-hospital-delhi/')]),
+            'gastroenterology-treatment-india':([('Dr. Arvind Kumar Khurana','/doctors/dr-arvind-kumar-khurana/')],[('Fortis Memorial Research Institute','/hospitals/fortis-memorial-research-institute-gurugram/'),('Medanta Super Speciality Hospital, Noida','/hospitals/medanta-super-speciality-hospital-noida/')]),
+          }
+          ar_names={'Prof. (Dr.) Atul Sharma':'البروفيسور د. أتول شارما','Dr. Ankur Bahl':'د. أنكور باهل','Dr. Ashok Kumar Vaid':'د. أشوك كومار فايد','Dr. Viveka Kumar':'د. فيفيكا كومار','Dr. Naresh Trehan':'د. ناريش تريهان','Dr. Ashok Rajgopal':'د. أشوك راجغوبال','Dr. Aditya Gupta':'د. أديتيا غوبتا','Dr. Anant Kumar':'د. أنانت كومار','Dr. Anil Mandhani':'د. أنيل مانداني','Dr. Arvinder Singh Soin':'د. أرفيندر سينغ سوين','Dr. Abhideep Chaudhary':'د. أبهي ديب تشودري','Dr. Arvind Kumar Khurana':'د. أرفيند كومار خورانا','Max Super Speciality Hospital, Saket':'مستشفى ماكس سوبر سبيشاليتي، ساكيت','BLK-Max Super Speciality Hospital':'مستشفى BLK-Max سوبر سبيشاليتي','Fortis Memorial Research Institute':'معهد فورتيس ميموريال للأبحاث','Fortis Escorts Heart Institute':'معهد فورتيس إسكورتس للقلب','Medanta – The Medicity':'ميدانتا – ذا ميديسيتي','Artemis Hospital':'مستشفى أرتيميس','Medanta Super Speciality Hospital, Noida':'مستشفى ميدانتا سوبر سبيشاليتي، نويدا'}
+          changed=[]
+          for slug,(docs,hosps) in maps.items():
+            for lang in ('en','ar'):
+              p=Path('treatments' if lang=='en' else 'ar/treatments')/slug/'index.html'
+              if not p.exists():
+                print('Skip absent route',p); continue
+              s=p.read_text(encoding='utf-8')
+              if 'specialty-specific-discovery' in s: continue
+              if lang=='en':
+                d=''.join(f'<li><a href="{u}">{n}</a></li>' for n,u in docs)
+                h=''.join(f'<li><a href="{u}">{n}</a></li>' for n,u in hosps)
+                block=f'<section class="sec specialty-specific-discovery"><div class="c"><h2>Relevant specialists and hospitals in the Elajme directory</h2><p class="lead">These directory profiles match this specialty based on the specialties currently listed by Elajme India. Final doctor availability, hospital suitability and treatment planning are confirmed only after case review.</p><div class="grid"><article class="card"><h3>Specialists to explore</h3><ul>{d}</ul></article><article class="card"><h3>Hospitals to explore</h3><ul>{h}</ul></article><article class="card"><h3>Need help choosing?</h3><p>Send your diagnosis and recent reports to Elajme India. We can coordinate an appropriate case review without routing you to a provider directly.</p><p><a href="/#enquiry">Start your Elajme enquiry</a></p></article></div></div></section>'
+              else:
+                d=''.join(f'<li><a href="/ar{u}">{ar_names.get(n,n)}</a></li>' for n,u in docs)
+                h=''.join(f'<li><a href="/ar{u}">{ar_names.get(n,n)}</a></li>' for n,u in hosps)
+                block=f'<section class="sec specialty-specific-discovery"><div class="c"><h2>أطباء ومستشفيات ذات صلة في دليل علاج مي إنديا</h2><p class="lead">تتوافق هذه الملفات مع التخصص وفق المعلومات المدرجة حالياً في دليل علاج مي إنديا. يتم تأكيد توفر الطبيب وملاءمة المستشفى وخطة العلاج فقط بعد مراجعة الحالة.</p><div class="grid"><article class="card"><h3>أطباء يمكن استعراضهم</h3><ul>{d}</ul></article><article class="card"><h3>مستشفيات يمكن استعراضها</h3><ul>{h}</ul></article><article class="card"><h3>هل تحتاج مساعدة في الاختيار؟</h3><p>أرسل التشخيص والتقارير الحديثة إلى علاج مي إنديا، ويمكننا تنسيق مراجعة مناسبة للحالة دون تحويل الاستفسار مباشرة إلى مقدم الخدمة.</p><p><a href="/ar/#enquiry">ابدأ استفسارك عبر علاج مي إنديا</a></p></article></div></div></section>'
+              marker='<section class="cta">'
+              if marker not in s:
+                print('Missing CTA marker',p);sys.exit(1)
+              s=s.replace(marker,block+marker,1)
+              p.write_text(s,encoding='utf-8');changed.append(str(p))
+          print('Changed',len(changed),'pages')
+      - name: Verify mapped profile links and Elajme routing
+        shell: python
+        run: |
+          from pathlib import Path
+          import re,sys
+          issues=[];count=0
+          for root in (Path('treatments'),Path('ar/treatments')):
+            for p in root.glob('*/index.html'):
+              s=p.read_text(encoding='utf-8')
+              if 'specialty-specific-discovery' not in s: continue
+              count+=1
+              for href in re.findall(r'href="([^"]+)"',s):
+                if href.startswith('/doctors/'):
+                  q=Path(href.strip('/')+'/index.html')
+                  if not q.exists(): issues.append(f'Broken doctor link {p}: {href}')
+                elif href.startswith('/hospitals/'):
+                  q=Path(href.strip('/')+'/index.html')
+                  if not q.exists(): issues.append(f'Broken hospital link {p}: {href}')
+                elif href.startswith('/ar/doctors/'):
+                  q=Path(href.strip('/')+'/index.html')
+                  if not q.exists(): issues.append(f'Broken Arabic doctor link {p}: {href}')
+                elif href.startswith('/ar/hospitals/'):
+                  q=Path(href.strip('/')+'/index.html')
+                  if not q.exists(): issues.append(f'Broken Arabic hospital link {p}: {href}')
+              block=s.split('specialty-specific-discovery',1)[1].split('<section class="cta">',1)[0]
+              if 'wa.me/' in block or 'tel:' in block: issues.append(f'Direct provider contact in specialty block: {p}')
+          if count<2: issues.append('No specialty-specific pages integrated')
+          if issues:
+            print('\n'.join(issues));sys.exit(1)
+          print('Verified specialty-specific discovery on',count,'bilingual pages')
+      - name: Protect approved global UI
+        run: git diff --exit-code assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md
+      - name: Commit specialty-specific integration
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add treatments ar/treatments
+          git commit -m 'Add specialty-specific treatment doctor hospital links'
+          git push
