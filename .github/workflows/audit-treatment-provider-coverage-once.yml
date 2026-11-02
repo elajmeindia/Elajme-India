@@ -1,0 +1,86 @@
+name: Audit 47-specialty provider coverage once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-treatment-provider-coverage-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Classify treatment provider coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+
+          root=Path('.')
+          problems=[]
+          rows=[]
+
+          def redirect(text):
+              low=text.lower()
+              return 'http-equiv="refresh"' in low or "http-equiv='refresh'" in low
+
+          def hrefs(text):
+              return re.findall(r'\bhref=["\']([^"\']+)', text, re.I)
+
+          en={p.parent.name:p for p in (root/'treatments').glob('*/index.html') if not redirect(p.read_text(encoding='utf-8',errors='ignore'))}
+          ar={p.parent.name:p for p in (root/'ar'/'treatments').glob('*/index.html') if not redirect(p.read_text(encoding='utf-8',errors='ignore'))}
+          if len(en)!=47 or len(ar)!=47:
+              problems.append(f'Expected 47 active EN and 47 active AR treatments; found EN={len(en)} AR={len(ar)}')
+          if set(en)!=set(ar):
+              problems.append(f'EN/AR treatment mismatch EN-only={sorted(set(en)-set(ar))} AR-only={sorted(set(ar)-set(en))}')
+
+          counts={'A':0,'B':0,'C':0,'D':0}
+          for slug,page in sorted(en.items()):
+              text=page.read_text(encoding='utf-8',errors='ignore')
+              links=hrefs(text)
+              docs=sorted({h.split('/doctors/',1)[1].split('/',1)[0] for h in links if h.startswith('/doctors/') and h.split('/doctors/',1)[1]})
+              hosps=sorted({h.split('/hospitals/',1)[1].split('/',1)[0] for h in links if h.startswith('/hospitals/') and h.split('/hospitals/',1)[1]})
+              if docs and hosps: grade='A'
+              elif hosps: grade='B'
+              elif docs: grade='C'
+              else: grade='D'
+              counts[grade]+=1
+              rows.append((grade,slug,docs,hosps))
+
+              ap=ar.get(slug)
+              if ap:
+                  at=ap.read_text(encoding='utf-8',errors='ignore')
+                  al=hrefs(at)
+                  adocs=sorted({h.split('/ar/doctors/',1)[1].split('/',1)[0] for h in al if h.startswith('/ar/doctors/') and h.split('/ar/doctors/',1)[1]})
+                  ahosps=sorted({h.split('/ar/hospitals/',1)[1].split('/',1)[0] for h in al if h.startswith('/ar/hospitals/') and h.split('/ar/hospitals/',1)[1]})
+                  if bool(docs)!=bool(adocs) or bool(hosps)!=bool(ahosps):
+                      problems.append(f'{slug}: EN/AR provider-link type mismatch EN doctors={len(docs)} hospitals={len(hosps)} AR doctors={len(adocs)} hospitals={len(ahosps)}')
+
+          print(f'ACTIVE TREATMENTS EN={len(en)} AR={len(ar)}')
+          print('COVERAGE CLASSIFICATION: A=doctor+hospital, B=hospital-only, C=doctor-only, D=no specific provider')
+          for grade in 'ABCD': print(f'{grade}={counts[grade]}')
+          for grade,slug,docs,hosps in rows:
+              print(f'{grade}\t{slug}\tdoctors={",".join(docs) or "-"}\thospitals={",".join(hosps) or "-"}')
+          if problems:
+              print('COVERAGE AUDIT ISSUES:')
+              print('\n'.join(problems))
+              sys.exit(1)
+          print('47-SPECIALTY PROVIDER COVERAGE CLASSIFICATION COMPLETE')
+          PY
+      - name: Verify protected header footer assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object assets/css/master-header.css)" = "26fcbc9a88dfa959e48e3c079790011d5001fa95"
+          test "$(git hash-object assets/css/arabic-master-header.css)" = "3e85661d08f9a5ef7d8f586a7c8a38451c78c42e"
+          test "$(git hash-object assets/css/mobile-header.css)" = "e2e1b33e23b0881749c0cc019f622fc793cbce45"
+          test "$(git hash-object assets/css/arabic-mobile-header.css)" = "19af6f197ce194a9c9c043c8e22c5703a8c86ced"
+          test "$(git hash-object assets/js/mobile-header.js)" = "171e2202591dda27ed852edfbd6754ba46157060"
+          test "$(git hash-object assets/css/footer-approved.css)" = "05faf239dd9cf39a19b41e596f433c99989c1e9b"
