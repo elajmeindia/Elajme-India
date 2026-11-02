@@ -1,6 +1,6 @@
 name: Audit doctor hospital media parity once
 
-# Final media/parity rerun after conversion and SEO cleanup.
+# Final media/parity rerun after conversion and SEO cleanup. Rerun 2026-11-02.
 on:
   push:
     branches: [main]
