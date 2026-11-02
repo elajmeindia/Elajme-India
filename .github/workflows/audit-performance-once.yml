@@ -1,6 +1,6 @@
 name: Audit site performance once
 
-# Final verification rerun after locked responsive production QA and post-launch quality pass.
+# Final verification rerun after doctor/hospital media parity cleanup.
 on:
   push:
     branches: [main]
@@ -60,13 +60,14 @@ jobs:
           print(f'Live PNG references: {len(png_refs)}')
           for page,src in png_refs[:80]: print(f'PNG_REF {page}: {src}')
           print(f'Non-critical images missing loading hint: {len(missing_lazy)}')
+          for page,src in missing_lazy[:100]: print(f'NO_LAZY {page}: {src}')
           print(f'Images missing width/height: {len(missing_dims)}')
-          for page,src in missing_dims[:40]: print(f'NO_DIMS {page}: {src}')
+          for page,src in missing_dims[:100]: print(f'NO_DIMS {page}: {src}')
           if very_large:
               raise SystemExit(f'Live performance audit found {len(very_large)} referenced image(s) over 800KB')
           if missing_lazy:
               raise SystemExit(f'Live performance audit found {len(missing_lazy)} non-critical image(s) without lazy loading')
           PY
-      - name: Verify footer lock files are untouched
+      - name: Verify protected header footer files are untouched
         run: |
-          test -z "$(git status --porcelain -- assets/css/footer-approved.css FOOTER-LOCK.md)"
+          test -z "$(git status --porcelain -- assets/css/master-header.css assets/css/arabic-master-header.css assets/css/mobile-header.css assets/css/arabic-mobile-header.css assets/js/mobile-header.js assets/css/footer-approved.css FOOTER-LOCK.md)"
