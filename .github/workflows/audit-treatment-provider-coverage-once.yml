@@ -45,7 +45,6 @@ jobs:
                   for prefix,bucket in ((dp,docs),(hp,hosps)):
                       if path.startswith(prefix):
                           tail=path[len(prefix):].strip('/')
-                          # Count only individual provider profile routes, never directory/search links.
                           if tail and '/' not in tail:
                               bucket.add(tail)
               return sorted(docs), sorted(hosps)
@@ -96,3 +95,4 @@ jobs:
           test "$(git hash-object assets/css/arabic-mobile-header.css)" = "19af6f197ce194a9c9c043c8e22c5703a8c86ced"
           test "$(git hash-object assets/js/mobile-header.js)" = "171e2202591dda27ed852edfbd6754ba46157060"
           test "$(git hash-object assets/css/footer-approved.css)" = "05faf239dd9cf39a19b41e596f433c99989c1e9b"
+          echo 'Protected header/footer hashes verified; corrected provider-link classifier executed.'
