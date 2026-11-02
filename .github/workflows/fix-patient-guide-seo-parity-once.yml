@@ -1,0 +1,53 @@
+name: Fix patient guide SEO parity once
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-patient-guide-seo-parity-once.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fix patient guide metadata and current-page semantics
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, re
+
+          banner='https://elajmeindia.com/Healthcare%20Travel%20Banner.png'
+          for path, lang in [(Path('patient-guide/index.html'),'en'),(Path('ar/patient-guide/index.html'),'ar')]:
+              s=path.read_text(encoding='utf-8')
+              s=s.replace('aria-current="page" aria-label="Elajme India Home"','aria-label="Elajme India Home"')
+              s=s.replace('aria-current="page" aria-label="علاج مي إنديا - الرئيسية"','aria-label="علاج مي إنديا - الرئيسية"')
+              s=s.replace('<meta name="robots" content="index,follow">','<meta name="robots" content="index,follow,max-image-preview:large">',1)
+              if 'property="og:image"' not in s:
+                  s=s.replace('<meta property="og:type" content="article">',f'<meta property="og:type" content="article"><meta property="og:image" content="{banner}">',1)
+              if lang=='ar' and 'application/ld+json' not in s:
+                  data={
+                    '@context':'https://schema.org','@type':'WebPage',
+                    'name':'دليل المريض الدولي للعلاج في الهند',
+                    'url':'https://elajmeindia.com/ar/patient-guide/','inLanguage':'ar',
+                    'description':'دليل عملي خطوة بخطوة للمرضى الدوليين الراغبين في العلاج في الهند، من مراجعة الحالة إلى تنسيق المستشفى والتخطيط للسفر.',
+                    'publisher':{'@type':'Organization','name':'Elajme India'},
+                    'about':{'@type':'Service','name':'تنسيق علاج المرضى الدوليين في الهند','provider':{'@type':'Organization','name':'Elajme India'},'availableLanguage':['Arabic','English']}
+                  }
+                  schema='<script type="application/ld+json">'+json.dumps(data,ensure_ascii=False,separators=(',',':'))+'</script>'
+                  s=s.replace('<link rel="stylesheet" href="/assets/css/site-shell.css">',schema+'<link rel="stylesheet" href="/assets/css/site-shell.css">',1)
+              path.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then
+            echo 'No changes needed'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add patient-guide/index.html ar/patient-guide/index.html
+          git commit -m 'Polish bilingual patient guide SEO parity'
+          git push
