@@ -18,13 +18,13 @@ jobs:
           from pathlib import Path
           import hashlib,re,sys
           problems=[]
-          # Approved baseline after the verified bilingual mobile-header repair.
+          # Approved baseline after the verified bilingual mobile-header repair and directory language-switch normalization.
           locked_hashes={
             'assets/css/master-header.css':'26fcbc9a88dfa959e48e3c079790011d5001fa95',
             'assets/css/arabic-master-header.css':'3e85661d08f9a5ef7d8f586a7c8a38451c78c42e',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
-            'assets/js/mobile-header.js':'171e2202591dda27ed852edfbd6754ba46157060',
+            'assets/js/mobile-header.js':'034b2d8481f68243e099dbbb0ff1f876d96d9a8f',
             'assets/css/footer-approved.css':'05faf239dd9cf39a19b41e596f433c99989c1e9b',
           }
           def git_blob_sha(data): return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
@@ -42,8 +42,6 @@ jobs:
 
           for token in ['height:82px!important','max-width:1320px!important','.master-nav{display:flex!important','.master-actions{display:flex!important','.master-cta{display:inline-flex!important']:
               if token not in master: problems.append('DESKTOP_EN_HEADER_STYLE_DRIFT '+token)
-          # These rules are the critical regression guard that prevents desktop actions/nav
-          # from reappearing beside the dedicated mobile controls.
           for token in ['@media(max-width:900px)', '.master-actions{display:none!important}', '.master-site-header .master-header-inner>.master-nav{display:none!important}', 'height:72px!important', 'flex-wrap:nowrap!important']:
               if token not in master: problems.append('MOBILE_MASTER_CASCADE_GUARD_DRIFT '+token)
           for token in ['html[lang="ar"] .master-header-inner{direction:rtl!important','html[lang="ar"] .master-nav{direction:rtl!important','html[lang="ar"] .master-actions{direction:rtl!important',"@import url('/assets/css/arabic-mobile-header.css?v=4');"]:
