@@ -12,18 +12,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Block unapproved English Arabic header or footer drift
+      - name: Block unapproved English Arabic header footer or mobile CTA drift
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import hashlib,re,sys
           problems=[]
 
-          # Exact approved production CSS snapshots. Any byte-level change fails this gate.
+          # Exact approved production UI snapshots. Any byte-level change fails this gate.
+          # This now Super Locks the approved EN/AR desktop headers, mobile headers,
+          # Arabic mobile conversion dock/icon implementation, shared mobile JS, and footer.
           locked_hashes={
             'assets/css/master-header.css':'932ce7acbd738f1ea5a71bb0b3913635b647f255',
             'assets/css/arabic-master-header.css':'ca750db9fef35f39930e6137ae5f7b339e0834ae',
             'assets/css/mobile-header.css':'4c179e2d0811c4e52160a08ac0992eaf710b475f',
+            'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
+            'assets/js/mobile-header.js':'171e2202591dda27ed852edfbd6754ba46157060',
             'assets/css/footer-approved.css':'889e7b6f4ca5951d9dc8599390fddeba0c0caf12',
           }
           def git_blob_sha(data):
@@ -35,6 +39,26 @@ jobs:
               actual=git_blob_sha(p.read_bytes())
               if actual!=expected:
                   problems.append(f'UNAPPROVED_LOCKED_FILE_CHANGE {path} expected={expected} actual={actual}')
+
+          # Lock the approved conversion-bar semantics as well as the file snapshots.
+          js=Path('assets/js/mobile-header.js').read_text(encoding='utf-8',errors='ignore')
+          ar_mobile=Path('assets/css/arabic-mobile-header.css').read_text(encoding='utf-8',errors='ignore')
+          required_js=[
+            "enquiry.innerHTML='<span aria-hidden=\"true\">＋</span><span>ابدأ الاستفسار</span>'",
+            "wa.innerHTML='<span>واتساب</span>'",
+            "wa.className='arabic-mobile-wa-cta'",
+          ]
+          for token in required_js:
+              if token not in js: problems.append('MOBILE_CTA_MARKUP_DRIFT '+token)
+          if "◉" in js: problems.append('ARABIC_WHATSAPP_DOT_REINTRODUCED')
+          required_ar_css=[
+            ".arabic-mobile-wa-cta::before{content:'☎'!important",
+            "width:18px!important;height:18px!important;flex:0 0 18px!important",
+            "background:#20a86b!important",
+            ".arabic-mobile-case-cta::before{content:none!important",
+          ]
+          for token in required_ar_css:
+              if token not in ar_mobile: problems.append('ARABIC_MOBILE_CTA_STYLE_DRIFT '+token)
 
           ar_sequence=['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا']
           ar_actions=['+91 74889 55154','واتساب','English','ابدأ استفسارك']
@@ -80,10 +104,10 @@ jobs:
                       for cls in ['footer-wrap','footer-top','footer-brand','footer-links','footer-bottom']:
                           if cls not in f: problems.append('FOOTER_STRUCTURE_DRIFT '+rel+' '+cls)
 
-          print('Approved Header/Footer Super Lock blocking issues:',len(problems))
+          print('Approved Header/Footer/Mobile CTA Super Lock blocking issues:',len(problems))
           if problems:
               print('\n'.join(problems))
-              print('\nBLOCKED: English/Arabic approved headers and footers may only change after explicit owner approval and the lock snapshot is intentionally updated.')
+              print('\nBLOCKED: Approved English/Arabic desktop/mobile headers, mobile conversion UI, and footers may only change after explicit owner approval and an intentional lock snapshot update.')
               sys.exit(1)
-          print('ELAJME APPROVED EN/AR DESKTOP + MOBILE HEADER + FOOTER SUPER LOCK: CLEAN')
+          print('ELAJME APPROVED EN/AR DESKTOP + MOBILE HEADER + CONVERSION CTA + FOOTER SUPER LOCK: CLEAN')
           PY
