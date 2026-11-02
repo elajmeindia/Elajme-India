@@ -1,0 +1,48 @@
+name: Audit live Cloudflare production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audit-live-cloudflare-production.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify production routes and conversion endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://elajmeindia.com'
+          routes=(
+            '/'
+            '/ar/'
+            '/treatments/'
+            '/hospitals/'
+            '/doctors/'
+            '/international-patients/'
+            '/patient-guide/'
+            '/ar/patient-guide/'
+          )
+          for route in "${routes[@]}"; do
+            echo "Checking ${base}${route}"
+            code=$(curl -L --retry 3 --retry-delay 2 --connect-timeout 15 --max-time 30 -sS -o /tmp/page.html -w '%{http_code}' "${base}${route}")
+            test "$code" = '200' || { echo "FAIL ${route}: HTTP ${code}"; exit 1; }
+            grep -qi '<html' /tmp/page.html || { echo "FAIL ${route}: no HTML document"; exit 1; }
+          done
+
+          curl -L --retry 3 --connect-timeout 15 --max-time 30 -fsS "$base/" -o /tmp/en.html
+          curl -L --retry 3 --connect-timeout 15 --max-time 30 -fsS "$base/ar/" -o /tmp/ar.html
+          grep -q '917488955154' /tmp/en.html || { echo 'FAIL: English homepage missing Elajme WhatsApp number'; exit 1; }
+          grep -q '917488955154' /tmp/ar.html || { echo 'FAIL: Arabic homepage missing Elajme WhatsApp number'; exit 1; }
+          grep -q 'id="enquiry"' /tmp/en.html || { echo 'FAIL: English enquiry anchor missing'; exit 1; }
+          grep -q 'id="enquiry"' /tmp/ar.html || { echo 'FAIL: Arabic enquiry anchor missing'; exit 1; }
+          grep -q 'https://elajmeindia.com/' /tmp/en.html || { echo 'FAIL: English production canonical/domain marker missing'; exit 1; }
+          grep -q 'https://elajmeindia.com/ar/' /tmp/ar.html || { echo 'FAIL: Arabic production canonical/domain marker missing'; exit 1; }
+          echo 'LIVE CLOUDFLARE PRODUCTION AUDIT PASSED'
