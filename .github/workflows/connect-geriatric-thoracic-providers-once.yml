@@ -1,0 +1,36 @@
+name: Connect geriatric and thoracic providers once
+on:
+  push:
+    paths: ['.github/workflows/connect-geriatric-thoracic-providers-once.yml']
+permissions: {contents: write}
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Connect exact providers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          cases={
+          'treatments/geriatric-medicine-india/index.html':('<a href="/doctors/dr-prasun-chatterjee/">Dr. Prasun Chatterjee · Geriatric Medicine</a><a href="/hospitals/indraprastha-apollo-hospital-delhi/">Indraprastha Apollo Hospital, Delhi</a>','Apollo currently lists Dr. Prasun Chatterjee in Geriatric Medicine. Provider association, availability and suitability are reconfirmed for each enquiry.'),
+          'ar/treatments/geriatric-medicine-india/index.html':('<a href="/ar/doctors/dr-prasun-chatterjee/">د. براسون تشاترجي · طب الشيخوخة</a><a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">مستشفى إندرابراستا أبولو، دلهي</a>','تدرج أبولو حالياً د. براسون تشاترجي في طب الشيخوخة. يتم إعادة تأكيد الارتباط والتوفر ومدى الملاءمة لكل حالة.'),
+          'treatments/thoracic-chest-surgery-india/index.html':('<a href="/doctors/dr-saraansh-bansal/">Dr. Saraansh Bansal · Thoracic Surgery</a><a href="/hospitals/indraprastha-apollo-hospital-delhi/">Indraprastha Apollo Hospital, Delhi</a>','Apollo currently lists Dr. Saraansh Bansal in Thoracic Surgery. Provider association, availability and suitability are reconfirmed for each enquiry.'),
+          'ar/treatments/thoracic-chest-surgery-india/index.html':('<a href="/ar/doctors/dr-saraansh-bansal/">د. سارانش بانسال · جراحة الصدر</a><a href="/ar/hospitals/indraprastha-apollo-hospital-delhi/">مستشفى إندرابراستا أبولو، دلهي</a>','تدرج أبولو حالياً د. سارانش بانسال في جراحة الصدر. يتم إعادة تأكيد الارتباط والتوفر ومدى الملاءمة لكل حالة.')}
+          import re
+          for fn,(links,note) in cases.items():
+            p=Path(fn); s=p.read_text()
+            m=re.search(r'<section class="sec" data-treatment-care-links="1">.*?</section>',s)
+            if not m: raise SystemExit('missing provider section '+fn)
+            ar=fn.startswith('ar/')
+            h='أطباء ومستشفيات ذات صلة' if ar else 'Relevant doctor and hospital'
+            dirs='<a href="/ar/doctors/">استعرض الأطباء</a><a href="/ar/hospitals/">استعرض المستشفيات</a><a href="/ar/#enquiry">اطلب تنسيق حالتك عبر علاج مي إنديا</a>' if ar else '<a href="/doctors/">Browse doctors</a><a href="/hospitals/">Explore hospitals</a><a href="/#enquiry">Request case coordination through Elajme India</a>'
+            sec=f'<section class="sec" data-treatment-care-links="1"><div class="c"><h2>{h}</h2><p class="lead">{note}</p><div class="related">{links}{dirs}</div></div></section>'
+            p.write_text(s[:m.start()]+sec+s[m.end():])
+          PY
+      - name: Commit
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add treatments/geriatric-medicine-india/index.html ar/treatments/geriatric-medicine-india/index.html treatments/thoracic-chest-surgery-india/index.html ar/treatments/thoracic-chest-surgery-india/index.html
+          git diff --cached --quiet || (git commit -m 'Connect geriatric and thoracic treatments to verified providers' && git push)
