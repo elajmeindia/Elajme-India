@@ -1,21 +1,24 @@
 /* Shared doctor profile layout for Elajme India */
 :root{--ink:#16333c;--muted:#587078;--brand:#0b6574;--soft:#eef7f8;--line:#d9e7e9;--white:#fff}
 *{box-sizing:border-box}
-body{margin:0;color:var(--ink);background:var(--white);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;line-height:1.65}
-.profile-main .container{width:min(1120px,calc(100% - 40px));margin:0 auto}
+body{margin:0;color:var(--ink);background:var(--white);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;line-height:1.65;overflow-wrap:break-word}
+.profile-main{min-width:0;overflow-x:clip}
+.profile-main .container{width:min(1120px,calc(100% - 40px));max-width:100%;margin:0 auto;min-width:0}
+.profile-main .container>*{min-width:0;max-width:100%}
 .profile-hero{padding:72px 0 64px;background:linear-gradient(180deg,#f3fafb 0%,#fff 100%);border-bottom:1px solid var(--line)}
 .profile-hero .eyebrow{margin:0 0 10px;color:var(--brand);font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-.profile-hero h1{margin:0;max-width:850px;font-size:clamp(34px,5vw,54px);line-height:1.12;color:#0b3440}
-.profile-hero .lead{max-width:760px;margin:18px 0 26px;color:var(--muted);font-size:18px}
-.profile-main .btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:9px;background:#0b6574;color:#fff;text-decoration:none;font-weight:750}
+.profile-hero h1{margin:0;max-width:850px;font-size:clamp(34px,5vw,54px);line-height:1.12;color:#0b3440;overflow-wrap:anywhere}
+.profile-hero .lead{max-width:760px;margin:18px 0 26px;color:var(--muted);font-size:18px;overflow-wrap:anywhere}
+.profile-main .btn{display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:12px 18px;border-radius:9px;background:#0b6574;color:#fff;text-decoration:none;font-weight:750;text-align:center;white-space:normal;overflow-wrap:anywhere}
 .profile-section{padding:52px 0 68px}
-.profile-section h2{margin:30px 0 10px;color:#0b3440;font-size:24px;line-height:1.3}
+.profile-section h2{margin:30px 0 10px;color:#0b3440;font-size:24px;line-height:1.3;overflow-wrap:anywhere}
 .profile-section h2:first-child{margin-top:0}
-.profile-section p{max-width:900px;margin:0 0 18px;color:#314f58}
-.profile-section .note{max-width:900px;margin:28px 0;padding:18px 20px;border:1px solid #cfe2e5;border-radius:12px;background:var(--soft);color:#294b54}
-.profile-section .related{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
-.profile-section .related a{display:inline-flex;padding:10px 14px;border:1px solid #c8dde0;border-radius:9px;color:#075d6b;background:#fff;text-decoration:none;font-weight:700}
+.profile-section p{max-width:900px;margin:0 0 18px;color:#314f58;overflow-wrap:anywhere}
+.profile-section .note{max-width:900px;margin:28px 0;padding:18px 20px;border:1px solid #cfe2e5;border-radius:12px;background:var(--soft);color:#294b54;overflow-wrap:anywhere}
+.profile-section .related{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;min-width:0}
+.profile-section .related a{display:inline-flex;max-width:100%;padding:10px 14px;border:1px solid #c8dde0;border-radius:9px;color:#075d6b;background:#fff;text-decoration:none;font-weight:700;white-space:normal;overflow-wrap:anywhere}
 .profile-section .related a:hover,.profile-section .related a:focus-visible{background:#eef7f8;border-color:#9fc8ce}
+.profile-main img{max-width:100%;height:auto}
 html[lang="ar"] .profile-main{direction:rtl;text-align:right}
 html[lang="ar"] .profile-hero .eyebrow{letter-spacing:0;text-transform:none}
-@media(max-width:700px){.profile-main .container{width:min(100% - 32px,1120px)}.profile-hero{padding:48px 0 42px}.profile-hero .lead{font-size:16px}.profile-section{padding:38px 0 52px}.profile-section h2{font-size:21px}.profile-main .btn{width:100%;text-align:center}.profile-section .related{flex-direction:column}.profile-section .related a{width:100%}}
+@media(max-width:700px){.profile-main .container{width:min(100% - 32px,1120px)}.profile-hero{padding:48px 0 42px}.profile-hero h1{font-size:clamp(30px,10vw,42px)}.profile-hero .lead{font-size:16px}.profile-section{padding:38px 0 52px}.profile-section h2{font-size:21px}.profile-main .btn{width:100%;text-align:center}.profile-section .related{flex-direction:column}.profile-section .related a{width:100%}}
