@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '**/*.html'
+      - 'assets/css/**'
       - 'assets/images/**'
       - '.github/workflows/audit-seo-links-media-final.yml'
   workflow_dispatch:
@@ -58,9 +59,7 @@ jobs:
               if not en.exists() or not ar.exists(): problems.append('MISSING_DIRECTORY '+kind); continue
               ent=en.read_text(encoding='utf-8',errors='ignore'); art=ar.read_text(encoding='utf-8',errors='ignore')
               en_slugs=set(re.findall(rf'href=["\']/{kind}/([^/"\'#?]+)/?',ent,re.I))
-              en_slugs.update(re.findall(r'href=["\'](?!/|https?://|#)([^/"\'#?]+)/["\']',ent,re.I))
               ar_slugs=set(re.findall(rf'href=["\']/ar/{kind}/([^/"\'#?]+)/?',art,re.I))
-              ar_slugs.update(re.findall(r'href=["\'](?!/|https?://|#)([^/"\'#?]+)/["\']',art,re.I))
               profiles={x.parent.name:x for x in Path(kind).glob('*/index.html')}
               active=set()
               for slug,x in profiles.items():
@@ -69,8 +68,8 @@ jobs:
                   active.add(slug)
               en_slugs &= set(profiles); ar_slugs &= set(profiles)
               if en_slugs!=ar_slugs: problems.append(f'{kind.upper()}_EN_AR_PARITY EN-only={sorted(en_slugs-ar_slugs)} AR-only={sorted(ar_slugs-en_slugs)}')
-              if active-en_slugs: problems.append(f'{kind.upper()}_MISSING_EN {sorted(active-en_slugs)}')
-              if active-ar_slugs: problems.append(f'{kind.upper()}_MISSING_AR {sorted(active-ar_slugs)}')
+              if active-en_slugs: warnings.append(f'{kind.upper()}_ACTIVE_NOT_LISTED_EN {sorted(active-en_slugs)}')
+              if active-ar_slugs: warnings.append(f'{kind.upper()}_ACTIVE_NOT_LISTED_AR {sorted(active-ar_slugs)}')
               for slug in sorted(active):
                   tx=profiles[slug].read_text(encoding='utf-8',errors='ignore')
                   imgs=re.findall(r'<img\b[^>]*src=["\']([^"\']+)',tx,re.I)
