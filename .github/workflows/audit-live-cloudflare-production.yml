@@ -6,6 +6,8 @@ on:
     paths:
       - '.github/workflows/audit-live-cloudflare-production.yml'
       - '_redirects'
+      - '_headers'
+      - '404.html'
   workflow_dispatch:
 
 permissions:
@@ -16,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Verify production routes and conversion endpoints
+      - name: Verify production routes, redirects, headers and conversion endpoints
         shell: bash
         run: |
           set -euo pipefail
@@ -39,11 +41,25 @@ jobs:
             grep -qi '<html' /tmp/page.html || { echo "FAIL ${route}: no HTML document"; exit 1; }
           done
 
-          for route in '/international-patients/' '/ar/international-patients/'; do
-            echo "Checking redirect ${base}${route}"
-            code=$(curl -L --retry 3 --retry-delay 2 --connect-timeout 15 --max-time 30 -sS -o /tmp/page.html -w '%{http_code}' "${base}${route}")
-            test "$code" = '200' || { echo "FAIL redirect ${route}: final HTTP ${code}"; exit 1; }
-          done
+          check_redirect() {
+            source="$1"; expected="$2"
+            echo "Checking redirect ${base}${source} -> ${expected}"
+            headers=$(curl --retry 3 --retry-delay 2 --connect-timeout 15 --max-time 30 -sSI "${base}${source}")
+            code=$(printf '%s' "$headers" | awk 'toupper($1) ~ /^HTTP\// {c=$2} END {print c}')
+            location=$(printf '%s' "$headers" | awk 'BEGIN{IGNORECASE=1} /^location:/ {sub(/\r$/,""); sub(/^[^:]+:[[:space:]]*/,""); print; exit}')
+            test "$code" = '301' || { echo "FAIL redirect ${source}: expected 301, got ${code}"; exit 1; }
+            case "$location" in
+              "$expected"|"${base}${expected}") ;;
+              *) echo "FAIL redirect ${source}: ${location} != ${expected}"; exit 1;;
+            esac
+          }
+
+          check_redirect '/international-patients/' '/international-patients/mea/'
+          check_redirect '/ar/international-patients/' '/ar/international-patients/mea/'
+          check_redirect '/hospitals/medanta-noida/' '/hospitals/medanta-super-speciality-hospital-noida/'
+          check_redirect '/ar/hospitals/medanta-noida/' '/ar/hospitals/medanta-super-speciality-hospital-noida/'
+          check_redirect '/hospitals/wockhardt-hospitals-mumbai-central/' '/hospitals/wockhardt-hospital-mumbai-central/'
+          check_redirect '/ar/hospitals/wockhardt-hospitals-mumbai-central/' '/ar/hospitals/wockhardt-hospital-mumbai-central/'
 
           curl -L --retry 3 --connect-timeout 15 --max-time 30 -fsS "$base/" -o /tmp/en.html
           curl -L --retry 3 --connect-timeout 15 --max-time 30 -fsS "$base/ar/" -o /tmp/ar.html
@@ -53,4 +69,17 @@ jobs:
           grep -q 'id="enquiry"' /tmp/ar.html || { echo 'FAIL: Arabic enquiry anchor missing'; exit 1; }
           grep -q 'https://elajmeindia.com/' /tmp/en.html || { echo 'FAIL: English production canonical/domain marker missing'; exit 1; }
           grep -q 'https://elajmeindia.com/ar/' /tmp/ar.html || { echo 'FAIL: Arabic production canonical/domain marker missing'; exit 1; }
+
+          echo 'Checking Cloudflare security headers'
+          curl --retry 3 --connect-timeout 15 --max-time 30 -sSI "$base/" -o /tmp/headers.txt
+          grep -qi '^strict-transport-security:' /tmp/headers.txt || { echo 'FAIL: HSTS header missing'; exit 1; }
+          grep -qi '^x-content-type-options:[[:space:]]*nosniff' /tmp/headers.txt || { echo 'FAIL: nosniff header missing'; exit 1; }
+          grep -qi '^referrer-policy:[[:space:]]*strict-origin-when-cross-origin' /tmp/headers.txt || { echo 'FAIL: Referrer-Policy header missing'; exit 1; }
+
+          echo 'Checking custom 404 response'
+          code=$(curl --retry 3 --connect-timeout 15 --max-time 30 -sS -o /tmp/404.html -w '%{http_code}' "$base/__elajme-production-404-check__")
+          test "$code" = '404' || { echo "FAIL: missing route returned HTTP ${code}, expected 404"; exit 1; }
+          grep -q 'Page Not Found | Elajme India' /tmp/404.html || { echo 'FAIL: custom Elajme 404 page not served'; exit 1; }
+          grep -qi 'noindex,follow' /tmp/404.html || { echo 'FAIL: custom 404 missing noindex,follow'; exit 1; }
+
           echo 'LIVE CLOUDFLARE PRODUCTION AUDIT PASSED'
