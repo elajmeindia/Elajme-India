@@ -54,19 +54,36 @@ jobs:
               for href in re.findall(r'href=["\']([^"\']+)',t,re.I):
                   if href.startswith('/') and not route_exists(href): problems.append('BROKEN_INTERNAL_LINK '+rel+' -> '+href)
 
+          def directory_slugs(text, kind, lang):
+              slugs=set()
+              for href in re.findall(r'href=["\']([^"\']+)',text,re.I):
+                  path=unquote(urlparse(href).path).strip('/')
+                  parts=[p for p in path.split('/') if p]
+                  if lang=='en':
+                      if len(parts)==1:
+                          slugs.add(parts[0])
+                      elif len(parts)==2 and parts[0]==kind:
+                          slugs.add(parts[1])
+                  else:
+                      if len(parts)==1:
+                          slugs.add(parts[0])
+                      elif len(parts)==3 and parts[0]=='ar' and parts[1]==kind:
+                          slugs.add(parts[2])
+              return slugs
+
           for kind in ('doctors','hospitals'):
               en=Path(kind)/'index.html'; ar=Path('ar')/kind/'index.html'
               if not en.exists() or not ar.exists(): problems.append('MISSING_DIRECTORY '+kind); continue
               ent=en.read_text(encoding='utf-8',errors='ignore'); art=ar.read_text(encoding='utf-8',errors='ignore')
-              en_slugs=set(re.findall(rf'href=["\']/{kind}/([^/"\'#?]+)/?',ent,re.I))
-              ar_slugs=set(re.findall(rf'href=["\']/ar/{kind}/([^/"\'#?]+)/?',art,re.I))
               profiles={x.parent.name:x for x in Path(kind).glob('*/index.html')}
+              profile_slugs=set(profiles)
+              en_slugs=directory_slugs(ent,kind,'en') & profile_slugs
+              ar_slugs=directory_slugs(art,kind,'ar') & profile_slugs
               active=set()
               for slug,x in profiles.items():
                   tx=x.read_text(encoding='utf-8',errors='ignore').lower()
                   if 'noindex' in tx or 'http-equiv="refresh"' in tx or "http-equiv='refresh'" in tx: continue
                   active.add(slug)
-              en_slugs &= set(profiles); ar_slugs &= set(profiles)
               if en_slugs!=ar_slugs: problems.append(f'{kind.upper()}_EN_AR_PARITY EN-only={sorted(en_slugs-ar_slugs)} AR-only={sorted(ar_slugs-en_slugs)}')
               if active-en_slugs: warnings.append(f'{kind.upper()}_ACTIVE_NOT_LISTED_EN {sorted(active-en_slugs)}')
               if active-ar_slugs: warnings.append(f'{kind.upper()}_ACTIVE_NOT_LISTED_AR {sorted(active-ar_slugs)}')
