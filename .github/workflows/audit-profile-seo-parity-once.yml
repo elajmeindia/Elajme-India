@@ -2,7 +2,13 @@ name: Audit bilingual profile SEO and internal links once
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/audit-profile-seo-parity-once.yml']
+    paths:
+      - '.github/workflows/audit-profile-seo-parity-once.yml'
+      - 'doctors/**/index.html'
+      - 'ar/doctors/**/index.html'
+      - 'hospitals/**/index.html'
+      - 'ar/hospitals/**/index.html'
+      - 'sitemap.xml'
 permissions:
   contents: read
 jobs:
@@ -68,5 +74,4 @@ jobs:
           if problems:
               print('PROFILE SEO/PARITY ISSUES:'); print('\n'.join(problems)); sys.exit(1)
           print('BILINGUAL PROFILE SEO/PARITY AUDIT CLEAN')
-          # audit trigger: exact profile language switches added 2026-11-03
           PY
