@@ -11,5 +11,12 @@
 # Preserve SEO equity from a legacy orthopaedic treatment URL that Google discovered.
 /treatments/orthopedic-treatment-india/ /treatments/knee-replacement-india/ 301
 
+# Canonicalize legacy hospital profile aliases at the Cloudflare edge.
+# Keep both language versions aligned with their active profile URLs.
+/hospitals/medanta-noida/ /hospitals/medanta-super-speciality-hospital-noida/ 301
+/ar/hospitals/medanta-noida/ /ar/hospitals/medanta-super-speciality-hospital-noida/ 301
+/hospitals/wockhardt-hospitals-mumbai-central/ /hospitals/wockhardt-hospital-mumbai-central/ 301
+/ar/hospitals/wockhardt-hospitals-mumbai-central/ /ar/hospitals/wockhardt-hospital-mumbai-central/ 301
+
 # Note: Cloudflare Pages _redirects does not support matching query parameters.
 # Legacy ?lang=ar handling remains in the homepage JavaScript where required.
