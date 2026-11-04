@@ -107,9 +107,23 @@ jobs:
                 console.log('FORM VALIDATION',path,JSON.stringify(result),'NO SUBMISSION');
               }catch(e){errors.push(path+': enquiry validation: '+e.message)}
             }
+            if(errors.length){
+              const fs=require('fs');
+              fs.mkdirSync('qa-artifacts',{recursive:true});
+              fs.writeFileSync('qa-artifacts/failures.txt',errors.join('\n')+'\n');
+              try{await page.screenshot({path:'qa-artifacts/last-mobile-page.png',fullPage:true})}catch(e){console.error('Screenshot unavailable:',e.message)}
+            }
             await browser.close();
             errors.forEach(e=>console.error('FAIL',e));
             console.log('MOBILE BILINGUAL BROWSER:',errors.length,'issues');
             if(errors.length)process.exitCode=1;
           })().catch(e=>{console.error(e);process.exitCode=1});
           JS
+      - name: Upload failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-bilingual-failure-evidence
+          path: qa-artifacts/
+          if-no-files-found: ignore
+          retention-days: 14
