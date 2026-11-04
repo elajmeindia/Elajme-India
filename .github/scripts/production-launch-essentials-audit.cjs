@@ -15,7 +15,7 @@ const errors = [], results = [];
       const html = await response.text();
       const failures = [];
       if (!response.ok) failures.push('HTTP ' + response.status);
-      if (!new RegExp('<html[^>]*lang=["\\']' + lang + '["\\']', 'i').test(html)) failures.push('wrong HTML language');
+      if (!html.toLowerCase().includes('lang="' + lang + '"') && !html.toLowerCase().includes("lang='" + lang + "'")) failures.push('wrong HTML language');
       if (!/<meta[^>]+name=["']viewport["']/i.test(html)) failures.push('missing mobile viewport');
       if (!/<link[^>]+rel=["']canonical["']/i.test(html)) failures.push('missing canonical');
       if (!/<link[^>]+hreflang=["']en["']/i.test(html) || !/<link[^>]+hreflang=["']ar["']/i.test(html)) failures.push('missing bilingual alternate');
