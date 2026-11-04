@@ -13,6 +13,8 @@ jobs:
           python - <<'PY'
           import requests,re,html
           urls={
+            'kanchan_profile_portrait':'https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-07/whatsapp-image-2026-07-31-at-13.28.29.jpeg',
+            'nishchint_profile_portrait':'https://images.apollo247.in/doctors/9f3aed98-015d-45fc-b4ee-581f2a7b6d2f.jpg',
             'uma':'https://www.apollohospitals.com/doctors/nuclear-medicine-physician/delhi/dr-uma-ravishankar',
             'uma_cancer':'https://www.apollohospitals.com/cancer-treatment-centres/cancer-hospital/delhi/nuclear-medicine/dr-uma-ravishanka/bio/',
             'prasun':'https://www.apollohospitals.com/doctors/geriatrician/delhi/dr-prasun-chatterjee',
@@ -29,7 +31,7 @@ jobs:
           for name,url in urls.items():
             try:
               r=requests.get(url,timeout=15,headers={'User-Agent':'Mozilla/5.0'})
-              print('PAGE',name,r.status_code,len(r.content))
+              print('PAGE',name,r.status_code,len(r.content),r.headers.get('Content-Type','unknown'))
               for pattern in [r'<meta[^>]+(?:og:image|twitter:image)[^>]+>',r'<img[^>]+(?:uma|prasun|dhavendra|kumar|doctor)[^>]*>']:
                 for match in re.findall(pattern,r.text,re.I)[:8]:
                   print('IMAGE_CANDIDATE',name,html.unescape(match[:600]))
