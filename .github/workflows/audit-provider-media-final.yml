@@ -91,5 +91,27 @@ jobs:
           for x in blocking: print(x)
           print(f'Review warnings: {len(warnings)}')
           for x in warnings: print(x)
+          # Surface non-blocking findings in the Actions run summary so a green
+          # check cannot be mistaken for a warning-free provider media audit.
+          import os
+          summary_path = os.environ.get('GITHUB_STEP_SUMMARY')
+          if summary_path:
+              with open(summary_path, 'a', encoding='utf-8') as summary:
+                  summary.write('## Provider media quality audit\\n\\n')
+                  summary.write(f'- Provider pages checked: **{checked}**\\n')
+                  summary.write(f'- Blocking issues: **{len(blocking)}**\\n')
+                  summary.write(f'- Review warnings: **{len(warnings)}**\\n\\n')
+                  if warnings:
+                      summary.write('### Review required (non-blocking)\\n\\n')
+                      for warning in warnings[:100]:
+                          summary.write(f'- {warning}\\n')
+                      if len(warnings) > 100:
+                          summary.write(f'- … and {len(warnings)-100} more warnings (see job log).\\n')
+                  if blocking:
+                      summary.write('### Blocking issues\\n\\n')
+                      for issue in blocking[:100]:
+                          summary.write(f'- {issue}\\n')
+          if warnings:
+              print('WARNING: Audit passed only if blocking issues are zero; media review warnings remain.')
           if blocking:
               sys.exit(1)
