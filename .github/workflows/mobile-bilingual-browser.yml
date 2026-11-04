@@ -71,6 +71,31 @@ jobs:
                 console.log('JOURNEY',treatment,'->',directory,'->',profileHref,'->',enquiry);
               }catch(e){errors.push(lang+': treatment-to-enquiry journey: '+e.message)}
             }
+            for(const path of ['/','/ar/']){
+              try{
+                await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
+                const result=await page.locator('#patientEnquiryForm').evaluate(form=>{
+                  const required=['patientName','patientCountry','patientMobile','medicalNeed'];
+                  const missing=required.filter(id=>!form.querySelector('#'+id));
+                  const initiallyInvalid=!form.checkValidity();
+                  const inputs=required.map(id=>form.querySelector('#'+id));
+                  if(inputs.every(Boolean)){
+                    inputs[0].value='Test Patient';
+                    inputs[1].value='Test Country';
+                    inputs[2].value='+971501234567';
+                    inputs[3].value='Browser validation only, no submission';
+                    inputs.forEach(el=>el.dispatchEvent(new Event('input',{bubbles:true})));
+                  }
+                  const validAfterFill=form.checkValidity();
+                  inputs.forEach(el=>{if(el)el.value=''});
+                  return {missing,initiallyInvalid,validAfterFill};
+                });
+                if(result.missing.length)errors.push(path+': missing enquiry fields '+result.missing.join(','));
+                if(!result.initiallyInvalid)errors.push(path+': blank enquiry form should be invalid');
+                if(!result.validAfterFill)errors.push(path+': valid enquiry form rejected');
+                console.log('FORM VALIDATION',path,JSON.stringify(result),'NO SUBMISSION');
+              }catch(e){errors.push(path+': enquiry validation: '+e.message)}
+            }
             await browser.close();
             errors.forEach(e=>console.error('FAIL',e));
             console.log('MOBILE BILINGUAL BROWSER:',errors.length,'issues');
