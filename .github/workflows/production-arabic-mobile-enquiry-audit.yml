@@ -26,6 +26,15 @@ jobs:
         env:
           BASE_URL: https://elajmeindia.com
         run: node .github/scripts/production-arabic-mobile-enquiry-audit.cjs
+      - name: Publish audit summary
+        if: always()
+        run: |
+          if [ -f audit-results/report.json ]; then
+            node -e "const r=require('./audit-results/report.json');const fs=require('fs');const lines=['## Arabic production mobile audit','Checked: '+r.checkedAt,'Checks: '+r.checks.length,'Failures: '+r.errors.length,...r.errors.map(x=>'- '+x)];fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\\n')+'\\n');"
+          else
+            echo "## Arabic production mobile audit" >> "$GITHUB_STEP_SUMMARY"
+            echo "Browser report unavailable. Inspect the failed job step." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
