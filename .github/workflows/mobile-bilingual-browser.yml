@@ -88,7 +88,7 @@ jobs:
                   ])));
                   await new Promise(resolve=>setTimeout(resolve,900));
                   await Promise.all(imgs.filter(img=>!img.complete||img.naturalWidth===0).map(img=>img.decode().catch(()=>{})));
-                  return {count:imgs.length,broken:imgs.filter(img=>!img.complete||img.naturalWidth===0).map(img=>({src:img.currentSrc||img.src,alt:img.alt})).slice(0,35),fallbacks:imgs.filter(img=>(img.currentSrc||img.src).includes('/portrait-unavailable.svg')).length};
+                  return {count:imgs.length,broken:imgs.filter(img=>!img.complete||img.naturalWidth===0).map(img=>({src:img.currentSrc||img.src,alt:img.alt})).slice(0,35),fallbacks:imgs.filter(img=>(img.currentSrc||img.src).includes('/portrait-unavailable.svg')).length,fallbackDoctors:imgs.filter(img=>(img.currentSrc||img.src).includes('/portrait-unavailable.svg')).map(img=>({name:img.closest('article')?.querySelector('h2')?.textContent?.trim()||img.alt,profile:img.closest('article')?.querySelector('a[href*=\"/doctors/\"]')?.getAttribute('href')||null}))};
                 });
                 console.log('PROVIDER DIRECTORY IMAGE SCAN',path,JSON.stringify(result));
                 if(result.broken.length)errors.push(path+': '+result.broken.length+' broken provider directory images: '+JSON.stringify(result.broken));
