@@ -1,6 +1,12 @@
 name: Production Launch Smoke Test
 on:
   workflow_dispatch:
+    inputs:
+      site_origin:
+        description: 'Deployed site origin (include repository path if needed)'
+        required: true
+        default: 'https://elajmeindia.com'
+        type: string
   schedule:
     - cron: '17 4 * * *'
 permissions:
@@ -13,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check production bilingual routes and critical assets
         env:
-          SITE_ORIGIN: https://elajmeindia.com
+          SITE_ORIGIN: \${{ inputs.site_origin || vars.ELAJME_SITE_ORIGIN || 'https://elajmeindia.com' }}
         run: |
           python3 - <<'PY'
           import os,urllib.request,urllib.error,sys,re
