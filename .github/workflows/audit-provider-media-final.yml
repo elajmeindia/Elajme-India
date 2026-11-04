@@ -128,7 +128,7 @@ jobs:
           for p in Path('doctors').glob('*/index.html'):
               html = p.read_text(encoding='utf-8', errors='ignore')
               for tag in re.findall(r'<img\\b[^>]*>', html, re.I):
-                  m = re.search(r'\\bsrc=["\\'](https?://[^"\\']+)', tag, re.I)
+                  m = re.search(r'src="(https?://[^"]+)', tag, re.I)
                   if not m: continue
                   url = m.group(1).replace('&amp;', '&')
                   urls.setdefault(url, []).append(str(p))
