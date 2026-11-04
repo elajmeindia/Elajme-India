@@ -1,0 +1,47 @@
+name: Clean Official URL Guard
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.html'
+      - '**/*.js'
+      - '**/*.css'
+      - '.github/workflows/clean-url-guard.yml'
+  pull_request:
+    paths:
+      - '**/*.html'
+      - '**/*.js'
+      - '**/*.css'
+      - '.github/workflows/clean-url-guard.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  clean-url:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prevent UTM tracking and malformed homepage links
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,sys
+          errors=[]
+          ignored={'.git','node_modules','vendor','dist'}
+          for p in Path('.').rglob('*'):
+              if not p.is_file() or p.suffix.lower() not in ('.html','.js','.css'):continue
+              if any(part in ignored for part in p.parts):continue
+              try:content=p.read_text(encoding='utf-8')
+              except UnicodeError:continue
+              if re.search(r'utm_(?:source|medium|campaign|term|content|id)\s*=',content,re.I):
+                  errors.append(f'{p}: UTM tracking parameter detected')
+              if re.search(r'https?://(?:www\.)?elajmeindia\.com/\*\*',content,re.I):
+                  errors.append(f'{p}: malformed /** homepage path detected')
+          for path,canonical in [('index.html','https://elajmeindia.com/'),('ar/index.html','https://elajmeindia.com/ar/')]:
+              html=Path(path).read_text(encoding='utf-8')
+              if not re.search(r'<link\b[^>]*rel=["\']canonical["\'][^>]*href=["\']'+re.escape(canonical)+r'["\']',html,re.I):
+                  errors.append(f'{path}: canonical URL is not {canonical}')
+          for error in errors:print('ERROR:',error)
+          print(f'CLEAN URL GUARD: {len(errors)} errors')
+          if errors:sys.exit(1)
+          PY
