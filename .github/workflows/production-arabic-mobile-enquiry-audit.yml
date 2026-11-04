@@ -24,6 +24,12 @@ jobs:
           node-version: '22'
       - name: Verify Arabic directory and enquiry source
         run: node .github/scripts/arabic-directory-static-audit.cjs
+      - name: Validate audit scripts before browser installation
+        run: |
+          node --check .github/scripts/production-arabic-mobile-enquiry-audit.cjs
+          node --check .github/scripts/production-bilingual-readiness-audit.cjs
+          node --check .github/scripts/production-launch-essentials-audit.cjs
+          node --check .github/scripts/production-phase2-performance-baseline.cjs
       - name: Install browser
         run: |
           npm install --no-save playwright@1.56.1
