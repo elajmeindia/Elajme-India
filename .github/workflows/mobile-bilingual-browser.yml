@@ -107,7 +107,7 @@ jobs:
                     if(!img)return {missing:true};
                     await Promise.race([img.decode().catch(()=>{}),new Promise(resolve=>setTimeout(resolve,7000))]);
                     if(!img.complete||img.naturalWidth===0){await new Promise(resolve=>setTimeout(resolve,800));await img.decode().catch(()=>{});}
-                    return {src:img.currentSrc||img.src,loaded:img.complete&&img.naturalWidth>0};
+                    return {src:img.currentSrc||img.src,loaded:img.complete&&img.naturalWidth>0,placeholder:(img.currentSrc||img.src).includes('/portrait-unavailable.svg')};
                   });
                   console.log('PROFILE PORTRAIT REVIEW',path,JSON.stringify(result));
                   if(!result.loaded)errors.push(path+': broken profile portrait '+JSON.stringify(result));
