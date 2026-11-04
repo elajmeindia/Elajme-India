@@ -44,8 +44,10 @@ jobs:
                   img=re.search(r'<img\b[^>]*\bsrc="([^"]+)"',card)
                   if not img:issues.append(f'{lang}: card {n} missing image');continue
                   src=img.group(1)
-                  if src.startswith(('http://','https://')) and 'www.fortishealthcare.com/azblob/files/styles/experts_image/azblob/doctors/dr-anil--mandhani-1879.jpg' in src:\n                      pass\n                  elif src.startswith(('http://','https://')):
-                      issues.append(f'{lang}: card {n} external image dependency: {src}')
+                  if src.startswith('https://'):
+                      if not re.match(r'^https://[^/]+/.+',src):issues.append(f'{lang}: card {n} invalid HTTPS image URL: {src}')
+                  elif src.startswith('http://'):
+                      issues.append(f'{lang}: card {n} insecure image URL: {src}')
                   elif src.startswith('/assets/'):
                       if not Path(src.split('?',1)[0].lstrip('/')).is_file():issues.append(f'{lang}: card {n} missing local image: {src}')
                   else:issues.append(f'{lang}: card {n} unexpected image path: {src}')
