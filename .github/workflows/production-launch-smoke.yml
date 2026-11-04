@@ -1,0 +1,50 @@
+name: Production Launch Smoke Test
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 4 * * *'
+permissions:
+  contents: read
+jobs:
+  production-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check production bilingual routes and critical assets
+        env:
+          SITE_ORIGIN: https://elajmeindia.com
+        run: |
+          python3 - <<'PY'
+          import os,urllib.request,urllib.error,sys,re
+          from urllib.parse import urljoin
+          origin=os.environ['SITE_ORIGIN'].rstrip('/')+'/'
+          routes=['','ar/','doctors/','ar/doctors/','hospitals/','ar/hospitals/','contact/','ar/contact/','treatments/','ar/treatments/']
+          assets=['assets/js/mobile-header.js','assets/images/doctors/prof-dr-subhash-gupta.jpg','assets/images/hospitals/max-saket.webp']
+          errors=[]
+          def fetch(path):
+              url=urljoin(origin,path)
+              req=urllib.request.Request(url,headers={'User-Agent':'ElajmeIndia-ProductionSmoke/1.0'})
+              try:
+                  with urllib.request.urlopen(req,timeout=18) as res:
+                      return res.status,res.read(900000).decode('utf-8','replace') if path not in assets else ''
+              except Exception as exc:
+                  errors.append(f'{url}: {exc}');return 0,''
+          for path in routes:
+              status,body=fetch(path)
+              if status!=200:errors.append(f'{path or "/"}: HTTP {status}')
+              if not body:continue
+              if '<html' not in body.lower():errors.append(f'{path or "/"}: not HTML')
+              if path.startswith('ar/') and not re.search(r'<html[^>]*dir=["\']rtl["\']',body,re.I):errors.append(f'{path}: RTL missing')
+              if path in ('','ar/','contact/','ar/contact/'):
+                  if 'wa.me/917488955154' not in body:errors.append(f'{path or "/"}: Elajme WhatsApp missing')
+              if path in ('','ar/') and 'patientEnquiryForm' not in body:errors.append(f'{path or "/"}: enquiry form missing')
+              print(f'PAGE {path or "/"}: HTTP {status}')
+          for path in assets:
+              status,_=fetch(path)
+              if status!=200:errors.append(f'{path}: HTTP {status}')
+              print(f'ASSET {path}: HTTP {status}')
+          for issue in errors:print('FAIL:',issue)
+          print(f'PRODUCTION SMOKE TEST: {len(errors)} issues')
+          if errors:sys.exit(1)
+          PY
