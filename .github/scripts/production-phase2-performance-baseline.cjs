@@ -29,6 +29,7 @@ const routes = ['/', '/ar/', '/contact/', '/ar/contact/', '/privacy.html', '/ar/
           });
           if (!response?.ok()) errors.push(width + 'px ' + route + ': HTTP ' + response?.status());
           if (metrics.horizontalOverflow) errors.push(width + 'px ' + route + ': horizontal overflow');
+          for (const error of failures) errors.push(width + 'px ' + route + ': JavaScript error: ' + error);
           results.push({ route, width, httpStatus: response?.status(), elapsedMs: Date.now() - start, ...metrics, pageErrors: failures });
         } catch (e) { errors.push(width + 'px ' + route + ': ' + e.message); }
         finally { await page.close(); }
