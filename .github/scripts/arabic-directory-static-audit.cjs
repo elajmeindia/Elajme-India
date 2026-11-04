@@ -9,6 +9,11 @@ for(const link of links){const path=link.slice(1)+'index.html';assert.ok(fs.exis
 const alts=[...directory.matchAll(/<img\b[^>]*alt="([^"]*)"/gi)].map(x=>x[1]);
 assert.ok(alts.length>=60,'Doctor image descriptions missing');
 assert.ok(alts.every(x=>!/[A-Za-z]{3}/.test(x)),'English text found in Arabic image descriptions');
+const profileCount=links.length;
+for(const link of links){
+  const content=read(link.slice(1)+'index.html');
+  assert.ok(content.includes('917488955154'),'Doctor profile missing Elajme WhatsApp number: '+link);
+}
 const bookingHosts=[...directory.matchAll(/<a\b[^>]*href="(https?:[^"]+)"/gi)].map(x=>x[1]).filter(x=>!x.startsWith('https://wa.me/917488955154'));
 assert.deepEqual(bookingHosts,[],'External booking or enquiry links found in Arabic doctor directory');
 for(const card of cards)assert.ok(card.includes('href="/ar/#enquiry"'),'Doctor card must route enquiries through Elajme India');
