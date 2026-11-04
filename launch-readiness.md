@@ -2,6 +2,15 @@
 
 This checklist tracks the production launch and patient-acquisition phase without changing the approved master footer or Elajme-only enquiry routing.
 
+## Phase 1 live-site status and Phase 2 release gate (verified 5 November 2026)
+- Phase 1 is already live at https://elajmeindia.com and has existing Google search visibility. This is an incremental production improvement project, not a first-time website launch.
+- Preserve the live custom domain, current hosting, Google Search Console, sitemap, GA4, approved header/footer and Elajme-only patient enquiries. Do not change DNS or hosting as part of routine QA.
+- Doctor and hospital directory content/media expansion is deferred by owner decision. Do not edit these directories during the current Phase 2 pass.
+- Production GitHub Actions commit b5420c265569f00eba64246b4b202cd32c7b79e9 passed: Arabic mobile/enquiry audit, bilingual mobile/desktop audit, live privacy/terms/SEO/security essentials, conversion journey, header/footer protection, production gate and Pages deployment.
+- The production essentials audit covers 8 representative EN/AR pages, robots/sitemap and selected response security headers. This is not a substitute for legal review, comprehensive performance measurement or full site coverage.
+- Outstanding before Phase 2 sign-off: independent mobile performance/LCP/CLS/INP measurements, real-device patient enquiry and GA4 attribution checks, private patient-data handling review, and Cloudflare hosting/DNS inventory. Obtain owner approval and rollback plan before any migration or DNS switch.
+- Cloudflare migration planning means reviewing the current Cloudflare configuration first; do not assume a hosting migration is required for an already-live Phase 1 site.
+
 ## Locked rules
 - All patient and consultation enquiries remain routed through Elajme India.
 - English and Arabic master footer designs remain locked across mobile, tablet and desktop.
