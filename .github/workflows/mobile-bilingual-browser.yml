@@ -1,0 +1,61 @@
+name: Mobile Bilingual Browser Journey
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '43 4 * * *'
+permissions:
+  contents: read
+jobs:
+  mobile-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test runtime
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test live English and Arabic mobile journeys
+        env:
+          SITE_ORIGIN: https://elajmeindia.com
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+            const origin=process.env.SITE_ORIGIN;
+            const errors=[];
+            for(const path of ['/','/ar/','/doctors/','/ar/doctors/','/hospitals/','/ar/hospitals/']){
+              try{
+                const response=await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
+                if(!response||response.status()!==200)throw Error('HTTP '+(response?.status()??'none'));
+                await page.waitForTimeout(500);
+                const lang=path.startsWith('/ar/')?'ar':'en';
+                const htmlLang=await page.locator('html').getAttribute('lang');
+                if(htmlLang?.toLowerCase()!==lang)errors.push(path+': incorrect html language '+htmlLang);
+                if(lang==='ar' && await page.locator('html').getAttribute('dir')!=='rtl')errors.push(path+': missing RTL');
+                const menu=page.locator('.master-mobile-menu').first();
+                if(await menu.count()){
+                  await menu.click();
+                  if(await menu.getAttribute('aria-expanded')!=='true')errors.push(path+': mobile menu did not open');
+                  await menu.click();
+                  if(await menu.getAttribute('aria-expanded')!=='false')errors.push(path+': mobile menu did not close');
+                }else errors.push(path+': mobile menu not found');
+                const wa=page.locator('a[href^="https://wa.me/917488955154"]').first();
+                if(!await wa.count())errors.push(path+': Elajme WhatsApp link missing');
+                if(path==='/'||path==='/ar/'){
+                  if(!await page.locator('#patientEnquiryForm').count())errors.push(path+': patient enquiry form missing');
+                }
+                console.log('CHECK',path,'HTTP',response.status());
+              }catch(e){errors.push(path+': '+e.message)}
+            }
+            await browser.close();
+            errors.forEach(e=>console.error('FAIL',e));
+            console.log('MOBILE BILINGUAL BROWSER:',errors.length,'issues');
+            if(errors.length)process.exitCode=1;
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
