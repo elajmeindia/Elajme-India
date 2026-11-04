@@ -1,0 +1,30 @@
+name: Inspect three official doctor portrait sources
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-three-doctor-portraits.yml'
+  workflow_dispatch:
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check official source images
+        run: |
+          python - <<'PY'
+          import requests,re,html
+          urls={
+            'uma':'https://www.apollohospitals.com/doctors/nuclear-medicine-physician/delhi/dr-uma-ravishankar',
+            'uma_cancer':'https://www.apollohospitals.com/cancer-treatment-centres/cancer-hospital/delhi/nuclear-medicine/dr-uma-ravishanka/bio/',
+            'prasun':'https://www.apollohospitals.com/doctors/geriatrician/delhi/dr-prasun-chatterjee',
+            'prasun_personal':'https://drprasunchatterjee.com/',
+            'dhavendra':'https://www.qmul.ac.uk/whri/people/academic-staff/items/dhavendrakumar.html',
+          }
+          for name,url in urls.items():
+            try:
+              r=requests.get(url,timeout=15,headers={'User-Agent':'Mozilla/5.0'})
+              print('PAGE',name,r.status_code,len(r.content))
+              for pattern in [r'<meta[^>]+(?:og:image|twitter:image)[^>]+>',r'<img[^>]+(?:uma|prasun|dhavendra|kumar|doctor)[^>]*>']:
+                for match in re.findall(pattern,r.text,re.I)[:8]:
+                  print('IMAGE_CANDIDATE',name,html.unescape(match[:600]))
+            except Exception as e:print('ERROR',name,str(e))
+          PY
