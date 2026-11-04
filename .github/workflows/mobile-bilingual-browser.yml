@@ -94,6 +94,25 @@ jobs:
                 if(result.broken.length)errors.push(path+': '+result.broken.length+' broken provider directory images: '+JSON.stringify(result.broken));
               }catch(e){errors.push(path+': directory image scan '+e.message)}
             }
+            // Check first-party profile pages for the doctors whose directory portraits needed fallbacks.
+            const affected=['dr-aloy-j-mukherjee','dr-ameet-kishore','dr-deepa-sharma','dr-dinesh-talwar','dr-hardeep-singh','dr-jatin-ahuja','dr-kulbhushan-attri','dr-neeraj-singh','dr-sandip-agnihotri','dr-saveena-gulati-raheja','dr-sundeep-kumar-upadhyaya','dr-vinit-suri','dr-anil-mandhani'];
+            for(const slug of affected){
+              for(const prefix of ['/doctors/','/ar/doctors/']){
+                const path=prefix+slug+'/';
+                try{
+                  const response=await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
+                  if(response?.status()!==200){console.log('PROFILE PORTRAIT REVIEW',path,'HTTP '+response?.status());continue}
+                  const result=await page.evaluate(async()=>{
+                    const img=document.querySelector('img.profile-photo');
+                    if(!img)return {missing:true};
+                    await Promise.race([img.decode().catch(()=>{}),new Promise(resolve=>setTimeout(resolve,7000))]);
+                    return {src:img.currentSrc||img.src,loaded:img.complete&&img.naturalWidth>0};
+                  });
+                  console.log('PROFILE PORTRAIT REVIEW',path,JSON.stringify(result));
+                  if(!result.loaded)errors.push(path+': broken profile portrait '+JSON.stringify(result));
+                }catch(e){errors.push(path+': profile portrait scan '+e.message)}
+              }
+            }
             // Verify the two recently updated doctor portraits on both live language pages.
             for(const slug of ['dr-kanchan-bansode','dr-nishchint-jain']){
               for(const prefix of ['/doctors/','/ar/doctors/']){
