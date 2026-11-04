@@ -75,6 +75,25 @@ jobs:
                 console.log('CHECK',path,'HTTP',response.status());
               }catch(e){errors.push(path+': '+e.message)}
             }
+            // Verify the two recently updated doctor portraits on both live language pages.
+            for(const slug of ['dr-kanchan-bansode','dr-nishchint-jain']){
+              for(const prefix of ['/doctors/','/ar/doctors/']){
+                const path=prefix+slug+'/';
+                try{
+                  const response=await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
+                  if(response?.status()!==200){errors.push(path+': HTTP '+response?.status());continue}
+                  const result=await page.evaluate(async()=>{
+                    const imgs=[...document.images].filter(img=>img.alt?.toLowerCase().includes('portrait'));
+                    if(!imgs.length)return {error:'portrait element missing'};
+                    const img=imgs[0];
+                    await Promise.race([img.decode().catch(()=>{}),new Promise(resolve=>setTimeout(resolve,12000))]);
+                    return {src:img.currentSrc||img.src,loaded:img.complete&&img.naturalWidth>0};
+                  });
+                  if(result.error||!result.loaded)errors.push(path+': portrait failed to render '+(result.error||result.src));
+                  else console.log('PORTRAIT OK',path,result.src);
+                }catch(e){errors.push(path+': portrait verification '+e.message)}
+              }
+            }
             for(const lang of ['en','ar']){
               const prefix=lang==='ar'?'/ar':'';
               const treatment=prefix+'/treatments/';
