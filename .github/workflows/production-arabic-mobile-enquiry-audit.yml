@@ -6,7 +6,7 @@ on:
     paths:
       - 'ar/**'
       - 'assets/css/**'
-      - 'assets/js/**'
+      - 'assets/js/**'\n      - '.github/scripts/**'
       - '.github/workflows/production-arabic-mobile-enquiry-audit.yml'
 jobs:
   audit:
@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install browser
+      - name: Verify Arabic directory and enquiry source\n        run: node .github/scripts/arabic-directory-static-audit.cjs\n      - name: Install browser
         run: |
           npm install --no-save playwright@1.56.1
           npx playwright install --with-deps chromium
