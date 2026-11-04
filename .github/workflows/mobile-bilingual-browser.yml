@@ -86,7 +86,9 @@ jobs:
                     img.decode().catch(()=>{}),
                     new Promise(resolve=>setTimeout(resolve,12000))
                   ])));
-                  return {count:imgs.length,broken:imgs.filter(img=>!img.complete||img.naturalWidth===0).map(img=>({src:img.currentSrc||img.src,alt:img.alt})).slice(0,35)};
+                  await new Promise(resolve=>setTimeout(resolve,900));
+                  await Promise.all(imgs.filter(img=>!img.complete||img.naturalWidth===0).map(img=>img.decode().catch(()=>{})));
+                  return {count:imgs.length,broken:imgs.filter(img=>!img.complete||img.naturalWidth===0).map(img=>({src:img.currentSrc||img.src,alt:img.alt})).slice(0,35),fallbacks:imgs.filter(img=>(img.currentSrc||img.src).includes('/portrait-unavailable.svg')).length};
                 });
                 console.log('DOCTOR DIRECTORY IMAGE SCAN',path,JSON.stringify(result));
                 if(result.broken.length)errors.push(path+': '+result.broken.length+' broken doctor directory images: '+JSON.stringify(result.broken));
