@@ -11,7 +11,7 @@ on:
       - '.github/workflows/production-arabic-mobile-enquiry-audit.yml'
 jobs:
   audit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
