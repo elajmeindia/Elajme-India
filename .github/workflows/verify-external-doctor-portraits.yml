@@ -1,0 +1,63 @@
+name: Verify external doctor portraits live
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/verify-external-doctor-portraits.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check external doctor portrait URLs and bilingual parity
+        shell: python
+        run: |
+          import re, html, urllib.request, urllib.error, concurrent.futures, json
+          from pathlib import Path
+          def cards(path):
+              s=Path(path).read_text(encoding='utf-8')
+              out=[]
+              for m in re.finditer(r'<article class="card"[^>]*>(.*?)</article>',s,re.S):
+                  c=m.group(1)
+                  img=re.search(r'<img\\b[^>]*\\bsrc="([^"]+)"',c)
+                  name=re.search(r'<h2[^>]*>(.*?)</h2>',c,re.S)
+                  if img:
+                      out.append((re.sub(r'<[^>]+>','',name.group(1)).strip() if name else '?',html.unescape(img.group(1))))
+              return out
+          en=cards('doctors/index.html')
+          ar=cards('ar/doctors/index.html')
+          urls=sorted(set(u for _,u in en if u.startswith('http')))
+          def check(url):
+              try:
+                  req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (compatible; ElajmeMediaAudit/1.0)','Accept':'image/avif,image/webp,image/*,*/*;q=0.8'})
+                  with urllib.request.urlopen(req,timeout=18) as res:
+                      data=res.read(128)
+                      mime=res.headers.get('Content-Type','')
+                      ok=res.status==200 and ('image/' in mime.lower() or data.startswith((b'\\xff\\xd8',b'\\x89PNG',b'RIFF')))
+                      return {'url':url,'ok':ok,'status':res.status,'mime':mime}
+              except Exception as e:
+                  return {'url':url,'ok':False,'error':str(e)[:180]}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+              results=list(pool.map(check,urls))
+          by_url={x['url']:x for x in results}
+          report=[dict(name=n,**by_url[u]) for n,u in en if u in by_url]
+          mismatches=[]
+          if len(en)!=len(ar): mismatches.append('EN/AR card counts differ')
+          from collections import Counter
+          if Counter(u for _,u in en)!=Counter(u for _,u in ar): mismatches.append('EN/AR portrait URL sets differ')
+          failed=[x for x in report if not x['ok']]
+          Path('doctor-image-audit.json').write_text(json.dumps({'external_checked':len(urls),'failed':failed,'bilingual_issues':mismatches,'all_results':report},indent=2))
+          with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write(f"## Doctor image live check\\nExternal URLs: {len(urls)} | Failed: {len(failed)} | Bilingual issues: {len(mismatches)}\\n\\n")
+              for x in failed: f.write(f"- {x['name']}: {x.get('status',x.get('error'))}\\n")
+              for x in mismatches: f.write(f"- {x}\\n")
+          print(json.dumps({'checked':len(urls),'failed':failed,'bilingual_issues':mismatches},indent=2))
+          if failed or mismatches: raise SystemExit(1)
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: doctor-image-live-audit
+          path: doctor-image-audit.json
