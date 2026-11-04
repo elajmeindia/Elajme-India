@@ -49,6 +49,17 @@ jobs:
                 const htmlLang=await page.locator('html').getAttribute('lang');
                 if(htmlLang?.toLowerCase()!==lang)errors.push(path+': incorrect html language '+htmlLang);
                 if(lang==='ar' && await page.locator('html').getAttribute('dir')!=='rtl')errors.push(path+': missing RTL');
+                const overflow=await page.evaluate(()=>({
+                  documentWidth:document.documentElement.scrollWidth,
+                  viewportWidth:window.innerWidth
+                }));
+                if(overflow.documentWidth>overflow.viewportWidth+2)
+                  errors.push(path+': horizontal overflow '+overflow.documentWidth+'px > '+overflow.viewportWidth+'px');
+                const images=await page.locator('img').evaluateAll(nodes=>nodes.filter(img=>{
+                  const rect=img.getBoundingClientRect();
+                  return rect.width>0 && rect.height>0 && rect.top<window.innerHeight && rect.bottom>0 && img.complete && img.naturalWidth===0;
+                }).slice(0,8).map(img=>img.getAttribute('src')));
+                if(images.length)errors.push(path+': visible broken images '+images.join(', '));
                 const menu=page.locator('.master-mobile-menu').first();
                 if(await menu.count()){
                   await menu.click();
