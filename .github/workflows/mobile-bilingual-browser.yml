@@ -98,6 +98,23 @@ jobs:
             for(const path of ['/','/ar/']){
               try{
                 await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
+                const generated=await page.evaluate(()=>{
+                  const form=document.getElementById('patientEnquiryForm');
+                  const fields={patientName:'Test Patient',patientCountry:'Test Country',patientMobile:'+971501234567',medicalNeed:'QA test, not a real medical enquiry'};
+                  for(const [id,value] of Object.entries(fields)){const el=document.getElementById(id);if(!el)return {error:'missing '+id};el.value=value}
+                  if(!form.checkValidity())return {error:'test form invalid'};
+                  const original=window.open;
+                  let target=null;
+                  window.open=(url)=>{target=String(url);return null};
+                  try{form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))}
+                  catch(e){return {error:e.message}}
+                  finally{window.open=original;for(const id of Object.keys(fields))document.getElementById(id).value=''}
+                  return {target};
+                });
+                if(generated.error)errors.push(path+': enquiry routing '+generated.error);
+                else if(!generated.target?.startsWith('https://wa.me/917488955154?text='))
+                  errors.push(path+': enquiry does not route to Elajme WhatsApp');
+                console.log('ENQUIRY DESTINATION',path,generated.error||'Elajme WhatsApp (intercepted; not sent)');
                 const result=await page.locator('#patientEnquiryForm').evaluate(form=>{
                   const required=['patientName','patientCountry','patientMobile','medicalNeed'];
                   const missing=required.filter(id=>!form.querySelector('#'+id));
