@@ -1,0 +1,23 @@
+name: Verify official Anup Dhir portrait
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/verify-anup-dhir-portrait.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check exact Apollo published image asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/styles/doctor_card/public/2026-03/dr-anup-dhir.jpg.webp?itok=TKjxXN5Q'
+          status=$(curl -L --max-time 20 --retry 1 -A 'Mozilla/5.0' -sS -o /tmp/anup-image -w '%{http_code} %{content_type} %{size_download}' "$url" || true)
+          echo "Apollo published asset: $status"
+          file /tmp/anup-image || true
+          echo "Image URL must return actual image bytes, not an HTML error page."
+          file --mime-type /tmp/anup-image | grep -Eq 'image/(jpeg|png|webp)' || exit 1
+          echo "Official image asset is accessible."
