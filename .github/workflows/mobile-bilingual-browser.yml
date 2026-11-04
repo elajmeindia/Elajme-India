@@ -53,6 +53,24 @@ jobs:
                 console.log('CHECK',path,'HTTP',response.status());
               }catch(e){errors.push(path+': '+e.message)}
             }
+            for(const lang of ['en','ar']){
+              const prefix=lang==='ar'?'/ar':'';
+              const treatment=prefix+'/treatments/';
+              const directory=prefix+'/doctors/';
+              try{
+                await page.goto(origin+treatment,{waitUntil:'domcontentloaded',timeout:25000});
+                if(!await page.locator('a[href="'+directory+'"]').count())errors.push(treatment+': doctor directory route missing');
+                await page.goto(origin+directory,{waitUntil:'domcontentloaded',timeout:25000});
+                const hrefs=await page.locator('a[href^="'+directory+'"]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
+                const profileHref=hrefs.find(h=>h && h!==directory && h.split('/').filter(Boolean).length>directory.split('/').filter(Boolean).length);
+                if(!profileHref){errors.push(directory+': doctor profile link missing');continue}
+                const response=await page.goto(origin+profileHref,{waitUntil:'domcontentloaded',timeout:25000});
+                if(response?.status()!==200)errors.push(profileHref+': profile HTTP '+response?.status());
+                const enquiry=lang==='ar'?'/ar/#enquiry':'/#enquiry';
+                if(!await page.locator('a[href="'+enquiry+'"]').count())errors.push(profileHref+': Elajme enquiry route missing');
+                console.log('JOURNEY',treatment,'->',directory,'->',profileHref,'->',enquiry);
+              }catch(e){errors.push(lang+': treatment-to-enquiry journey: '+e.message)}
+            }
             await browser.close();
             errors.forEach(e=>console.error('FAIL',e));
             console.log('MOBILE BILINGUAL BROWSER:',errors.length,'issues');
