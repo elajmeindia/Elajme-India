@@ -92,6 +92,7 @@ jobs:
                 });
                 console.log('PROVIDER DIRECTORY IMAGE SCAN',path,JSON.stringify(result));
                 if(result.broken.length)errors.push(path+': '+result.broken.length+' broken provider directory images: '+JSON.stringify(result.broken));
+                if((path==='/doctors/'||path==='/ar/doctors/')&&result.fallbacks>9)errors.push(path+': doctor portrait regression: '+result.fallbacks+' fallbacks exceed verified baseline of 9');
               }catch(e){errors.push(path+': directory image scan '+e.message)}
             }
             // Check first-party profile pages for the doctors whose directory portraits needed fallbacks.
