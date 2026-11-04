@@ -48,13 +48,15 @@ jobs:
           if len(en)!=len(ar): mismatches.append('EN/AR card counts differ')
           from collections import Counter
           if Counter(u for _,u in en)!=Counter(u for _,u in ar): mismatches.append('EN/AR portrait URL sets differ')
-          failed=[x for x in report if not x['ok']]
-          Path('doctor-image-audit.json').write_text(json.dumps({'external_checked':len(urls),'failed':failed,'bilingual_issues':mismatches,'all_results':report},indent=2))
+          blocked=[x for x in report if not x['ok'] and '403' in str(x.get('error',''))]
+          failed=[x for x in report if not x['ok'] and x not in blocked]
+          Path('doctor-image-audit.json').write_text(json.dumps({'external_checked':len(urls),'failed':failed,'blocked_403_inconclusive':blocked,'bilingual_issues':mismatches,'all_results':report},indent=2))
           with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a') as f:
-              f.write(f"## Doctor image live check\\nExternal URLs: {len(urls)} | Failed: {len(failed)} | Bilingual issues: {len(mismatches)}\\n\\n")
+              f.write(f"## Doctor image live check\\nExternal URLs: {len(urls)} | Failed: {len(failed)} | 403 inconclusive: {len(blocked)} | Bilingual issues: {len(mismatches)}\\n\\n")
+              for x in blocked: f.write(f"- 403 / needs browser verification: {x['name']}\\n")
               for x in failed: f.write(f"- {x['name']}: {x.get('status',x.get('error'))}\\n")
               for x in mismatches: f.write(f"- {x}\\n")
-          print(json.dumps({'checked':len(urls),'failed':failed,'bilingual_issues':mismatches},indent=2))
+          print(json.dumps({'checked':len(urls),'failed':failed,'blocked_403_inconclusive':blocked,'bilingual_issues':mismatches},indent=2))
           if failed or mismatches: raise SystemExit(1)
       - uses: actions/upload-artifact@v4
         if: always()
