@@ -1,0 +1,47 @@
+name: Phase 2 Lighthouse mobile verification
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'styles.css'
+      - 'script.js'
+      - 'assets/css/**'
+      - 'assets/js/**'
+      - '.github/workflows/phase2-lighthouse-mobile.yml'
+jobs:
+  lighthouse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Lighthouse and Chromium
+        run: |
+          npm install --no-save lighthouse@12.8.2
+          sudo apt-get update -qq
+          sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
+      - name: Measure live English homepage on mobile
+        run: |
+          mkdir -p audit-results
+          CHROME_PATH="$(command -v chromium || command -v chromium-browser || command -v google-chrome)"
+          export CHROME_PATH
+          npx lighthouse https://elajmeindia.com/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path=audit-results/lighthouse-mobile.json --quiet
+          node - <<'NODE'
+          const r=require('./audit-results/lighthouse-mobile.json');
+          const scores=Object.fromEntries(Object.entries(r.categories).map(([k,v])=>[k,Math.round(v.score*100)]));
+          const metrics={cls:r.audits['cumulative-layout-shift']?.numericValue,lcp:r.audits['largest-contentful-paint']?.numericValue};
+          const failures=Object.values(r.audits).filter(a=>a.score!==null&&a.score<1&&['color-contrast','target-size','errors-in-console'].includes(a.id)).map(a=>({id:a.id,title:a.title,details:a.details?.items?.slice(0,12)}));
+          console.log(JSON.stringify({scores,metrics,failures},null,2));
+          require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Lighthouse mobile\n'+JSON.stringify({scores,metrics,failures},null,2)+'\n');
+          NODE
+      - name: Upload Lighthouse JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2-lighthouse-mobile
+          path: audit-results/lighthouse-mobile.json
+          if-no-files-found: ignore
