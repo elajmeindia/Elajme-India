@@ -36,6 +36,10 @@ jobs:
         env:
           BASE_URL: https://elajmeindia.com
         run: node .github/scripts/production-bilingual-readiness-audit.cjs
+      - name: Verify live privacy terms SEO and security essentials
+        env:
+          BASE_URL: https://elajmeindia.com
+        run: node .github/scripts/production-launch-essentials-audit.cjs
       - name: Publish audit summary
         if: always()
         run: |
