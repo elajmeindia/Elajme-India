@@ -13,6 +13,7 @@ jobs:
           python - <<'PY'
           import requests,re,html
           urls={
+            'kanchan_official_profile':'https://www.apollohospitals.com/doctors/obstetrician-and-gynaecologist/delhi/dr-kanchan-bansode',
             'kanchan_profile_portrait':'https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-07/whatsapp-image-2026-07-31-at-13.28.29.jpeg',
             'nishchint_profile_portrait':'https://images.apollo247.in/doctors/9f3aed98-015d-45fc-b4ee-581f2a7b6d2f.jpg',
             'uma':'https://www.apollohospitals.com/doctors/nuclear-medicine-physician/delhi/dr-uma-ravishankar',
