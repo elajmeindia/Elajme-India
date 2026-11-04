@@ -85,8 +85,8 @@ jobs:
                 await page.goto(origin+directory,{waitUntil:'domcontentloaded',timeout:25000});
                 const hrefs=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
                 const profileHref=hrefs.map(h=>{
-                  try{return new URL(h,location.href)}catch{return null}
-                }).find(u=>u && u.origin===location.origin && u.pathname.startsWith(directory) && u.pathname!==directory && u.pathname.split('/').filter(Boolean).length===directory.split('/').filter(Boolean).length+1);
+                  try{return new URL(h,origin+directory)}catch{return null}
+                }).find(u=>u && u.origin===new URL(origin).origin && u.pathname.startsWith(directory) && u.pathname!==directory && u.pathname.split('/').filter(Boolean).length===directory.split('/').filter(Boolean).length+1);
                 if(!profileHref){errors.push(directory+': doctor profile link missing');continue}
                 const response=await page.goto(profileHref.href,{waitUntil:'domcontentloaded',timeout:25000});
                 if(response?.status()!==200)errors.push(profileHref.pathname+': profile HTTP '+response?.status());
