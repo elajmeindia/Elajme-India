@@ -125,15 +125,17 @@ jobs:
           import re, os
 
           urls = {}
-          for p in Path('doctors').glob('*/index.html'):
+          for p in list(Path('doctors').glob('*/index.html')) + [Path('doctors/index.html'), Path('ar/doctors/index.html')]:
               html = p.read_text(encoding='utf-8', errors='ignore')
-              for tag in re.findall(r'<img\\b[^>]*>', html, re.I):
+              for tag in re.findall(r'<img\b[^>]*>', html, re.I):
                   m = re.search(r'src="(https?://[^"]+)', tag, re.I)
                   if not m: continue
                   url = m.group(1).replace('&amp;', '&')
                   urls.setdefault(url, []).append(str(p))
           failures = []
           checked = 0
+          if not urls:
+              raise SystemExit('ERROR: No external images discovered; check audit parser')
           for url, pages in urls.items():
               try:
                   req = Request(url, headers={'User-Agent':'Mozilla/5.0 (compatible; ElajmeMediaAudit/1.0)', 'Range':'bytes=0-1023'})
