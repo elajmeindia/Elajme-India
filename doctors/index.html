@@ -98,4 +98,14 @@
   apply();
 })();
 </script>
-<script src="/assets/js/mobile-header.js?v=3" defer></script><script id="doctor-directory-image-resilience-script">(function(){function repair(img){var box=img.closest('.media,.doctor-media');if(box){box.setAttribute('data-photo-unavailable','true');img.style.display='none';}}document.querySelectorAll('.grid>.card .media img,.grid>.card .doctor-media img').forEach(function(img){img.addEventListener('error',function(){repair(img)});if(img.complete&&img.naturalWidth===0)repair(img);});})();</script></body></html>
+<script src="/assets/js/mobile-header.js?v=3" defer></script><script id="doctor-directory-image-resilience-script">(function(){function repair(img){var box=img.closest('.media,.doctor-media');if(box){box.setAttribute('data-photo-unavailable','true');img.style.display='none';}}document.querySelectorAll('.grid>.card .media img,.grid>.card .doctor-media img').forEach(function(img){img.addEventListener('error',function(){repair(img)});if(img.complete&&img.naturalWidth===0)repair(img);});})();</script><script>
+/* Keep legacy placeholder references from rendering as broken images. */
+document.addEventListener('error', function(event) {
+  const img=event.target;
+  if(img && img.tagName==='IMG' && (img.currentSrc||img.src).includes('/assets/images/doctors/doctor-placeholder.svg')) {
+    img.onerror=null;
+    img.src='/assets/images/doctors/portrait-unavailable.svg';
+  }
+}, true);
+</script>
+</body></html>
