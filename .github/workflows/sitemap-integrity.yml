@@ -1,0 +1,51 @@
+name: Sitemap and Robots Integrity
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sitemap.xml'
+      - 'robots.txt'
+      - '.github/workflows/sitemap-integrity.yml'
+  pull_request:
+    paths:
+      - 'sitemap.xml'
+      - 'robots.txt'
+      - '.github/workflows/sitemap-integrity.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sitemap-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate clean official URLs and local sitemap targets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urlparse,unquote
+          import xml.etree.ElementTree as ET
+          import sys
+          errors=[]
+          root=ET.parse('sitemap.xml').getroot()
+          ns={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
+          urls=[(e.text or '').strip() for e in root.findall('.//s:loc',ns)]
+          if not urls:errors.append('sitemap has no URL entries')
+          if len(urls)!=len(set(urls)):errors.append('sitemap has duplicate URLs')
+          for url in urls:
+              p=urlparse(url)
+              if p.scheme!='https' or p.netloc!='elajmeindia.com':
+                  errors.append('nonofficial sitemap URL: '+url);continue
+              if p.query or p.fragment or 'utm_' in url.lower() or '**' in p.path:
+                  errors.append('unclean sitemap URL: '+url)
+              relative=unquote(p.path).lstrip('/')
+              target=Path(relative)/'index.html' if relative.endswith('/') or not relative else Path(relative)
+              if not target.is_file():
+                  errors.append('sitemap target missing: '+str(target))
+          robots=Path('robots.txt').read_text(encoding='utf-8')
+          if 'Sitemap: https://elajmeindia.com/sitemap.xml' not in robots:
+              errors.append('robots.txt missing official sitemap URL')
+          for e in errors:print('ERROR:',e)
+          print(f'SITEMAP AUDIT: {len(urls)} URLs, {len(errors)} errors')
+          if errors:sys.exit(1)
+          PY
