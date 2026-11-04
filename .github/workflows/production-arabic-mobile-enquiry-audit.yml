@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - 'ar/**'
+      - 'index.html'
+      - 'doctors/**'
+      - 'hospitals/**'
+      - 'contact/**'
       - 'assets/css/**'
       - 'assets/js/**'
       - '.github/scripts/**'
@@ -28,6 +32,10 @@ jobs:
         env:
           BASE_URL: https://elajmeindia.com
         run: node .github/scripts/production-arabic-mobile-enquiry-audit.cjs
+      - name: Test bilingual mobile and desktop navigation and images
+        env:
+          BASE_URL: https://elajmeindia.com
+        run: node .github/scripts/production-bilingual-readiness-audit.cjs
       - name: Publish audit summary
         if: always()
         run: |
