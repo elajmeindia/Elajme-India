@@ -1,0 +1,34 @@
+name: Production Arabic mobile and enquiry audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'ar/**'
+      - 'assets/css/**'
+      - 'assets/js/**'
+      - '.github/workflows/production-arabic-mobile-enquiry-audit.yml'
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test production Arabic pages at 360, 390 and 768px
+        env:
+          BASE_URL: https://elajmeindia.com
+        run: node .github/scripts/production-arabic-mobile-enquiry-audit.cjs
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arabic-production-mobile-audit
+          path: audit-results/
+          if-no-files-found: ignore
