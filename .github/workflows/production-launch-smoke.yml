@@ -50,6 +50,12 @@ jobs:
               status,_=fetch(path)
               if status!=200:errors.append(f'{path}: HTTP {status}')
               print(f'ASSET {path}: HTTP {status}')
+          # The malformed path is handled by a client-side redirect on the 404 page.
+          # Confirm the recovery script is deployed without pretending it is an HTTP redirect.
+          status,body=fetch('**')
+          if status==200 and "location.replace('https://elajmeindia.com/')" not in body:
+              errors.append('malformed homepage path: client-side recovery missing')
+          print(f'MALFORMED PATH RECOVERY: HTTP {status}')
           for issue in errors:print('FAIL:',issue)
           print(f'PRODUCTION SMOKE TEST: {len(errors)} issues')
           if errors:sys.exit(1)
