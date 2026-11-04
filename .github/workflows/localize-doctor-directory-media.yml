@@ -1,0 +1,62 @@
+name: Localize verified doctor directory media
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/localize-doctor-directory-media.yml'
+permissions:
+  contents: write
+jobs:
+  localize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Inspect and stage reachable directory images
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re,requests,hashlib,pathlib,urllib.parse,json
+          from PIL import Image
+          from io import BytesIO
+          root=pathlib.Path('assets/images/doctors');root.mkdir(parents=True,exist_ok=True)
+          paths=[pathlib.Path('doctors/index.html'),pathlib.Path('ar/doctors/index.html')]
+          texts={p:p.read_text(encoding='utf8') for p in paths}
+          slugs={}
+          for p,html in texts.items():
+            for m in re.finditer(r'<article class="card"[^>]*>[\s\S]*?</article>',html):
+              card=m.group()
+              match=re.search(r'href="(?:/ar/doctors/|/doctors/)?(dr-[a-z0-9-]+)/"',card)
+              if not match:continue
+              im=re.search(r'<img\b[^>]*\bsrc="(https?://[^"]+)"',card)
+              if im:slugs.setdefault(match.group(1),im.group(1))
+          manifest={}
+          for slug,url in sorted(slugs.items()):
+            if 'fortishealthcare.com' in url:
+              print('KEEP VERIFIED FORTIS EXCEPTION',slug);continue
+            try:
+              r=requests.get(url,headers={'User-Agent':'Mozilla/5.0 (compatible; ElajmeMediaAudit/1.0)','Referer':urllib.parse.urlsplit(url).scheme+'://'+urllib.parse.urlsplit(url).netloc+'/'},timeout=15)
+              r.raise_for_status()
+              if len(r.content)>5_000_000:raise ValueError('oversized')
+              im=Image.open(BytesIO(r.content));im.verify()
+              im=Image.open(BytesIO(r.content)).convert('RGB')
+              if im.width<80 or im.height<80:raise ValueError('image too small')
+              im.thumbnail((900,900))
+              dest=root/(slug+'.jpg')
+              im.save(dest,'JPEG',quality=86,optimize=True)
+              manifest[slug]={'local':'/assets/images/doctors/'+slug+'.jpg','source':url,'sha256':hashlib.sha256(r.content).hexdigest()}
+              print('STAGED',slug,im.size)
+            except Exception as e:print('UNRESOLVED',slug,str(e)[:200])
+          pathlib.Path('/tmp/doctor-media-manifest.json').write_text(json.dumps(manifest,indent=2))
+          # Do not silently replace external images until reuse permissions are confirmed.
+          print('STAGED_FOR_REVIEW',len(manifest),'images; HTML references intentionally unchanged')
+          PY
+      - name: Report staged assets
+        run: git status --short | head -80
+      - name: Upload staged assets for rights and identity review
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-portrait-candidates
+          path: assets/images/doctors/dr-*.jpg
+          retention-days: 7
