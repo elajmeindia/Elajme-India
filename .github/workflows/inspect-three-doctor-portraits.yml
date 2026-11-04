@@ -22,6 +22,8 @@ jobs:
             'uma_alternative':'https://www.apollocancercentres.com/doctor/dr-uma-ravishankar/',
             'prasun_image':'https://drprasunchatterjee.com/wp-content/uploads/2026/05/dr-prasun-chatterjee.jpeg',
             'uma_image':'https://images.apollo247.in/doctors/bf9ef813-0c0e-47e6-99aa-bddba348b7f7.jpg',
+            'achal_apollo247':'https://www.apollo247.com/doctors/dr-achal-bhagat-887f4694-b8d3-4e5c-a502-35ab1062d401',
+            'adosh_apollo247':'https://www.apollo247.com/doctors/dr-adosh-lall-172a65ea-3b98-448d-8c5b-4e6c6cb30863',
             'dhavendra_image':'https://www.spirehealthcare.com/media/15482/kumar-dhavendra.jpg',
           }
           for name,url in urls.items():
