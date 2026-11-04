@@ -44,7 +44,13 @@ jobs:
           CHROME_PATH="$(command -v chromium || command -v chromium-browser || command -v google-chrome)"
           export CHROME_PATH
           for n in 2 3; do
-            npx lighthouse https://elajmeindia.com/ --only-categories=performance --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path="audit-results/lighthouse-mobile-$n.json" --quiet
+            for attempt in 1 2 3; do
+              if npx lighthouse https://elajmeindia.com/ --only-categories=performance --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path="audit-results/lighthouse-mobile-$n.json" --quiet; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then exit 1; fi
+              sleep 5
+            done
           done
           node - <<'NODE'
           const fs=require('fs');
