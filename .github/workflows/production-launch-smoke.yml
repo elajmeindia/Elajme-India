@@ -34,6 +34,10 @@ jobs:
               try:
                   with urllib.request.urlopen(req,timeout=18) as res:
                       return res.status,res.read(900000).decode('utf-8','replace') if path not in assets else ''
+              except urllib.error.HTTPError as exc:
+                  if path=='**' and exc.code==404:
+                      return 404,exc.read(900000).decode('utf-8','replace')
+                  errors.append(f'{url}: HTTP {exc.code}');return exc.code,''
               except Exception as exc:
                   errors.append(f'{url}: {exc}');return 0,''
           for path in routes:
@@ -53,7 +57,7 @@ jobs:
           # The malformed path is handled by a client-side redirect on the 404 page.
           # Confirm the recovery script is deployed without pretending it is an HTTP redirect.
           status,body=fetch('**')
-          if status==200 and "location.replace('https://elajmeindia.com/')" not in body:
+          if status in (200,404) and "location.replace('https://elajmeindia.com/')" not in body:
               errors.append('malformed homepage path: client-side recovery missing')
           print(f'MALFORMED PATH RECOVERY: HTTP {status}')
           for issue in errors:print('FAIL:',issue)
