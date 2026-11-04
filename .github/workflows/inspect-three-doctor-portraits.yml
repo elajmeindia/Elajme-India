@@ -14,7 +14,7 @@ jobs:
           import requests,re,html
           urls={
             'kanchan_official_profile':'https://www.apollohospitals.com/doctors/obstetrician-and-gynaecologist/delhi/dr-kanchan-bansode',
-            'kanchan_profile_portrait':'https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-07/whatsapp-image-2026-07-31-at-13.28.29.jpeg',
+            'kanchan_profile_portrait':'https://images.apollo247.in/doctors/66b7533e-bff1-4c3c-a11d-4bdca7a5acd0-1785253866910.jpg?tr=w-76%2Cc-at_max%2Cf-auto%2Cq%3D80%2Cdpr-2',
             'nishchint_profile_portrait':'https://images.apollo247.in/doctors/9f3aed98-015d-45fc-b4ee-581f2a7b6d2f.jpg',
             'uma':'https://www.apollohospitals.com/doctors/nuclear-medicine-physician/delhi/dr-uma-ravishankar',
             'uma_cancer':'https://www.apollohospitals.com/cancer-treatment-centres/cancer-hospital/delhi/nuclear-medicine/dr-uma-ravishanka/bio/',
