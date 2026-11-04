@@ -21,6 +21,8 @@ jobs:
             'uma_apollo247':'https://www.apollo247.com/doctors/dr-uma-ravishankar-e1f97ad1-5301-40e0-8923-9ef7e52cd30a',
             'uma_alternative':'https://www.apollocancercentres.com/doctor/dr-uma-ravishankar/',
             'prasun_image':'https://drprasunchatterjee.com/wp-content/uploads/2026/05/dr-prasun-chatterjee.jpeg',
+            'uma_image':'https://images.apollo247.in/doctors/bf9ef813-0c0e-47e6-99aa-bddba348b7f7.jpg',
+            'dhavendra_image':'https://www.spirehealthcare.com/media/15482/kumar-dhavendra.jpg',
           }
           for name,url in urls.items():
             try:
