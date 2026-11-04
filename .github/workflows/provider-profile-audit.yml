@@ -62,14 +62,16 @@ jobs:
                   for href in parser.links:
                       parsed=urlparse(href)
                       if parsed.scheme or href.startswith(('#','mailto:','tel:')): continue
-                      path=unquote(parsed.path).strip('/')
-                      rootname=prefix+kind
-                      if path.startswith(rootname+'/'):
-                          tail=path[len(rootname)+1:].strip('/')
-                      elif '/' not in path and path and path not in ('index.html',):
-                          tail=path
-                      else: continue
-                      if tail and '/' not in tail and tail!='index.html': profile_links.add(tail)
+                      raw=unquote(parsed.path)
+                      if raw.startswith('/'):
+                          absolute=raw.strip('/')
+                      else:
+                          absolute=(root/raw).as_posix().strip('/')
+                      parts=absolute.split('/')
+                      if len(parts)==len(root.parts)+1 and parts[:len(root.parts)]==list(root.parts):
+                          slug=parts[-1]
+                          if slug and slug!='index.html' and (root/slug/'index.html').is_file():
+                              profile_links.add(slug)
                   counts[prefix+kind]=len(profile_links)
                   for slug in sorted(profile_links):
                       page=root/slug/'index.html'
