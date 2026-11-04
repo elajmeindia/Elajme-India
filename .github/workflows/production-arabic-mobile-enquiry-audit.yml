@@ -40,6 +40,10 @@ jobs:
         env:
           BASE_URL: https://elajmeindia.com
         run: node .github/scripts/production-launch-essentials-audit.cjs
+      - name: Measure Phase 2 production performance baseline
+        env:
+          BASE_URL: https://elajmeindia.com
+        run: node .github/scripts/production-phase2-performance-baseline.cjs
       - name: Publish audit summary
         if: always()
         run: |
