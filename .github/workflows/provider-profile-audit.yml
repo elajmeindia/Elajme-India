@@ -82,6 +82,10 @@ jobs:
                       if expected not in html: issues.append(str(page)+': missing Elajme enquiry route')
                       other=('/doctors/' if lang=='ar' else '/ar/doctors/') if kind=='doctors' else ('/hospitals/' if lang=='ar' else '/ar/hospitals/')
                       if other not in html: warnings.append(str(page)+': no obvious bilingual counterpart link')
+              en_slugs={p.parent.name for p in Path(kind).glob('*/index.html')}
+              ar_slugs={p.parent.name for p in Path('ar/'+kind).glob('*/index.html')}
+              for slug in sorted(en_slugs-ar_slugs): issues.append(f'{kind}/{slug}: Arabic counterpart missing')
+              for slug in sorted(ar_slugs-en_slugs): issues.append(f'{kind}/{slug}: English counterpart missing')
               a=counts.get(kind,0); b=counts.get('ar/'+kind,0)
               if a!=b: issues.append(f'{kind}: English/Arabic directory counts differ ({a}/{b})')
           print('PROFILE COUNTS:',json.dumps(counts,ensure_ascii=False))
