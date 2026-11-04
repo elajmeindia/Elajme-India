@@ -25,8 +25,8 @@ const output = 'audit-results/bilingual-readiness.json';
               h1: !!document.querySelector('h1'),
               imageCount: images.length,
               brokenImages: images.filter(img => img.complete && img.naturalWidth === 0 && img.getAttribute('src')).map(img => img.getAttribute('src')).slice(0, 15),
-              englishLink: !!document.querySelector('a[href="/"],a[href="https://elajmeindia.com/"]'),
-              arabicLink: !!document.querySelector('a[href="/ar/"],a[href="https://elajmeindia.com/ar/"]')
+              englishLink: !!document.querySelector('a[href="/"],a[href="https://elajmeindia.com/"],link[rel="alternate"][hreflang="en"]'),
+              arabicLink: !!document.querySelector('a[href="/ar/"],a[href="https://elajmeindia.com/ar/"],link[rel="alternate"][hreflang="ar"]')
             };
           });
           const expectedArabic = path.startsWith('/ar/');
