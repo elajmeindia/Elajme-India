@@ -1,5 +1,16 @@
 name: Mobile Bilingual Browser Journey
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mobile-bilingual-browser.yml'
+      - 'index.html'
+      - 'ar/index.html'
+      - 'assets/js/mobile-header.js'
+      - 'doctors/**'
+      - 'ar/doctors/**'
+      - 'treatments/**'
+      - 'ar/treatments/**'
   workflow_dispatch:
   schedule:
     - cron: '43 4 * * *'
