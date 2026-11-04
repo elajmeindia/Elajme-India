@@ -57,7 +57,9 @@ jobs:
           const files=['audit-results/lighthouse-mobile.json','audit-results/lighthouse-mobile-2.json','audit-results/lighthouse-mobile-3.json'];
           const samples=files.map((f,i)=>{const r=JSON.parse(fs.readFileSync(f));return {run:i+1,performance:Math.round(r.categories.performance.score*100),lcpMs:r.audits['largest-contentful-paint']?.numericValue,cls:r.audits['cumulative-layout-shift']?.numericValue}});
           const lcp=samples.map(s=>s.lcpMs).sort((a,b)=>a-b);
-          console.log(JSON.stringify({samples,medianLcpMs:lcp[1],under2500:samples.filter(s=>s.lcpMs<2500).length+'/3'},null,2));
+          const passing=samples.filter(s=>s.lcpMs<2500).length;
+          const rangeMs=Math.max(...samples.map(s=>s.lcpMs))-Math.min(...samples.map(s=>s.lcpMs));
+          console.log(JSON.stringify({samples,medianLcpMs:lcp[1],under2500:passing+'/3',rangeMs,consistentUnder2500:passing===3},null,2));
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## Repeated mobile LCP samples\n'+JSON.stringify({samples,medianLcpMs:lcp[1]},null,2)+'\n');
           NODE
       - name: Upload Lighthouse JSON
