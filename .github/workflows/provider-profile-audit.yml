@@ -48,6 +48,14 @@ jobs:
                       issues.append(str(directory)+': missing directory'); continue
                   parser=Tags(); parser.feed(directory.read_text(encoding='utf-8'))
                   if lang=='ar' and parser.html_attrs.get('dir')!='rtl': issues.append(str(directory)+': missing RTL')
+                  for img in parser.images:
+                      src=img.get('src','')
+                      if not src: issues.append(str(directory)+': image without source'); continue
+                      if src.startswith('http://'): issues.append(str(directory)+': insecure image '+src)
+                      elif src.startswith('/'):
+                          local=Path(unquote(urlparse(src).path).lstrip('/'))
+                          if not local.is_file(): issues.append(str(directory)+': missing local image '+src)
+                      elif not src.startswith('https://'): warnings.append(str(directory)+': unexpected image path '+src)
                   profile_links=set()
                   for href in parser.links:
                       parsed=urlparse(href)
