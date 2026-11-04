@@ -1,0 +1,92 @@
+name: Bilingual Provider Profile Audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'doctors/**'
+      - 'ar/doctors/**'
+      - 'hospitals/**'
+      - 'ar/hospitals/**'
+      - '.github/workflows/provider-profile-audit.yml'
+  pull_request:
+    paths:
+      - 'doctors/**'
+      - 'ar/doctors/**'
+      - 'hospitals/**'
+      - 'ar/hospitals/**'
+      - '.github/workflows/provider-profile-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit doctor and hospital directories and bilingual profiles
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          from urllib.parse import urlparse, unquote
+          import sys, json
+          class Tags(HTMLParser):
+              def __init__(self):
+                  super().__init__(); self.images=[]; self.links=[]; self.html_attrs={}
+              def handle_starttag(self,tag,attrs):
+                  a=dict(attrs)
+                  if tag=='html': self.html_attrs=a
+                  if tag=='img': self.images.append(a)
+                  if tag=='a': self.links.append(a.get('href',''))
+          issues=[]; warnings=[]; counts={}
+          for kind in ('doctors','hospitals'):
+              for lang in ('en','ar'):
+                  prefix='' if lang=='en' else 'ar/'
+                  root=Path(prefix+kind)
+                  directory=root/'index.html'
+                  if not directory.is_file():
+                      issues.append(str(directory)+': missing directory'); continue
+                  parser=Tags(); parser.feed(directory.read_text(encoding='utf-8'))
+                  if lang=='ar' and parser.html_attrs.get('dir')!='rtl': issues.append(str(directory)+': missing RTL')
+                  profile_links=set()
+                  for href in parser.links:
+                      parsed=urlparse(href)
+                      if parsed.scheme or href.startswith(('#','mailto:','tel:')): continue
+                      path=unquote(parsed.path).strip('/')
+                      rootname=prefix+kind
+                      if path.startswith(rootname+'/'):
+                          tail=path[len(rootname)+1:].strip('/')
+                      elif '/' not in path and path and path not in ('index.html',):
+                          tail=path
+                      else: continue
+                      if tail and '/' not in tail and tail!='index.html': profile_links.add(tail)
+                  counts[prefix+kind]=len(profile_links)
+                  for slug in sorted(profile_links):
+                      page=root/slug/'index.html'
+                      if not page.is_file():
+                          issues.append(str(page)+': linked profile missing');continue
+                      html=page.read_text(encoding='utf-8')
+                      p=Tags();p.feed(html)
+                      if lang=='ar' and p.html_attrs.get('dir')!='rtl': issues.append(str(page)+': missing RTL')
+                      provider_imgs=[a for a in p.images if 'Swoosh' not in a.get('src','') and 'logo' not in a.get('src','').lower()]
+                      if not provider_imgs: warnings.append(str(page)+': no provider portrait/photo')
+                      for img in provider_imgs:
+                          src=img.get('src','')
+                          if not img.get('alt','').strip(): warnings.append(str(page)+': image missing alt text')
+                          if src.startswith('http://'): issues.append(str(page)+': insecure image '+src)
+                          elif src.startswith('/'):
+                              local=Path(unquote(urlparse(src).path).lstrip('/'))
+                              if not local.is_file(): issues.append(str(page)+': local image missing '+src)
+                          elif not src.startswith('https://'): warnings.append(str(page)+': unexpected image path '+src)
+                      expected='/ar/#enquiry' if lang=='ar' else '/#enquiry'
+                      if expected not in html: issues.append(str(page)+': missing Elajme enquiry route')
+                      other=('/doctors/' if lang=='ar' else '/ar/doctors/') if kind=='doctors' else ('/hospitals/' if lang=='ar' else '/ar/hospitals/')
+                      if other not in html: warnings.append(str(page)+': no obvious bilingual counterpart link')
+              a=counts.get(kind,0); b=counts.get('ar/'+kind,0)
+              if a!=b: issues.append(f'{kind}: English/Arabic directory counts differ ({a}/{b})')
+          print('PROFILE COUNTS:',json.dumps(counts,ensure_ascii=False))
+          for item in issues: print('ERROR:',item)
+          for item in warnings: print('WARNING:',item)
+          print(f'AUDIT RESULT: {len(issues)} errors, {len(warnings)} warnings')
+          if issues:sys.exit(1)
+          PY
