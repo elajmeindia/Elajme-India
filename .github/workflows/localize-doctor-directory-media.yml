@@ -53,6 +53,9 @@ jobs:
           pathlib.Path('/tmp/doctor-media-manifest.json').write_text(json.dumps(manifest,indent=2))
           # Do not silently replace external images until reuse permissions are confirmed.
           print('STAGED_FOR_REVIEW',len(manifest),'images; HTML references intentionally unchanged')
+          missing={slug:url for slug,url in slugs.items() if slug not in manifest and 'fortishealthcare.com' not in url}
+          pathlib.Path('doctor-portrait-review.json').write_text(json.dumps({'ready_for_identity_and_rights_review':manifest,'unresolved':missing},indent=2))
+          print('REVIEW_INVENTORY',len(manifest),len(missing))
           PY
       - name: Report staged assets
         run: git status --short | head -80
@@ -60,5 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: doctor-portrait-candidates
-          path: assets/images/doctors/dr-*.jpg
+          path: |
+            assets/images/doctors/dr-*.jpg
+            doctor-portrait-review.json
           retention-days: 7
