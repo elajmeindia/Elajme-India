@@ -1,0 +1,61 @@
+name: Bilingual Enquiry and Contact Guard
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'ar/index.html'
+      - 'contact/**'
+      - 'ar/contact/**'
+      - 'script.js'
+      - 'assets/js/mobile-header.js'
+      - '.github/workflows/enquiry-contact-guard.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'ar/index.html'
+      - 'contact/**'
+      - 'ar/contact/**'
+      - 'script.js'
+      - 'assets/js/mobile-header.js'
+      - '.github/workflows/enquiry-contact-guard.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  enquiry-contact-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify bilingual enquiry destinations and mobile metadata
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,sys
+          errors=[]
+          number='917488955154'
+          pages=['index.html','ar/index.html','contact/index.html','ar/contact/index.html']
+          for name in pages:
+              path=Path(name)
+              if not path.is_file(): errors.append(f'{name}: missing');continue
+              html=path.read_text(encoding='utf-8')
+              for marker in ('name="viewport"','rel="canonical"','name="description"','master-site-header'):
+                  if marker not in html:errors.append(f'{name}: missing {marker}')
+              if f'https://wa.me/{number}' not in html:errors.append(f'{name}: missing Elajme WhatsApp destination')
+              if f'tel:+{number}' not in html:errors.append(f'{name}: missing Elajme phone destination')
+              if name.startswith('ar/') and not re.search(r'<html[^>]*dir=["\']rtl["\']',html,re.I):errors.append(f'{name}: missing RTL')
+              if name.endswith('index.html') and name in ('index.html','ar/index.html'):
+                  for field in ('patientEnquiryForm','patientName','patientCountry','patientMobile','medicalNeed'):
+                      if f'id="{field}"' not in html:errors.append(f'{name}: missing form field {field}')
+                  if 'id="enquiry"' not in html:errors.append(f'{name}: missing enquiry anchor')
+              if 'mobile-header.js' not in html:errors.append(f'{name}: missing mobile header script')
+          js=Path('script.js').read_text(encoding='utf-8')
+          for marker in ('patientEnquiryForm','addEventListener("submit"','encodeURIComponent'):
+              if marker not in js:errors.append(f'script.js: missing enquiry logic {marker}')
+          ar=Path('ar/index.html').read_text(encoding='utf-8')
+          if "addEventListener('submit'" not in ar or 'encodeURIComponent(msg)' not in ar:
+              errors.append('ar/index.html: missing Arabic enquiry submission logic')
+          for err in errors:print('ERROR:',err)
+          print(f'ENQUIRY CONTACT GUARD: {len(errors)} errors')
+          if errors:sys.exit(1)
+          PY
