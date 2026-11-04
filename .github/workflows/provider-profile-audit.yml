@@ -16,6 +16,8 @@ on:
       - 'ar/hospitals/**'
       - '.github/workflows/provider-profile-audit.yml'
   workflow_dispatch:
+  schedule:
+    - cron: '29 5 * * *'
 permissions:
   contents: read
 jobs:
