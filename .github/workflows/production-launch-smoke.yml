@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check production bilingual routes and critical assets
         env:
-          SITE_ORIGIN: \${{ inputs.site_origin || vars.ELAJME_SITE_ORIGIN || 'https://elajmeindia.com' }}
+          SITE_ORIGIN: ${{ inputs.site_origin || vars.ELAJME_SITE_ORIGIN || 'https://elajmeindia.com' }}
         run: |
           python3 - <<'PY'
           import os,urllib.request,urllib.error,sys,re
