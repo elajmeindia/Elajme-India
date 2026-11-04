@@ -34,9 +34,10 @@ jobs:
           const r=require('./audit-results/lighthouse-mobile.json');
           const scores=Object.fromEntries(Object.entries(r.categories).map(([k,v])=>[k,Math.round(v.score*100)]));
           const metrics={cls:r.audits['cumulative-layout-shift']?.numericValue,lcp:r.audits['largest-contentful-paint']?.numericValue};
+          const diagnostics={fcp:r.audits['first-contentful-paint']?.numericValue,tbt:r.audits['total-blocking-time']?.numericValue,speedIndex:r.audits['speed-index']?.numericValue,lcpElement:r.audits['largest-contentful-paint-element']?.details?.items?.[0]?.node?.selector||null,lcpBreakdown:r.audits['lcp-breakdown-insight']?.details?.items?.slice(0,3)||[],renderBlocking:r.audits['render-blocking-insight']?.details?.items?.slice(0,8)||[],serverResponse:r.audits['server-response-time']?.numericValue};
           const failures=Object.values(r.audits).filter(a=>a.score!==null&&a.score<1&&['color-contrast','target-size','errors-in-console'].includes(a.id)).map(a=>({id:a.id,title:a.title,details:a.details?.items?.slice(0,12)}));
-          console.log(JSON.stringify({scores,metrics,failures},null,2));
-          require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Lighthouse mobile\n'+JSON.stringify({scores,metrics,failures},null,2)+'\n');
+          console.log(JSON.stringify({scores,metrics,diagnostics,failures},null,2));
+          require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Lighthouse mobile\n'+JSON.stringify({scores,metrics,diagnostics,failures},null,2)+'\n');
           NODE
       - name: Upload Lighthouse JSON
         if: always()
