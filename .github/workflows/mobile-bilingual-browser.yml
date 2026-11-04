@@ -11,6 +11,7 @@ on:
       - 'ar/doctors/**'
       - 'treatments/**'
       - 'ar/treatments/**'
+      - 'assets/images/doctors/portrait-unavailable.svg'
   workflow_dispatch:
   schedule:
     - cron: '43 4 * * *'
