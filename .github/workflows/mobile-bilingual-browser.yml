@@ -105,7 +105,7 @@ jobs:
                   if(!form.checkValidity())return {error:'test form invalid'};
                   const original=window.open;
                   let target=null;
-                  window.open=(url)=>{target=String(url);return null};
+                  window.open=(url)=>{target=String(url);return {closed:false}};
                   try{form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))}
                   catch(e){return {error:e.message}}
                   finally{window.open=original;for(const id of Object.keys(fields))document.getElementById(id).value=''}
