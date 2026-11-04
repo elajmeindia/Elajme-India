@@ -95,7 +95,7 @@ jobs:
               }catch(e){errors.push(path+': directory image scan '+e.message)}
             }
             // Check first-party profile pages for the doctors whose directory portraits needed fallbacks.
-            const affected=['dr-aloy-j-mukherjee','dr-ameet-kishore','dr-anup-dhir','dr-deepa-sharma','dr-dinesh-talwar','dr-hardeep-singh','dr-jatin-ahuja','dr-kulbhushan-attri','dr-neeraj-singh','dr-sandip-agnihotri','dr-saveena-gulati-raheja','dr-sundeep-kumar-upadhyaya','dr-vinit-suri','dr-anil-mandhani'];
+            const affected=['dr-aloy-j-mukherjee','dr-ameet-kishore','dr-anup-dhir','dr-geeta-kadayaprath','dr-kalyanpury-jawaharlal-choudhury','dr-deepa-sharma','dr-dinesh-talwar','dr-hardeep-singh','dr-jatin-ahuja','dr-kulbhushan-attri','dr-neeraj-singh','dr-sandip-agnihotri','dr-saveena-gulati-raheja','dr-sundeep-kumar-upadhyaya','dr-vinit-suri','dr-anil-mandhani'];
             for(const slug of affected){
               for(const prefix of ['/doctors/','/ar/doctors/']){
                 const path=prefix+slug+'/';
