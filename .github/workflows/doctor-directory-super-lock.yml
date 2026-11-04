@@ -1,0 +1,58 @@
+name: Bilingual Doctor Directory Super Lock
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'doctors/index.html'
+      - 'ar/doctors/index.html'
+      - 'assets/images/doctors/**'
+      - '.github/workflows/doctor-directory-super-lock.yml'
+  pull_request:
+    paths:
+      - 'doctors/index.html'
+      - 'ar/doctors/index.html'
+      - 'assets/images/doctors/**'
+      - '.github/workflows/doctor-directory-super-lock.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  doctor-directory-super-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enforce English and Arabic doctor directory protection
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,sys
+          issues=[]
+          for lang,path in [('en',Path('doctors/index.html')),('ar',Path('ar/doctors/index.html'))]:
+              html=path.read_text(encoding='utf-8')
+              pre=html.partition('<footer')[0]
+              if 'doctor-card-row-alignment' not in html:issues.append(f'{lang}: row alignment lock missing')
+              if 'doctor-directory-image-resilience' not in html:issues.append(f'{lang}: image fallback missing')
+              if 'doctor-directory-image-resilience-script' not in html:issues.append(f'{lang}: image fallback script missing')
+              if 'id="q"' not in html:issues.append(f'{lang}: search missing')
+              if 'URLSearchParams' not in html:issues.append(f'{lang}: URL filter missing')
+              if 'footer-approved.css' not in html:issues.append(f'{lang}: approved footer missing')
+              if ('/ar/#enquiry' if lang=='ar' else '/#enquiry') not in pre:issues.append(f'{lang}: Elajme enquiry missing')
+              if lang=='ar' and not re.search(r'<html[^>]*dir=["\']rtl["\']',html,re.I):issues.append('ar: RTL missing')
+              cards=re.findall(r'<article class="card"[^>]*>[\s\S]*?</article>',pre)
+              if not cards:issues.append(f'{lang}: no doctor cards')
+              for n,card in enumerate(cards,1):
+                  img=re.search(r'<img\b[^>]*\bsrc="([^"]+)"',card)
+                  if not img:issues.append(f'{lang}: card {n} missing image');continue
+                  src=img.group(1)
+                  if src.startswith(('http://','https://')):
+                      issues.append(f'{lang}: card {n} external image dependency: {src}')
+                  elif src.startswith('/assets/'):
+                      if not Path(src.split('?',1)[0].lstrip('/')).is_file():issues.append(f'{lang}: card {n} missing local image: {src}')
+                  else:issues.append(f'{lang}: card {n} unexpected image path: {src}')
+              print(f'{lang}: {len(cards)} doctor cards checked')
+          if issues:
+              print('SUPER LOCK BLOCKED: '+str(len(issues))+' issue(s)')
+              print('\n'.join(issues))
+              sys.exit(1)
+          print('BILINGUAL DOCTOR DIRECTORY SUPER LOCK: PASSED')
+          PY
