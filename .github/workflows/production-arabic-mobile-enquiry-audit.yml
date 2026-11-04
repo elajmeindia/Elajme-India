@@ -6,7 +6,8 @@ on:
     paths:
       - 'ar/**'
       - 'assets/css/**'
-      - 'assets/js/**'\n      - '.github/scripts/**'
+      - 'assets/js/**'
+      - '.github/scripts/**'
       - '.github/workflows/production-arabic-mobile-enquiry-audit.yml'
 jobs:
   audit:
