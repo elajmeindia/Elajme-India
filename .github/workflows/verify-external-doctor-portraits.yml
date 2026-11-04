@@ -22,7 +22,7 @@ jobs:
               out=[]
               for m in re.finditer(r'<article class="card"[^>]*>(.*?)</article>',s,re.S):
                   c=m.group(1)
-                  img=re.search(r'<img\\b[^>]*\\bsrc="([^"]+)"',c)
+                  img=re.search(r'<img\b[^>]*\bsrc="([^"]+)"',c)
                   name=re.search(r'<h2[^>]*>(.*?)</h2>',c,re.S)
                   if img:
                       out.append((re.sub(r'<[^>]+>','',name.group(1)).strip() if name else '?',html.unescape(img.group(1))))
@@ -36,7 +36,7 @@ jobs:
                   with urllib.request.urlopen(req,timeout=18) as res:
                       data=res.read(128)
                       mime=res.headers.get('Content-Type','')
-                      ok=res.status==200 and ('image/' in mime.lower() or data.startswith((b'\\xff\\xd8',b'\\x89PNG',b'RIFF')))
+                      ok=res.status==200 and ('image/' in mime.lower() or data.startswith((b'\xff\xd8',b'\x89PNG',b'RIFF')))
                       return {'url':url,'ok':ok,'status':res.status,'mime':mime}
               except Exception as e:
                   return {'url':url,'ok':False,'error':str(e)[:180]}
