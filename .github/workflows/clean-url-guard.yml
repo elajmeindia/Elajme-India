@@ -33,7 +33,7 @@ jobs:
               if any(part in ignored for part in p.parts):continue
               try:content=p.read_text(encoding='utf-8')
               except UnicodeError:continue
-              if re.search(r'utm_(?:source|medium|campaign|term|content|id)\s*=',content,re.I):
+              if re.search(r'utm_[a-z0-9_]+\s*=',content,re.I):
                   errors.append(f'{p}: UTM tracking parameter detected')
               if re.search(r'https?://(?:www\.)?elajmeindia\.com/\*\*',content,re.I):
                   errors.append(f'{p}: malformed /** homepage path detected')
