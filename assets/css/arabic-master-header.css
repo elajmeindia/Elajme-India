@@ -44,3 +44,6 @@ html[lang="ar"] .master-site-header .master-nav a[href*="about"]::after,html[lan
 
 /* Uniform horizontal rhythm for every Arabic desktop navigation item. */
 @media(min-width:901px){html[lang="ar"] .master-site-header .master-nav{gap:10px!important}html[lang="ar"] .master-site-header .master-nav a,html[lang="ar"] .master-site-header .master-nav a:nth-child(5){padding-left:2px!important;padding-right:2px!important;margin:0!important;flex-shrink:0!important}html[lang="ar"] .master-site-header .master-actions{gap:8px!important}}
+
+/* Improve Arabic desktop menu legibility while preserving even spacing. */
+@media(min-width:901px){html[lang="ar"] .master-site-header .master-nav a,html[lang="ar"] .master-site-header .master-nav a[href*="about"],html[lang="ar"] .master-site-header .master-nav a[href*="contact"]{font-size:13px!important;font-weight:800!important;color:#173b4b!important}html[lang="ar"] .master-site-header .master-nav{gap:8px!important}html[lang="ar"] .master-site-header .master-nav a,html[lang="ar"] .master-site-header .master-nav a:nth-child(5){padding-inline:1px!important}}
