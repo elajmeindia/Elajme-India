@@ -43,3 +43,74 @@ html[lang="ar"] .grid .card:nth-child(33) .doctor-media{background-image:url('/a
 html[lang="ar"] .grid .card:nth-child(34) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-34.jpg')!important;background-size:cover!important;background-position:center top!important}
 html[lang="ar"] .grid .card .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
 html[lang="ar"] .grid .card .doctor-media:after{content:"صورة توضيحية"!important}
+
+/* Restore directory portraits from the original doctor-specific source; never show an unrelated generic person. */
+html[lang="ar"] .grid .card .doctor-media{background-image:none!important;background-color:#edf3f4!important}
+html[lang="ar"] .grid .card .doctor-media img{opacity:1!important}
+html[lang="ar"] .grid .card .doctor-media:after{content:none!important}
+html[lang="ar"] .grid .card:nth-child(1) .doctor-media{background-image:url("https://images.apollo247.in/doctors/fa311ee5-1ebf-4291-a69b-59db07e5bff3.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(1) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(2) .doctor-media{background-image:url("https://images.apollo247.in/doctors/172a65ea-3b98-448d-8c5b-4e6c6cb30863-1733377327196.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(2) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(3) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-aloy-j-mukherjee_0.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(3) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(4) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-ameet-kishore.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(4) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(6) .doctor-media{background-image:url("https://medanta.s3.ap-south-1.amazonaws.com/doctors/April2026/KIH7UpJ0gpcV23aWNbDLbMp3td2U9f-metaZHJfYXNoaXNoX3lhZGF2Xy53ZWJw-.webp")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(6) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(7) .doctor-media{background-image:url("https://images.apollo247.in/doctors/74c8f83c-0d75-4288-b60f-1a7b09eba154-1774415011772.png")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(7) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(8) .doctor-media{background-image:url("https://www.apollohospitals.com/sites/default/files/2025-01/dr-deepa-sharma-pediatrics-in-delhi.png")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(8) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(9) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-dinesh-talwar.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(9) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(10) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-02/dr-geeta-kadayaprah-new-profile.jpeg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(10) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(11) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-hardeep-singh.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(11) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(12) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-jatin-ahuja.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(12) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(13) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/styles/doctor_card/public/2026-02/dr-kalyanpury-jawaharlal-choudhury.jpg.webp?itok=edfpPHx2")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(13) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(14) .doctor-media{background-image:url("https://images.apollo247.in/doctors/66b7533e-bff1-4c3c-a11d-4bdca7a5acd0-1785253866910.jpg?tr=w-76%2Cc-at_max%2Cf-auto%2Cq%3D80%2Cdpr-2")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(14) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(15) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-kulbhushan-attri.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(15) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(16) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-neeraj-singh.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(16) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(17) .doctor-media{background-image:url("https://images.apollo247.in/doctors/9f3aed98-015d-45fc-b4ee-581f2a7b6d2f.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(17) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(18) .doctor-media{background-image:url("https://cdn.prod.website-files.com/659c9d2768dc328628d30423/67938cc46d2097c5f70edf9d_Dr%20Nitish%20Anchal.png")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(18) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(19) .doctor-media{background-image:url("https://drprasunchatterjee.com/wp-content/uploads/2026/05/dr-prasun-chatterjee.jpeg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(19) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(20) .doctor-media{background-image:url("https://medanta.s3.ap-south-1.amazonaws.com/doctors/January2026/lmGVXpR7oE2umcVXvzfCEjsbkdBMGh-metaZHItcHJhdmVlbi1rdW1hci1rb3R3YW5pLnBuZw%3D%3D-.png")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(20) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(21) .doctor-media{background-image:url("https://www.spirehealthcare.com/media/15482/kumar-dhavendra.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(21) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(22) .doctor-media{background-image:url("https://images.apollo247.in/pd-cms/cms/2024-05/1715856160267.jpg?tr=q-100")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(22) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(23) .doctor-media{background-image:url("https://medanta.s3.ap-south-1.amazonaws.com/all-doctor-with-slug/dr-rajiva-gupta.png")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(23) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(24) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-sandip-agnihotri.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(24) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(25) .doctor-media{background-image:url("https://images.apollo247.in/doctors/fea7b18a-3850-4bfd-91ff-6f5d8f7be628.png")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(25) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(26) .doctor-media{background-image:url("https://images.apollo247.in/doctors/1ae4e18f-1ac8-4731-bf34-e2fb38c62474-1706774875698.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(26) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(27) .doctor-media{background-image:url("https://max-website20-images.s3.ap-south-1.amazonaws.com/medium_dr_saraansh_bansal_4a9b62c31c.jpeg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(27) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(28) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-04/untitled-design--86-.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(28) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(29) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-sundeep-kumar-upadhyaya.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(29) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(30) .doctor-media{background-image:url("https://www.logintohealth.com/assets/uploads/doctors/6483d79fd34b1f47a263d47fd2763f05.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(30) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(31) .doctor-media{background-image:url("https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/styles/doctor_card/public/2026-03/dr-tarun-sahni.jpg.webp?itok=Y49-vGAp")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(31) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(32) .doctor-media{background-image:url("https://images.apollo247.in/doctors/bf9ef813-0c0e-47e6-99aa-bddba348b7f7.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(32) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(33) .doctor-media{background-image:url("https://www.apollohospitals.com/sites/default/files/2025-01/dr-vinit-suri-neurology-in-delhi.png")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(33) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card:nth-child(34) .doctor-media{background-image:url("https://cdn.prod.website-files.com/659c9d2768dc328628d30423/6622b6addc794b35764ca309_Dr%20Vipul%20Vijay.jpg")!important;background-size:contain!important;background-position:center!important}
+html[lang="ar"] .grid .card:nth-child(34) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
