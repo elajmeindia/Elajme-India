@@ -24,3 +24,6 @@
 # Explicit blog article routes: serve the individual HTML documents, not the blog listing.
 /blog/how-to-choose-a-hospital-in-india/ /blog/how-to-choose-a-hospital-in-india/index.html 200
 /ar/blog/how-to-choose-a-hospital-in-india/ /ar/blog/how-to-choose-a-hospital-in-india/index.html 200
+
+/blog/treatment-in-india-for-patients-from-oman/ /blog/treatment-in-india-for-patients-from-oman/index.html 200
+/ar/blog/treatment-in-india-for-patients-from-oman/ /ar/blog/treatment-in-india-for-patients-from-oman/index.html 200
