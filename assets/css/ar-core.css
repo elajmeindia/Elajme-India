@@ -4,4 +4,4 @@ html[lang="ar"] .grid .card .doctor-media{position:relative;background:#edf5f5 u
 html[lang="ar"] .grid .card:nth-child(3n+2) .doctor-media{background-image:url('/assets/images/doctors/generic-avatar-4.svg')!important}
 html[lang="ar"] .grid .card:nth-child(3n) .doctor-media{background-image:url('/assets/images/doctors/generic-avatar-5.svg')!important}
 html[lang="ar"] .grid .card .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
-html[lang="ar"] .grid .card .doctor-media:after{content:"صورة رمزية";position:absolute;bottom:7px;right:7px;background:rgba(255,255,255,.92);color:#244958;font-size:11px;font-weight:700;padding:3px 7px;border-radius:5px;pointer-events:none}
+html[lang="ar"] .grid .card .doctor-media:after{content:"صورة توضيحية";position:absolute;bottom:7px;right:7px;background:rgba(255,255,255,.92);color:#244958;font-size:11px;font-weight:700;padding:3px 7px;border-radius:5px;pointer-events:none}
