@@ -41,3 +41,6 @@ html[lang="ar"] .master-site-header .master-nav a[href*="about"]::after,html[lan
 
 /* Consistent bold typography across the Arabic desktop header. */
 @media(min-width:901px){html[lang="ar"] .master-site-header .master-nav a{font-weight:800!important;font-size:12px!important;letter-spacing:0!important}html[lang="ar"] .master-site-header .master-nav a[href*="about"],html[lang="ar"] .master-site-header .master-nav a[href*="contact"]{font-weight:800!important;font-size:12px!important}html[lang="ar"] .master-site-header .master-phone,html[lang="ar"] .master-site-header .master-whatsapp,html[lang="ar"] .master-site-header .master-lang,html[lang="ar"] .master-site-header .master-cta{font-weight:800!important}html[lang="ar"] .master-site-header .master-nav a{padding-left:5px!important;padding-right:5px!important}}
+
+/* Uniform horizontal rhythm for every Arabic desktop navigation item. */
+@media(min-width:901px){html[lang="ar"] .master-site-header .master-nav{gap:10px!important}html[lang="ar"] .master-site-header .master-nav a,html[lang="ar"] .master-site-header .master-nav a:nth-child(5){padding-left:2px!important;padding-right:2px!important;margin:0!important;flex-shrink:0!important}html[lang="ar"] .master-site-header .master-actions{gap:8px!important}}
