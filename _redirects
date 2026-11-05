@@ -20,3 +20,7 @@
 
 # Note: Cloudflare Pages _redirects does not support matching query parameters.
 # Legacy ?lang=ar handling remains in the homepage JavaScript where required.
+
+# Explicit blog article routes: serve the individual HTML documents, not the blog listing.
+/blog/how-to-choose-a-hospital-in-india/ /blog/how-to-choose-a-hospital-in-india/index.html 200
+/ar/blog/how-to-choose-a-hospital-in-india/ /ar/blog/how-to-choose-a-hospital-in-india/index.html 200
