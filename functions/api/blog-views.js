@@ -1,6 +1,6 @@
 // Cloudflare Pages Function. Requires D1 binding BLOG_DB and table blog_views.
 // CREATE TABLE IF NOT EXISTS blog_views (slug TEXT PRIMARY KEY, views INTEGER NOT NULL DEFAULT 0);
-const allowed=new Set(["medical-interpretation-for-arabic-speaking-patients-en","medical-interpretation-for-arabic-speaking-patients-ar","preparing-for-medical-travel-to-india-en","preparing-for-medical-travel-to-india-ar","what-affects-treatment-costs-in-india-en","what-affects-treatment-costs-in-india-ar","treatment-in-india-for-patients-from-oman-en","treatment-in-india-for-patients-from-oman-ar","how-to-choose-a-hospital-in-india-en","how-to-choose-a-hospital-in-india-ar"]);
+const allowed=new Set(["preparing-for-a-medical-consultation-en","preparing-for-a-medical-consultation-ar","medical-interpretation-for-arabic-speaking-patients-en","medical-interpretation-for-arabic-speaking-patients-ar","preparing-for-medical-travel-to-india-en","preparing-for-medical-travel-to-india-ar","what-affects-treatment-costs-in-india-en","what-affects-treatment-costs-in-india-ar","treatment-in-india-for-patients-from-oman-en","treatment-in-india-for-patients-from-oman-ar","how-to-choose-a-hospital-in-india-en","how-to-choose-a-hospital-in-india-ar"]);
 const headers={"content-type":"application/json; charset=utf-8","cache-control":"no-store","x-content-type-options":"nosniff"};
 export async function onRequest({request,env}){
  const url=new URL(request.url),slug=url.searchParams.get("slug");
