@@ -5,3 +5,41 @@ html[lang="ar"] .grid .card:nth-child(3n+2) .doctor-media{background-image:url('
 html[lang="ar"] .grid .card:nth-child(3n) .doctor-media{background-image:url('/assets/images/doctors/generic-avatar-5.svg')!important}
 html[lang="ar"] .grid .card .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
 html[lang="ar"] .grid .card .doctor-media:after{content:"صورة توضيحية";position:absolute;bottom:7px;right:7px;background:rgba(255,255,255,.92);color:#244958;font-size:11px;font-weight:700;padding:3px 7px;border-radius:5px;pointer-events:none}
+
+/* Uploaded illustrative JPG portraits, one image per Arabic doctor card. */
+html[lang="ar"] .grid .card:nth-child(1) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-01.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(2) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-02.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(3) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-03.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(4) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-04.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(5) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-05.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(6) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-06.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(7) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-07.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(8) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-08.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(9) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-09.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(10) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-10.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(11) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-11.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(12) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-12.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(13) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-13.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(14) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-14.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(15) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-15.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(16) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-16.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(17) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-17.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(18) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-18.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(19) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-19.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(20) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-20.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(21) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-21.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(22) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-22.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(23) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-23.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(24) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-24.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(25) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-25.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(26) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-26.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(27) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-27.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(28) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-28.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(29) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-29.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(30) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-30.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(31) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-31.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(32) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-32.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(33) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-33.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card:nth-child(34) .doctor-media{background-image:url('/assets/images/doctors/generic-doctor-34.jpg')!important;background-size:cover!important;background-position:center top!important}
+html[lang="ar"] .grid .card .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+html[lang="ar"] .grid .card .doctor-media:after{content:"صورة توضيحية"!important}
