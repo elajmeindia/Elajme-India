@@ -1,6 +1,6 @@
 /* Elajme India — bilingual homepage and conversion-aware routing */
 const GA4_MEASUREMENT_ID="G-ZEKEN0TB2N";
-(function installGA4(){if(document.querySelector(`script[src*="${GA4_MEASUREMENT_ID}"]`))return;window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments);};window.gtag('js',new Date());window.gtag('config',GA4_MEASUREMENT_ID);const ga=document.createElement('script');ga.async=true;ga.src=`https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`;ga.setAttribute('data-elajme-ga4','');document.head.appendChild(ga);})();
+(function installGA4(){if(window.__elajmeGaConfigured)return;window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments);};window.gtag('js',new Date());window.gtag('config',GA4_MEASUREMENT_ID);window.__elajmeGaConfigured=true;if(document.querySelector(`script[src*="${GA4_MEASUREMENT_ID}"]`))return;const ga=document.createElement('script');ga.async=true;ga.src=`https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`;ga.setAttribute('data-elajme-ga4','');document.head.appendChild(ga);})();
 function trackElajmeEvent(name,params){if(typeof window.gtag==='function')window.gtag('event',name,params||{});}
 const SITE_CONFIG={brandName:"Elajme India",whatsappNumber:"917488955154"};
 const translations={en:{lang:"en",dir:"ltr",toggle:"Arabic"},ar:{lang:"ar",dir:"rtl",toggle:"English"}};
