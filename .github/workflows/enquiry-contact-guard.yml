@@ -45,9 +45,10 @@ jobs:
               if f'tel:+{number}' not in html:errors.append(f'{name}: missing Elajme phone destination')
               if name.startswith('ar/') and not re.search(r'<html[^>]*dir=["\']rtl["\']',html,re.I):errors.append(f'{name}: missing RTL')
               if name.endswith('index.html') and name in ('index.html','ar/index.html'):
-                  for field in ('patientEnquiryForm','patientName','patientCountry','patientMobile','medicalNeed'):
+                  for field in ('patientEnquiryForm','patientName','patientCountry','patientMobile','preferredLanguage'):
                       if f'id="{field}"' not in html:errors.append(f'{name}: missing form field {field}')
                   if 'id="enquiry"' not in html:errors.append(f'{name}: missing enquiry anchor')
+                  if 'id="medicalNeed"' in html:errors.append(f'{name}: sensitive medical details must not be requested in initial contact form')
               if 'mobile-header.js' not in html:errors.append(f'{name}: missing mobile header script')
           js=Path('script.js').read_text(encoding='utf-8')
           for marker in ('patientEnquiryForm','addEventListener("submit"','encodeURIComponent'):
