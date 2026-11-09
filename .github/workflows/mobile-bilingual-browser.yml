@@ -160,7 +160,7 @@ jobs:
                 await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
                 const generated=await page.evaluate(()=>{
                   const form=document.getElementById('patientEnquiryForm');
-                  const fields={patientName:'Test Patient',patientCountry:'Test Country',patientMobile:'+971501234567',medicalNeed:'QA test, not a real medical enquiry'};
+                  const fields={patientName:'Test Patient',patientCountry:'Test Country',patientMobile:'+971501234567',preferredLanguage:'Arabic'};
                   for(const [id,value] of Object.entries(fields)){const el=document.getElementById(id);if(!el)return {error:'missing '+id};el.value=value}
                   if(!form.checkValidity())return {error:'test form invalid'};
                   const original=window.open;
@@ -176,7 +176,7 @@ jobs:
                   errors.push(path+': enquiry does not route to Elajme WhatsApp');
                 console.log('ENQUIRY DESTINATION',path,generated.error||'Elajme WhatsApp (intercepted; not sent)');
                 const result=await page.locator('#patientEnquiryForm').evaluate(form=>{
-                  const required=['patientName','patientCountry','patientMobile','medicalNeed'];
+                  const required=['patientName','patientCountry','patientMobile','preferredLanguage'];
                   const missing=required.filter(id=>!form.querySelector('#'+id));
                   const initiallyInvalid=!form.checkValidity();
                   const inputs=required.map(id=>form.querySelector('#'+id));
@@ -184,11 +184,11 @@ jobs:
                     inputs[0].value='Test Patient';
                     inputs[1].value='Test Country';
                     inputs[2].value='+971501234567';
-                    inputs[3].value='Browser validation only, no submission';
+                    inputs[3].value='Arabic';
                     inputs.forEach(el=>el.dispatchEvent(new Event('input',{bubbles:true})));
                   }
                   const validAfterFill=form.checkValidity();
-                  inputs.forEach(el=>{if(el)el.value=''});
+                  inputs.forEach(el=>{if(el)el.value=el.tagName==='SELECT'?'English':''});
                   return {missing,initiallyInvalid,validAfterFill};
                 });
                 if(result.missing.length)errors.push(path+': missing enquiry fields '+result.missing.join(','));
