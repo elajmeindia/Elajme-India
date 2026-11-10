@@ -72,7 +72,7 @@ fs.mkdirSync(out,{recursive:true});
           if (event.target.closest('a[href^="https://wa.me/"]')) event.preventDefault();
         }, true);
       });
-      await omanPage.locator('a[href^="https://wa.me/917488955154"]').first().click();
+      await omanPage.locator('main a[href^="https://wa.me/917488955154"]:visible').first().click();
       const events = await omanPage.evaluate(() =>
         (window.dataLayer || []).filter(item => item && item[0] === 'event' && item[1] === 'whatsapp_handoff_intent')
           .map(item => ({page_path:item[2]?.page_path,language:item[2]?.language,
