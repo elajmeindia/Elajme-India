@@ -46,7 +46,8 @@ class Profile(HTMLParser):
                 self.noindex = True
 
 def audit():
-    issues, counts = [], {"doctors": 0, "hospitals": 0, "redirects": 0}
+    issues, counts = [], {"doctors": 0, "hospitals": 0, "redirects": 0, "doctor_placeholder_pages": 0}
+    placeholders = []
     for category in CATEGORIES:
         english = ROOT / category
         arabic = ROOT / "ar" / category
@@ -86,6 +87,9 @@ def audit():
                 enquiry = "/ar/#enquiry" if lang == "ar" else "/#enquiry"
                 if enquiry not in page.links: issues.append(f"{rel}: missing {enquiry} enquiry link")
                 if not page.images: issues.append(f"{rel}: no images")
+                if category == "doctors" and any("portrait-unavailable" in src for src, alt in page.images):
+                    counts["doctor_placeholder_pages"] += 1
+                    placeholders.append(str(rel))
                 for src, alt in page.images:
                     parsed = urlsplit(src)
                     if not src: issues.append(f"{rel}: empty image source")
@@ -102,6 +106,7 @@ def audit():
             if pages["en"].redirect and pages["ar"].redirect:
                 counts["redirects"] += 2
     print("Profile audit:", counts)
+    for path in placeholders: print("PLACEHOLDER:", path)
     for issue in issues: print("ISSUE:", issue)
     print("Total issues:", len(issues))
     return 1 if issues else 0
