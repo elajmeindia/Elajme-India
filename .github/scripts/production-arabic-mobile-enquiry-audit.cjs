@@ -63,6 +63,28 @@ fs.mkdirSync(out,{recursive:true});
       if(!analyticsPass)report.errors.push('Arabic form did not queue a privacy-safe GA4 handoff-intent event');
     }catch(e){report.errors.push('Arabic enquiry test: '+e.message);}
     await page.close();
+    const omanPage = await browser.newPage({viewport:{width:390,height:850}});
+    try {
+      const response = await omanPage.goto(base+'/ar/oman/treatment-in-india/',{waitUntil:'domcontentloaded',timeout:30000});
+      if(!response || response.status()>=400) throw Error('Oman landing page unavailable');
+      await omanPage.evaluate(() => {
+        document.addEventListener('click', event => {
+          if (event.target.closest('a[href^="https://wa.me/"]')) event.preventDefault();
+        }, true);
+      });
+      await omanPage.locator('a[href^="https://wa.me/917488955154"]').first().click();
+      const events = await omanPage.evaluate(() =>
+        (window.dataLayer || []).filter(item => item && item[0] === 'event' && item[1] === 'whatsapp_handoff_intent')
+          .map(item => ({page_path:item[2]?.page_path,language:item[2]?.language,
+            lead_source:item[2]?.lead_source,keys:Object.keys(item[2] || {})}))
+      );
+      const pass = events.some(item => item.page_path === '/ar/oman/treatment-in-india/' &&
+        item.language === 'ar' && item.lead_source === 'oman_landing_whatsapp' &&
+        item.keys.every(key => ['page_path','language','lead_source'].includes(key)));
+      report.checks.push({test:'oman-arabic-whatsapp-analytics-no-patient-data',pass});
+      if(!pass) report.errors.push('Arabic Oman WhatsApp click did not queue the privacy-safe analytics event');
+    }catch(e){report.errors.push('Arabic Oman analytics test: '+e.message);}
+    await omanPage.close();
   }finally{
     fs.writeFileSync(out+'/report.json',JSON.stringify(report,null,2));
     await browser.close();
