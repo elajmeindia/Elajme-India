@@ -4,9 +4,16 @@ on:
     branches: [main]
     paths:
       - 'scripts/check_treatment_directory.py'
+      - 'scripts/check_profile_directory.py'
       - '.github/workflows/audit-treatment-directory.yml'
       - 'treatments/**'
       - 'ar/treatments/**'
+      - 'doctors/**'
+      - 'ar/doctors/**'
+      - 'hospitals/**'
+      - 'ar/hospitals/**'
+      - 'assets/images/doctors/**'
+      - 'assets/images/hospitals/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,11 +27,19 @@ jobs:
         run: |
           set -o pipefail
           python3 scripts/check_treatment_directory.py 2>&1 | tee treatment-audit-report.txt
+      - name: Check bilingual doctor and hospital profiles
+        if: always()
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 scripts/check_profile_directory.py 2>&1 | tee profile-audit-report.txt
       - name: Upload audit report even if checks fail
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: treatment-directory-audit
-          path: treatment-audit-report.txt
+          name: bilingual-directory-audit
+          path: |
+            treatment-audit-report.txt
+            profile-audit-report.txt
           if-no-files-found: warn
           retention-days: 14
