@@ -37,7 +37,7 @@ jobs:
               if 'master-site-header' in t:
                   for asset in ['/assets/css/master-header.css?v=6','/assets/css/mobile-header.css?v=3','/assets/js/mobile-header.js?v=3']:
                       if asset not in t: problems.append('MOBILE_HEADER_ASSET_MISSING '+rel+' '+asset)
-                  if is_ar and (('/assets/css/arabic-master-header.css?v=7' if rel=='ar/index.html' else '/assets/css/arabic-master-header.css?v=2') not in t): problems.append('AR_HEADER_ASSET_MISSING '+rel)
+                  if is_ar and (('/assets/css/arabic-master-header.css?v=5' if rel=='ar/index.html' else '/assets/css/arabic-master-header.css?v=2') not in t): problems.append('AR_HEADER_ASSET_MISSING '+rel)
                   if '917488955154' not in t: problems.append('PHONE_ROUTE_MISSING '+rel)
                   if 'wa.me/917488955154' not in t: problems.append('WHATSAPP_ROUTE_MISSING '+rel)
               if 'class="site-footer"' in t and '/assets/css/footer-approved.css' not in t: problems.append('MOBILE_FOOTER_ASSET_MISSING '+rel)
