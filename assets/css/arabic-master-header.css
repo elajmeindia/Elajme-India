@@ -47,3 +47,6 @@ html[lang="ar"] .master-site-header .master-nav a[href*="about"]::after,html[lan
 
 /* Improve Arabic desktop menu legibility while preserving even spacing. */
 @media(min-width:901px){html[lang="ar"] .master-site-header .master-nav a,html[lang="ar"] .master-site-header .master-nav a[href*="about"],html[lang="ar"] .master-site-header .master-nav a[href*="contact"]{font-size:13px!important;font-weight:800!important;color:#173b4b!important}html[lang="ar"] .master-site-header .master-nav{gap:8px!important}html[lang="ar"] .master-site-header .master-nav a,html[lang="ar"] .master-site-header .master-nav a:nth-child(5){padding-inline:1px!important}}
+
+/* Distribute spare desktop width evenly without changing compact tablet/mobile layouts. */
+@media(min-width:1400px){html[lang="ar"] .master-header-inner{justify-content:space-between!important}html[lang="ar"] .master-site-header .master-nav{flex:1 1 auto!important;justify-content:space-evenly!important;min-width:0!important;gap:6px!important}html[lang="ar"] .master-site-header .master-actions{flex:0 0 auto!important}}
