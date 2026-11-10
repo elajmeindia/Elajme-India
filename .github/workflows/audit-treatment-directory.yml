@@ -16,4 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check bilingual treatment routes and enquiry links
-        run: python3 scripts/check_treatment_directory.py
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 scripts/check_treatment_directory.py 2>&1 | tee treatment-audit-report.txt
+      - name: Upload audit report even if checks fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: treatment-directory-audit
+          path: treatment-audit-report.txt
+          if-no-files-found: warn
+          retention-days: 14
