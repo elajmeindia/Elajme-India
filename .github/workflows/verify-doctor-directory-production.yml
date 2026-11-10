@@ -69,18 +69,31 @@ jobs:
                       print(f'PASS {url}: current notice visible')
               except Exception as exc:
                   failed.append(f'{url}: request failed: {exc}')
-          # Confirm the latest Arabic placeholder accessibility correction is live.
+          # Verify every named Arabic placeholder alt from the committed source.
+          # Comparing the full set catches partial or stale production deployments.
+          import re
+          from html import unescape
+          source_ar = Path('ar/doctors/index.html').read_text(encoding='utf-8')
+          source_alts = set(unescape(value) for value in
+              re.findall(r'<img\\b[^>]*\\balt="([^"]+)"', source_ar)
+              if value.startswith('صورة بديلة؛'))
+          if len(source_alts) < 30:
+              failed.append(f'Unexpected Arabic named-placeholder inventory: {len(source_alts)}')
           try:
               request = Request('https://elajmeindia.com/ar/doctors/',
                                 headers={'User-Agent': 'ElajmeProductionParityAudit/1.0',
                                          'Cache-Control': 'no-cache'})
               with urlopen(request, timeout=25) as response:
                   arabic_html = response.read().decode('utf-8', errors='replace')
-              expected_alt = 'صورة بديلة؛ الصورة الفعلية للدكتور أنوب دير غير متاحة'
-              if expected_alt not in arabic_html:
-                  failed.append('Arabic Dr Anup Dhir placeholder alt text not yet deployed')
+              live_alts = set(unescape(value) for value in
+                  re.findall(r'<img\\b[^>]*\\balt="([^"]+)"', arabic_html))
+              missing = sorted(source_alts - live_alts)
+              if missing:
+                  failed.append(f'{len(missing)} Arabic placeholder descriptions absent on production')
+                  for value in missing[:5]:
+                      print(f'MISSING Arabic alt: {value}')
               else:
-                  print('PASS Arabic Dr Anup Dhir placeholder description')
+                  print(f'PASS {len(source_alts)} Arabic named-placeholder descriptions')
           except Exception as exc:
               failed.append(f'Arabic placeholder verification failed: {exc}')
           if failed:
