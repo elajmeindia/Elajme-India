@@ -1,0 +1,17 @@
+name: Check live bilingual Blog navigation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 */6 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  production-navigation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check live English and Arabic homepages
+        run: python3 scripts/check_live_blog_navigation.py
