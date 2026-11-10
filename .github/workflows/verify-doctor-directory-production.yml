@@ -1,5 +1,11 @@
 name: Verify doctor directory production parity
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'doctors/index.html'
+      - 'ar/doctors/index.html'
+      - '.github/workflows/verify-doctor-directory-production.yml'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
