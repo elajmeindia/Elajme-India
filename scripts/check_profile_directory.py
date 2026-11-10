@@ -25,12 +25,18 @@ class Profile(HTMLParser):
         self.h1 = False
         self.in_h1 = False
         self.h1_text = []
+        self.nonvisible_depth = 0
     def handle_data(self, data):
-        self.visible_text.append(data)
-        if self.in_h1: self.h1_text.append(data)
+        if self.nonvisible_depth == 0:
+            self.visible_text.append(data)
+            if self.in_h1: self.h1_text.append(data)
     def handle_endtag(self, tag):
+        if tag in ("script", "style", "template"):
+            self.nonvisible_depth = max(0, self.nonvisible_depth - 1)
         if tag == "h1": self.in_h1 = False
     def handle_starttag(self, tag, attrs):
+        if tag in ("script", "style", "template"):
+            self.nonvisible_depth += 1
         a = dict(attrs)
         if tag == "html":
             self.lang, self.dir = a.get("lang"), a.get("dir")
