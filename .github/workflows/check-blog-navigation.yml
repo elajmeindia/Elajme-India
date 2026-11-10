@@ -1,0 +1,28 @@
+name: Protect bilingual Blog navigation
+
+on:
+  push:
+    paths:
+      - 'index.html'
+      - 'ar/index.html'
+      - 'blog/index.html'
+      - 'ar/blog/index.html'
+      - 'scripts/check_blog_navigation.py'
+      - '.github/workflows/check-blog-navigation.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'ar/index.html'
+      - 'blog/index.html'
+      - 'ar/blog/index.html'
+      - 'scripts/check_blog_navigation.py'
+      - '.github/workflows/check-blog-navigation.yml'
+  workflow_dispatch:
+
+jobs:
+  navigation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify bilingual Blog links
+        run: python3 scripts/check_blog_navigation.py
