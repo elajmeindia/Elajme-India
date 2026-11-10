@@ -59,4 +59,4 @@ html[lang="ar"] .master-site-header .master-nav a[href*="about"]::after,html[lan
 
 /* Approved wide desktop gutters: 5% per side; keep tighter gutters on smaller desktops. */
 @media(min-width:1400px){html[lang="ar"] .master-site-header .master-header-inner{width:90%!important;max-width:none!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important}}
-@media(min-width:1200px) and (max-width:1399px){html[lang="ar"] .master-site-header .master-header-inner{width:calc(100% - 48px)!important;max-width:none!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important}}
+@media(min-width:1200px) and (max-width:1399px){html[lang="ar"] .master-site-header .master-header-inner{width:90%!important;max-width:none!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important}}
