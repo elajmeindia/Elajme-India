@@ -22,7 +22,7 @@
     const mobile = document.getElementById('patientMobile');
     const number = mobile && mobile.value.trim();
     if (!name || !name.value.trim() || !country || !country.value.trim() || !number ||
-        !/^[+0-9][0-9\\s()\\-]{6,20}$/.test(number)) return;
+        !/^[+0-9][0-9\s()\-]{6,20}$/.test(number)) return;
     window.gtag('event', 'whatsapp_handoff_intent', {
       page_path: location.pathname,
       language: 'ar',
