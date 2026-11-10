@@ -23,14 +23,20 @@ class Profile(HTMLParser):
         self.redirect_target = None
         self.noindex = False
         self.h1 = False
+        self.in_h1 = False
+        self.h1_text = []
     def handle_data(self, data):
         self.visible_text.append(data)
+        if self.in_h1: self.h1_text.append(data)
+    def handle_endtag(self, tag):
+        if tag == "h1": self.in_h1 = False
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
         if tag == "html":
             self.lang, self.dir = a.get("lang"), a.get("dir")
         elif tag == "h1":
             self.h1 = True
+            self.in_h1 = True
         elif tag == "link":
             if a.get("rel") == "canonical": self.canonical = a.get("href")
             if a.get("rel") == "alternate" and a.get("hreflang"):
@@ -81,6 +87,10 @@ def audit():
                     continue
                 counts[category] += 1
                 if not page.h1: issues.append(f"{rel}: missing h1")
+                if category == "doctors" and lang == "ar" and not any(
+                    "\u0600" <= char <= "\u06ff" for char in "".join(page.h1_text)
+                ):
+                    issues.append(f"{rel}: doctor heading has no Arabic-script name")
                 en_url = f"{SITE}/{category}/{slug}/"
                 ar_url = f"{SITE}/ar/{category}/{slug}/"
                 expected = ar_url if lang == "ar" else en_url
