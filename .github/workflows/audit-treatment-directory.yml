@@ -1,0 +1,19 @@
+name: Audit bilingual treatment directory
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/check_treatment_directory.py'
+      - '.github/workflows/audit-treatment-directory.yml'
+      - 'treatments/**'
+      - 'ar/treatments/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check bilingual treatment routes and enquiry links
+        run: python3 scripts/check_treatment_directory.py
