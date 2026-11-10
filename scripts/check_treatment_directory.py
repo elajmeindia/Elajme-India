@@ -19,7 +19,6 @@ class Page(HTMLParser):
         self.has_h1 = False
         self.canonical = None
         self.alternates = {}
-        self.has_enquiry = False
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
         if tag == "html": self.lang = a.get("lang")
@@ -31,7 +30,6 @@ class Page(HTMLParser):
         if tag == "a":
             href = a.get("href", "")
             self.links.append(href)
-            if href.endswith("#enquiry"): self.has_enquiry = True
 
 def audit():
     issues = []
@@ -58,7 +56,9 @@ def audit():
             for hreflang, expected in (("en", expected_en), ("ar", expected_ar), ("x-default", expected_en)):
                 if page.alternates.get(hreflang) != expected:
                     issues.append(f"{path.relative_to(ROOT)}: incorrect {hreflang} alternate {page.alternates.get(hreflang)!r}")
-            if not page.has_enquiry: issues.append(f"{path.relative_to(ROOT)}: missing enquiry link")
+            expected_enquiry = "/ar/#enquiry" if language == "ar" else "/#enquiry"
+            if expected_enquiry not in page.links:
+                issues.append(f"{path.relative_to(ROOT)}: missing Elajme India enquiry link {expected_enquiry}")
             base_url = "https://elajmeindia.com/" + str(path.relative_to(ROOT).parent) + "/"
             for href in page.links:
                 if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
