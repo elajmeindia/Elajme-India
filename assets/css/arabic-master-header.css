@@ -57,5 +57,6 @@ html[lang="ar"] .master-site-header .master-nav a[href*="about"]::after,html[lan
 /* Desktop visual polish: readable Arabic links and a tighter action group. */
 @media(min-width:1200px){html[lang="ar"] .master-site-header .master-nav a,html[lang="ar"] .master-site-header .master-nav a[href*="about"],html[lang="ar"] .master-site-header .master-nav a[href*="contact"]{font-size:14px!important;line-height:1.35!important}html[lang="ar"] .master-site-header .master-nav{justify-content:space-around!important;gap:3px!important}html[lang="ar"] .master-site-header .master-actions{gap:5px!important;margin-right:2px!important}html[lang="ar"] .master-site-header .master-phone{padding-left:2px!important;padding-right:2px!important}}
 
-/* Balanced desktop gutters; preserve room for all eight Arabic navigation links. */
-@media(min-width:1200px){html[lang="ar"] .master-site-header .master-header-inner{width:calc(100% - 48px)!important;max-width:1600px!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important}}
+/* Approved wide desktop gutters: 5% per side; keep tighter gutters on smaller desktops. */
+@media(min-width:1400px){html[lang="ar"] .master-site-header .master-header-inner{width:90%!important;max-width:none!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important}}
+@media(min-width:1200px) and (max-width:1399px){html[lang="ar"] .master-site-header .master-header-inner{width:calc(100% - 48px)!important;max-width:none!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important}}
