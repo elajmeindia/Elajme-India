@@ -63,6 +63,20 @@ jobs:
                       print(f'PASS {url}: current notice visible')
               except Exception as exc:
                   failed.append(f'{url}: request failed: {exc}')
+          # Confirm the latest Arabic placeholder accessibility correction is live.
+          try:
+              request = Request('https://elajmeindia.com/ar/doctors/',
+                                headers={'User-Agent': 'ElajmeProductionParityAudit/1.0',
+                                         'Cache-Control': 'no-cache'})
+              with urlopen(request, timeout=25) as response:
+                  arabic_html = response.read().decode('utf-8', errors='replace')
+              expected_alt = 'صورة بديلة؛ الصورة الفعلية للدكتور أنوب دير غير متاحة'
+              if expected_alt not in arabic_html:
+                  failed.append('Arabic Dr Anup Dhir placeholder alt text not yet deployed')
+              else:
+                  print('PASS Arabic Dr Anup Dhir placeholder description')
+          except Exception as exc:
+              failed.append(f'Arabic placeholder verification failed: {exc}')
           if failed:
               raise SystemExit('Production directory parity not confirmed:\\n' + '\\n'.join(failed))
           print('Doctor directory production parity confirmed for both languages.')
