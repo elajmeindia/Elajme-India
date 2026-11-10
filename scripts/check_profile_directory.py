@@ -97,6 +97,7 @@ def audit():
                     disclosure = "صورة توضيحية" if lang == "ar" else "placeholder"
                     if disclosure.lower() not in " ".join(page.visible_text).lower():
                         unlabeled_placeholders.append(str(rel))
+                        issues.append(f"{rel}: doctor placeholder needs visible disclosure")
                 for src, alt in page.images:
                     parsed = urlsplit(src)
                     if not src: issues.append(f"{rel}: empty image source")
