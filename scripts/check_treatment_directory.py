@@ -3,6 +3,7 @@
 from html.parser import HTMLParser
 from pathlib import Path
 import sys
+from urllib.parse import urljoin, urlsplit, unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 EN = ROOT / "treatments"
@@ -48,13 +49,20 @@ def audit():
             if not page.has_main or not page.has_h1: issues.append(f"{path.relative_to(ROOT)}: missing main or h1")
             if not page.has_canonical: issues.append(f"{path.relative_to(ROOT)}: missing canonical")
             if not page.has_enquiry: issues.append(f"{path.relative_to(ROOT)}: missing enquiry link")
+            base_url = "https://elajmeindia.com/" + str(path.relative_to(ROOT).parent) + "/"
             for href in page.links:
-                if not href.startswith("/") or href.startswith("//"): continue
-                route = href.split("#", 1)[0].split("?", 1)[0]
-                if not route: continue
+                if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
+                    continue
+                resolved = urlsplit(urljoin(base_url, href))
+                if resolved.netloc != "elajmeindia.com":
+                    continue
+                route = unquote(resolved.path)
+                if not route.startswith("/") or ".." in Path(route).parts:
+                    issues.append(f"{path.relative_to(ROOT)}: unsafe internal link {href}")
+                    continue
                 target = ROOT / route.lstrip("/")
                 if not (target.is_file() or (target / "index.html").is_file()):
-                    issues.append(f"{path.relative_to(ROOT)}: unresolved internal link {route}")
+                    issues.append(f"{path.relative_to(ROOT)}: unresolved internal link {href}")
     print(f"Checked {checked} active treatment pages across {len(en_slugs)} EN directories and {len(ar_slugs)} AR directories.")
     for issue in issues: print("ISSUE:", issue)
     print(f"Total issues: {len(issues)}")
