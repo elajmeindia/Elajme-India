@@ -2,7 +2,7 @@
 """Read-only bilingual doctor/hospital profile audit. Run from any directory."""
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import unquote, urljoin, urlsplit
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,7 +78,11 @@ def audit():
                     parsed = urlsplit(src)
                     if not src: issues.append(f"{rel}: empty image source")
                     elif not parsed.scheme and not parsed.netloc:
-                        local = ROOT / unquote(parsed.path).lstrip("/")
+                        page_url = f"{SITE}/{rel.parent.as_posix()}/"
+                        resolved = urlsplit(urljoin(page_url, src))
+                        if resolved.netloc != "elajmeindia.com":
+                            continue
+                        local = ROOT / unquote(resolved.path).lstrip("/")
                         if not local.is_file():
                             issues.append(f"{rel}: missing local image {src}")
             if pages["en"].redirect != pages["ar"].redirect:
