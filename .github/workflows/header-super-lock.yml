@@ -20,8 +20,8 @@ jobs:
           problems=[]
           # Approved baseline after the verified bilingual mobile-header repair and directory language-switch normalization.
           locked_hashes={
-            'assets/css/master-header.css':'26fcbc9a88dfa959e48e3c079790011d5001fa95',
-            'assets/css/arabic-master-header.css':'10ed97caf7a4223fc8353c5b2fedbdbbca05443e',
+            'assets/css/master-header.css':'97d1b98203185bd444d7f66a11df89cee58b4f16',
+            'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
             'assets/js/mobile-header.js':'034b2d8481f68243e099dbbb0ff1f876d96d9a8f',
@@ -71,13 +71,14 @@ jobs:
                   m=re.search(r'<header class="master-site-header">.*?</header>',t,re.S)
                   if not m: problems.append('MASTER_HEADER_MARKUP_INVALID '+rel); continue
                   h=m.group(0)
-                  if '/assets/css/master-header.css?v=6' not in t: problems.append('MASTER_HEADER_STYLE '+rel)
+                  expected_master='/assets/css/master-header.css?v=8' if rel in ('index.html','ar/index.html') else '/assets/css/master-header.css?v=6'
+                  if expected_master not in t: problems.append('MASTER_HEADER_STYLE '+rel)
                   if '/assets/css/mobile-header.css?v=3' not in t: problems.append('MOBILE_HEADER_STYLE '+rel)
                   if '/assets/js/mobile-header.js?v=3' not in t: problems.append('MOBILE_HEADER_SCRIPT '+rel)
-                  if t.count('/assets/css/master-header.css?v=6')!=1: problems.append('MASTER_HEADER_STYLE_DUPLICATE '+rel)
+                  if t.count(expected_master)!=1: problems.append('MASTER_HEADER_STYLE_DUPLICATE '+rel)
                   if t.count('/assets/css/mobile-header.css?v=3')!=1: problems.append('MOBILE_HEADER_STYLE_DUPLICATE '+rel)
                   if t.count('/assets/js/mobile-header.js?v=3')!=1: problems.append('MOBILE_HEADER_SCRIPT_DUPLICATE '+rel)
-                  if is_ar and (('/assets/css/arabic-master-header.css?v=5' if rel=='ar/index.html' else '/assets/css/arabic-master-header.css?v=2') not in t): problems.append('AR_HEADER_STYLE '+rel)
+                  if is_ar and (('/assets/css/arabic-master-header.css?v=8' if rel=='ar/index.html' else '/assets/css/arabic-master-header.css?v=2') not in t): problems.append('AR_HEADER_STYLE '+rel)
                   if h.count('class="master-actions"')!=1: problems.append('MASTER_ACTIONS_COUNT '+rel)
                   if h.count('class="master-lang"')!=1: problems.append('MASTER_LANGUAGE_COUNT '+rel)
                   if '917488955154' not in h: problems.append('HEADER_CONTACT_ROUTE '+rel)
