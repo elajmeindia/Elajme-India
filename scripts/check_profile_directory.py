@@ -90,7 +90,13 @@ def audit():
                         issues.append(f"{rel}: incorrect {key} hreflang")
                 enquiry = "/ar/#enquiry" if lang == "ar" else "/#enquiry"
                 if enquiry not in page.links: issues.append(f"{rel}: missing {enquiry} enquiry link")
-                if not page.images: issues.append(f"{rel}: no images")
+                profile_images = [(src, alt) for src, alt in page.images
+                                  if "/Healthcare%20Travel%20Swoosh%20Emblem" not in src
+                                  and "brand-icon" not in src]
+                if not profile_images:
+                    issues.append(f"{rel}: missing doctor/hospital profile image (branding images do not count)")
+                elif not any(alt.strip() for src, alt in profile_images):
+                    issues.append(f"{rel}: profile image missing descriptive alt text")
                 if category == "doctors" and any("portrait-unavailable" in src for src, alt in page.images):
                     counts["doctor_placeholder_pages"] += 1
                     placeholders.append(str(rel))
