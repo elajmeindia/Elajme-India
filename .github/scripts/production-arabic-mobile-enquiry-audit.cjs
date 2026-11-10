@@ -42,6 +42,25 @@ fs.mkdirSync(out,{recursive:true});
       const pass = target?.hostname==='wa.me' && target.pathname==='/917488955154' && target.searchParams.get('text')?.includes('Audit Test');
       report.checks.push({test:'enquiry-intercept-no-message-sent',destination:target?target.origin+target.pathname:null,pass:!!pass});
       if(!pass)report.errors.push('Arabic form did not open the expected Elajme India WhatsApp destination');
+      // GA4 event is a handoff intent, never a confirmed patient lead.
+      // Inspect the in-page event queue without transmitting or logging patient details.
+      const analytics = await page.evaluate(() => {
+        const entries = (window.dataLayer || []).filter(item => item && item[0] === 'event' && item[1] === 'whatsapp_handoff_intent');
+        return entries.map(item => ({
+          event: item[1],
+          page_path: item[2]?.page_path,
+          language: item[2]?.language,
+          lead_source: item[2]?.lead_source,
+          keys: Object.keys(item[2] || {})
+        }));
+      });
+      const analyticsPass = analytics.some(item =>
+        item.page_path === '/ar/' && item.language === 'ar' &&
+        item.lead_source === 'patient_enquiry_form' &&
+        item.keys.every(key => ['page_path','language','lead_source'].includes(key))
+      );
+      report.checks.push({test:'arabic-ga4-handoff-intent-no-patient-data',pass:analyticsPass});
+      if(!analyticsPass)report.errors.push('Arabic form did not queue a privacy-safe GA4 handoff-intent event');
     }catch(e){report.errors.push('Arabic enquiry test: '+e.message);}
     await page.close();
   }finally{
