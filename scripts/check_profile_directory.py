@@ -18,10 +18,13 @@ class Profile(HTMLParser):
         self.alternates = {}
         self.links = []
         self.images = []
+        self.visible_text = []
         self.redirect = False
         self.redirect_target = None
         self.noindex = False
         self.h1 = False
+    def handle_data(self, data):
+        self.visible_text.append(data)
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
         if tag == "html":
@@ -48,6 +51,7 @@ class Profile(HTMLParser):
 def audit():
     issues, counts = [], {"doctors": 0, "hospitals": 0, "redirects": 0, "doctor_placeholder_pages": 0}
     placeholders = []
+    unlabeled_placeholders = []
     for category in CATEGORIES:
         english = ROOT / category
         arabic = ROOT / "ar" / category
@@ -90,6 +94,9 @@ def audit():
                 if category == "doctors" and any("portrait-unavailable" in src for src, alt in page.images):
                     counts["doctor_placeholder_pages"] += 1
                     placeholders.append(str(rel))
+                    disclosure = "صورة توضيحية" if lang == "ar" else "placeholder"
+                    if disclosure.lower() not in " ".join(page.visible_text).lower():
+                        unlabeled_placeholders.append(str(rel))
                 for src, alt in page.images:
                     parsed = urlsplit(src)
                     if not src: issues.append(f"{rel}: empty image source")
@@ -107,6 +114,8 @@ def audit():
                 counts["redirects"] += 2
     print("Profile audit:", counts)
     for path in placeholders: print("PLACEHOLDER:", path)
+    for path in unlabeled_placeholders: print("DISCLOSURE NEEDED:", path)
+    print("Placeholder pages missing visible disclosure:", len(unlabeled_placeholders))
     for issue in issues: print("ISSUE:", issue)
     print("Total issues:", len(issues))
     return 1 if issues else 0
