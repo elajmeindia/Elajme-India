@@ -19,6 +19,7 @@ class Profile(HTMLParser):
         self.links = []
         self.images = []
         self.redirect = False
+        self.redirect_target = None
         self.noindex = False
         self.h1 = False
     def handle_starttag(self, tag, attrs):
@@ -36,7 +37,11 @@ class Profile(HTMLParser):
         elif tag == "img":
             self.images.append((a.get("src", ""), a.get("alt", "")))
         elif tag == "meta":
-            if a.get("http-equiv", "").lower() == "refresh": self.redirect = True
+            if a.get("http-equiv", "").lower() == "refresh":
+                self.redirect = True
+                value = a.get("content", "")
+                if "url=" in value.lower():
+                    self.redirect_target = value.split("=", 1)[1].strip().strip("'\\\"")
             if a.get("name", "").lower() == "robots" and "noindex" in a.get("content", "").lower():
                 self.noindex = True
 
@@ -61,6 +66,13 @@ def audit():
                 if lang == "ar" and page.dir != "rtl": issues.append(f"{rel}: missing RTL direction")
                 if page.redirect:
                     if not page.noindex: issues.append(f"{rel}: redirect missing noindex")
+                    target_url = urlsplit(urljoin(f"{SITE}/{rel.parent.as_posix()}/", page.redirect_target or ""))
+                    expected_prefix = f"/ar/{category}/" if lang == "ar" else f"/{category}/"
+                    target_path = unquote(target_url.path)
+                    if not page.redirect_target or target_url.netloc != "elajmeindia.com" or not target_path.startswith(expected_prefix):
+                        issues.append(f"{rel}: unsafe or wrong-language redirect {page.redirect_target!r}")
+                    elif not (ROOT / target_path.lstrip("/") / "index.html").is_file():
+                        issues.append(f"{rel}: redirect target missing {page.redirect_target!r}")
                     continue
                 counts[category] += 1
                 if not page.h1: issues.append(f"{rel}: missing h1")
