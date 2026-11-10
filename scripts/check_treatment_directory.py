@@ -17,14 +17,17 @@ class Page(HTMLParser):
         self.lang = None
         self.has_main = False
         self.has_h1 = False
-        self.has_canonical = False
+        self.canonical = None
+        self.alternates = {}
         self.has_enquiry = False
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
         if tag == "html": self.lang = a.get("lang")
         if tag == "main": self.has_main = True
         if tag == "h1": self.has_h1 = True
-        if tag == "link" and a.get("rel") == "canonical": self.has_canonical = True
+        if tag == "link" and a.get("rel") == "canonical": self.canonical = a.get("href")
+        if tag == "link" and a.get("rel") == "alternate" and a.get("hreflang"):
+            self.alternates[a["hreflang"]] = a.get("href")
         if tag == "a":
             href = a.get("href", "")
             self.links.append(href)
@@ -47,7 +50,14 @@ def audit():
             checked += 1
             if page.lang != language: issues.append(f"{path.relative_to(ROOT)}: expected html lang={language}")
             if not page.has_main or not page.has_h1: issues.append(f"{path.relative_to(ROOT)}: missing main or h1")
-            if not page.has_canonical: issues.append(f"{path.relative_to(ROOT)}: missing canonical")
+            expected_en = f"https://elajmeindia.com/treatments/{slug}/"
+            expected_ar = f"https://elajmeindia.com/ar/treatments/{slug}/"
+            expected_canonical = expected_ar if language == "ar" else expected_en
+            if page.canonical != expected_canonical:
+                issues.append(f"{path.relative_to(ROOT)}: incorrect canonical {page.canonical!r}")
+            for hreflang, expected in (("en", expected_en), ("ar", expected_ar), ("x-default", expected_en)):
+                if page.alternates.get(hreflang) != expected:
+                    issues.append(f"{path.relative_to(ROOT)}: incorrect {hreflang} alternate {page.alternates.get(hreflang)!r}")
             if not page.has_enquiry: issues.append(f"{path.relative_to(ROOT)}: missing enquiry link")
             base_url = "https://elajmeindia.com/" + str(path.relative_to(ROOT).parent) + "/"
             for href in page.links:
