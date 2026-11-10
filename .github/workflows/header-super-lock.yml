@@ -108,7 +108,8 @@ jobs:
                   if 'Healthcare%20Travel%20Swoosh%20Emblem' not in f: problems.append('FOOTER_LOGO_DRIFT '+rel)
                   if 'Elajme India' not in f or 'علاج مي إنديا' not in f: problems.append('FOOTER_BRAND_DRIFT '+rel)
                   if not is_ar:
-                      if '© 2026 Elajme India. International patient coordination.' not in f: problems.append('FOOTER_COPYRIGHT_DRIFT '+rel)
+                      expected_copyright=('© 2026 Elajme India. All rights reserved. International patient coordination for treatment in India.' if rel=='index.html' else '© 2026 Elajme India. International patient coordination.')
+                      if expected_copyright not in f: problems.append('FOOTER_COPYRIGHT_DRIFT '+rel)
                       pos=[f.find(x) for x in footer_links]
                       for x,n in zip(footer_links,pos):
                           if n<0: problems.append('FOOTER_LINK_MISSING '+rel+' '+x)
