@@ -58,6 +58,7 @@ def audit():
     issues, counts = [], {"doctors": 0, "hospitals": 0, "redirects": 0, "doctor_placeholder_pages": 0}
     placeholders = []
     unlabeled_placeholders = []
+    remote_images = []
     for category in CATEGORIES:
         english = ROOT / category
         arabic = ROOT / "ar" / category
@@ -117,6 +118,9 @@ def audit():
                 for src, alt in page.images:
                     parsed = urlsplit(src)
                     if not src: issues.append(f"{rel}: empty image source")
+                    elif parsed.scheme in ("https", "http") and parsed.netloc not in ("elajmeindia.com", "www.elajmeindia.com"):
+                        if category == "doctors" and "Healthcare%20Travel%20Swoosh" not in src:
+                            remote_images.append((str(rel), parsed.netloc, src))
                     elif not parsed.scheme and not parsed.netloc:
                         page_url = f"{SITE}/{rel.parent.as_posix()}/"
                         resolved = urlsplit(urljoin(page_url, src))
@@ -130,6 +134,9 @@ def audit():
             if pages["en"].redirect and pages["ar"].redirect:
                 counts["redirects"] += 2
     print("Profile audit:", counts)
+    print("Doctor profile images hosted externally:", len(remote_images))
+    for path, host, url in remote_images:
+        print(f"EXTERNAL IMAGE: {path} | {host} | {url}")
     for path in placeholders: print("PLACEHOLDER:", path)
     for path in unlabeled_placeholders: print("DISCLOSURE NEEDED:", path)
     print("Placeholder pages missing visible disclosure:", len(unlabeled_placeholders))
