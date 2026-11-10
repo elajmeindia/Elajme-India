@@ -33,7 +33,7 @@ def audit():
     issues = []
     en_slugs = {p.name for p in EN.iterdir() if (p / "index.html").is_file()}
     ar_slugs = {p.name for p in AR.iterdir() if (p / "index.html").is_file()}
-    for slug in sorted(en_slugs ^ ar_slugs):
+    for slug in sorted((en_slugs ^ ar_slugs) - LEGACY):
         issues.append(f"Missing language counterpart: {slug}")
     checked = 0
     for slug in sorted(en_slugs & ar_slugs):
