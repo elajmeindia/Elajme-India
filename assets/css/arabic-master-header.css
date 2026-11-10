@@ -50,3 +50,6 @@ html[lang="ar"] .master-site-header .master-nav a[href*="about"]::after,html[lan
 
 /* Distribute spare desktop width evenly without changing compact tablet/mobile layouts. */
 @media(min-width:1400px){html[lang="ar"] .master-header-inner{justify-content:space-between!important}html[lang="ar"] .master-site-header .master-nav{flex:1 1 auto!important;justify-content:space-evenly!important;min-width:0!important;gap:6px!important}html[lang="ar"] .master-site-header .master-actions{flex:0 0 auto!important}}
+
+/* Fill the highlighted outer desktop gutters by using the available header width. */
+@media(min-width:1200px){html[lang="ar"] .master-site-header .master-header-inner{width:calc(100% - 48px)!important;max-width:none!important;justify-content:space-between!important;gap:10px!important}html[lang="ar"] .master-site-header .master-nav{flex:1 1 auto!important;min-width:0!important;justify-content:space-evenly!important;gap:4px!important}html[lang="ar"] .master-site-header .master-brand,html[lang="ar"] .master-site-header .master-actions{flex-shrink:0!important}}
