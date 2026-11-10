@@ -35,7 +35,7 @@ fs.mkdirSync(out,{recursive:true});
       await page.locator('#patientName').fill('Audit Test');
       await page.locator('#patientCountry').fill('Test Country');
       await page.locator('#patientMobile').fill('+919999999999');
-      await page.locator('#medicalNeed').fill('Automated routing test only. No message sent.');
+      // The approved privacy-first form collects contact details only; no medical text field.
       await page.locator('#patientEnquiryForm button[type=submit]').click();
       const urls = await page.evaluate(()=>window.__auditOpen||[]);
       const target = urls[0] ? new URL(urls[0]) : null;
