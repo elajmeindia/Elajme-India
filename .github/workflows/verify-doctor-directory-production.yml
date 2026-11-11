@@ -75,7 +75,7 @@ jobs:
           from html import unescape
           source_ar = Path('ar/doctors/index.html').read_text(encoding='utf-8')
           source_alts = set(unescape(value) for value in
-              re.findall(r'<img\\b[^>]*\\balt="([^"]+)"', source_ar)
+              re.findall(r'<img\b[^>]*\balt="([^"]+)"', source_ar)
               if value.startswith('صورة بديلة؛'))
           if len(source_alts) < 30:
               failed.append(f'Unexpected Arabic named-placeholder inventory: {len(source_alts)}')
@@ -86,7 +86,7 @@ jobs:
               with urlopen(request, timeout=25) as response:
                   arabic_html = response.read().decode('utf-8', errors='replace')
               live_alts = set(unescape(value) for value in
-                  re.findall(r'<img\\b[^>]*\\balt="([^"]+)"', arabic_html))
+                  re.findall(r'<img\b[^>]*\balt="([^"]+)"', arabic_html))
               missing = sorted(source_alts - live_alts)
               if missing:
                   failed.append(f'{len(missing)} Arabic placeholder descriptions absent on production')
