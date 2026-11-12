@@ -15,6 +15,27 @@
     script.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
     document.head.appendChild(script);
   }
+
+  // Add a human-readable source marker only when Google Ads click identifiers exist.
+  // Never place raw click identifiers or patient data in the WhatsApp message.
+  const query = new URLSearchParams(window.location.search);
+  const googleAdsVisit = ['gclid', 'gbraid', 'wbraid'].some(function (key) {
+    return Boolean(query.get(key));
+  });
+  if (googleAdsVisit) {
+    document.querySelectorAll('a[href^="https://wa.me/917488955154"]').forEach(function (link) {
+      try {
+        const url = new URL(link.href);
+        const message = url.searchParams.get('text');
+        const marker = 'رمز المصدر: إعلان جوجل - عُمان';
+        if (!message || message.includes(marker)) return;
+        url.searchParams.set('text', message + '\n\n' + marker);
+        link.href = url.toString();
+      } catch (_) {
+        // Leave the original enquiry link untouched on any error.
+      }
+    });
+  }
   document.addEventListener('click', function (event) {
     const link = event.target.closest && event.target.closest('a[href]');
     if (!link) return;
