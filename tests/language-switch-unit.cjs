@@ -51,7 +51,7 @@ function mobileScenario(lang,path,alternate,expected){
   const classes=()=>{const state=new Set();return {add(x){state.add(x)},remove(x){state.delete(x)},contains(x){return state.has(x)},toggle(x,on){if(on)state.add(x);else state.delete(x)}}};
   function element(tag){
     return {tag,className:'',href:'',id:'',children:[],attrs:{},classList:classes(),
-      setAttribute(k,v){this.attrs[k]=String(v)},getAttribute(k){return this.attrs[k]??null},
+      setAttribute(k,v){this.attrs[k]=String(v);if(k==='href')this.href=String(v)},getAttribute(k){return this.attrs[k]??null},
       append(...nodes){this.children.push(...nodes)},appendChild(node){this.children.push(node)},
       addEventListener(event,fn){(this.events??={})[event]=fn},
       click(){this.events?.click?.()},
