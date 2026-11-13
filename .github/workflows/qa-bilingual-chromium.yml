@@ -1,0 +1,82 @@
+name: QA bilingual Chromium preview
+on:
+  push:
+    branches: [qa/language-switch-preview]
+    paths:
+      - '.github/workflows/qa-bilingual-chromium.yml'
+      - 'assets/js/mobile-header.js'
+      - 'tests/language-switch-unit.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium test runtime
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local QA preview
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/elajme-qa-http.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/elajme-qa-http.log
+          exit 1
+      - name: Verify bilingual navigation in Chromium
+        run: |
+          node <<'JS'
+          const assert=require('node:assert/strict');
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try{
+              const origin='http://127.0.0.1:8765';
+              for(const width of [390,1280]){
+                const page=await browser.newPage({viewport:{width,height:844}});
+                for(const path of ['/','/ar/','/doctors/','/ar/doctors/','/hospitals/','/ar/hospitals/']){
+                  const response=await page.goto(origin+path,{waitUntil:'domcontentloaded'});
+                  assert.equal(response?.status(),200,path+' must be available locally');
+                  const lang=path.startsWith('/ar/')?'ar':'en';
+                  assert.equal((await page.locator('html').getAttribute('lang'))?.slice(0,2),lang,path+' language');
+                  await page.waitForTimeout(200);
+                  const desktop=page.locator('.master-lang').first();
+                  assert.ok(await desktop.count(),path+' desktop language link');
+                  const desktopTarget=await desktop.getAttribute('href');
+                  assert.ok(desktopTarget?.startsWith(lang==='ar'?'/':'/ar/'),path+' desktop language direction');
+                  const mobile=page.locator('.master-mobile-lang').first();
+                  assert.ok(await mobile.count(),path+' mobile language link');
+                  assert.equal(await mobile.getAttribute('href'),desktopTarget,path+' mobile/desktop parity');
+                  if(path==='/doctors/'||path==='/ar/doctors/'||path==='/hospitals/'||path==='/ar/hospitals/'){
+                    const target=lang==='ar'?path.replace(/^\/ar/,''):'/ar'+path;
+                    assert.equal(desktopTarget,target,path+' directory language continuity');
+                  }
+                  const phone=page.locator('.master-mobile-call').first();
+                  const whatsapp=page.locator('.master-mobile-whatsapp').first();
+                  assert.match(await phone.getAttribute('href'),/^tel:/,path+' phone');
+                  assert.match(await whatsapp.getAttribute('href'),/^https:\/\/wa\.me\//,path+' WhatsApp');
+                  if(width===390){
+                    const menu=page.locator('.master-mobile-menu').first();
+                    await menu.click();
+                    assert.equal(await menu.getAttribute('aria-expanded'),'true',path+' menu open');
+                    await page.keyboard.press('Escape');
+                    assert.equal(await menu.getAttribute('aria-expanded'),'false',path+' Escape close');
+                  }
+                  if(lang==='ar'){
+                    assert.ok(await page.locator('.arabic-mobile-conversion-bar').count(),path+' Arabic conversion bar');
+                  }
+                  console.log('PASS',width,path,'target',desktopTarget);
+                }
+                await page.close();
+              }
+            }finally{await browser.close()}
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
