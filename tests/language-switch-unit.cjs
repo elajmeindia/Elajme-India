@@ -93,6 +93,12 @@ function mobileScenario(lang,path,alternate,expected){
   assert.equal(menu.getAttribute('aria-expanded'),'true','menu opens');
   menu.click();
   assert.equal(menu.getAttribute('aria-expanded'),'false','menu closes');
+  menu.click();
+  document.events?.keydown?.({key:'Escape'});
+  assert.equal(menu.getAttribute('aria-expanded'),'false','Escape closes menu');
+  menu.click();
+  nav.events?.click?.({target:{closest(selector){return selector==='a'?{}:null}}});
+  assert.equal(menu.getAttribute('aria-expanded'),'false','navigation closes menu');
   if(lang==='ar'){
     const bar=body.children.find(node=>node.className==='arabic-mobile-conversion-bar');
     assert.ok(bar,'Arabic conversion bar');
