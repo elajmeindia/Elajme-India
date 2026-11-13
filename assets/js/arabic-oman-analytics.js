@@ -42,7 +42,7 @@
     const href = link.getAttribute('href') || '';
     if (!/^https:\/\/wa\.me\/917488955154(?:[/?#]|$)/i.test(href)) return;
     // Never transmit the WhatsApp URL, prefilled message, or patient information.
-    window.gtag('event', 'whatsapp_handoff_intent', {
+    window.gtag('event', 'whatsapp_enquiry_click', {
       page_path: location.pathname,
       language: 'ar',
       lead_source: 'oman_landing_whatsapp'
