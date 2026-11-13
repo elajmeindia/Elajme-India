@@ -24,7 +24,7 @@ jobs:
             'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
-            'assets/js/mobile-header.js':'034b2d8481f68243e099dbbb0ff1f876d96d9a8f',
+            'assets/js/mobile-header.js':'bc3a3fac18efe7b6eac1771a9e2b2e4321b11661',
             'assets/css/footer-approved.css':'05faf239dd9cf39a19b41e596f433c99989c1e9b',
           }
           def git_blob_sha(data): return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
