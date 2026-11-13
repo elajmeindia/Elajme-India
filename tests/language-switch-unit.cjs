@@ -15,7 +15,8 @@ function run({path,lang,alternate,expected}){
       if(selector==='.master-site-header')return [];
       return [];
     },
-    querySelector(){return null},
+    // The language-only scenarios intentionally skip header and conversion-bar creation.
+    querySelector(selector){return selector==='.arabic-mobile-conversion-bar'?{}:null},
     body:{classList:{remove(){},toggle(){}},appendChild(){}},
     createElement(){throw Error('Unexpected element creation')},
     addEventListener(){}
