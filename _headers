@@ -31,3 +31,7 @@
 
 /sitemap.xml
   Cache-Control: public, max-age=3600
+
+# Always revalidate the English enquiry handler when treatment context changes.
+/script.js
+  Cache-Control: no-cache, must-revalidate
