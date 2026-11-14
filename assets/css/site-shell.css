@@ -200,3 +200,6 @@ html:not([dir="rtl"]) .shell-footer-bottom .shell-disclaimer{
   .shell-cta:after{font-size:12px!important}
 }
 
+
+/* Arabic homepage hero CTA: preserve white text against the teal primary button. */
+html[lang="ar"] body.site-shell .hero-actions > a.button-primary{color:#fff}
