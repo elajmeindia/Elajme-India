@@ -54,7 +54,15 @@ jobs:
           node - <<'NODE'
           const fs=require('fs');
           const files=['audit-results/lighthouse-mobile.json','audit-results/lighthouse-mobile-2.json','audit-results/lighthouse-mobile-3.json'];
-          const samples=files.map((f,i)=>{const r=JSON.parse(fs.readFileSync(f));return {run:i+1,performance:Math.round(r.categories.performance.score*100),lcpMs:r.audits['largest-contentful-paint']?.numericValue,cls:r.audits['cumulative-layout-shift']?.numericValue}});
+          const samples=files.map((f,i)=>{
+            const r=JSON.parse(fs.readFileSync(f));
+            const lcp=r.audits['largest-contentful-paint'];
+            const breakdown=r.audits['lcp-breakdown-insight']?.details?.items||[];
+            const element=breakdown.find(x=>x.type==='node');
+            const subparts=breakdown.find(x=>x.type==='table')?.items||[];
+            const blocking=r.audits['render-blocking-insight']?.details?.items||[];
+            return {run:i+1,performance:Math.round(r.categories.performance.score*100),lcpMs:lcp?.numericValue,cls:r.audits['cumulative-layout-shift']?.numericValue,fcpMs:r.audits['first-contentful-paint']?.numericValue,tbtMs:r.audits['total-blocking-time']?.numericValue,ttfbMs:r.audits['server-response-time']?.numericValue,lcpElement:element?.selector||null,lcpSubparts:subparts.map(x=>({name:x.subpart,ms:x.duration})),renderBlocking: blocking.slice(0,5).map(x=>({url:x.url,bytes:x.totalBytes,wastedMs:x.wastedMs}))};
+          });
           const lcp=samples.map(s=>s.lcpMs).sort((a,b)=>a-b);
           const passing=samples.filter(s=>s.lcpMs<2500).length;
           const rangeMs=Math.max(...samples.map(s=>s.lcpMs))-Math.min(...samples.map(s=>s.lcpMs));
