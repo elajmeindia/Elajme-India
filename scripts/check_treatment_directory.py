@@ -57,8 +57,11 @@ def audit():
                 if page.alternates.get(hreflang) != expected:
                     issues.append(f"{path.relative_to(ROOT)}: incorrect {hreflang} alternate {page.alternates.get(hreflang)!r}")
             expected_enquiry = "/ar/#enquiry" if language == "ar" else "/#enquiry"
-            if expected_enquiry not in page.links:
-                issues.append(f"{path.relative_to(ROOT)}: missing Elajme India enquiry link {expected_enquiry}")
+            contextual_enquiry = (f"/ar/?treatment={slug}#enquiry" if language == "ar"
+                                  else f"/?treatment={slug}#enquiry")
+            if expected_enquiry not in page.links and contextual_enquiry not in page.links:
+                issues.append(f"{path.relative_to(ROOT)}: missing Elajme India enquiry link "
+                              f"{expected_enquiry} or {contextual_enquiry}")
             base_url = "https://elajmeindia.com/" + str(path.relative_to(ROOT).parent) + "/"
             for href in page.links:
                 if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
