@@ -64,7 +64,7 @@ jobs:
                           fallback='/' if lang=='ar' else '/ar/'
                           alternate='https://elajmeindia.com'+expected_lang
                           dynamic_switch=(lang_links[0] == fallback
-                              and re.search(r'<link\\s+rel="alternate"\\s+hreflang="'+('en' if lang=='ar' else 'ar')+r'"\\s+href="'+re.escape(alternate)+r'"',txt,re.I)
+                              and re.search(r'<link\s+rel="alternate"\s+hreflang="'+('en' if lang=='ar' else 'ar')+r'"\s+href="'+re.escape(alternate)+r'"',txt,re.I)
                               and '/assets/js/mobile-header.js' in txt
                               and Path('assets/js/mobile-header.js').is_file())
                           if not dynamic_switch:
