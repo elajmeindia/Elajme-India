@@ -41,9 +41,9 @@ def main():
     en_source = (ROOT / "script.js").read_text(encoding="utf-8")
     ar_source = (ROOT / "ar/index.html").read_text(encoding="utf-8")
     for slug in sorted(slugs):
-        if not re.search(r'["\\\']' + re.escape(slug) + r'["\\\']\\s*:', en_source):
+        if not any(q + slug + q + ":" in en_source for q in ("\"", "\'")):
             errors.append(f"English form mapping missing: {slug}")
-        if not re.search(r'["\\\']' + re.escape(slug) + r'["\\\']\\s*:', ar_source):
+        if not any(q + slug + q + ":" in ar_source for q in ("\"", "\'")):
             errors.append(f"Arabic form mapping missing: {slug}")
         for lang in ("en", "ar"):
             path = pages.get((lang, slug))
@@ -61,7 +61,7 @@ def main():
                 if parsed.scheme or parsed.netloc or parsed.path != expected_path or params != {"treatment": [slug]}:
                     errors.append(f"Invalid treatment context in {path.relative_to(ROOT)}: {href}")
     if errors:
-        print("\\n".join(errors))
+        print("\n".join(errors))
         return 1
     print(f"PASS: {len(slugs)} specialties, {len(pages)} bilingual pages, all enquiry links and form mappings validated")
     return 0
