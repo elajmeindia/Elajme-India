@@ -56,6 +56,20 @@ jobs:
           ar=Path('ar/index.html').read_text(encoding='utf-8')
           if "addEventListener('submit'" not in ar or 'encodeURIComponent(msg)' not in ar:
               errors.append('ar/index.html: missing Arabic enquiry submission logic')
+          # Regression checks for the protected bilingual enquiry handoff.
+          if 'window.location.assign(makeWhatsAppUrl(language,buildCaseMessage(language)))' not in js:
+              errors.append('script.js: missing single same-tab WhatsApp handoff')
+          if 'const opened=window.open(makeWhatsAppUrl' in js:
+              errors.append('script.js: legacy duplicate WhatsApp opening fallback returned')
+          if "window.location.assign('https://wa.me/"+number+"?text='+encodeURIComponent(msg))" not in ar:
+              errors.append('ar/index.html: missing single same-tab WhatsApp handoff')
+          if "try{localStorage.setItem('elajmeLanguage','ar');}catch(e)" not in ar:
+              errors.append('ar/index.html: browser storage safeguard missing')
+          if 'aria-label="نموذج استفسار المريض"' not in ar:
+              errors.append('ar/index.html: Arabic form accessible name missing')
+          for field, hint in (('patientName','name'),('patientCountry','country-name'),('patientMobile','tel')):
+              if not re.search(r'<input\\b(?=[^>]*\\bid="'+field+r'")(?=[^>]*\\bautocomplete="'+hint+r'")[^>]*>',ar):
+                  errors.append(f'ar/index.html: missing {field} autofill hint')
           for err in errors:print('ERROR:',err)
           print(f'ENQUIRY CONTACT GUARD: {len(errors)} errors')
           if errors:sys.exit(1)
