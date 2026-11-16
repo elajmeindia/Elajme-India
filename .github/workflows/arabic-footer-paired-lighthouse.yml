@@ -1,0 +1,63 @@
+name: Arabic footer paired Lighthouse experiment
+on:
+  push:
+    branches: [test/arabic-footer-visual-guard-fix-20261117]
+    paths: ['.github/workflows/arabic-footer-paired-lighthouse.yml']
+  workflow_dispatch:
+jobs:
+  paired-lighthouse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: candidate
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: baseline
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Lighthouse and Chromium
+        working-directory: candidate
+        run: |
+          npm install --no-save lighthouse@12.8.2 playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run paired Arabic mobile audits against local baseline and candidate
+        working-directory: candidate
+        run: |
+          python3 -m http.server 8765 --directory ../baseline >/tmp/elajme-baseline.log 2>&1 &
+          python3 -m http.server 8766 --directory . >/tmp/elajme-candidate.log 2>&1 &
+          sleep 3
+          mkdir -p audit-results
+          CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          export CHROME_PATH
+          for pair in 1 2 3; do
+            if [ $((pair % 2)) -eq 1 ]; then order="baseline candidate"; else order="candidate baseline"; fi
+            for variant in $order; do
+              if [ "$variant" = baseline ]; then port=8765; else port=8766; fi
+              echo "Auditing pair=$pair variant=$variant"
+              npx lighthouse "http://127.0.0.1:$port/ar/" --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path="audit-results/$variant-$pair.json" --quiet
+            done
+          done
+          node - <<'NODE'
+          const fs=require('fs');
+          const samples={baseline:[],candidate:[]};
+          for(const variant of Object.keys(samples)) for(let i=1;i<=3;i++){
+            const r=JSON.parse(fs.readFileSync('audit-results/'+variant+'-'+i+'.json'));
+            samples[variant].push({pair:i,lcpMs:r.audits['largest-contentful-paint']?.numericValue,cls:r.audits['cumulative-layout-shift']?.numericValue,performance:Math.round(r.categories.performance.score*100),accessibility:Math.round(r.categories.accessibility.score*100),seo:Math.round(r.categories.seo.score*100),bestPractices:Math.round(r.categories['best-practices'].score*100)});
+          }
+          const median=a=>[...a].sort((x,y)=>x-y)[1];
+          const a=median(samples.baseline.map(x=>x.lcpMs)),b=median(samples.candidate.map(x=>x.lcpMs));
+          const result={samples,medianBaselineLcpMs:a,medianCandidateLcpMs:b,medianImprovementMs:a-b,allCandidateLcpUnder2500:samples.candidate.every(x=>x.lcpMs<2500)};
+          console.log('PAIRED_LIGHTHOUSE_RESULT '+JSON.stringify(result));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Arabic paired mobile Lighthouse\n\n```json\n'+JSON.stringify(result,null,2)+'\n```\n');
+          NODE
+      - name: Upload paired audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arabic-footer-paired-lighthouse
+          path: candidate/audit-results/*.json
+          if-no-files-found: ignore
