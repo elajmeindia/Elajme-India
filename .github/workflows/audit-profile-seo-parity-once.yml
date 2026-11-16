@@ -59,7 +59,16 @@ jobs:
                       if len(lang_links) != 1:
                           problems.append(f'{path}: expected exactly one master language switch, found {len(lang_links)}')
                       elif lang_links[0] != expected_lang:
-                          problems.append(f'{path}: language switch wrong ({lang_links[0]} != {expected_lang})')
+                          # The shared header script replaces the homepage fallback using the
+                          # opposite-language hreflang URL after page initialization.
+                          fallback='/' if lang=='ar' else '/ar/'
+                          alternate='https://elajmeindia.com'+expected_lang
+                          dynamic_switch=(lang_links[0] == fallback
+                              and re.search(r'<link\\s+rel="alternate"\\s+hreflang="'+('en' if lang=='ar' else 'ar')+r'"\\s+href="'+re.escape(alternate)+r'"',txt,re.I)
+                              and '/assets/js/mobile-header.js' in txt
+                              and Path('assets/js/mobile-header.js').is_file())
+                          if not dynamic_switch:
+                              problems.append(f'{path}: language switch wrong ({lang_links[0]} != {expected_lang})')
                       if lang=='ar' and ('lang="ar"' not in txt or 'dir="rtl"' not in txt): problems.append(f'{path}: Arabic lang/RTL missing')
                       if lang=='en' and 'lang="en"' not in txt: problems.append(f'{path}: English lang missing')
           sitemap=Path('sitemap.xml').read_text(encoding='utf-8') if Path('sitemap.xml').exists() else ''
