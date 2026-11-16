@@ -1,7 +1,7 @@
 name: Arabic footer preview visual guard
 on:
   push:
-    branches: [experiment/arabic-footer-nonblocking-20261117]
+    branches: [test/arabic-footer-visual-guard-fix-20261117]
     paths: ['.github/workflows/arabic-footer-preview-compare.yml']
   workflow_dispatch:
 jobs:
@@ -32,7 +32,7 @@ jobs:
           sleep 2
           node - <<'NODE'
           const {chromium}=require('playwright');
-          const pixelmatch=require('pixelmatch');
+          const {default:pixelmatch}=require('pixelmatch');
           const {PNG}=require('pngjs');
           (async()=>{
             const browser=await chromium.launch();
@@ -65,5 +65,5 @@ jobs:
             await browser.close();
             console.log('Comparison finished');
             if(failed)process.exitCode=1;
-          })().catch(e=>{console.error(e);process.exitCode=1});
+          })().catch(e=>{console.error(e);process.exitCode=1;process.exit();});
           NODE
