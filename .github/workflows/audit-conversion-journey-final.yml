@@ -43,7 +43,7 @@ jobs:
               # Recognize treatment-specific enquiry links while preserving language.
               context_path = '/ar/' if ar else '/'
               contextual_enquiry = re.search(
-                  r'href="' + re.escape(context_path) + r'\\?treatment=[a-z0-9][a-z0-9-]*#enquiry"',
+                  r'href="' + re.escape(context_path) + r'\?treatment=[a-z0-9][a-z0-9-]*#enquiry"',
                   s, re.I
               )
               has_enquiry = expected in s or bool(contextual_enquiry) or ('917488955154' in s and ('wa.me/' in s or 'tel:+917488955154' in s))
