@@ -28,7 +28,35 @@ fs.mkdirSync(out,{recursive:true});
       await page.close();
     }
     const page = await browser.newPage({viewport:{width:390,height:850}});
-    await page.addInitScript(()=>{window.__auditOpen=[];window.open=(url)=>{window.__auditOpen.push(url);return null;};});
+    // Observe navigation to WhatsApp without sending any message or leaving the test page.
+    let interceptedWhatsApp = null;
+    const capturedEvents = [];
+    await page.route('https://wa.me/**', async route => {
+      interceptedWhatsApp = route.request().url();
+      await route.abort();
+    });
+    await page.addInitScript(() => {
+      window.dataLayer = window.dataLayer || [];
+      const push = window.dataLayer.push;
+      window.dataLayer.push = function (...entries) {
+        for (const entry of entries) {
+          if (entry && entry[0] === 'event' && entry[1] === 'whatsapp_handoff_intent') {
+            const data = entry[2] || {};
+            console.info('ELAJME_AUDIT_EVENT:' + JSON.stringify({
+              event: entry[1], page_path: data.page_path,
+              language: data.language, lead_source: data.lead_source,
+              keys: Object.keys(data)
+            }));
+          }
+        }
+        return push.apply(this, entries);
+      };
+    });
+    page.on('console', message => {
+      if (!message.text().startsWith('ELAJME_AUDIT_EVENT:')) return;
+      try { capturedEvents.push(JSON.parse(message.text().slice('ELAJME_AUDIT_EVENT:'.length))); }
+      catch (_) { /* Ignore malformed audit-only console messages. */ }
+    });
     try {
       const response = await page.goto(base+'/ar/',{waitUntil:'domcontentloaded',timeout:30000});
       if(!response || response.status()>=400)throw Error('Homepage unavailable');
@@ -37,23 +65,14 @@ fs.mkdirSync(out,{recursive:true});
       await page.locator('#patientMobile').fill('+919999999999');
       // The approved privacy-first form collects contact details only; no medical text field.
       await page.locator('#patientEnquiryForm button[type=submit]').click();
-      const urls = await page.evaluate(()=>window.__auditOpen||[]);
-      const target = urls[0] ? new URL(urls[0]) : null;
+      await page.waitForTimeout(500);
+      const target = interceptedWhatsApp ? new URL(interceptedWhatsApp) : null;
       const pass = target?.hostname==='wa.me' && target.pathname==='/917488955154' && target.searchParams.get('text')?.includes('Audit Test');
       report.checks.push({test:'enquiry-intercept-no-message-sent',destination:target?target.origin+target.pathname:null,pass:!!pass});
       if(!pass)report.errors.push('Arabic form did not open the expected Elajme India WhatsApp destination');
       // GA4 event is a handoff intent, never a confirmed patient lead.
       // Inspect the in-page event queue without transmitting or logging patient details.
-      const analytics = await page.evaluate(() => {
-        const entries = (window.dataLayer || []).filter(item => item && item[0] === 'event' && item[1] === 'whatsapp_handoff_intent');
-        return entries.map(item => ({
-          event: item[1],
-          page_path: item[2]?.page_path,
-          language: item[2]?.language,
-          lead_source: item[2]?.lead_source,
-          keys: Object.keys(item[2] || {})
-        }));
-      });
+      const analytics = capturedEvents;
       const analyticsPass = analytics.some(item =>
         item.page_path === '/ar/' && item.language === 'ar' &&
         item.lead_source === 'patient_enquiry_form' &&
@@ -74,7 +93,7 @@ fs.mkdirSync(out,{recursive:true});
       });
       await omanPage.locator('main a[href^="https://wa.me/917488955154"]:visible').first().click();
       const events = await omanPage.evaluate(() =>
-        (window.dataLayer || []).filter(item => item && item[0] === 'event' && item[1] === 'whatsapp_handoff_intent')
+        (window.dataLayer || []).filter(item => item && item[0] === 'event' && item[1] === 'whatsapp_enquiry_click')
           .map(item => ({page_path:item[2]?.page_path,language:item[2]?.language,
             lead_source:item[2]?.lead_source,keys:Object.keys(item[2] || {})}))
       );
