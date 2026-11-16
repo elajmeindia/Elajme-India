@@ -1,0 +1,65 @@
+name: Arabic footer preview visual guard
+on:
+  push:
+    branches: [experiment/arabic-footer-nonblocking-20261117]
+    paths: ['.github/workflows/arabic-footer-preview-compare.yml']
+  workflow_dispatch:
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: candidate
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: baseline
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium and image comparison tools
+        working-directory: candidate
+        run: |
+          npm install --no-save playwright@1.56.1 pixelmatch@6.0.0 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Compare Arabic footer baseline and experiment
+        working-directory: candidate
+        run: |
+          python3 -m http.server 8765 --directory ../baseline >/tmp/baseline.log 2>&1 &
+          python3 -m http.server 8766 --directory . >/tmp/candidate.log 2>&1 &
+          sleep 2
+          node - <<'NODE'
+          const {chromium}=require('playwright');
+          const pixelmatch=require('pixelmatch');
+          const {PNG}=require('pngjs');
+          (async()=>{
+            const browser=await chromium.launch();
+            let failed=false;
+            for(const viewport of [{width:390,height:844},{width:1440,height:900}]){
+              const results=[];
+              for(const port of [8765,8766]){
+                const page=await browser.newPage({viewport,deviceScaleFactor:1});
+                await page.addInitScript(()=>{window.__shift=0;new PerformanceObserver(list=>{for(const e of list.getEntries())if(!e.hadRecentInput)window.__shift+=e.value}).observe({type:'layout-shift',buffered:true})});
+                await page.goto('http://127.0.0.1:'+port+'/ar/',{waitUntil:'networkidle'});
+                await page.evaluate(()=>document.fonts.ready);
+                const footer=page.locator('footer.site-footer');
+                await footer.scrollIntoViewIfNeeded();
+                await page.waitForTimeout(1000);
+                const shot=PNG.sync.read(await footer.screenshot());
+                const style=await footer.evaluate(el=>({color:getComputedStyle(el).color,background:getComputedStyle(el).backgroundColor,height:el.getBoundingClientRect().height,links:el.querySelectorAll('a').length}));
+                results.push({shot,style,cls:await page.evaluate(()=>window.__shift)});
+                await page.close();
+              }
+              const [a,b]=results;
+              const sameSize=a.shot.width===b.shot.width&&a.shot.height===b.shot.height;
+              const diff=sameSize?pixelmatch(a.shot.data,b.shot.data,null,a.shot.width,a.shot.height,{threshold:0.1})/(a.shot.width*a.shot.height):1;
+              const sameStyle=JSON.stringify(a.style)===JSON.stringify(b.style);
+              console.log(JSON.stringify({viewport,pixelDifference:diff,sameStyle,baselineCls:a.cls,candidateCls:b.cls,baseline:a.style,candidate:b.style}));
+              if(!sameStyle||diff>0.001||b.cls>a.cls+0.005)failed=true;
+            }
+            await browser.close();
+            if(failed)process.exitCode=1;
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          NODE
