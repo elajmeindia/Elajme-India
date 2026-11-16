@@ -68,7 +68,7 @@ jobs:
           if 'aria-label="نموذج استفسار المريض"' not in ar:
               errors.append('ar/index.html: Arabic form accessible name missing')
           for field, hint in (('patientName','name'),('patientCountry','country-name'),('patientMobile','tel')):
-              if not re.search(r'<input\\b(?=[^>]*\\bid="'+field+r'")(?=[^>]*\\bautocomplete="'+hint+r'")[^>]*>',ar):
+              if not any('id="'+field+'"' in tag and 'autocomplete="'+hint+'"' in tag for tag in re.findall(r'<input[^>]*>',ar)):
                   errors.append(f'ar/index.html: missing {field} autofill hint')
           for err in errors:print('ERROR:',err)
           print(f'ENQUIRY CONTACT GUARD: {len(errors)} errors')
