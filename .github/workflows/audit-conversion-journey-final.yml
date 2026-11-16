@@ -40,7 +40,13 @@ jobs:
               ar=str(p).startswith('ar/')
               expected='/ar/#enquiry' if ar else '/#enquiry'
               # Every indexable provider/treatment page should provide an Elajme-owned conversion route.
-              has_enquiry = expected in s or ('917488955154' in s and ('wa.me/' in s or 'tel:+917488955154' in s))
+              # Recognize treatment-specific enquiry links while preserving language.
+              context_path = '/ar/' if ar else '/'
+              contextual_enquiry = re.search(
+                  r'href="' + re.escape(context_path) + r'\\?treatment=[a-z0-9][a-z0-9-]*#enquiry"',
+                  s, re.I
+              )
+              has_enquiry = expected in s or bool(contextual_enquiry) or ('917488955154' in s and ('wa.me/' in s or 'tel:+917488955154' in s))
               if not has_enquiry:
                   blocking.append(f'MISSING_ELAJME_CONVERSION {p}')
               for pat in direct_provider_patterns:
