@@ -1,0 +1,15 @@
+name: Treatment Enquiry Context Regression
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  treatment-enquiry-context:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate all EN/AR treatment enquiry links and allowlists
+        run: python3 scripts/check-treatment-enquiry-context.py
