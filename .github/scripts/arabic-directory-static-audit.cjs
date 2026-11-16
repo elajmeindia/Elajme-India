@@ -1,7 +1,7 @@
 const fs=require('node:fs');const assert=require('node:assert/strict');
 const read=p=>fs.readFileSync(p,'utf8');
 const directory=read('ar/doctors/index.html');
-const cards=[...directory.matchAll(/<article class="card">([\s\S]*?)<\/article>/g)].map(x=>x[1]);
+const cards=[...directory.matchAll(/<article\b(?=[^>]*\bclass="[^"]*\bcard\b[^"]*")[^>]*>([\s\S]*?)<\/article>/g)].map(x=>x[1]);
 assert.equal(cards.length,60,'Expected 60 Arabic doctor cards');
 const links=cards.map((c,i)=>{const m=c.match(/href="(\/ar\/doctors\/[^"]+\/)"\s*/);assert.ok(m,'Missing profile link in card '+(i+1));return m[1];});
 assert.equal(new Set(links).size,60,'Arabic doctor cards should link to 60 distinct profiles');
