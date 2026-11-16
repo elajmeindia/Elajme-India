@@ -69,10 +69,27 @@ jobs:
           console.log(JSON.stringify({samples,medianLcpMs:lcp[1],under2500:passing+'/3',rangeMs,consistentUnder2500:passing===3},null,2));
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## Repeated mobile LCP samples\n'+JSON.stringify({samples,medianLcpMs:lcp[1]},null,2)+'\n');
           NODE
+      - name: Measure live Arabic homepage on mobile
+        run: |
+          CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          export CHROME_PATH
+          npx lighthouse https://elajmeindia.com/ar/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path=audit-results/lighthouse-ar-mobile.json --quiet
+          node - <<'NODE'
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync('audit-results/lighthouse-ar-mobile.json'));
+          const scores=Object.fromEntries(Object.entries(r.categories).map(([k,v])=>[k,Math.round(v.score*100)]));
+          const breakdown=r.audits['lcp-breakdown-insight']?.details?.items||[];
+          const blocking=r.audits['render-blocking-insight']?.details?.items||[];
+          const result={scores,lcpMs:r.audits['largest-contentful-paint']?.numericValue,cls:r.audits['cumulative-layout-shift']?.numericValue,fcpMs:r.audits['first-contentful-paint']?.numericValue,ttfbMs:r.audits['server-response-time']?.numericValue,lcpElement:breakdown.find(x=>x.type==='node')?.selector||null,renderBlocking:blocking.slice(0,8).map(x=>({url:x.url,bytes:x.totalBytes,wastedMs:x.wastedMs}))};
+          console.log(JSON.stringify(result,null,2));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## Arabic homepage Lighthouse mobile\n'+JSON.stringify(result,null,2)+'\n');
+          NODE
       - name: Upload Lighthouse JSON
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phase2-lighthouse-mobile
-          path: audit-results/lighthouse-mobile*.json
+          path: |
+            audit-results/lighthouse-mobile*.json
+            audit-results/lighthouse-ar-mobile.json
           if-no-files-found: ignore
