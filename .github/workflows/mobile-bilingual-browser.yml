@@ -43,12 +43,8 @@ jobs:
             const browser=await chromium.launch({headless:true});
             const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
             const origin=process.env.SITE_ORIGIN;
-            // Exclude synthetic journeys from analytics and block all non-GET writes.
-            await page.context().route('**/*',route=>{
-              const req=route.request(),host=new URL(req.url()).hostname;
-              if(!['GET','HEAD'].includes(req.method())||/google-analytics|googletagmanager|cloudflareinsights/.test(host))return route.abort();
-              return route.continue();
-            });
+            // Exclude synthetic journeys from analytics. WhatsApp is intercepted below.
+            await page.context().route(url=>/google-analytics|googletagmanager|analytics.google.com|doubleclick.net|cloudflareinsights/.test(url.hostname),route=>route.abort());
             const errors=[];
             for(const path of ['/','/ar/','/doctors/','/ar/doctors/','/hospitals/','/ar/hospitals/']){
               try{
