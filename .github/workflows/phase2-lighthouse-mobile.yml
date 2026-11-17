@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [enhancement-preload, early-css, inline-base, without-tawk]
+        variant: [declarative-enhancement]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -45,6 +45,7 @@ jobs:
             'enhancement-preload': original.replace('<link rel="stylesheet" href="styles.css"', enhancement+'\n<link rel="stylesheet" href="styles.css"'),
             'early-css': original.replace('<link rel="stylesheet" href="styles.css"', earlyCss+'\n<link rel="stylesheet" href="styles.css"'),
             'inline-base': original.replace('<link rel="stylesheet" href="styles.css" fetchpriority="high">','<style>'+readFileSync('styles.css','utf8')+'</style>'),
+            'declarative-enhancement': original.replace('</head>', '<link rel="stylesheet" href="/assets/css/homepage-enhancements.css" data-homepage-enhancements>\n</head>'),
             'without-tawk': original
           };
           const variant = process.env.VARIANT;
