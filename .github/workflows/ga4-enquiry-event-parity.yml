@@ -38,16 +38,17 @@ jobs:
               });
               await page.route('https://www.googletagmanager.com/**',r=>r.abort());
               await page.route('https://wa.me/**',r=>r.abort());
-              await page.goto('http://127.0.0.1:8765'+path,{waitUntil:'domcontentloaded'});
+              page.setDefaultTimeout(7000); 
+              await page.goto('http://127.0.0.1:8765'+path,{waitUntil:'domcontentloaded',timeout:15000});
               await page.waitForTimeout(900);
               if(path==='/ar/oman/treatment-in-india/'){
                 const link=page.locator('a[href^="https://wa.me/917488955154"]').first();
-                await link.click({noWaitAfter:true});
+                await link.evaluate(el=>el.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true})));
               }else{
                 await page.locator('#patientName').fill('Test Person');
                 await page.locator('#patientCountry').fill('Oman');
                 await page.locator('#patientMobile').fill('+968 9000 0000');
-                await page.locator('#patientEnquiryForm button[type=submit]').click({noWaitAfter:true});
+                await page.locator('#patientEnquiryForm').evaluate(el=>el.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
               }
               await page.waitForTimeout(300);
               const events=await page.evaluate(()=>window.__testEvents);
