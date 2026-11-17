@@ -1,8 +1,10 @@
-name: GA4 enquiry event parity (non-production)
+name: GA4 enquiry event parity
 on:
+  pull_request:
+    paths: ['.github/workflows/ga4-arabic-key-event-parity.yml', 'index.html', 'ar/index.html', 'script.js', 'assets/js/arabic-enquiry-analytics.js']
   push:
-    branches: [fix/arabic-ga4-key-event-parity-20261117]
-    paths: ['.github/workflows/ga4-arabic-key-event-parity.yml', 'assets/js/arabic-enquiry-analytics.js']
+    branches: [main]
+    paths: ['.github/workflows/ga4-arabic-key-event-parity.yml', 'index.html', 'ar/index.html', 'script.js', 'assets/js/arabic-enquiry-analytics.js']
   workflow_dispatch:
 jobs:
   test:
@@ -20,12 +22,20 @@ jobs:
         run: |
           python3 -m http.server 8765 --directory . >/tmp/elajme-test.log 2>&1 &
           sleep 2
-          node - <<'NODE'
+          cat > ga4-check.cjs <<'NODE'
           const {chromium}=require('playwright');
           (async()=>{
+            const origin=process.env.SITE_ORIGIN || 'http://127.0.0.1:8765';
             const browser=await chromium.launch();
             let failed=false;
-            for(const path of ['/', '/ar/', '/ar/oman/treatment-in-india/']){
+            const cases = [
+              ['/', true, 'en'],
+              ['/', false, 'en'],
+              ['/ar/', true, 'ar'],
+              ['/ar/', false, 'ar'],
+              ['/ar/oman/treatment-in-india/', false, 'ar']
+            ];
+            for(const [path, form, language] of cases){
               const page=await browser.newPage({viewport:{width:390,height:844}});
               const recorded=[];
               page.on('console',msg=>{if(msg.text().startsWith('GA4_CAPTURE:')){try{recorded.push(JSON.parse(msg.text().slice(12)));}catch(e){}}});
@@ -38,33 +48,59 @@ jobs:
                 };
                 window.dataLayer=arr;
               });
-              await page.route('https://www.googletagmanager.com/**',r=>r.abort());
-              await page.route('https://wa.me/**',r=>r.abort());
+              await page.context().route('**/*', route => {
+                const request=route.request();
+                return request.method()==='GET' && new URL(request.url()).origin===origin ? route.continue() : route.abort();
+              });
               page.setDefaultTimeout(7000); 
-              await page.goto('http://127.0.0.1:8765'+path,{waitUntil:'domcontentloaded',timeout:15000});
+              await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:15000});
               await page.waitForTimeout(900);
-              if(path==='/ar/oman/treatment-in-india/'){
+              if(!form){
                 const link=page.locator('a[href^="https://wa.me/917488955154"]').first();
                 await link.evaluate(el=>el.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true})));
               }else{
                 await page.locator('#patientName').fill('Test Person');
                 await page.locator('#patientCountry').fill('Oman');
                 await page.locator('#patientMobile').fill('+968 9000 0000');
+                if(path==='/') await page.locator('#preferredLanguage').selectOption('Arabic');
                 await page.locator('#patientEnquiryForm').evaluate(el=>el.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
               }
               await page.waitForTimeout(300);
-              const events=recorded;
-              const names=events.map(x=>x.name);
-              const expected=path==='/ar/oman/treatment-in-india/'?'whatsapp_enquiry_click':'whatsapp_handoff_intent';
-              const ok=names.includes(expected) && (path!=='/ar/' || names.includes('whatsapp_enquiry_click'));
-              const leaked=JSON.stringify(events).includes('Test Person')||JSON.stringify(events).includes('9000 0000');
-              const falseLead=names.includes('generate_lead');
-              const duplicate=names.filter(name=>name===expected).length!==1 || (path==='/ar/' && names.filter(name=>name==='whatsapp_enquiry_click').length!==1);
-              console.log(JSON.stringify({path,events:names,expected,ok,leaked,falseLead,duplicate}));
-              if(!ok||leaked||falseLead||duplicate)failed=true;
+              const names=recorded.map(x=>x.name);
+              const allowed=new Set(['contact_method','page_path','language','lead_source','traffic_source']);
+              const canonical=recorded.filter(x=>x.name==='whatsapp_enquiry_click');
+              const intents=recorded.filter(x=>x.name==='whatsapp_handoff_intent');
+              const ok=canonical.length===1 && intents.length===(form?1:0)
+                && [...canonical,...intents].every(({params})=>params.page_path===path && params.language===language
+                  && Object.keys(params).every(key=>allowed.has(key)))
+                && !names.includes('generate_lead')
+                && !/Test Person|9000 0000/.test(JSON.stringify(recorded));
+              console.log(JSON.stringify({path,form,names,ok}));
+              if(!ok)failed=true;
               await page.close();
             }
             await browser.close();
             if(failed)process.exitCode=1;
           })().catch(e=>{console.error(e);process.exitCode=1;});
           NODE
+          node ga4-check.cjs
+      - name: Verify the deployed analytics without sending enquiries
+        if: github.event_name == 'push'
+        env:
+          SITE_ORIGIN: https://elajmeindia.com
+        run: |
+          ready=false
+          for attempt in {1..12}; do
+            if curl -fsS --max-time 10 "$SITE_ORIGIN/" -o /tmp/elajme-en.html &&
+               curl -fsS --max-time 10 "$SITE_ORIGIN/ar/" -o /tmp/elajme-ar.html &&
+               cmp -s index.html /tmp/elajme-en.html && cmp -s ar/index.html /tmp/elajme-ar.html; then
+              ready=true
+              break
+            fi
+            sleep 10
+          done
+          if [ "$ready" != true ]; then
+            echo 'Production homepages do not match this revision'
+            exit 1
+          fi
+          node ga4-check.cjs
