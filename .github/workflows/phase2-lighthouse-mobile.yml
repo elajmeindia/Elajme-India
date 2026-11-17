@@ -1,95 +1,134 @@
-name: Phase 2 Lighthouse mobile verification
+name: Isolated English homepage LCP comparison
 on:
-  workflow_dispatch:
   push:
-    branches: [main]
-    paths:
-      - 'index.html'
-      - 'styles.css'
-      - 'script.js'
-      - 'assets/css/**'
-      - 'assets/js/**'
-      - '.github/workflows/phase2-lighthouse-mobile.yml'
+    branches: [experiment/english-homepage-lcp]
+permissions:
+  contents: read
 jobs:
-  lighthouse:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [enhancement-preload, early-css, inline-base, without-tawk]
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install Lighthouse and Chromium
+      - run: npm install --no-save lighthouse@12.8.2 playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Measure paired mobile samples and visual parity
+        env:
+          VARIANT: ${{ matrix.variant }}
         run: |
-          npm install --no-save lighthouse@12.8.2 playwright@1.56.1
-          npx playwright install --with-deps chromium
-      - name: Measure live English homepage on mobile
-        run: |
-          mkdir -p audit-results
-          CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
-          export CHROME_PATH
-          npx lighthouse https://elajmeindia.com/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path=audit-results/lighthouse-mobile.json --quiet
-          node - <<'NODE'
-          const r=require('./audit-results/lighthouse-mobile.json');
-          const scores=Object.fromEntries(Object.entries(r.categories).map(([k,v])=>[k,Math.round(v.score*100)]));
-          const metrics={cls:r.audits['cumulative-layout-shift']?.numericValue,lcp:r.audits['largest-contentful-paint']?.numericValue};
-          const diagnostics={fcp:r.audits['first-contentful-paint']?.numericValue,tbt:r.audits['total-blocking-time']?.numericValue,speedIndex:r.audits['speed-index']?.numericValue,lcpElement:r.audits['largest-contentful-paint-element']?.details?.items?.[0]?.node?.selector||null,lcpBreakdown:r.audits['lcp-breakdown-insight']?.details?.items?.slice(0,3)||[],renderBlocking:r.audits['render-blocking-insight']?.details?.items?.slice(0,8)||[],serverResponse:r.audits['server-response-time']?.numericValue};
-          const failures=Object.values(r.audits).filter(a=>a.score!==null&&a.score<1&&['color-contrast','target-size','errors-in-console'].includes(a.id)).map(a=>({id:a.id,title:a.title,details:a.details?.items?.slice(0,12)}));
-          console.log(JSON.stringify({scores,metrics,diagnostics,failures},null,2));
-          require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Lighthouse mobile\n'+JSON.stringify({scores,metrics,diagnostics,failures},null,2)+'\n');
-          NODE
-      - name: Repeat mobile LCP measurement for consistency
-        run: |
-          CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
-          export CHROME_PATH
-          for n in 2 3; do
-            for attempt in 1 2 3; do
-              if npx lighthouse https://elajmeindia.com/ --only-categories=performance --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path="audit-results/lighthouse-mobile-$n.json" --quiet; then
-                break
-              fi
-              if [ "$attempt" -eq 3 ]; then exit 1; fi
-              sleep 5
-            done
-          done
-          node - <<'NODE'
-          const fs=require('fs');
-          const files=['audit-results/lighthouse-mobile.json','audit-results/lighthouse-mobile-2.json','audit-results/lighthouse-mobile-3.json'];
-          const samples=files.map((f,i)=>{
-            const r=JSON.parse(fs.readFileSync(f));
-            const lcp=r.audits['largest-contentful-paint'];
-            const breakdown=r.audits['lcp-breakdown-insight']?.details?.items||[];
-            const element=breakdown.find(x=>x.type==='node');
-            const subparts=breakdown.find(x=>x.type==='table')?.items||[];
-            const blocking=r.audits['render-blocking-insight']?.details?.items||[];
-            return {run:i+1,performance:Math.round(r.categories.performance.score*100),lcpMs:lcp?.numericValue,cls:r.audits['cumulative-layout-shift']?.numericValue,fcpMs:r.audits['first-contentful-paint']?.numericValue,tbtMs:r.audits['total-blocking-time']?.numericValue,ttfbMs:r.audits['server-response-time']?.numericValue,lcpElement:element?.selector||null,lcpSubparts:subparts.map(x=>({name:x.subpart,ms:x.duration})),renderBlocking: blocking.slice(0,5).map(x=>({url:x.url,bytes:x.totalBytes,wastedMs:x.wastedMs}))};
-          });
-          const lcp=samples.map(s=>s.lcpMs).sort((a,b)=>a-b);
-          const passing=samples.filter(s=>s.lcpMs<2500).length;
-          const rangeMs=Math.max(...samples.map(s=>s.lcpMs))-Math.min(...samples.map(s=>s.lcpMs));
-          console.log(JSON.stringify({samples,medianLcpMs:lcp[1],under2500:passing+'/3',rangeMs,consistentUnder2500:passing===3},null,2));
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## Repeated mobile LCP samples\n'+JSON.stringify({samples,medianLcpMs:lcp[1]},null,2)+'\n');
-          NODE
-      - name: Measure live Arabic homepage on mobile
-        run: |
-          CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
-          export CHROME_PATH
-          npx lighthouse https://elajmeindia.com/ar/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path=audit-results/lighthouse-ar-mobile.json --quiet
-          node - <<'NODE'
-          const fs=require('fs');
-          const r=JSON.parse(fs.readFileSync('audit-results/lighthouse-ar-mobile.json'));
-          const scores=Object.fromEntries(Object.entries(r.categories).map(([k,v])=>[k,Math.round(v.score*100)]));
-          const breakdown=r.audits['lcp-breakdown-insight']?.details?.items||[];
-          const blocking=r.audits['render-blocking-insight']?.details?.items||[];
-          const result={scores,lcpMs:r.audits['largest-contentful-paint']?.numericValue,cls:r.audits['cumulative-layout-shift']?.numericValue,fcpMs:r.audits['first-contentful-paint']?.numericValue,ttfbMs:r.audits['server-response-time']?.numericValue,lcpElement:breakdown.find(x=>x.type==='node')?.selector||null,renderBlocking:blocking.slice(0,8).map(x=>({url:x.url,bytes:x.totalBytes,wastedMs:x.wastedMs}))};
-          console.log(JSON.stringify(result,null,2));
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## Arabic homepage Lighthouse mobile\n'+JSON.stringify(result,null,2)+'\n');
-          NODE
-      - name: Upload Lighthouse JSON
+          cat > lcp-experiment.mjs <<'JS'
+          import { createServer } from 'node:http';
+          import { existsSync, readFileSync, statSync } from 'node:fs';
+          import { resolve, extname } from 'node:path';
+          import { gzipSync } from 'node:zlib';
+          import { execFile } from 'node:child_process';
+          import { promisify } from 'node:util';
+          import { chromium } from 'playwright';
+
+          const run = promisify(execFile);
+          const original = readFileSync('index.html', 'utf8');
+          const enhancement = '<link rel="preload" as="style" href="/assets/css/homepage-enhancements.css">';
+          const earlyCss = [
+            enhancement,
+            '<link rel="preload" as="style" href="/assets/css/mobile-header.css?v=3">',
+            '<link rel="preload" as="style" href="/assets/css/mobile-header-v2.css?v=16">',
+            '<link rel="preload" as="style" href="/assets/css/master-header.css?v=8">'
+          ].join('\n');
+          const alternatives = {
+            'enhancement-preload': original.replace('<link rel="stylesheet" href="styles.css"', enhancement+'\n<link rel="stylesheet" href="styles.css"'),
+            'early-css': original.replace('<link rel="stylesheet" href="styles.css"', earlyCss+'\n<link rel="stylesheet" href="styles.css"'),
+            'inline-base': original.replace('<link rel="stylesheet" href="styles.css" fetchpriority="high">','<style>'+readFileSync('styles.css','utf8')+'</style>'),
+            'without-tawk': original
+          };
+          const variant = process.env.VARIANT;
+          if(variant!=='without-tawk' && alternatives[variant]===original) throw Error('HTML replacement failed');
+          let mode='baseline';
+          const root=process.cwd();
+          const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'application/javascript; charset=utf-8','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg'};
+          const server=createServer((req,res)=>{
+            const path=new URL(req.url,'http://127.0.0.1').pathname;
+            let file=resolve(root,'.'+decodeURIComponent(path));
+            if(!file.startsWith(root+'/') && file!==root) return res.writeHead(404).end();
+            if(existsSync(file)&&statSync(file).isDirectory()) file=resolve(file,'index.html');
+            if(!existsSync(file)) return res.writeHead(404).end();
+            const type=mime[extname(file)]||'application/octet-stream';
+            const data=file===resolve('index.html')?Buffer.from(mode==='baseline'?original:alternatives[variant]):readFileSync(file);
+            const gzip=/text|javascript/.test(type);
+            res.writeHead(200,{'content-type':type,'cache-control':'no-store',...(gzip?{'content-encoding':'gzip'}:{})});
+            res.end(gzip?gzipSync(data):data);
+          }).listen(0,'127.0.0.1');
+          await new Promise(r=>server.once('listening',r));
+          const url='http://127.0.0.1:'+server.address().port+'/';
+          const summarize=r=>{
+            const a=r.audits, num=k=>Math.round(a[k]?.numericValue||0);
+            return {
+              lcp:num('largest-contentful-paint'), fcp:num('first-contentful-paint'), tbt:num('total-blocking-time'),
+              cls:a['cumulative-layout-shift'].numericValue,
+              element:a['lcp-breakdown-insight']?.details?.items?.find(x=>x.type==='node')?.selector,
+              blocking:a['render-blocking-insight']?.details?.items?.map(x=>({url:x.url,wastedMs:x.wastedMs})),
+              scripts:a['bootup-time']?.details?.items?.slice(0,6).map(x=>({url:x.url,total:Math.round(x.total),evaluate:Math.round(x.scripting)})),
+              longTasks:a['long-tasks']?.details?.items?.slice(0,8).map(x=>({url:x.url,start:Math.round(x.startTime),duration:Math.round(x.duration)})),
+              stylesheetTimings:a['network-requests']?.details?.items?.filter(x=>x.resourceType==='Stylesheet').map(x=>({url:x.url,start:x.networkRequestTime,end:x.networkEndTime}))
+            };
+          };
+          try{
+            const common=['--only-categories=performance','--form-factor=mobile','--screenEmulation.mobile','--screenEmulation.width=390','--screenEmulation.height=844','--screenEmulation.deviceScaleFactor=1','--throttling-method=simulate','--chrome-flags=--headless --no-sandbox --disable-dev-shm-usage','--output=json','--quiet'];
+            const env={...process.env,CHROME_PATH:chromium.executablePath()};
+            const results={baseline:[],candidate:[]};
+            for(let i=0;i<3;i++){
+              for(const key of (i%2?['candidate','baseline']:['baseline','candidate'])){
+                mode=key;
+                const file=`lcp-${key}-${i}.json`;
+                const blocked=['*google-analytics.com*',...(key==='candidate'&&variant==='without-tawk'?['*tawk.to*']:[])];
+                await run('node',['node_modules/lighthouse/cli/index.js',url,...common,'--blocked-url-patterns='+blocked.join(','),'--output-path='+file],{env,timeout:75000});
+                const sample=summarize(JSON.parse(readFileSync(file)));
+                results[key].push(sample);
+                console.log('LCP SAMPLE',variant,key,i+1,JSON.stringify(sample));
+              }
+            }
+            const median=s=>s.map(x=>x.lcp).sort((a,b)=>a-b)[1];
+            console.log('LCP COMPARISON',JSON.stringify({variant,baseline:results.baseline.map(x=>x.lcp),candidate:results.candidate.map(x=>x.lcp),baselineMedian:median(results.baseline),candidateMedian:median(results.candidate)}));
+            if(variant==='without-tawk') process.exitCode=0;
+            else {
+              const browser=await chromium.launch({headless:true});
+              try{
+                for(const width of [390,768,1440]){
+                  const context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});
+                  await context.route(/googletagmanager|google-analytics|tawk\.to/,route=>route.abort());
+                  const captures=[];
+                  for(const key of ['baseline','candidate']){
+                    mode=key;
+                    const page=await context.newPage();
+                    await page.goto(url,{waitUntil:'networkidle'});
+                    await page.evaluate(()=>document.fonts.ready);
+                    const h1=await page.locator('#home h1').evaluate(el=>{
+                      const s=getComputedStyle(el),r=el.getBoundingClientRect();
+                      return {font:s.fontFamily,size:s.fontSize,color:s.color,box:[r.x,r.y,r.width,r.height]};
+                    });
+                    const image=await page.screenshot({fullPage:true,animations:'disabled',path:`layout-${width}-${key}.png`});
+                    captures.push({h1,image});
+                    await page.close();
+                  }
+                  console.log('VISUAL PARITY',width,JSON.stringify({sameScreenshot:captures[0].image.equals(captures[1].image),sameHeading:JSON.stringify(captures[0].h1)===JSON.stringify(captures[1].h1),heading:captures[0].h1}));
+                  if(!captures[0].image.equals(captures[1].image)) process.exitCode=1;
+                  await context.close();
+                }
+              } finally{await browser.close();}
+            }
+          }finally{server.close();}
+          JS
+          node lcp-experiment.mjs
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: phase2-lighthouse-mobile
+          name: paired-lcp-${{ matrix.variant }}
           path: |
-            audit-results/lighthouse-mobile*.json
-            audit-results/lighthouse-ar-mobile.json
-          if-no-files-found: ignore
+            lcp-*.json
+            layout-*.png
