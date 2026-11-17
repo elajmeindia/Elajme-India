@@ -43,6 +43,8 @@ jobs:
             const browser=await chromium.launch({headless:true});
             const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
             const origin=process.env.SITE_ORIGIN;
+            // Exclude synthetic journeys from analytics. WhatsApp is intercepted below.
+            await page.context().route(url=>/google-analytics|googletagmanager|analytics.google.com|doubleclick.net|cloudflareinsights/.test(url.hostname),route=>route.abort());
             const errors=[];
             for(const path of ['/','/ar/','/doctors/','/ar/doctors/','/hospitals/','/ar/hospitals/']){
               try{
@@ -226,7 +228,7 @@ jobs:
                   if(!request)errors.push(path+': enquiry does not route to Elajme WhatsApp');
                   else console.log('ENQUIRY DESTINATION',path,'Elajme WhatsApp (intercepted; not sent)');
                 }
-                await page.unroute('https://wa.me/**');
+                await page.unrouteAll({behavior:'wait'});
                 // Navigation may have started, so reload before the independent validation test.
                 await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
                 const result=await page.locator('#patientEnquiryForm').evaluate(form=>{
@@ -263,6 +265,158 @@ jobs:
             if(errors.length)process.exitCode=1;
           })().catch(e=>{console.error(e);process.exitCode=1});
           JS
+      - name: Verify four responsive homepages in both languages
+        if: ${{ !cancelled() }}
+        env:
+          SITE_ORIGIN: https://elajmeindia.com
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');
+          const fs=require('fs');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const origin=process.env.SITE_ORIGIN||'https://elajmeindia.com';
+            const results=[];
+            fs.mkdirSync('qa-artifacts',{recursive:true});
+            for(const [width,height] of [[375,812],[390,844],[768,1024],[1363,936]]){
+              for(const lang of ['en','ar']){
+                const id=`${lang}-${width}`;
+                const result={lang,width,height,errors:[],observations:{}};
+                const check=(ok,message)=>{if(!ok)result.errors.push(message)};
+                const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,isMobile:width<768,hasTouch:width<1363,serviceWorkers:'block'});
+                // Keep synthetic activity out of analytics; block all message destinations and writes.
+                let handoffs=0;
+                await context.route('**/*',route=>{
+                  const req=route.request(),url=new URL(req.url());
+                  if(/(^|\.)((wa\.me)|(whatsapp\.com))$/.test(url.hostname)){
+                    handoffs++;
+                    check(url.hostname==='wa.me'&&url.pathname==='/917488955154','Unexpected WhatsApp destination');
+                    return route.abort();
+                  }
+                  if(!['GET','HEAD'].includes(req.method())||/google-analytics|googletagmanager|cloudflareinsights/.test(url.hostname))return route.abort();
+                  return route.continue();
+                });
+                const page=await context.newPage();
+                page.setDefaultTimeout(10000);
+                try{
+                  const response=await page.goto(origin+(lang==='ar'?'/ar/':'/'),{waitUntil:'networkidle',timeout:45000});
+                  check(response?.status()===200,'Homepage HTTP status');
+                  await page.evaluate(()=>document.fonts.ready);
+                  check(await page.locator('html').getAttribute('lang')===lang,'Page language');
+                  check(await page.locator('html').evaluate(el=>getComputedStyle(el).direction)===(lang==='ar'?'rtl':'ltr'),'Page direction');
+                  const logo=page.locator('.master-brand img');
+                  check(await logo.isVisible()&&await logo.evaluate(img=>img.complete&&img.naturalWidth>0),'Header logo');
+                  const menu=page.locator('.master-mobile-menu').first();
+                  if(await menu.isVisible()){
+                    await menu.click();
+                    await page.waitForTimeout(250);
+                    check(await menu.getAttribute('aria-expanded')==='true','Menu did not open');
+                    check(await page.locator('.master-nav a:visible').count()===8,'Eight navigation tabs unavailable');
+                    await page.screenshot({path:`qa-artifacts/${id}-menu.png`});
+                    await menu.click();
+                    check(await menu.getAttribute('aria-expanded')==='false','Menu did not close');
+                    result.observations.menu='opened, eight links visible, closed';
+                  }else{
+                    check(await page.locator('.master-nav a:visible').count()===8,'Desktop navigation tabs unavailable');
+                    result.observations.menu='desktop navigation';
+                  }
+                  const wa=await page.locator('a[href*="wa.me/"],a[href*="api.whatsapp.com/"]').evaluateAll(nodes=>nodes.map(a=>a.href));
+                  check(wa.length>0&&wa.every(h=>new URL(h).pathname==='/917488955154'),'Official WhatsApp number');
+                  const prefix=lang==='ar'?'/ar':'';
+                  const links=await page.locator('.treatments-section .hero-actions > .button').evaluateAll(nodes=>nodes.map(a=>new URL(a.href).pathname));
+                  check(links.length===3&&['/treatments/','/hospitals/','/doctors/'].every(p=>links.includes(prefix+p)),'Directory destinations');
+                  const countryCount=await page.locator('.audience-inner .country').count();
+                  check(countryCount===8,'Eight country cards');
+                  check(await page.locator('.process-grid .process-step').count()===4,'Four journey cards');
+                  result.observations.grids=await page.evaluate(()=>{
+                    const out={};
+                    for(const [name,selector,child] of [['countries','.audience-inner','.country'],['journey','.process-grid','.process-step']]){
+                      const grid=document.querySelector(selector),cells=[...grid.querySelectorAll(child)].map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}});
+                      const overlaps=cells.some((a,i)=>cells.slice(i+1).some(b=>Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x)>2&&Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y)>2));
+                      out[name]={columns:getComputedStyle(grid).gridTemplateColumns,rows:[...new Set(cells.map(r=>Math.round(r.y)))].length,cells,overlaps};
+                    }
+                    return out;
+                  });
+                  check(!Object.values(result.observations.grids).some(g=>g.overlaps),'Overlapping grid cards');
+                  if(width===1363){
+                    check(result.observations.grids.countries.rows===2,'Desktop country cards should occupy two rows');
+                    check(result.observations.grids.journey.rows===1,'Desktop journey should occupy one row');
+                  }
+                  check(await page.locator('.master-lang').getAttribute('href')===(lang==='ar'?'/':'/ar/'),'Homepage language switch destination');
+                  result.observations.countryCount=countryCount;
+                  result.observations.css=await page.locator('link[rel="stylesheet"]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
+                  // Scroll every screen so lazy images and sticky/floating controls are represented.
+                  for(let y=0;y<await page.evaluate(()=>document.documentElement.scrollHeight);y+=Math.floor(height*0.75)){
+                    await page.evaluate(y=>window.scrollTo(0,y),y);
+                    await page.waitForTimeout(80);
+                    const overflow=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,viewport:innerWidth}));
+                    check(overflow.scroll<=overflow.viewport+2,`Horizontal overflow at y=${y}: ${overflow.scroll}>${overflow.viewport}`);
+                  }
+                  await page.evaluate(()=>scrollTo(0,0));
+                  await page.screenshot({path:`qa-artifacts/${id}-full.png`,fullPage:true});
+                  for(const [name,selector] of Object.entries({hero:'#home',countries:'.audience-strip',enquiry:'#enquiry',treatments:'.treatments-section',journey:'.process-section',guides:'.countries-section',faq:'.faq-section',footer:'footer'})){
+                    const section=page.locator(selector).first();
+                    check(await section.isVisible(),`${name} section missing`);
+                    await section.screenshot({path:`qa-artifacts/${id}-${name}.png`});
+                  }
+                  // Native clicks exercise the real FAQ and required-field validation.
+                  const faq=page.locator('.faq-list details').first();
+                  await faq.locator('summary').click();
+                  check(await faq.evaluate(el=>el.open),'FAQ did not open');
+                  await faq.locator('summary').click();
+                  check(!await faq.evaluate(el=>el.open),'FAQ did not close');
+                  const form=page.locator('#patientEnquiryForm');
+                  check(!await form.evaluate(el=>el.checkValidity()),'Blank form accepted');
+                  await form.locator('[type="submit"]').click();
+                  check(handoffs===0,'Blank form triggered handoff');
+                  for(const [field,value] of Object.entries({patientName:'Synthetic QA',patientCountry:'Oman',patientMobile:'+12025550123'}))await page.locator('#'+field).fill(value);
+                  check(await form.evaluate(el=>el.checkValidity()),'Valid synthetic fields rejected');
+                  const required=await form.evaluate(el=>['patientName','patientCountry','patientMobile'].map(id=>{const field=el.querySelector('#'+id),saved=field.value;field.value='';const rejected=!el.checkValidity();field.value=saved;return {id,rejected};}));
+                  check(required.every(f=>f.rejected),'Required field accepted when empty');
+                  result.observations.required=required;
+                  await page.locator('#patientMobile').fill('12');
+                  await form.locator('[type="submit"]').click();
+                  await page.waitForTimeout(200);
+                  check(handoffs===0,'Invalid phone triggered handoff');
+                  await page.locator('#patientMobile').fill('+12025550123');
+                  // Hit testing detects fixed controls covering actual field/button centres after normal scrolling.
+                  const obstruction=[];
+                  for(const selector of ['#patientName','#patientCountry','#patientMobile','#preferredLanguage','.enquiry-submit']){
+                    const target=page.locator(selector);
+                    await target.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
+                    const hit=await target.evaluate(el=>{const r=el.getBoundingClientRect(),top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!top&&(top===el||el.contains(top));});
+                    if(!hit)obstruction.push(selector);
+                  }
+                  check(!obstruction.length,'Form controls obstructed: '+obstruction.join(', '));
+                  result.observations.obstructed=obstruction;
+                  await form.screenshot({path:`qa-artifacts/${id}-validation.png`});
+                  const outgoing=page.waitForRequest(req=>new URL(req.url()).hostname==='wa.me',{timeout:10000}).catch(()=>null);
+                  await form.locator('[type="submit"]').click({noWaitAfter:true});
+                  check(!!await outgoing,'Synthetic enquiry handoff missing');
+                  // The request event precedes the route callback; wait for interception before counting.
+                  for(let n=0;n<50&&handoffs===0;n++)await new Promise(resolve=>setTimeout(resolve,20));
+                  check(handoffs===1,'Expected exactly one intercepted handoff');
+                  result.observations.handoffs=handoffs;
+                }catch(error){result.errors.push(error.message);try{await page.screenshot({path:`qa-artifacts/${id}-failure.png`,fullPage:true})}catch{}}
+                finally{await context.close()}
+                results.push(result);
+                console.log('RESPONSIVE',JSON.stringify(result));
+              }
+            }
+            await browser.close();
+            fs.writeFileSync('qa-artifacts/responsive-results.json',JSON.stringify(results,null,2));
+            if(process.env.GITHUB_STEP_SUMMARY)fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Responsive production verification\n\n|Language|Viewport|Result|\n|---|---|---|\n'+results.map(r=>`|${r.lang}|${r.width} × ${r.height}|${r.errors.length?r.errors.join('; '):'PASS'}|`).join('\n')+'\n\nScreenshots and measurements are in the responsive evidence artifact. Automated geometry checks require visual review; they do not establish a quality score.\n');
+            if(results.some(r=>r.errors.length))process.exitCode=1;
+          })().catch(error=>{console.error(error);process.exitCode=1});
+          JS
+      - name: Upload responsive evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilingual-responsive-evidence
+          path: qa-artifacts/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Upload failure evidence
         if: failure()
         uses: actions/upload-artifact@v4
@@ -271,3 +425,4 @@ jobs:
           path: qa-artifacts/
           if-no-files-found: ignore
           retention-days: 14
+
