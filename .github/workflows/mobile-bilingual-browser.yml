@@ -332,6 +332,21 @@ jobs:
                   const countryCount=await page.locator('.audience-inner .country').count();
                   check(countryCount===8,'Eight country cards');
                   check(await page.locator('.process-grid .process-step').count()===4,'Four journey cards');
+                  result.observations.grids=await page.evaluate(()=>{
+                    const out={};
+                    for(const [name,selector,child] of [['countries','.audience-inner','.country'],['journey','.process-grid','.process-step']]){
+                      const grid=document.querySelector(selector),cells=[...grid.querySelectorAll(child)].map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}});
+                      const overlaps=cells.some((a,i)=>cells.slice(i+1).some(b=>Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x)>2&&Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y)>2));
+                      out[name]={columns:getComputedStyle(grid).gridTemplateColumns,rows:[...new Set(cells.map(r=>Math.round(r.y)))].length,cells,overlaps};
+                    }
+                    return out;
+                  });
+                  check(!Object.values(result.observations.grids).some(g=>g.overlaps),'Overlapping grid cards');
+                  if(width===1363){
+                    check(result.observations.grids.countries.rows===2,'Desktop country cards should occupy two rows');
+                    check(result.observations.grids.journey.rows===1,'Desktop journey should occupy one row');
+                  }
+                  check(await page.locator('.master-lang').getAttribute('href')===(lang==='ar'?'/':'/ar/'),'Homepage language switch destination');
                   result.observations.countryCount=countryCount;
                   result.observations.css=await page.locator('link[rel="stylesheet"]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
                   // Scroll every screen so lazy images and sticky/floating controls are represented.
@@ -363,6 +378,11 @@ jobs:
                   const required=await form.evaluate(el=>['patientName','patientCountry','patientMobile'].map(id=>{const field=el.querySelector('#'+id),saved=field.value;field.value='';const rejected=!el.checkValidity();field.value=saved;return {id,rejected};}));
                   check(required.every(f=>f.rejected),'Required field accepted when empty');
                   result.observations.required=required;
+                  await page.locator('#patientMobile').fill('12');
+                  await form.locator('[type="submit"]').click();
+                  await page.waitForTimeout(200);
+                  check(handoffs===0,'Invalid phone triggered handoff');
+                  await page.locator('#patientMobile').fill('+12025550123');
                   // Hit testing detects fixed controls covering actual field/button centres after normal scrolling.
                   const obstruction=[];
                   for(const selector of ['#patientName','#patientCountry','#patientMobile','#preferredLanguage','.enquiry-submit']){
