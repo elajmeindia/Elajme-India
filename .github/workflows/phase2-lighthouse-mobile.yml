@@ -1,15 +1,15 @@
-name: Isolated English homepage LCP comparison
+name: Same-origin mobile homepage LCP experiment
 on:
   push:
     branches: [experiment/english-homepage-lcp]
 permissions:
   contents: read
 jobs:
-  compare:
+  paired:
     strategy:
       fail-fast: false
       matrix:
-        variant: [declarative-enhancement]
+        variant: [declarative-enhancement, early-css]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -17,119 +17,84 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --no-save lighthouse@12.8.2 playwright@1.56.1
+      - run: npm install --no-save lighthouse@12.8.2 playwright@1.56.1 puppeteer-core@24.32.0
       - run: npx playwright install --with-deps chromium
-      - name: Measure paired mobile samples and visual parity
+      - name: Compare live-origin Lighthouse samples with a browser-only HTML override
         env:
           VARIANT: ${{ matrix.variant }}
         run: |
-          cat > lcp-experiment.mjs <<'JS'
-          import { createServer } from 'node:http';
-          import { existsSync, readFileSync, statSync } from 'node:fs';
-          import { resolve, extname } from 'node:path';
-          import { gzipSync } from 'node:zlib';
-          import { execFile } from 'node:child_process';
-          import { promisify } from 'node:util';
+          cat > lcp-same-origin.mjs <<'JS'
+          import lighthouse from 'lighthouse';
+          import puppeteer from 'puppeteer-core';
           import { chromium } from 'playwright';
+          import { brotliCompressSync } from 'node:zlib';
+          import { writeFileSync } from 'node:fs';
 
-          const run = promisify(execFile);
-          const original = readFileSync('index.html', 'utf8');
-          const enhancement = '<link rel="preload" as="style" href="/assets/css/homepage-enhancements.css">';
-          const earlyCss = [
-            enhancement,
-            '<link rel="preload" as="style" href="/assets/css/mobile-header.css?v=3">',
-            '<link rel="preload" as="style" href="/assets/css/mobile-header-v2.css?v=16">',
-            '<link rel="preload" as="style" href="/assets/css/master-header.css?v=8">'
-          ].join('\n');
-          const alternatives = {
-            'enhancement-preload': original.replace('<link rel="stylesheet" href="styles.css"', enhancement+'\n<link rel="stylesheet" href="styles.css"'),
-            'early-css': original.replace('<link rel="stylesheet" href="styles.css"', earlyCss+'\n<link rel="stylesheet" href="styles.css"'),
-            'inline-base': original.replace('<link rel="stylesheet" href="styles.css" fetchpriority="high">','<style>'+readFileSync('styles.css','utf8')+'</style>'),
-            'declarative-enhancement': original.replace('</head>', '<link rel="stylesheet" href="/assets/css/homepage-enhancements.css" data-homepage-enhancements>\n</head>'),
-            'without-tawk': original
-          };
+          const site = 'https://elajmeindia.com/';
           const variant = process.env.VARIANT;
-          if(variant!=='without-tawk' && alternatives[variant]===original) throw Error('HTML replacement failed');
-          let mode='baseline';
-          const root=process.cwd();
-          const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'application/javascript; charset=utf-8','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg'};
-          const server=createServer((req,res)=>{
-            const path=new URL(req.url,'http://127.0.0.1').pathname;
-            let file=resolve(root,'.'+decodeURIComponent(path));
-            if(!file.startsWith(root+'/') && file!==root) return res.writeHead(404).end();
-            if(existsSync(file)&&statSync(file).isDirectory()) file=resolve(file,'index.html');
-            if(!existsSync(file)) return res.writeHead(404).end();
-            const type=mime[extname(file)]||'application/octet-stream';
-            const data=file===resolve('index.html')?Buffer.from(mode==='baseline'?original:alternatives[variant]):readFileSync(file);
-            const gzip=/text|javascript/.test(type);
-            res.writeHead(200,{'content-type':type,'cache-control':'no-store',...(gzip?{'content-encoding':'gzip'}:{})});
-            res.end(gzip?gzipSync(data):data);
-          }).listen(0,'127.0.0.1');
-          await new Promise(r=>server.once('listening',r));
-          const url='http://127.0.0.1:'+server.address().port+'/';
-          const summarize=r=>{
-            const a=r.audits, num=k=>Math.round(a[k]?.numericValue||0);
-            return {
-              lcp:num('largest-contentful-paint'), fcp:num('first-contentful-paint'), tbt:num('total-blocking-time'),
-              cls:a['cumulative-layout-shift'].numericValue,
-              element:a['lcp-breakdown-insight']?.details?.items?.find(x=>x.type==='node')?.selector,
-              blocking:a['render-blocking-insight']?.details?.items?.map(x=>({url:x.url,wastedMs:x.wastedMs})),
-              scripts:a['bootup-time']?.details?.items?.slice(0,6).map(x=>({url:x.url,total:Math.round(x.total),evaluate:Math.round(x.scripting)})),
-              longTasks:a['long-tasks']?.details?.items?.slice(0,8).map(x=>({url:x.url,start:Math.round(x.startTime),duration:Math.round(x.duration)})),
-              stylesheetTimings:a['network-requests']?.details?.items?.filter(x=>x.resourceType==='Stylesheet').map(x=>({url:x.url,start:x.networkRequestTime,end:x.networkEndTime}))
-            };
-          };
-          try{
-            const common=['--only-categories=performance','--form-factor=mobile','--screenEmulation.mobile','--screenEmulation.width=390','--screenEmulation.height=844','--screenEmulation.deviceScaleFactor=1','--throttling-method=simulate','--chrome-flags=--headless --no-sandbox --disable-dev-shm-usage','--output=json','--quiet'];
-            const env={...process.env,CHROME_PATH:chromium.executablePath()};
-            const results={baseline:[],candidate:[]};
-            for(let i=0;i<3;i++){
-              for(const key of (i%2?['candidate','baseline']:['baseline','candidate'])){
-                mode=key;
-                const file=`lcp-${key}-${i}.json`;
-                const blocked=['*google-analytics.com*',...(key==='candidate'&&variant==='without-tawk'?['*tawk.to*']:[])];
-                await run('node',['node_modules/lighthouse/cli/index.js',url,...common,'--blocked-url-patterns='+blocked.join(','),'--output-path='+file],{env,timeout:75000});
-                const sample=summarize(JSON.parse(readFileSync(file)));
-                results[key].push(sample);
-                console.log('LCP SAMPLE',variant,key,i+1,JSON.stringify(sample));
-              }
-            }
-            const median=s=>s.map(x=>x.lcp).sort((a,b)=>a-b)[1];
-            console.log('LCP COMPARISON',JSON.stringify({variant,baseline:results.baseline.map(x=>x.lcp),candidate:results.candidate.map(x=>x.lcp),baselineMedian:median(results.baseline),candidateMedian:median(results.candidate)}));
-            if(variant==='without-tawk') process.exitCode=0;
-            else {
-              const browser=await chromium.launch({headless:true});
-              try{
-                for(const width of [390,768,1440]){
-                  const context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});
-                  await context.route(/googletagmanager|google-analytics|tawk\.to/,route=>route.abort());
-                  const captures=[];
-                  for(const key of ['baseline','candidate']){
-                    mode=key;
-                    const page=await context.newPage();
-                    await page.goto(url,{waitUntil:'networkidle'});
-                    await page.evaluate(()=>document.fonts.ready);
-                    const h1=await page.locator('#home h1').evaluate(el=>{
-                      const s=getComputedStyle(el),r=el.getBoundingClientRect();
-                      return {font:s.fontFamily,size:s.fontSize,color:s.color,box:[r.x,r.y,r.width,r.height]};
-                    });
-                    const image=await page.screenshot({fullPage:true,animations:'disabled',path:`layout-${width}-${key}.png`});
-                    captures.push({h1,image});
-                    await page.close();
-                  }
-                  console.log('VISUAL PARITY',width,JSON.stringify({sameScreenshot:captures[0].image.equals(captures[1].image),sameHeading:JSON.stringify(captures[0].h1)===JSON.stringify(captures[1].h1),heading:captures[0].h1}));
-                  if(!captures[0].image.equals(captures[1].image)) process.exitCode=1;
-                  await context.close();
+          const enhancementUrl = '/assets/css/homepage-enhancements.css';
+          const earlyLinks = [
+            enhancementUrl,
+            '/assets/css/mobile-header.css?v=3',
+            '/assets/css/mobile-header-v2.css?v=16',
+            '/assets/css/master-header.css?v=8'
+          ].map(href => `<link rel="preload" as="style" href="${href}">`).join('\n');
+          const modify = markup => variant === 'declarative-enhancement'
+            ? markup.replace('</head>', `<link rel="stylesheet" href="${enhancementUrl}" data-homepage-enhancements>\n</head>`)
+            : markup.replace('<link rel="stylesheet" href="styles.css"', earlyLinks+'\n<link rel="stylesheet" href="styles.css"');
+          const flags = {onlyCategories:['performance'],formFactor:'mobile',screenEmulation:{mobile:true,width:390,height:844,deviceScaleFactor:1,disabled:false},throttlingMethod:'simulate',blockedUrlPatterns:['*google-analytics.com*'],logLevel:'error'};
+
+          async function measure(mode, i){
+            const browser = await puppeteer.launch({
+              executablePath: chromium.executablePath(), headless:true,
+              defaultViewport:null, ignoreDefaultArgs:['--enable-automation'],
+              args:['--no-sandbox','--disable-dev-shm-usage']
+            });
+            try {
+              const page = await browser.newPage();
+              const client = await page.createCDPSession();
+              let rewritten = 0, rewriteError;
+              await client.send('Fetch.enable',{patterns:[{urlPattern:site,resourceType:'Document',requestStage:'Response'}]});
+              client.on('Fetch.requestPaused', async ev => {
+                try {
+                  if(ev.responseStatusCode!==200) return await client.send('Fetch.continueRequest',{requestId:ev.requestId});
+                  const payload = await client.send('Fetch.getResponseBody',{requestId:ev.requestId});
+                  const original = payload.base64Encoded ? Buffer.from(payload.body,'base64').toString('utf8') : payload.body;
+                  const html = mode==='candidate' ? modify(original) : original;
+                  if(mode==='candidate' && html===original) throw Error('HTML override did not match');
+                  const body = brotliCompressSync(html);
+                  const headers = (ev.responseHeaders||[]).filter(x=>!/^(content-encoding|content-length|transfer-encoding|etag)$/i.test(x.name));
+                  headers.push({name:'Content-Encoding',value:'br'},{name:'Content-Length',value:String(body.length)});
+                  await client.send('Fetch.fulfillRequest',{requestId:ev.requestId,responseCode:200,responseHeaders:headers,body:body.toString('base64')});
+                  rewritten++;
+                } catch (err) {
+                  rewriteError=err;
+                  await client.send('Fetch.continueRequest',{requestId:ev.requestId}).catch(()=>{});
                 }
-              } finally{await browser.close();}
+              });
+              const {lhr} = await lighthouse(site,flags,undefined,page);
+              if(rewriteError) throw rewriteError;
+              if(rewritten!==1 || lhr.runtimeError) throw Error(JSON.stringify({rewritten,runtimeError:lhr.runtimeError}));
+              const a=lhr.audits, metrics=a.metrics.details.items[0];
+              writeFileSync(`same-origin-${mode}-${i}.json`,JSON.stringify(lhr));
+              const net=a['network-requests'].details.items.filter(x=>x.resourceType==='Stylesheet'&&x.url.startsWith(site)).map(x=>[x.url.slice(site.length),Math.round(x.networkRequestTime),Math.round(x.networkEndTime)]);
+              const sample={lcp:Math.round(a['largest-contentful-paint'].numericValue),fcp:Math.round(a['first-contentful-paint'].numericValue),tbt:Math.round(a['total-blocking-time'].numericValue),cls:a['cumulative-layout-shift'].numericValue,observedLcp:metrics.observedLargestContentfulPaint,net,element:a['lcp-breakdown-insight'].details.items.find(x=>x.type==='node')?.selector};
+              console.log('SAME ORIGIN SAMPLE',variant,mode,i,JSON.stringify(sample));
+              return sample;
+            } finally { await browser.close(); }
+          }
+          const results={baseline:[],candidate:[]};
+          for(let i=1;i<=5;i++){
+            for(const mode of (i%2?['baseline','candidate']:['candidate','baseline'])){
+              results[mode].push(await measure(mode,i));
             }
-          }finally{server.close();}
+          }
+          const median=x=>x.map(i=>i.lcp).sort((a,b)=>a-b)[2];
+          console.log('SAME ORIGIN COMPARISON',JSON.stringify({variant,baseline:results.baseline.map(x=>x.lcp),candidate:results.candidate.map(x=>x.lcp),baselineMedian:median(results.baseline),candidateMedian:median(results.candidate)}));
           JS
-          node lcp-experiment.mjs
+          node lcp-same-origin.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: paired-lcp-${{ matrix.variant }}
-          path: |
-            lcp-*.json
-            layout-*.png
+          name: same-origin-${{ matrix.variant }}
+          path: same-origin-*.json
