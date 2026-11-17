@@ -27,11 +27,13 @@ jobs:
             let failed=false;
             for(const path of ['/', '/ar/', '/ar/oman/treatment-in-india/']){
               const page=await browser.newPage({viewport:{width:390,height:844}});
+              const recorded=[];
+              page.on('console',msg=>{if(msg.text().startsWith('GA4_CAPTURE:')){try{recorded.push(JSON.parse(msg.text().slice(12)));}catch(e){}}});
               await page.addInitScript(()=>{
                 window.__testEvents=[];
                 const arr=[];
                 arr.push=function(...args){
-                  for(const a of args){if(a&&a[0]==='event')window.__testEvents.push({name:a[1],params:a[2]||{}});}
+                  for(const a of args){if(a&&a[0]==='event')window.__testEvents.push({name:a[1],params:a[2]||{}}),console.log('GA4_CAPTURE:'+JSON.stringify({name:a[1],params:a[2]||{}}));}
                   return Array.prototype.push.apply(this,args);
                 };
                 window.dataLayer=arr;
@@ -51,7 +53,7 @@ jobs:
                 await page.locator('#patientEnquiryForm').evaluate(el=>el.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
               }
               await page.waitForTimeout(300);
-              const events=await page.evaluate(()=>window.__testEvents);
+              const events=recorded;
               const names=events.map(x=>x.name);
               const expected=path==='/ar/oman/treatment-in-india/'?'whatsapp_enquiry_click':'whatsapp_handoff_intent';
               const ok=names.includes(expected);
