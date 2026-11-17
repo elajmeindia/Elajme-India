@@ -63,3 +63,11 @@ body[dir=rtl] .section-label{letter-spacing:0;font-weight:750}body[dir=rtl] .sec
 @media(min-width:1500px){
   main .audience-strip .audience-inner{grid-template-columns:repeat(8,minmax(0,1fr))}
 }
+
+/* Cloud Browser audit: make homepage directory actions comfortably actionable. */
+main .treatments-section .hero-actions > .button{padding:11px 16px;min-height:42px;line-height:1.4;text-align:center}
+/* Distinguish country-guide links in the dark section, preserving RTL flow. */
+main .countries-section .country-tags{gap:10px 12px}
+main .countries-section .country-tags > a{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 12px;border:1px solid rgba(255,255,255,.22);border-radius:9px;background:rgba(255,255,255,.055);color:#e4eff1;font-size:12px;line-height:1.5;text-decoration:none;white-space:normal}
+main .countries-section .country-tags > a:hover,main .countries-section .country-tags > a:focus-visible{border-color:rgba(255,255,255,.62);background:rgba(255,255,255,.11);color:#fff}
+main .countries-section .country-tags > a:focus-visible{outline:2px solid #fff;outline-offset:2px}
