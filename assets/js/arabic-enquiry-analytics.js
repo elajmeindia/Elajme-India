@@ -28,5 +28,13 @@
       language: 'ar',
       lead_source: 'patient_enquiry_form'
     });
+    // GA4 key event parity with English: this records the WhatsApp handoff click,
+    // not a confirmed message or patient lead. Never include form values.
+    window.gtag('event', 'whatsapp_enquiry_click', {
+      contact_method: 'whatsapp',
+      page_path: location.pathname,
+      language: 'ar',
+      lead_source: 'patient_enquiry_form'
+    });
   });
 })();
