@@ -54,12 +54,12 @@ body[dir=rtl] .section-label{letter-spacing:0;font-weight:750}body[dir=rtl] .sec
 
 /* Cloud Browser audit: four journey cards must fill four desktop columns. */
 @media(min-width:821px){
-  body.site-shell > main .process-section .process-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  main .process-section .process-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 /* Eight country cards: balanced rows at standard desktop widths. */
 @media(min-width:641px) and (max-width:1499px){
-  body.site-shell > main .audience-strip .audience-inner{grid-template-columns:repeat(4,minmax(0,1fr))}
+  main .audience-strip .audience-inner{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 @media(min-width:1500px){
-  body.site-shell > main .audience-strip .audience-inner{grid-template-columns:repeat(8,minmax(0,1fr))}
+  main .audience-strip .audience-inner{grid-template-columns:repeat(8,minmax(0,1fr))}
 }
