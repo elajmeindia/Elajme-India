@@ -387,7 +387,7 @@ jobs:
                   const obstruction=[];
                   for(const selector of ['#patientName','#patientCountry','#patientMobile','#preferredLanguage','.enquiry-submit']){
                     const target=page.locator(selector);
-                    await target.scrollIntoViewIfNeeded();
+                    await target.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
                     const hit=await target.evaluate(el=>{const r=el.getBoundingClientRect(),top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!top&&(top===el||el.contains(top));});
                     if(!hit)obstruction.push(selector);
                   }
@@ -397,6 +397,8 @@ jobs:
                   const outgoing=page.waitForRequest(req=>new URL(req.url()).hostname==='wa.me',{timeout:10000}).catch(()=>null);
                   await form.locator('[type="submit"]').click({noWaitAfter:true});
                   check(!!await outgoing,'Synthetic enquiry handoff missing');
+                  // The request event precedes the route callback; wait for interception before counting.
+                  for(let n=0;n<50&&handoffs===0;n++)await new Promise(resolve=>setTimeout(resolve,20));
                   check(handoffs===1,'Expected exactly one intercepted handoff');
                   result.observations.handoffs=handoffs;
                 }catch(error){result.errors.push(error.message);try{await page.screenshot({path:`qa-artifacts/${id}-failure.png`,fullPage:true})}catch{}}
