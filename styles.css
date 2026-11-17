@@ -71,3 +71,8 @@ main .countries-section .country-tags{gap:10px 12px}
 main .countries-section .country-tags > a{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 12px;border:1px solid rgba(255,255,255,.22);border-radius:9px;background:rgba(255,255,255,.055);color:#e4eff1;font-size:12px;line-height:1.5;text-decoration:none;white-space:normal}
 main .countries-section .country-tags > a:hover,main .countries-section .country-tags > a:focus-visible{border-color:rgba(255,255,255,.62);background:rgba(255,255,255,.11);color:#fff}
 main .countries-section .country-tags > a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* Responsive QA at 768px: keep four patient-journey steps in a balanced 2x2 tablet grid. */
+@media(min-width:641px) and (max-width:820px){
+  main .process-section .process-grid > .process-step:last-child{grid-column:auto;max-width:none;width:auto;justify-self:stretch}
+}
