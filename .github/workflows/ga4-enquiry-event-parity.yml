@@ -1,0 +1,65 @@
+name: GA4 enquiry event parity (non-production)
+on:
+  push:
+    branches: [test/ga4-enquiry-event-parity-20261117]
+    paths: ['.github/workflows/ga4-enquiry-event-parity.yml']
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Check anonymous event emission without sending enquiries
+        run: |
+          python3 -m http.server 8765 --directory . >/tmp/elajme-test.log 2>&1 &
+          sleep 2
+          node - <<'NODE'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch();
+            let failed=false;
+            for(const path of ['/', '/ar/', '/ar/oman/treatment-in-india/']){
+              const page=await browser.newPage({viewport:{width:390,height:844}});
+              await page.addInitScript(()=>{
+                window.__testEvents=[];
+                const arr=[];
+                arr.push=function(...args){
+                  for(const a of args){if(a&&a[0]==='event')window.__testEvents.push({name:a[1],params:a[2]||{}});}
+                  return Array.prototype.push.apply(this,args);
+                };
+                window.dataLayer=arr;
+              });
+              await page.route('https://www.googletagmanager.com/**',r=>r.abort());
+              await page.route('https://wa.me/**',r=>r.abort());
+              await page.goto('http://127.0.0.1:8765'+path,{waitUntil:'domcontentloaded'});
+              await page.waitForTimeout(900);
+              if(path==='/ar/oman/treatment-in-india/'){
+                const link=page.locator('a[href^="https://wa.me/917488955154"]').first();
+                await link.click({noWaitAfter:true});
+              }else{
+                await page.locator('#patientName').fill('Test Person');
+                await page.locator('#patientCountry').fill('Oman');
+                await page.locator('#patientMobile').fill('+968 9000 0000');
+                await page.locator('#patientEnquiryForm button[type=submit]').click({noWaitAfter:true});
+              }
+              await page.waitForTimeout(300);
+              const events=await page.evaluate(()=>window.__testEvents);
+              const names=events.map(x=>x.name);
+              const expected=path==='/ar/oman/treatment-in-india/'?'whatsapp_enquiry_click':'whatsapp_handoff_intent';
+              const ok=names.includes(expected);
+              const leaked=JSON.stringify(events).includes('Test Person')||JSON.stringify(events).includes('9000 0000');
+              console.log(JSON.stringify({path,events:names,expected,ok,leaked}));
+              if(!ok||leaked)failed=true;
+              await page.close();
+            }
+            await browser.close();
+            if(failed)process.exitCode=1;
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
