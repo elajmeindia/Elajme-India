@@ -232,7 +232,7 @@ jobs:
                   if(!request)errors.push(path+': enquiry does not route to Elajme WhatsApp');
                   else console.log('ENQUIRY DESTINATION',path,'Elajme WhatsApp (intercepted; not sent)');
                 }
-                await page.unroute('https://wa.me/**');
+                await page.unrouteAll({behavior:'wait'});
                 // Navigation may have started, so reload before the independent validation test.
                 await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
                 const result=await page.locator('#patientEnquiryForm').evaluate(form=>{
