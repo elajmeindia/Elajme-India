@@ -2,6 +2,3 @@
 /* Approved desktop layout: 5% side gutters on wide screens, compact gutters below. */
 @media(min-width:1400px){.master-site-header .master-header-inner{width:90%!important;max-width:none!important;justify-content:space-between!important;gap:10px!important}.master-site-header .master-nav{flex:1 1 auto!important;min-width:0!important;justify-content:space-evenly!important;gap:4px!important}.master-site-header .master-brand,.master-site-header .master-actions{flex-shrink:0!important}}
 @media(min-width:1200px) and (max-width:1399px){.master-site-header .master-header-inner{width:90%!important;max-width:none!important;justify-content:space-between!important;gap:8px!important}.master-site-header .master-nav{flex:1 1 auto!important;justify-content:space-around!important;gap:3px!important}.master-site-header .master-brand{margin-right:10px!important}}
-
-/* Improve desktop navigation legibility without altering approved navigation or mobile menu. */
-@media (min-width:1400px){.master-site-header .master-nav a{font-size:13px!important}.master-site-header .master-phone{font-size:12px!important}}
