@@ -48,7 +48,10 @@ jobs:
                 };
                 window.dataLayer=arr;
               });
-              await page.route('**/*', r => r.request().method() === 'GET' && new URL(r.request().url()).origin === origin ? r.continue() : r.abort());
+              await page.context().route('**/*', route => {
+                const request=route.request();
+                return request.method()==='GET' && new URL(request.url()).origin===origin ? route.continue() : route.abort();
+              });
               page.setDefaultTimeout(7000); 
               await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:15000});
               await page.waitForTimeout(900);
