@@ -1,5 +1,8 @@
 name: Phase 2 Lighthouse mobile verification
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/phase2-lighthouse-mobile.yml'
   workflow_dispatch:
   push:
     branches: [main]
@@ -28,7 +31,7 @@ jobs:
           mkdir -p audit-results
           CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
           export CHROME_PATH
-          npx lighthouse https://elajmeindia.com/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path=audit-results/lighthouse-mobile.json --quiet
+          npx lighthouse https://elajmeindia.com/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --save-assets --output=json --output-path=audit-results/lighthouse-mobile.json --quiet
           node - <<'NODE'
           const r=require('./audit-results/lighthouse-mobile.json');
           const scores=Object.fromEntries(Object.entries(r.categories).map(([k,v])=>[k,Math.round(v.score*100)]));
@@ -44,7 +47,7 @@ jobs:
           export CHROME_PATH
           for n in 2 3; do
             for attempt in 1 2 3; do
-              if npx lighthouse https://elajmeindia.com/ --only-categories=performance --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path="audit-results/lighthouse-mobile-$n.json" --quiet; then
+              if npx lighthouse https://elajmeindia.com/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --save-assets --output=json --output-path="audit-results/lighthouse-mobile-$n.json" --quiet; then
                 break
               fi
               if [ "$attempt" -eq 3 ]; then exit 1; fi
@@ -73,7 +76,7 @@ jobs:
         run: |
           CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
           export CHROME_PATH
-          npx lighthouse https://elajmeindia.com/ar/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path=audit-results/lighthouse-ar-mobile.json --quiet
+          npx lighthouse https://elajmeindia.com/ar/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --save-assets --output=json --output-path=audit-results/lighthouse-ar-mobile.json --quiet
           node - <<'NODE'
           const fs=require('fs');
           const r=JSON.parse(fs.readFileSync('audit-results/lighthouse-ar-mobile.json'));
@@ -90,6 +93,6 @@ jobs:
         with:
           name: phase2-lighthouse-mobile
           path: |
-            audit-results/lighthouse-mobile*.json
-            audit-results/lighthouse-ar-mobile.json
+            audit-results/
           if-no-files-found: ignore
+
