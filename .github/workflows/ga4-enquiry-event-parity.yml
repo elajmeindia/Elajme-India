@@ -58,8 +58,10 @@ jobs:
               const expected=path==='/ar/oman/treatment-in-india/'?'whatsapp_enquiry_click':'whatsapp_handoff_intent';
               const ok=names.includes(expected);
               const leaked=JSON.stringify(events).includes('Test Person')||JSON.stringify(events).includes('9000 0000');
-              console.log(JSON.stringify({path,events:names,expected,ok,leaked}));
-              if(!ok||leaked)failed=true;
+              const falseLead=names.includes('generate_lead');
+              const duplicate=names.filter(name=>name===expected).length!==1;
+              console.log(JSON.stringify({path,events:names,expected,ok,leaked,falseLead,duplicate}));
+              if(!ok||leaked||falseLead||duplicate)failed=true;
               await page.close();
             }
             await browser.close();
