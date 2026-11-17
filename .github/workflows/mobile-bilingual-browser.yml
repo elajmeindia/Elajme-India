@@ -46,7 +46,7 @@ jobs:
             // Exclude synthetic journeys from analytics and block all non-GET writes.
             await page.context().route('**/*',route=>{
               const req=route.request(),host=new URL(req.url()).hostname;
-              if(!['GET','HEAD'].includes(req.method())||/google-analytics|googletagmanager|cloudflareinsights|(^|\.)(wa\.me|whatsapp\.com)$/.test(host))return route.abort();
+              if(!['GET','HEAD'].includes(req.method())||/google-analytics|googletagmanager|cloudflareinsights/.test(host))return route.abort();
               return route.continue();
             });
             const errors=[];
