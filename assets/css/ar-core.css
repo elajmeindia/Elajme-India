@@ -114,3 +114,11 @@ html[lang="ar"] .grid .card:nth-child(33) .doctor-media{background-image:url("ht
 html[lang="ar"] .grid .card:nth-child(33) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
 html[lang="ar"] .grid .card:nth-child(34) .doctor-media{background-image:url("https://cdn.prod.website-files.com/659c9d2768dc328628d30423/6622b6addc794b35764ca309_Dr%20Vipul%20Vijay.jpg")!important;background-size:contain!important;background-position:center!important}
 html[lang="ar"] .grid .card:nth-child(34) .doctor-media img[src*="portrait-unavailable.svg"]{opacity:0!important}
+
+/* Arabic doctor profiles: suppress only the decorative mobile chat bubble. */
+@media (max-width: 900px) {
+  html[lang="ar"]:has(link[rel="canonical"][href^="https://elajmeindia.com/ar/doctors/"]:not([href="https://elajmeindia.com/ar/doctors/"])) .master-mobile-whatsapp::after {
+    content: none !important;
+    display: none !important;
+  }
+}
