@@ -456,10 +456,10 @@ jobs:
             if(lang==='en'&&slug!==slugs[0])continue;
             const r={lang,slug,width,height,errors:[]},check=(ok,msg)=>{if(!ok)r.errors.push(msg)};
             const context=await browser.newContext({viewport:{width,height},serviceWorkers:'block',...(process.env.LOCAL_PROXY?{ignoreHTTPSErrors:true}:{})});
-            let handoffs=0;
+            let handoffs=0,resolveHandoff;const handoffPromise=new Promise(resolve=>{resolveHandoff=resolve});
             await context.route('**/*',route=>{
              const req=route.request(),u=new URL(req.url());
-             if(/(^|\.)(wa\.me|whatsapp\.com)$/.test(u.hostname)){handoffs++;check(u.hostname==='wa.me'&&u.pathname==='/917488955154','Unexpected WhatsApp handoff');return route.abort()}
+             if(/(^|\.)(wa\.me|whatsapp\.com)$/.test(u.hostname)){handoffs++;resolveHandoff();check(u.hostname==='wa.me'&&u.pathname==='/917488955154','Unexpected WhatsApp handoff');return route.abort()}
              if(!['GET','HEAD'].includes(req.method())||/google-analytics|googletagmanager|cloudflareinsights/.test(u.hostname))return route.abort();
              if(patch&&/^\/assets\/css\/(ar-core|doctor-profile|profile-directory)\.css$/.test(u.pathname))return route.fulfill({status:200,contentType:'text/css',body:fs.readFileSync(path.join(patch,u.pathname),'utf8')});
              // Provider-host image availability is covered separately; avoid waiting on unstable remote portraits here.
@@ -482,7 +482,7 @@ jobs:
              r.ctaHit=await ct.evaluate(a=>{const r=a.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;return y>=0&&y<innerHeight&&a.contains(document.elementFromPoint(x,y))});check(r.ctaHit,'CTA centre blocked');
              await p.screenshot({path:`${output}/${lang}-${slug}-${width}-cta.png`,animations:'disabled',mask:[p.locator('main img')]});
              await p.evaluate(()=>scrollTo(0,0));const wa=p.locator(width<=900?'.master-mobile-whatsapp':'.master-actions .master-whatsapp').first();check(await wa.isVisible(),'Actual WhatsApp control hidden');
-             await Promise.all([context.waitForEvent('request',{predicate:q=>new URL(q.url()).hostname==='wa.me',timeout:10000}),wa.click()]);check(handoffs===1,'Expected one intercepted WhatsApp action');
+             await Promise.all([handoffPromise,wa.click()]);check(handoffs===1,'Expected one intercepted WhatsApp action');
             }catch(e){r.errors.push(e.message)}
             results.push(r);console.log(JSON.stringify(r));await context.close();fs.writeFileSync(output+'/results.json',JSON.stringify(results,null,2));
            }
