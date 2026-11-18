@@ -348,6 +348,10 @@ jobs:
                   await email.evaluate(a=>a.addEventListener('click',e=>{e.preventDefault();a.dataset.qaEmailActivated='true'},{once:true}));
                   await email.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');
                   check(await email.evaluate(a=>document.activeElement===a),'Email reachable by Tab');
+                  await email.scrollIntoViewIfNeeded();
+                  const emailGeometry=await email.evaluate(a=>{const r=a.getBoundingClientRect(),s=getComputedStyle(a);return {x:r.x,y:r.y,width:r.width,height:r.height,outline:s.outline,position:s.position,visible:r.top>=0&&r.bottom<=innerHeight&&a.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}});
+                  check(emailGeometry.visible,'Email focus target unobstructed in viewport');
+                  result.observations.email=emailGeometry;
                   check(await email.evaluate(a=>getComputedStyle(a).outlineStyle!=='none'&&parseFloat(getComputedStyle(a).outlineWidth)>=2),'Visible email keyboard focus');
                   await page.screenshot({path:`qa-artifacts/${id}-email-focus.png`,animations:'disabled'});
                   await page.keyboard.press('Enter');
