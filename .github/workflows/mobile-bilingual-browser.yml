@@ -12,9 +12,12 @@ on:
       - 'treatments/**'
       - 'ar/treatments/**'
       - 'assets/images/doctors/portrait-unavailable.svg'
+      - 'assets/css/arabic-doctor-profile-controls.css'
   pull_request:
     paths:
       - '.github/workflows/mobile-bilingual-browser.yml'
+      - 'assets/css/arabic-doctor-profile-controls.css'
+      - 'ar/doctors/**'
   workflow_dispatch:
   schedule:
     - cron: '43 4 * * *'
@@ -429,6 +432,60 @@ jobs:
             if(process.env.GITHUB_STEP_SUMMARY)fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Responsive production verification\n\n|Language|Viewport|Result|\n|---|---|---|\n'+results.map(r=>`|${r.lang}|${r.width} × ${r.height}|${r.errors.length?r.errors.join('; '):'PASS'}|`).join('\n')+'\n\nScreenshots and measurements are in the responsive evidence artifact. Automated geometry checks require visual review; they do not establish a quality score.\n');
             if(results.some(r=>r.errors.length))process.exitCode=1;
           })().catch(error=>{console.error(error);process.exitCode=1});
+          JS
+      - name: Verify Arabic doctor-profile decorative bubble suppression
+        if: ${{ !cancelled() }}
+        env:
+          SITE_ORIGIN: https://elajmeindia.com
+          PATCH_CSS_ROOT: .
+          OUTPUT_DIR: qa-artifacts/profile-bubble
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs'),path=require('path');
+          (async()=>{
+           const origin=process.env.SITE_ORIGIN||'https://elajmeindia.com',output=process.env.OUTPUT_DIR||'issue267-evidence',patch=process.env.PATCH_CSS_ROOT,baseline=process.env.EXPECT_BUBBLE==='1',results=[];
+           const slugs=process.env.PROFILE_SLUGS?.split(',')||['dr-nishchint-jain','dr-kanchan-bansode','dr-achal-bhagat','dr-rajiva-gupta'];
+           fs.mkdirSync(output,{recursive:true});
+           const launch={headless:true};if(process.env.LOCAL_PROXY)launch.proxy={server:process.env.HTTPS_PROXY||process.env.HTTP_PROXY};
+           const browser=await chromium.launch(launch);
+           for(const [width,height] of [[375,812],[390,844],[768,1024],[1363,936]])for(const slug of slugs)for(const lang of ['ar','en']){
+            // English control is needed once per viewport; the Arabic cases cover each template.
+            if(lang==='en'&&slug!==slugs[0])continue;
+            const r={lang,slug,width,height,errors:[]},check=(ok,msg)=>{if(!ok)r.errors.push(msg)};
+            const context=await browser.newContext({viewport:{width,height},serviceWorkers:'block',...(process.env.LOCAL_PROXY?{ignoreHTTPSErrors:true}:{})});
+            let handoffs=0,resolveHandoff;const handoffPromise=new Promise(resolve=>{resolveHandoff=resolve});
+            await context.route('**/*',route=>{
+             const req=route.request(),u=new URL(req.url());
+             if(/(^|\.)(wa\.me|whatsapp\.com)$/.test(u.hostname)){handoffs++;resolveHandoff();check(u.hostname==='wa.me'&&u.pathname==='/917488955154','Unexpected WhatsApp handoff');return route.abort()}
+             if(!['GET','HEAD'].includes(req.method())||/google-analytics|googletagmanager|cloudflareinsights/.test(u.hostname))return route.abort();
+             if(patch&&u.origin===origin&&/^\/ar\/doctors\/[^/]+\/$/.test(u.pathname)&&req.isNavigationRequest())return route.fulfill({status:200,contentType:'text/html',body:fs.readFileSync(path.join(patch,u.pathname,'index.html'),'utf8')});
+             if(patch&&u.pathname==='/assets/css/arabic-doctor-profile-controls.css')return route.fulfill({status:200,contentType:'text/css',body:fs.readFileSync(path.join(patch,u.pathname),'utf8')});
+             // Provider-host image availability is covered separately; avoid waiting on unstable remote portraits here.
+             if(req.resourceType()==='image'&&u.hostname!==new URL(origin).hostname)return route.abort();
+             return route.continue();
+            });
+            const p=await context.newPage();p.setDefaultTimeout(10000);
+            try{
+             const response=await p.goto(origin+(lang==='ar'?'/ar':'')+'/doctors/'+slug+'/',{waitUntil:'domcontentloaded',timeout:40000});check(response?.status()===200,'Profile status');
+             await p.evaluate(()=>document.fonts.ready);await p.locator('.master-mobile-menu').waitFor({state:'attached'});await p.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,0)});
+             r.geometry=await p.evaluate(()=>{const el=document.querySelector('.master-mobile-whatsapp'),s=getComputedStyle(el,'::after'),rect=e=>{const q=e.getBoundingClientRect();return {x:q.x,y:q.y,width:q.width,height:q.height}},ctas=[...document.querySelectorAll('main a[href*="#enquiry"]')];return {scrollY,overflow:document.documentElement.scrollWidth>innerWidth+2,direction:getComputedStyle(document.documentElement).direction,pseudo:{content:s.content,display:s.display,left:s.left,top:s.top,width:s.width,height:s.height},header:rect(document.querySelector('header')),footer:rect(document.querySelector('footer')),ctas:ctas.map(a=>({text:a.innerText,href:a.getAttribute('href'),rect:rect(a)}))}});
+             check(!r.geometry.overflow,'Horizontal overflow');check(r.geometry.direction===(lang==='ar'?'rtl':'ltr'),'Direction');
+             if(lang==='ar'&&width<=900)check((r.geometry.pseudo.display==='none')!==baseline,baseline?'Baseline bubble not reproduced':'Decorative bubble remains');
+             check(r.geometry.ctas.length>0,'Missing enquiry CTA');check(r.geometry.ctas.every(a=>new URL(a.href,origin).origin===origin&&new URL(a.href,origin).pathname===(lang==='ar'?'/ar/':'/')),'Enquiry ownership');
+             const allWA=await p.locator('a[href*="wa.me/"],a[href*="api.whatsapp.com/"]').evaluateAll(es=>es.map(e=>e.href));check(allWA.every(h=>new URL(h).hostname==='wa.me'&&new URL(h).pathname==='/917488955154'),'WhatsApp ownership');
+             const menu=p.locator('.master-mobile-menu').first();
+             if(width<=900){await menu.click();check(await menu.getAttribute('aria-expanded')==='true','Menu did not open');check(await p.locator('.master-nav a:visible').count()===8,'Eight navigation links');await menu.click();check(await menu.getAttribute('aria-expanded')==='false','Menu did not close')}
+             await p.screenshot({path:`${output}/${lang}-${slug}-${width}-top.png`,animations:'disabled',mask:[p.locator('main img') ]});
+             const ct=p.locator('main a[href*="#enquiry"]').first();await ct.evaluate(e=>e.scrollIntoView({block:'center'}));
+             r.ctaHit=await ct.evaluate(a=>{const r=a.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;return y>=0&&y<innerHeight&&a.contains(document.elementFromPoint(x,y))});check(r.ctaHit,'CTA centre blocked');
+             await p.screenshot({path:`${output}/${lang}-${slug}-${width}-cta.png`,animations:'disabled',mask:[p.locator('main img')]});
+             await p.evaluate(()=>scrollTo(0,0));const wa=p.locator(width<=900?'.master-mobile-whatsapp':'.master-actions .master-whatsapp').first();check(await wa.isVisible(),'Actual WhatsApp control hidden');
+             let timer;try{await Promise.race([Promise.all([handoffPromise,wa.click()]),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('WhatsApp interception timed out')),10000)})])}finally{clearTimeout(timer)}check(handoffs===1,'Expected one intercepted WhatsApp action');
+            }catch(e){r.errors.push(e.message)}
+            results.push(r);console.log(JSON.stringify(r));await context.close();fs.writeFileSync(output+'/results.json',JSON.stringify(results,null,2));
+           }
+           await browser.close();if(results.some(r=>r.errors.length))process.exitCode=1;
+          })().catch(e=>{console.error(e);process.exitCode=1});
           JS
       - name: Upload responsive evidence
         if: always()

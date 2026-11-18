@@ -1,0 +1,8 @@
+
+/* Arabic doctor profiles: suppress only the decorative mobile chat bubble. */
+@media (max-width: 900px) {
+  html[lang="ar"]:has(link[rel="canonical"][href^="https://elajmeindia.com/ar/doctors/"]:not([href="https://elajmeindia.com/ar/doctors/"])) .master-mobile-whatsapp::after {
+    content: none !important;
+    display: none !important;
+  }
+}
