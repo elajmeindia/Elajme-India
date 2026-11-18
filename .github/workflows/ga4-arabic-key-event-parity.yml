@@ -12,6 +12,68 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Verify strict homepage revision comparison
+        run: |
+          cat > /tmp/elajme-homepage-compare.py <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+          
+          EMAIL = "care@elajmeindia.com"
+          HREF = re.compile(r'href="/cdn-cgi/l/email-protection#([0-9a-fA-F]+)"')
+          DECODER = re.compile(r'<script(?: defer(?:="")?)? data-cfasync="false"(?: defer(?:="")?)? src="/cdn-cgi/scripts/[0-9a-fA-F]+/cloudflare-static/email-decode\.min\.js"(?: defer(?:="")?)?></script>')
+          
+          def normalized_delivery(html):
+              def restore(match):
+                  data = bytes.fromhex(match.group(1))
+                  if len(data) < 2:
+                      raise ValueError("Invalid Cloudflare email payload")
+                  address = bytes(value ^ data[0] for value in data[1:]).decode("utf-8")
+                  if address != EMAIL:
+                      raise ValueError("Unexpected protected email destination")
+                  return 'href="mailto:' + address + '"'
+              html, addresses = HREF.subn(restore, html)
+              html, scripts = DECODER.subn("", html)
+              if addresses > 1 or scripts > 1 or (scripts and not addresses):
+                  raise ValueError("Unexpected email-protection transformation")
+              return html
+          
+          def self_test():
+              source = '<a href="https://wa.me/917488955154">WhatsApp</a><a href="mailto:' + EMAIL + '">mail</a>'
+              assert normalized_delivery(source) == source
+              for key in [7, 189]:
+                  payload = bytes([key]) + bytes(value ^ key for value in EMAIL.encode())
+                  live = source.replace('href="mailto:' + EMAIL + '"', 'href="/cdn-cgi/l/email-protection#' + payload.hex() + '"')
+                  live += '<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>'
+                  assert normalized_delivery(live) == source
+                  assert normalized_delivery(live.replace('data-cfasync="false" src=', 'data-cfasync="false" defer src=')) == source
+                  assert normalized_delivery(live.replace("917488955154", "111111111111")) != source
+                  assert normalized_delivery(live + '<script src="/unapproved.js"></script>') != source
+                  assert normalized_delivery(live + '<meta name="robots" content="noindex">') != source
+              bad = "wrong@example.com"
+              payload = bytes([7]) + bytes(value ^ 7 for value in bad.encode())
+              try:
+                  normalized_delivery('href="/cdn-cgi/l/email-protection#' + payload.hex() + '"')
+              except ValueError:
+                  pass
+              else:
+                  raise AssertionError("Unexpected email destination was accepted")
+              print("Revision comparator passed: plain/obfuscated HTML accepted; changed routes, metadata, scripts and email rejected")
+          
+          if __name__ == "__main__":
+              if sys.argv[1:] == ["--self-test"]:
+                  self_test()
+              else:
+                  expected = Path(sys.argv[1]).read_bytes().decode("utf-8")
+                  try:
+                      actual = normalized_delivery(Path(sys.argv[2]).read_bytes().decode("utf-8"))
+                  except (ValueError, UnicodeError):
+                      sys.exit(1)
+                  if actual != expected:
+                      print("Homepage differs beyond the known Cloudflare email transformation")
+                      sys.exit(1)
+          PY
+          python3 /tmp/elajme-homepage-compare.py --self-test
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -93,7 +155,8 @@ jobs:
           for attempt in {1..12}; do
             if curl -fsS --max-time 10 "$SITE_ORIGIN/" -o /tmp/elajme-en.html &&
                curl -fsS --max-time 10 "$SITE_ORIGIN/ar/" -o /tmp/elajme-ar.html &&
-               cmp -s index.html /tmp/elajme-en.html && cmp -s ar/index.html /tmp/elajme-ar.html; then
+               python3 /tmp/elajme-homepage-compare.py index.html /tmp/elajme-en.html &&
+               python3 /tmp/elajme-homepage-compare.py ar/index.html /tmp/elajme-ar.html; then
               ready=true
               break
             fi
