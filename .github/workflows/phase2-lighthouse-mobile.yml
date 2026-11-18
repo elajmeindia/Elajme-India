@@ -3,96 +3,45 @@ on:
   pull_request:
     paths:
       - '.github/workflows/phase2-lighthouse-mobile.yml'
-  workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'index.html'
-      - 'styles.css'
-      - 'script.js'
-      - 'assets/css/**'
-      - 'assets/js/**'
-      - '.github/workflows/phase2-lighthouse-mobile.yml'
+permissions:
+  contents: read
 jobs:
-  lighthouse:
+  applied-performance:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install Lighthouse and Chromium
+      - name: Install pinned browser runtime
         run: |
-          npm install --no-save lighthouse@12.8.2 playwright@1.56.1
+          npm install --no-save playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Measure live English homepage on mobile
+          git fetch origin 38c38963886656d49643083895d40d2aae35eb09 bf6b436ac1b64f56156dbfde6ea9589008e2e5c0
+      - name: Same-origin cold-cache applied network and CPU comparison
         run: |
-          mkdir -p audit-results
-          CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
-          export CHROME_PATH
-          npx lighthouse https://elajmeindia.com/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --save-assets --output=json --output-path=audit-results/lighthouse-mobile.json --quiet
-          node - <<'NODE'
-          const r=require('./audit-results/lighthouse-mobile.json');
-          const scores=Object.fromEntries(Object.entries(r.categories).map(([k,v])=>[k,Math.round(v.score*100)]));
-          const metrics={cls:r.audits['cumulative-layout-shift']?.numericValue,lcp:r.audits['largest-contentful-paint']?.numericValue};
-          const diagnostics={fcp:r.audits['first-contentful-paint']?.numericValue,tbt:r.audits['total-blocking-time']?.numericValue,speedIndex:r.audits['speed-index']?.numericValue,lcpElement:r.audits['largest-contentful-paint-element']?.details?.items?.[0]?.node?.selector||null,lcpBreakdown:r.audits['lcp-breakdown-insight']?.details?.items?.slice(0,3)||[],renderBlocking:r.audits['render-blocking-insight']?.details?.items?.slice(0,8)||[],serverResponse:r.audits['server-response-time']?.numericValue};
-          const failures=Object.values(r.audits).filter(a=>a.score!==null&&a.score<1&&['color-contrast','target-size','errors-in-console'].includes(a.id)).map(a=>({id:a.id,title:a.title,details:a.details?.items?.slice(0,12)}));
-          console.log(JSON.stringify({scores,metrics,diagnostics,failures},null,2));
-          require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Lighthouse mobile\n'+JSON.stringify({scores,metrics,diagnostics,failures},null,2)+'\n');
+          node <<'NODE'
+          const fs=require('fs'),http=require('http'),path=require('path'),{execFileSync}=require('child_process'),{chromium}=require('playwright');
+          (async()=>{const out='audit-results';fs.mkdirSync(out,{recursive:true});const baseline='38c38963886656d49643083895d40d2aae35eb09',candidate='bf6b436ac1b64f56156dbfde6ea9589008e2e5c0';let variant='baseline';
+          const html={};for(const [name,sha]of Object.entries({baseline,candidate}))for(const lang of ['en','ar'])html[name+lang]=execFileSync('git',['show',sha+':'+(lang==='ar'?'ar/index.html':'index.html')],{encoding:'utf8'});
+          if(html.baselinear!==html.candidatear)throw Error('Arabic control changed');if(html.candidateen.replace('<link rel="stylesheet" href="/assets/css/homepage-enhancements.css" data-homepage-enhancements>\n','')!==html.baselineen)throw Error('Unexpected candidate diff');
+          const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://localhost');let body,type;if(u.pathname==='/'||u.pathname==='/ar/'){body=html[variant+(u.pathname==='/ar/'?'ar':'en')];type='text/html'}else{const f=path.resolve('.','.'+decodeURIComponent(u.pathname));if(!f.startsWith(process.cwd()+path.sep)){res.writeHead(403);return res.end()}try{body=fs.readFileSync(f)}catch{res.writeHead(404);return res.end()}type=({'.css':'text/css','.js':'application/javascript','.webp':'image/webp','.png':'image/png','.svg':'image/svg+xml','.jpg':'image/jpeg'})[path.extname(f)]||'application/octet-stream'}res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store'});res.end(body)});await new Promise(r=>server.listen(8080,'127.0.0.1',r));
+          const browser=await chromium.launch({headless:true});const env={baseline,candidate,chromium:browser.version(),playwright:require('playwright/package.json').version,origin:'http://127.0.0.1:8080',network:{latencyMs:150,downloadBytesPerSecond:200000,uploadBytesPerSecond:93750},cpuSlowdown:4,coldCache:true,policy:{samplesPerGroup:5,medianIncreaseLimit:'max(100 ms,5%)',rangeLimit:'30% of median',tabletCandidateClsLimit:0.1},scope:'Controlled same-origin lab comparison; no Cloudflare edge latency; third-party scripts retained; collection and message destinations blocked'};fs.writeFileSync(out+'/environment.json',JSON.stringify(env,null,2));console.log('ENVIRONMENT',JSON.stringify(env));const results=[],attempts=[];
+          for(const width of [390,768])for(let round=1;round<=5;round++)for(const lang of (width===768?['en']:['en','ar']))for(const name of (round%2===0?['candidate','baseline']:['baseline','candidate'])){variant=name;const id=`${lang}-${width}-${name}-${round}`,context=await browser.newContext({viewport:{width,height:width===390?844:1024},deviceScaleFactor:1,isMobile:width===390,hasTouch:true,serviceWorkers:'block'}),page=await context.newPage(),cdp=await context.newCDPSession(page),network=[];try{
+          await cdp.send('Network.enable');await cdp.send('Network.setCacheDisabled',{cacheDisabled:true});await cdp.send('Network.setBlockedURLs',{urls:['*google-analytics.com/*','*analytics.google.com/*','*doubleclick.net/*','*cloudflareinsights.com/*','*google.com/g/collect*','*wa.me/*','*whatsapp.com/*']});await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:150,downloadThroughput:200000,uploadThroughput:93750,connectionType:'cellular4g'});await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});cdp.on('Network.responseReceived',e=>network.push({url:e.response.url,status:e.response.status,type:e.type,protocol:e.response.protocol,timing:e.response.timing}));cdp.on('Network.loadingFailed',e=>network.push({failed:true,error:e.errorText,blockedReason:e.blockedReason,type:e.type}));
+          await page.addInitScript(()=>{window.__perf={lcp:[],shifts:[]};new PerformanceObserver(l=>l.getEntries().forEach(e=>window.__perf.lcp.push({time:e.startTime,element:e.element?.tagName,url:e.url}))).observe({type:'largest-contentful-paint',buffered:true});new PerformanceObserver(l=>l.getEntries().forEach(e=>window.__perf.shifts.push({time:e.startTime,value:e.value,recent:e.hadRecentInput}))).observe({type:'layout-shift',buffered:true})});
+          await cdp.send('Tracing.start',{categories:'devtools.timeline,blink.user_timing,loading,disabled-by-default-devtools.timeline',transferMode:'ReturnAsStream'});const response=await page.goto('http://127.0.0.1:8080'+(lang==='ar'?'/ar/':'/'),{waitUntil:'domcontentloaded',timeout:60000});await page.waitForTimeout(8000);const r=await page.evaluate(()=>{const p=window.__perf,n=performance.getEntriesByType('navigation')[0],f=performance.getEntriesByName('first-contentful-paint')[0];let max=0,sum=0,start=0,last=-Infinity;for(const s of p.shifts.filter(x=>!x.recent)){if(s.time-last>1000||s.time-start>5000){sum=s.value;start=s.time}else sum+=s.value;last=s.time;max=Math.max(max,sum)}return{lcp:p.lcp.at(-1)?.time,lcpElement:p.lcp.at(-1)?.element,cls:max,fcp:f?.startTime,ttfb:n.responseStart-n.startTime,shifts:p.shifts,resources:performance.getEntriesByType('resource').map(e=>({url:e.name,start:e.startTime,end:e.responseEnd,duration:e.duration,type:e.initiatorType}))}});await page.screenshot({path:`${out}/${id}.png`});const complete=new Promise(resolve=>cdp.once('Tracing.tracingComplete',resolve));await cdp.send('Tracing.end');const {stream}=await complete;let trace='';for(;;){const chunk=await cdp.send('IO.read',{handle:stream});trace+=chunk.data;if(chunk.eof)break}await cdp.send('IO.close',{handle:stream});fs.writeFileSync(`${out}/${id}.trace.json`,trace);fs.writeFileSync(`${out}/${id}.network.json`,JSON.stringify(network,null,2));if(response.status()!==200||!r.lcp||!r.fcp||r.lcpElement!=='H1')throw Error('Invalid page/paint measurement');results.push({id,width,lang,variant:name,round,...r});attempts.push({id,valid:true});console.log('APPLIED',JSON.stringify({id,lcp:r.lcp,cls:r.cls,fcp:r.fcp,ttfb:r.ttfb}));
+          }catch(e){attempts.push({id,valid:false,error:e.message});console.error('FAILED_ATTEMPT',id,e.message)}finally{fs.writeFileSync(out+'/results.json',JSON.stringify(results,null,2));fs.writeFileSync(out+'/attempts.json',JSON.stringify(attempts,null,2));await context.close()}}
+          await browser.close();await new Promise(r=>server.close(r));const groups=[];for(const width of [390,768])for(const lang of(width===768?['en']:['en','ar']))for(const name of['baseline','candidate']){const a=results.filter(r=>r.width===width&&r.lang===lang&&r.variant===name),median=v=>v.slice().sort((a,b)=>a-b)[Math.floor(v.length/2)];const g={width,lang,variant:name,count:a.length};for(const metric of['lcp','cls','fcp','ttfb']){const vals=a.map(r=>r[metric]);g[metric]={samples:vals,median:median(vals),range:Math.max(...vals)-Math.min(...vals)}}g.stable=g.count===5&&g.lcp.range<=g.lcp.median*.3;groups.push(g)}let pass=attempts.every(a=>a.valid)&&groups.every(g=>g.stable);for(const width of[390,768])for(const lang of(width===768?['en']:['en','ar'])){const b=groups.find(g=>g.width===width&&g.lang===lang&&g.variant==='baseline'),c=groups.find(g=>g.width===width&&g.lang===lang&&g.variant==='candidate');if(c.lcp.median-b.lcp.median>Math.max(100,b.lcp.median*.05))pass=false;if(lang==='ar'&&Math.abs(c.lcp.median-b.lcp.median)>Math.max(100,b.lcp.median*.05))pass=false;if(width===768&&c.cls.samples.some(v=>v>=.1))pass=false}const summary={environment:env,groups,attempts,decision:pass?'PASS':'INCONCLUSIVE_OR_FAIL'};fs.writeFileSync(out+'/summary.json',JSON.stringify(summary,null,2));console.log('SUMMARY',JSON.stringify(summary));fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,JSON.stringify(summary,null,2));if(!pass)process.exitCode=1;
+          })().catch(e=>{console.error(e);process.exitCode=1});
+
           NODE
-      - name: Repeat mobile LCP measurement for consistency
-        run: |
-          CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
-          export CHROME_PATH
-          for n in 2 3; do
-            for attempt in 1 2 3; do
-              if npx lighthouse https://elajmeindia.com/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --save-assets --output=json --output-path="audit-results/lighthouse-mobile-$n.json" --quiet; then
-                break
-              fi
-              if [ "$attempt" -eq 3 ]; then exit 1; fi
-              sleep 5
-            done
-          done
-          node - <<'NODE'
-          const fs=require('fs');
-          const files=['audit-results/lighthouse-mobile.json','audit-results/lighthouse-mobile-2.json','audit-results/lighthouse-mobile-3.json'];
-          const samples=files.map((f,i)=>{
-            const r=JSON.parse(fs.readFileSync(f));
-            const lcp=r.audits['largest-contentful-paint'];
-            const breakdown=r.audits['lcp-breakdown-insight']?.details?.items||[];
-            const element=breakdown.find(x=>x.type==='node');
-            const subparts=breakdown.find(x=>x.type==='table')?.items||[];
-            const blocking=r.audits['render-blocking-insight']?.details?.items||[];
-            return {run:i+1,performance:Math.round(r.categories.performance.score*100),lcpMs:lcp?.numericValue,cls:r.audits['cumulative-layout-shift']?.numericValue,fcpMs:r.audits['first-contentful-paint']?.numericValue,tbtMs:r.audits['total-blocking-time']?.numericValue,ttfbMs:r.audits['server-response-time']?.numericValue,lcpElement:element?.selector||null,lcpSubparts:subparts.map(x=>({name:x.subpart,ms:x.duration})),renderBlocking: blocking.slice(0,5).map(x=>({url:x.url,bytes:x.totalBytes,wastedMs:x.wastedMs}))};
-          });
-          const lcp=samples.map(s=>s.lcpMs).sort((a,b)=>a-b);
-          const passing=samples.filter(s=>s.lcpMs<2500).length;
-          const rangeMs=Math.max(...samples.map(s=>s.lcpMs))-Math.min(...samples.map(s=>s.lcpMs));
-          console.log(JSON.stringify({samples,medianLcpMs:lcp[1],under2500:passing+'/3',rangeMs,consistentUnder2500:passing===3},null,2));
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## Repeated mobile LCP samples\n'+JSON.stringify({samples,medianLcpMs:lcp[1]},null,2)+'\n');
-          NODE
-      - name: Measure live Arabic homepage on mobile
-        run: |
-          CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
-          export CHROME_PATH
-          npx lighthouse https://elajmeindia.com/ar/ --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --save-assets --output=json --output-path=audit-results/lighthouse-ar-mobile.json --quiet
-          node - <<'NODE'
-          const fs=require('fs');
-          const r=JSON.parse(fs.readFileSync('audit-results/lighthouse-ar-mobile.json'));
-          const scores=Object.fromEntries(Object.entries(r.categories).map(([k,v])=>[k,Math.round(v.score*100)]));
-          const breakdown=r.audits['lcp-breakdown-insight']?.details?.items||[];
-          const blocking=r.audits['render-blocking-insight']?.details?.items||[];
-          const result={scores,lcpMs:r.audits['largest-contentful-paint']?.numericValue,cls:r.audits['cumulative-layout-shift']?.numericValue,fcpMs:r.audits['first-contentful-paint']?.numericValue,ttfbMs:r.audits['server-response-time']?.numericValue,lcpElement:breakdown.find(x=>x.type==='node')?.selector||null,renderBlocking:blocking.slice(0,8).map(x=>({url:x.url,bytes:x.totalBytes,wastedMs:x.wastedMs}))};
-          console.log(JSON.stringify(result,null,2));
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## Arabic homepage Lighthouse mobile\n'+JSON.stringify(result,null,2)+'\n');
-          NODE
-      - name: Upload Lighthouse JSON
+      - name: Retain all applied measurements and traces
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: phase2-lighthouse-mobile
-          path: |
-            audit-results/
-          if-no-files-found: ignore
-
+          name: applied-same-origin-evidence
+          path: audit-results/
