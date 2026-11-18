@@ -6,57 +6,42 @@ on:
 permissions:
   contents: read
 jobs:
-  lighthouse:
+  applied-performance:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install existing Lighthouse and Chromium versions
+      - name: Install pinned browser runtime
         run: |
-          npm install --no-save lighthouse@12.8.2 playwright@1.56.1
+          npm install --no-save playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Compare pinned baseline and CLS-fix previews on the same runner
+          git fetch origin 38c38963886656d49643083895d40d2aae35eb09 bf6b436ac1b64f56156dbfde6ea9589008e2e5c0
+      - name: Same-origin cold-cache applied network and CPU comparison
         run: |
-          mkdir -p audit-results
-          export CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
           node <<'NODE'
-          (async()=>{
-          const fs=require('fs'),{execFileSync}=require('child_process');
-          const results=[],attempts=[];
-          const origins={baseline:'https://0cba6f08.elajme-india.pages.dev',candidate:'https://b08bf7af.elajme-india.pages.dev'};
-          const environment={lighthouse:require('./node_modules/lighthouse/package.json').version,playwright:require('./node_modules/playwright/package.json').version,chrome:execFileSync(process.env.CHROME_PATH,['--version'],{encoding:'utf8'}).trim(),runner:process.env.RUNNER_NAME,settings:{width:390,height:844,dpr:1,throttling:'simulate'},policy:{validPerGroup:5,maxAttemptsPerSample:3,allowedRetryErrors:['NO_NAVSTART'],materialMedianIncrease:'max(100ms,5%)',maximumGroupRange:'30% of median',arabicControlMedianDifference:'max(100ms,5%)'}};
-          fs.writeFileSync('audit-results/environment.json',JSON.stringify(environment,null,2));console.log('ENVIRONMENT',JSON.stringify(environment));
-          for(const [name,origin] of Object.entries(origins))for(const path of ['/','/ar/']){const response=await fetch(origin+path),html=await response.text();if(response.status!==200||!html.includes('<h1>'))throw Error('Preview preflight failed '+name+path);console.log('PREFLIGHT',JSON.stringify({name,path,status:response.status,headers:Object.fromEntries(['content-type','cache-control','cf-cache-status','age','etag'].map(k=>[k,response.headers.get(k)])),hasStaticEnhancement:html.includes('data-homepage-enhancements')}))}
-          for(let round=1;round<=5;round++)for(const lang of ['en','ar'])for(const variant of (round%2===0?['candidate','baseline']:['baseline','candidate'])){
-           const url=origins[variant]+(lang==='ar'?'/ar/':'/'),id=`${lang}-${variant}-${round}`;let valid=false;
-           for(let attempt=1;attempt<=3;attempt++){
-            const file=`audit-results/${id}-attempt-${attempt}.json`,log=`audit-results/${id}-attempt-${attempt}.log`;
-            const flags=['--only-categories=performance,accessibility,best-practices,seo','--form-factor=mobile','--screenEmulation.mobile','--screenEmulation.width=390','--screenEmulation.height=844','--screenEmulation.deviceScaleFactor=1','--throttling-method=simulate','--chrome-flags=--headless --no-sandbox --disable-dev-shm-usage','--save-assets','--output=json','--output-path='+file,'--quiet','--blocked-url-patterns=*google-analytics.com/*','--blocked-url-patterns=*analytics.google.com/*','--blocked-url-patterns=*doubleclick.net/*','--blocked-url-patterns=*cloudflareinsights.com/*'];
-            let commandError=null;const fd=fs.openSync(log,'w');try{execFileSync('./node_modules/.bin/lighthouse',[url,...flags],{stdio:['ignore',fd,fd],timeout:150000})}catch(e){commandError=String(e.message)}finally{fs.closeSync(fd)}
-            const r=fs.existsSync(file)?JSON.parse(fs.readFileSync(file)):null,error=r?.runtimeError?.code||(commandError?'COMMAND_FAILED':null);
-            if(error){const record={id,lang,variant,round,attempt,excluded:true,reason:error,commandError};attempts.push(record);fs.writeFileSync('audit-results/attempts.json',JSON.stringify(attempts,null,2));console.log('EXCLUDED',JSON.stringify(record));if(error==='NO_NAVSTART'&&attempt<3)continue;throw Error('Invalid sample '+id+': '+error)}
-            const a=r.audits;if(a['http-status-code']?.score!==1)throw Error('HTTP failure '+id);
-            const element=a['lcp-breakdown-insight']?.details?.items?.find(x=>x.type==='node')?.selector;
-            if(!element?.endsWith('h1'))throw Error('Unexpected LCP document '+id);
-            const result={id,lang,variant,round,attempt,url,version:r.lighthouseVersion,hostBrowser:r.environment.hostUserAgent,emulatedUA:r.environment.networkUserAgent,benchmarkIndex:r.environment.benchmarkIndex,lcpMs:a['largest-contentful-paint'].numericValue,cls:a['cumulative-layout-shift'].numericValue,tbtMs:a['total-blocking-time'].numericValue,ttfbMs:a['server-response-time'].numericValue,scores:Object.fromEntries(Object.entries(r.categories).map(([k,v])=>[k,Math.round(v.score*100)])),lcpElement:element};
-            if(!Number.isFinite(result.lcpMs)||result.lcpMs<=0)throw Error('Invalid LCP '+id);results.push(result);attempts.push({id,attempt,excluded:false});fs.writeFileSync('audit-results/paired-results.json',JSON.stringify(results,null,2));fs.writeFileSync('audit-results/attempts.json',JSON.stringify(attempts,null,2));console.log('PAIRED',JSON.stringify(result));valid=true;break;
-           }
-           if(!valid)throw Error('Missing valid sample '+id);
-          }
-          const median=a=>a.slice().sort((a,b)=>a-b)[Math.floor(a.length/2)],summary=[];let unstable=false;
-          for(const lang of ['en','ar'])for(const variant of ['baseline','candidate']){const rows=results.filter(r=>r.lang===lang&&r.variant===variant),samples=rows.map(r=>r.lcpMs),m=median(samples),range=Math.max(...samples)-Math.min(...samples),stable=range<=m*.3;unstable||=!stable;summary.push({lang,variant,count:rows.length,lcpSamples:samples,medianLcpMs:m,rangeMs:range,stable,cls:rows.map(r=>r.cls),scores:rows.map(r=>r.scores)})}
-          const get=(l,v)=>summary.find(r=>r.lang===l&&r.variant===v).medianLcpMs;
-          const englishDelta=get('en','candidate')-get('en','baseline'),englishLimit=Math.max(100,get('en','baseline')*.05),controlDelta=Math.abs(get('ar','candidate')-get('ar','baseline')),controlLimit=Math.max(100,get('ar','baseline')*.05);
-          const gate={validCounts:summary.every(r=>r.count===5),unstable,englishDeltaMs:englishDelta,englishLimitMs:englishLimit,arabicControlDeltaMs:controlDelta,arabicControlLimitMs:controlLimit,pass:!unstable&&englishDelta<=englishLimit&&controlDelta<=controlLimit};
-          fs.writeFileSync('audit-results/summary.json',JSON.stringify({environment,summary,gate,attempts},null,2));console.log('SUMMARY',JSON.stringify({summary,gate}));fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Five-sample paired mobile results\n\n'+JSON.stringify({environment,summary,gate,excluded:attempts.filter(x=>x.excluded)},null,2)+'\n\nAll valid slow samples are retained. Only NO_NAVSTART recording failures receive bounded retries. Preview noindex affects SEO, not production SEO. Do not merge this test-only branch.\n');if(!gate.pass)throw Error('Performance acceptance unresolved: see summary.json');
+          const fs=require('fs'),http=require('http'),path=require('path'),{execFileSync}=require('child_process'),{chromium}=require('playwright');
+          (async()=>{const out='audit-results';fs.mkdirSync(out,{recursive:true});const baseline='38c38963886656d49643083895d40d2aae35eb09',candidate='bf6b436ac1b64f56156dbfde6ea9589008e2e5c0';let variant='baseline';
+          const html={};for(const [name,sha]of Object.entries({baseline,candidate}))for(const lang of ['en','ar'])html[name+lang]=execFileSync('git',['show',sha+':'+(lang==='ar'?'ar/index.html':'index.html')],{encoding:'utf8'});
+          if(html.baselinear!==html.candidatear)throw Error('Arabic control changed');if(html.candidateen.replace('<link rel="stylesheet" href="/assets/css/homepage-enhancements.css" data-homepage-enhancements>\n','')!==html.baselineen)throw Error('Unexpected candidate diff');
+          const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://localhost');let body,type;if(u.pathname==='/'||u.pathname==='/ar/'){body=html[variant+(u.pathname==='/ar/'?'ar':'en')];type='text/html'}else{const f=path.resolve('.','.'+decodeURIComponent(u.pathname));if(!f.startsWith(process.cwd()+path.sep)){res.writeHead(403);return res.end()}try{body=fs.readFileSync(f)}catch{res.writeHead(404);return res.end()}type=({'.css':'text/css','.js':'application/javascript','.webp':'image/webp','.png':'image/png','.svg':'image/svg+xml','.jpg':'image/jpeg'})[path.extname(f)]||'application/octet-stream'}res.writeHead(200,{'Content-Type':type,'Cache-Control':'no-store'});res.end(body)});await new Promise(r=>server.listen(8080,'127.0.0.1',r));
+          const browser=await chromium.launch({headless:true});const env={baseline,candidate,chromium:browser.version(),playwright:require('playwright/package.json').version,origin:'http://127.0.0.1:8080',network:{latencyMs:150,downloadBytesPerSecond:200000,uploadBytesPerSecond:93750},cpuSlowdown:4,coldCache:true,policy:{samplesPerGroup:5,medianIncreaseLimit:'max(100 ms,5%)',rangeLimit:'30% of median',tabletCandidateClsLimit:0.1},scope:'Controlled same-origin lab comparison; no Cloudflare edge latency; third-party scripts retained; collection and message destinations blocked'};fs.writeFileSync(out+'/environment.json',JSON.stringify(env,null,2));console.log('ENVIRONMENT',JSON.stringify(env));const results=[],attempts=[];
+          for(const width of [390,768])for(let round=1;round<=5;round++)for(const lang of (width===768?['en']:['en','ar']))for(const name of (round%2===0?['candidate','baseline']:['baseline','candidate'])){variant=name;const id=`${lang}-${width}-${name}-${round}`,context=await browser.newContext({viewport:{width,height:width===390?844:1024},deviceScaleFactor:1,isMobile:width===390,hasTouch:true,serviceWorkers:'block'}),page=await context.newPage(),cdp=await context.newCDPSession(page),network=[];try{
+          await cdp.send('Network.enable');await cdp.send('Network.setCacheDisabled',{cacheDisabled:true});await cdp.send('Network.setBlockedURLs',{urls:['*google-analytics.com/*','*analytics.google.com/*','*doubleclick.net/*','*cloudflareinsights.com/*','*google.com/g/collect*','*wa.me/*','*whatsapp.com/*']});await cdp.send('Network.emulateNetworkConditions',{offline:false,latency:150,downloadThroughput:200000,uploadThroughput:93750,connectionType:'cellular4g'});await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});cdp.on('Network.responseReceived',e=>network.push({url:e.response.url,status:e.response.status,type:e.type,protocol:e.response.protocol,timing:e.response.timing}));cdp.on('Network.loadingFailed',e=>network.push({failed:true,error:e.errorText,blockedReason:e.blockedReason,type:e.type}));
+          await page.addInitScript(()=>{window.__perf={lcp:[],shifts:[]};new PerformanceObserver(l=>l.getEntries().forEach(e=>window.__perf.lcp.push({time:e.startTime,element:e.element?.tagName,url:e.url}))).observe({type:'largest-contentful-paint',buffered:true});new PerformanceObserver(l=>l.getEntries().forEach(e=>window.__perf.shifts.push({time:e.startTime,value:e.value,recent:e.hadRecentInput}))).observe({type:'layout-shift',buffered:true})});
+          await cdp.send('Tracing.start',{categories:'devtools.timeline,blink.user_timing,loading,disabled-by-default-devtools.timeline',transferMode:'ReturnAsStream'});const response=await page.goto('http://127.0.0.1:8080'+(lang==='ar'?'/ar/':'/'),{waitUntil:'domcontentloaded',timeout:60000});await page.waitForTimeout(8000);const r=await page.evaluate(()=>{const p=window.__perf,n=performance.getEntriesByType('navigation')[0],f=performance.getEntriesByName('first-contentful-paint')[0];let max=0,sum=0,start=0,last=-Infinity;for(const s of p.shifts.filter(x=>!x.recent)){if(s.time-last>1000||s.time-start>5000){sum=s.value;start=s.time}else sum+=s.value;last=s.time;max=Math.max(max,sum)}return{lcp:p.lcp.at(-1)?.time,lcpElement:p.lcp.at(-1)?.element,cls:max,fcp:f?.startTime,ttfb:n.responseStart-n.startTime,shifts:p.shifts,resources:performance.getEntriesByType('resource').map(e=>({url:e.name,start:e.startTime,end:e.responseEnd,duration:e.duration,type:e.initiatorType}))}});await page.screenshot({path:`${out}/${id}.png`});const complete=new Promise(resolve=>cdp.once('Tracing.tracingComplete',resolve));await cdp.send('Tracing.end');const {stream}=await complete;let trace='';for(;;){const chunk=await cdp.send('IO.read',{handle:stream});trace+=chunk.data;if(chunk.eof)break}await cdp.send('IO.close',{handle:stream});fs.writeFileSync(`${out}/${id}.trace.json`,trace);fs.writeFileSync(`${out}/${id}.network.json`,JSON.stringify(network,null,2));if(response.status()!==200||!r.lcp||!r.fcp||r.lcpElement!=='H1')throw Error('Invalid page/paint measurement');results.push({id,width,lang,variant:name,round,...r});attempts.push({id,valid:true});console.log('APPLIED',JSON.stringify({id,lcp:r.lcp,cls:r.cls,fcp:r.fcp,ttfb:r.ttfb}));
+          }catch(e){attempts.push({id,valid:false,error:e.message});console.error('FAILED_ATTEMPT',id,e.message)}finally{fs.writeFileSync(out+'/results.json',JSON.stringify(results,null,2));fs.writeFileSync(out+'/attempts.json',JSON.stringify(attempts,null,2));await context.close()}}
+          await browser.close();await new Promise(r=>server.close(r));const groups=[];for(const width of [390,768])for(const lang of(width===768?['en']:['en','ar']))for(const name of['baseline','candidate']){const a=results.filter(r=>r.width===width&&r.lang===lang&&r.variant===name),median=v=>v.slice().sort((a,b)=>a-b)[Math.floor(v.length/2)];const g={width,lang,variant:name,count:a.length};for(const metric of['lcp','cls','fcp','ttfb']){const vals=a.map(r=>r[metric]);g[metric]={samples:vals,median:median(vals),range:Math.max(...vals)-Math.min(...vals)}}g.stable=g.count===5&&g.lcp.range<=g.lcp.median*.3;groups.push(g)}let pass=attempts.every(a=>a.valid)&&groups.every(g=>g.stable);for(const width of[390,768])for(const lang of(width===768?['en']:['en','ar'])){const b=groups.find(g=>g.width===width&&g.lang===lang&&g.variant==='baseline'),c=groups.find(g=>g.width===width&&g.lang===lang&&g.variant==='candidate');if(c.lcp.median-b.lcp.median>Math.max(100,b.lcp.median*.05))pass=false;if(lang==='ar'&&Math.abs(c.lcp.median-b.lcp.median)>Math.max(100,b.lcp.median*.05))pass=false;if(width===768&&c.cls.samples.some(v=>v>=.1))pass=false}const summary={environment:env,groups,attempts,decision:pass?'PASS':'INCONCLUSIVE_OR_FAIL'};fs.writeFileSync(out+'/summary.json',JSON.stringify(summary,null,2));console.log('SUMMARY',JSON.stringify(summary));fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,JSON.stringify(summary,null,2));if(!pass)process.exitCode=1;
           })().catch(e=>{console.error(e);process.exitCode=1});
+
           NODE
-      - name: Upload comparable Lighthouse evidence
+      - name: Retain all applied measurements and traces
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tablet-cls-paired-lighthouse
+          name: applied-same-origin-evidence
           path: audit-results/
