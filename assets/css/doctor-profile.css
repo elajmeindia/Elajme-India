@@ -22,3 +22,11 @@ body{margin:0;color:var(--ink);background:var(--white);font-family:Inter,ui-sans
 html[lang="ar"] .profile-main{direction:rtl;text-align:right}
 html[lang="ar"] .profile-hero .eyebrow{letter-spacing:0;text-transform:none}
 @media(max-width:700px){.profile-main .container{width:min(100% - 32px,1120px)}.profile-hero{padding:48px 0 42px}.profile-hero h1{font-size:clamp(30px,10vw,42px)}.profile-hero .lead{font-size:16px}.profile-section{padding:38px 0 52px}.profile-section h2{font-size:21px}.profile-main .btn{width:100%;text-align:center}.profile-section .related{flex-direction:column}.profile-section .related a{width:100%}}
+
+/* Arabic doctor profiles: suppress only the decorative mobile chat bubble. */
+@media (max-width: 900px) {
+  html[lang="ar"]:has(link[rel="canonical"][href^="https://elajmeindia.com/ar/doctors/"]:not([href="https://elajmeindia.com/ar/doctors/"])) .master-mobile-whatsapp::after {
+    content: none !important;
+    display: none !important;
+  }
+}
