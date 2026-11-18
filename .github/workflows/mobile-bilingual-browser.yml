@@ -482,7 +482,7 @@ jobs:
              r.ctaHit=await ct.evaluate(a=>{const r=a.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;return y>=0&&y<innerHeight&&a.contains(document.elementFromPoint(x,y))});check(r.ctaHit,'CTA centre blocked');
              await p.screenshot({path:`${output}/${lang}-${slug}-${width}-cta.png`,animations:'disabled',mask:[p.locator('main img')]});
              await p.evaluate(()=>scrollTo(0,0));const wa=p.locator(width<=900?'.master-mobile-whatsapp':'.master-actions .master-whatsapp').first();check(await wa.isVisible(),'Actual WhatsApp control hidden');
-             await Promise.all([handoffPromise,wa.click()]);check(handoffs===1,'Expected one intercepted WhatsApp action');
+             let timer;try{await Promise.race([Promise.all([handoffPromise,wa.click()]),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('WhatsApp interception timed out')),10000)})])}finally{clearTimeout(timer)}check(handoffs===1,'Expected one intercepted WhatsApp action');
             }catch(e){r.errors.push(e.message)}
             results.push(r);console.log(JSON.stringify(r));await context.close();fs.writeFileSync(output+'/results.json',JSON.stringify(results,null,2));
            }
