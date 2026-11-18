@@ -12,15 +12,12 @@ on:
       - 'treatments/**'
       - 'ar/treatments/**'
       - 'assets/images/doctors/portrait-unavailable.svg'
-      - 'assets/css/ar-core.css'
-      - 'assets/css/doctor-profile.css'
-      - 'assets/css/profile-directory.css'
+      - 'assets/css/arabic-doctor-profile-controls.css'
   pull_request:
     paths:
       - '.github/workflows/mobile-bilingual-browser.yml'
-      - 'assets/css/ar-core.css'
-      - 'assets/css/doctor-profile.css'
-      - 'assets/css/profile-directory.css'
+      - 'assets/css/arabic-doctor-profile-controls.css'
+      - 'ar/doctors/**'
   workflow_dispatch:
   schedule:
     - cron: '43 4 * * *'
@@ -461,7 +458,8 @@ jobs:
              const req=route.request(),u=new URL(req.url());
              if(/(^|\.)(wa\.me|whatsapp\.com)$/.test(u.hostname)){handoffs++;resolveHandoff();check(u.hostname==='wa.me'&&u.pathname==='/917488955154','Unexpected WhatsApp handoff');return route.abort()}
              if(!['GET','HEAD'].includes(req.method())||/google-analytics|googletagmanager|cloudflareinsights/.test(u.hostname))return route.abort();
-             if(patch&&/^\/assets\/css\/(ar-core|doctor-profile|profile-directory)\.css$/.test(u.pathname))return route.fulfill({status:200,contentType:'text/css',body:fs.readFileSync(path.join(patch,u.pathname),'utf8')});
+             if(patch&&u.origin===origin&&/^\/ar\/doctors\/[^/]+\/$/.test(u.pathname)&&req.isNavigationRequest())return route.fulfill({status:200,contentType:'text/html',body:fs.readFileSync(path.join(patch,u.pathname,'index.html'),'utf8')});
+             if(patch&&u.pathname==='/assets/css/arabic-doctor-profile-controls.css')return route.fulfill({status:200,contentType:'text/css',body:fs.readFileSync(path.join(patch,u.pathname),'utf8')});
              // Provider-host image availability is covered separately; avoid waiting on unstable remote portraits here.
              if(req.resourceType()==='image'&&u.hostname!==new URL(origin).hostname)return route.abort();
              return route.continue();
