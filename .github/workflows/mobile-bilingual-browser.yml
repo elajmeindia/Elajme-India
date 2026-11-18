@@ -16,6 +16,8 @@ on:
   pull_request:
     paths:
       - '.github/workflows/mobile-bilingual-browser.yml'
+      - 'index.html'
+      - 'ar/index.html'
       - 'assets/css/arabic-doctor-profile-controls.css'
       - 'ar/doctors/**'
   workflow_dispatch:
@@ -312,6 +314,8 @@ jobs:
                 let handoffs=0;
                 await context.route('**/*',route=>{
                   const req=route.request(),url=new URL(req.url());
+                  // PR checks exercise the checked-out homepage HTML before deployment.
+                  if(process.env.GITHUB_EVENT_NAME==='pull_request'&&req.isNavigationRequest()&&url.origin===origin&&['/','/ar/'].includes(url.pathname))return route.fulfill({status:200,contentType:'text/html',body:fs.readFileSync(url.pathname==='/ar/'?'ar/index.html':'index.html','utf8')});
                   if(/(^|\.)((wa\.me)|(whatsapp\.com))$/.test(url.hostname)){
                     handoffs++;
                     check(url.hostname==='wa.me'&&url.pathname==='/917488955154','Unexpected WhatsApp destination');
@@ -330,6 +334,28 @@ jobs:
                   check(await page.locator('html').evaluate(el=>getComputedStyle(el).direction)===(lang==='ar'?'rtl':'ltr'),'Page direction');
                   const logo=page.locator('.master-brand img');
                   check(await logo.isVisible()&&await logo.evaluate(img=>img.complete&&img.naturalWidth>0),'Header logo');
+
+                  const email=page.locator('.enquiry-copy > .enquiry-email');
+                  check(await email.count()===1,'One homepage email icon');
+                  check(await email.getAttribute('href')==='mailto:care@elajmeindia.com','Official email destination');
+                  check(await email.getAttribute('aria-label')===(lang==='ar'?'مراسلة علاج مي إنديا':'Email Elajme India'),'Email accessible name');
+                  check((await email.textContent()).trim()==='','Email icon has no visible text');
+                  check(await email.locator('svg[aria-hidden="true"]').count()===1,'Decorative envelope hidden from assistive technology');
+                  const emailBox=await email.boundingBox();
+                  check(await email.isVisible()&&emailBox?.width>=44&&emailBox?.height>=44,'Email tap target');
+                  check(await email.evaluate(el=>!['fixed','absolute'].includes(getComputedStyle(el).position)),'Email stays in page flow');
+                  // Prevent a mail-client launch; keyboard activation must target the official link.
+                  await email.evaluate(a=>a.addEventListener('click',e=>{e.preventDefault();a.dataset.qaEmailActivated='true'},{once:true}));
+                  await email.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');
+                  check(await email.evaluate(a=>document.activeElement===a),'Email reachable by Tab');
+                  await email.scrollIntoViewIfNeeded();
+                  const emailGeometry=await email.evaluate(a=>{const r=a.getBoundingClientRect(),s=getComputedStyle(a);return {x:r.x,y:r.y,width:r.width,height:r.height,outline:s.outline,position:s.position,visible:r.top>=0&&r.bottom<=innerHeight&&a.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}});
+                  check(emailGeometry.visible,'Email focus target unobstructed in viewport');
+                  result.observations.email=emailGeometry;
+                  check(await email.evaluate(a=>getComputedStyle(a).outlineStyle!=='none'&&parseFloat(getComputedStyle(a).outlineWidth)>=2),'Visible email keyboard focus');
+                  await page.screenshot({path:`qa-artifacts/${id}-email-focus.png`,animations:'disabled'});
+                  await page.keyboard.press('Enter');
+                  check(await email.getAttribute('data-qa-email-activated')==='true','Email keyboard activation intercepted');
                   const menu=page.locator('.master-mobile-menu').first();
                   if(await menu.isVisible()){
                     await menu.click();
