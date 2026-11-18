@@ -166,20 +166,41 @@ jobs:
             for(const slug of ['dr-kanchan-bansode','dr-nishchint-jain']){
               for(const prefix of ['/doctors/','/ar/doctors/']){
                 const path=prefix+slug+'/';
+                // PR checks exercise the checked-out Nishchint HTML before it is deployed.
+                if(slug==='dr-nishchint-jain')await page.route(origin+path,route=>route.fulfill({status:200,contentType:'text/html',body:require('fs').readFileSync(path.slice(1)+'index.html','utf8')}));
                 try{
                   const response=await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
                   if(response?.status()!==200){errors.push(path+': HTTP '+response?.status());continue}
+                  if(slug==='dr-nishchint-jain')await page.waitForFunction(()=>{const img=document.querySelector('img[data-doctor-portrait]');return img&&img.complete&&img.naturalWidth>0},null,{timeout:12000});
                   const result=await page.evaluate(async()=>{
                     const imgs=[...document.images].filter(img=>img.alt?.toLowerCase().includes('portrait'));
-                    if(!imgs.length)return {error:'portrait element missing'};
-                    const img=imgs[0];
+                    const img=document.querySelector('img[data-doctor-portrait]')||imgs[0];
+                    if(!img)return {error:'portrait element missing'};
                     await Promise.race([img.decode().catch(()=>{}),new Promise(resolve=>setTimeout(resolve,12000))]);
-                    return {src:img.currentSrc||img.src,loaded:img.complete&&img.naturalWidth>0};
+                    return {src:img.currentSrc||img.src,loaded:img.complete&&img.naturalWidth>0,placeholder:(img.currentSrc||img.src).includes('portrait-unavailable.svg')};
                   });
                   if(result.error||!result.loaded)errors.push(path+': portrait failed to render '+(result.error||result.src));
-                  else console.log('PORTRAIT OK',path,result.src);
+                  else console.log(result.placeholder?'PORTRAIT FALLBACK OK':'PORTRAIT OK',path,result.src);
                 }catch(e){errors.push(path+': portrait verification '+e.message)}
+                finally{if(slug==='dr-nishchint-jain')await page.unrouteAll({behavior:'wait'})}
               }
+            }
+            // Verify the real portrait failure handler without contacting the external image host.
+            for(const prefix of ['/doctors/','/ar/doctors/']){
+              const path=prefix+'dr-nishchint-jain/';
+              await page.route(origin+path,route=>route.fulfill({status:200,contentType:'text/html',body:require('fs').readFileSync(path.slice(1)+'index.html','utf8')}));
+              await page.route('https://images.apollo247.in/doctors/9f3aed98-015d-45fc-b4ee-581f2a7b6d2f.jpg',route=>route.abort());
+              try{
+                await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
+                await page.waitForFunction(()=>{
+                  const img=document.querySelector('img[data-doctor-portrait]');
+                  return img&&img.complete&&img.naturalWidth>0&&img.src.includes('/portrait-unavailable.svg');
+                },null,{timeout:12000});
+                const alt=await page.locator('img[data-doctor-portrait]').getAttribute('alt');
+                if(!alt?.includes(prefix.startsWith('/ar/')?'غير متاحة':'unavailable'))errors.push(path+': misleading fallback alt');
+                console.log('FORCED CHECKED-OUT PROFILE FALLBACK OK',path);
+              }catch(e){errors.push(path+': forced fallback '+e.message)}
+              finally{await page.unrouteAll({behavior:'wait'})}
             }
             for(const lang of ['en','ar']){
               const prefix=lang==='ar'?'/ar':'';
