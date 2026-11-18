@@ -171,6 +171,7 @@ jobs:
                 try{
                   const response=await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
                   if(response?.status()!==200){errors.push(path+': HTTP '+response?.status());continue}
+                  if(slug==='dr-nishchint-jain')await page.waitForFunction(()=>{const img=document.querySelector('img[data-doctor-portrait]');return img&&img.complete&&img.naturalWidth>0},null,{timeout:12000});
                   const result=await page.evaluate(async()=>{
                     const imgs=[...document.images].filter(img=>img.alt?.toLowerCase().includes('portrait'));
                     const img=document.querySelector('img[data-doctor-portrait]')||imgs[0];
