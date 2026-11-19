@@ -112,3 +112,17 @@ html body footer.site-footer .elajme-v2-copyright{padding-top:7px!important}
  html body footer.site-footer>.elajme-v2{padding-top:16px!important;padding-bottom:9px!important}
  html body footer.site-footer .elajme-v2-main{padding-bottom:12px!important}
 }
+
+/* Desktop footer height: trim vertical rhythm, not side borders or column widths.
+   Keep mobile/touch sizing comfortable and do not force fixed heights. */
+@media(min-width:1101px){
+ html body footer.site-footer .elajme-v2-col h2{margin-bottom:10px!important;padding-bottom:8px!important}
+ html body footer.site-footer .elajme-v2-col nav:not(.elajme-footer-socials){gap:7px!important}
+ html body footer.site-footer .elajme-v2-col nav:not(.elajme-footer-socials) a{line-height:1.4!important}
+ html body footer.site-footer .elajme-v2-offices .elajme-office-card+.elajme-office-card{margin-top:8px!important;padding-top:8px!important}
+ html body footer.site-footer .elajme-v2-offices .elajme-office-address{line-height:1.48!important}
+ html body footer.site-footer .elajme-v2-brand .footer-brand .brand-icon{width:100px!important;height:100px!important;max-width:100px!important;max-height:100px!important;flex-basis:100px!important}
+ html body footer.site-footer .elajme-v2-brand p{margin-top:7px!important;line-height:1.45!important}
+ html body footer.site-footer .elajme-v2 .elajme-office-contact-line{margin-bottom:9px!important}
+ html body footer.site-footer .elajme-v2 .elajme-footer-socials{margin-top:9px!important}
+}
