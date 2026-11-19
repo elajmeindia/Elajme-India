@@ -100,3 +100,15 @@ html body footer.site-footer .elajme-v2-copyright{font-size:11px!important;paddi
  html body footer.site-footer .elajme-v2-benefits .elajme-v2-benefit{font-size:12px!important;gap:5px!important}
  html body footer.site-footer .elajme-v2-medical-note{text-align:start!important;padding:0 5px!important}
 }
+
+/* Small vertical trim only: preserve five-column widths, typography and touch targets. */
+html body footer.site-footer>.elajme-v2{padding-top:16px!important;padding-bottom:8px!important}
+html body footer.site-footer .elajme-v2-main{padding-bottom:14px!important}
+html body footer.site-footer .elajme-v2-lower{padding-top:8px!important}
+html body footer.site-footer .elajme-v2-lower .elajme-office-website{margin-bottom:9px!important}
+html body footer.site-footer .elajme-v2-benefits{padding-top:9px!important;padding-bottom:9px!important}
+html body footer.site-footer .elajme-v2-copyright{padding-top:7px!important}
+@media(max-width:650px){
+ html body footer.site-footer>.elajme-v2{padding-top:16px!important;padding-bottom:9px!important}
+ html body footer.site-footer .elajme-v2-main{padding-bottom:12px!important}
+}
