@@ -167,3 +167,20 @@ html body footer.site-footer{
  background:linear-gradient(115deg,#0b444b 0%,#0d5155 55%,#0d5558 100%)!important;
  background-color:#0b444b!important;
 }
+
+/* Official social brand treatments, scoped to footer icons only. */
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-whatsapp{
+ background:#25D366!important;border-color:#25D366!important;color:#fff!important;
+}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-facebook{
+ background:#0866FF!important;border-color:#0866FF!important;color:#fff!important;
+}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-instagram{
+ background:linear-gradient(135deg,#833AB4 0%,#C13584 35%,#E1306C 60%,#F77737 85%,#FCAF45 100%)!important;
+ border-color:#C13584!important;color:#fff!important;
+}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-whatsapp:hover,
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-facebook:hover,
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-instagram:hover{
+ filter:brightness(1.12)!important;
+}
