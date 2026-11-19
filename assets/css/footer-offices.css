@@ -119,3 +119,10 @@ html body footer.site-footer > .footer-wrap > .elajme-office-contacts > .elajme-
  width:100%!important;justify-content:center!important;text-align:center!important;
  margin:16px auto 0!important
 }
+
+/* Verified social profiles, accessible and aligned with each language. */
+html body footer.site-footer .elajme-footer-socials{display:flex!important;align-items:center!important;justify-content:center!important;gap:14px!important;margin:14px auto 6px!important;width:100%!important;direction:ltr!important}
+html[lang="ar"] body footer.site-footer .elajme-footer-socials{direction:rtl!important}
+html body footer.site-footer .elajme-footer-socials a{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:38px!important;height:38px!important;border:1px solid rgba(255,255,255,.28)!important;border-radius:10px!important;color:#fff!important;text-decoration:none!important;background:rgba(255,255,255,.06)!important}
+html body footer.site-footer .elajme-footer-socials a:hover,html body footer.site-footer .elajme-footer-socials a:focus-visible{background:#197f80!important;outline-offset:3px!important}
+html body footer.site-footer .elajme-footer-socials svg{width:21px!important;height:21px!important}
