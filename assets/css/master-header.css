@@ -20,3 +20,22 @@ html:has(.master-site-header){scroll-padding-top:140px}
 
 /* Keep horizontal clipping without making the English mobile body a sticky scroll ancestor. */
 @media(max-width:900px){html[lang="en"] body:has(>.master-site-header):not(.mobile-menu-open){overflow-x:clip!important;overflow-y:visible!important}}
+
+/* Patient-friendly contact trio, visible in both languages on every viewport. */
+.master-site-header>.master-email-strip{gap:20px!important}
+.master-contact-actions{display:flex;align-items:center;justify-content:center;gap:20px;direction:ltr}
+.master-contact-actions a{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;color:#123b50;font-family:inherit;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;direction:ltr;unicode-bidi:isolate}
+.master-contact-actions svg{display:block;width:16px;height:16px;flex:0 0 16px;color:#1c827e}
+.master-contact-actions .master-contact-whatsapp svg{color:#168451}
+.master-contact-actions a:hover{text-decoration:underline;text-underline-offset:3px}
+.master-contact-actions a:focus-visible{outline:2px solid #123b50;outline-offset:-4px;border-radius:6px}
+@media(max-width:600px){
+ .master-site-header.master-site-header{height:152px!important;min-height:152px!important;max-height:152px!important;padding-top:80px!important}
+ .master-site-header>.master-email-strip{height:80px!important;flex-direction:column;gap:0!important}
+ .master-email-strip>.master-email-link{min-height:40px!important;height:40px!important}
+ .master-contact-actions{gap:16px;height:40px}
+ .master-contact-actions a{min-height:40px;font-size:12px;gap:5px}
+ .master-contact-actions svg{width:14px;height:14px;flex-basis:14px}
+ .master-site-header.master-site-header.mobile-menu-open .master-header-inner>.master-nav{top:152px!important;max-height:calc(100dvh - 152px)!important}
+ html:has(.master-site-header){scroll-padding-top:166px}
+}
