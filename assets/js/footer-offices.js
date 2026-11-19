@@ -31,6 +31,6 @@ lower.append(benefits);
 const copyright=document.createElement('div');copyright.className='elajme-v2-copyright';
 copyright.textContent=ar?'© 2026 علاج مي إنديا. جميع الحقوق محفوظة. خدمات تنسيق العلاج للمرضى الدوليين في الهند.':'© 2026 Elajme India. All rights reserved. International patient coordination in India.';
 shell.append(main,lower,copyright);
-wrap.replaceChildren(shell);
-if(!document.querySelector('link[href="/assets/css/footer-offices.css?v=18"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/assets/css/footer-offices.css?v=18';document.head.append(link)}
+footer.insertBefore(shell,wrap);wrap.remove();
+if(!document.querySelector('link[href="/assets/css/footer-offices.css?v=19"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/assets/css/footer-offices.css?v=19';document.head.append(link)}
 })};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init()})();
