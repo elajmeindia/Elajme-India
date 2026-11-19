@@ -12,7 +12,7 @@ const shell=document.createElement('div');shell.className='elajme-v2';shell.dir=
 const main=document.createElement('div');main.className='elajme-v2-main';
 const makeCol=(cls,title)=>{const col=document.createElement('section');col.className='elajme-v2-col '+cls;if(title){const h=document.createElement('h2');h.textContent=title;col.append(h)}return col};
 const branding=makeCol('elajme-v2-brand');branding.append(brand);
-const intro=document.createElement('p');intro.textContent=ar?'نساعد المرضى الدوليين في الاستفسارات الطبية وترتيبات رحلتهم العلاجية في الهند.':'Helping international patients with treatment enquiries and practical arrangements in India.';branding.append(intro);
+const intro=document.createElement('p');intro.textContent=ar?'رحلتك العلاجية تحظى باهتمامنا. نساعدك على التواصل مع المستشفيات في الهند وفهم الترتيبات المتاحة، مع تواصل واضح واهتمام شخصي.':'Your treatment journey matters to us. We help you connect with hospitals in India, understand available arrangements and plan the practical steps with clear communication and personal attention.';branding.append(intro);
 const services=makeCol('elajme-v2-services',ar?'خدماتنا':'Services');
 const useful=makeCol('elajme-v2-useful',ar?'روابط مفيدة':'Useful links');
 const navA=document.createElement('nav'),navB=document.createElement('nav');
@@ -26,11 +26,25 @@ main.append(branding,services,useful,contact,officesCol);
 const lower=document.createElement('div');lower.className='elajme-v2-lower';
 lower.append(website);
 const benefits=document.createElement('div');benefits.className='elajme-v2-benefits';
-(ar?['دعم في جميع المراحل','تواصل واضح وشفاف','مساعدة المرضى الدوليين','خصوصية البيانات']:['Support at every stage','Clear communication','International patient assistance','Data privacy']).forEach((t,i)=>{const item=document.createElement('span');item.textContent=t;benefits.append(item)});
+const trustItems=ar?[
+ ['اهتمام شخصي بكل مريض','heart'],['تواصل واضح ومباشر','message'],['تنسيق منظم للترتيبات','list'],['احترام خصوصية المرضى','shield']
+]:[['Personal attention','heart'],['Clear communication','message'],['Organised arrangements','list'],['Respect for patient privacy','shield']];
+const trustIcons={
+ heart:'<path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z"/>',
+ message:'<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5Z"/><path d="M8 11h9M8 14h6"/>',
+ list:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+ shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>'
+};
+trustItems.forEach(([label,key])=>{const item=document.createElement('span');item.className='elajme-v2-benefit';const svg=document.createElement('span');svg.className='elajme-v2-benefit-icon';svg.setAttribute('aria-hidden','true');svg.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+trustIcons[key]+'</svg>';const caption=document.createElement('span');caption.textContent=label;item.append(svg,caption);benefits.append(item)});
 lower.append(benefits);
+const medical=document.createElement('p');medical.className='elajme-v2-medical-note';
+const strong=document.createElement('strong');strong.textContent=ar?'معلومات طبية مهمة: ':'Medical Information: ';
+const medicalCopy=document.createTextNode(ar?'تقدم علاج مي إنديا خدمات تنسيق شؤون المرضى الدوليين، ولا تقدم العلاج الطبي. ويتولى الأطباء المؤهلون إجراء التقييمات الطبية واتخاذ القرارات العلاجية. ولا تُغني المعلومات المنشورة على هذا الموقع عن الاستشارة الطبية المتخصصة. ':'Elajme India provides international patient coordination services, not medical treatment. Qualified healthcare professionals make all clinical assessments and treatment decisions. Website information does not replace professional medical advice. ');
+const details=document.createElement('a');details.href=ar?'/ar/terms':'/terms';details.textContent=ar?'اقرأ إخلاء المسؤولية الطبية':'Read our medical disclaimer';
+medical.append(strong,medicalCopy,details);lower.append(medical);
 const copyright=document.createElement('div');copyright.className='elajme-v2-copyright';
-copyright.textContent=ar?'© 2026 علاج مي إنديا. جميع الحقوق محفوظة. خدمات تنسيق العلاج للمرضى الدوليين في الهند.':'© 2026 Elajme India. All rights reserved. International patient coordination in India.';
+copyright.textContent=ar?'© 2026 علاج مي إنديا. جميع الحقوق محفوظة. يخضع المحتوى الأصلي والهوية البصرية للحماية بموجب قوانين الملكية الفكرية المعمول بها.':'© 2026 Elajme India. All rights reserved. Original content and branding are protected under applicable intellectual property laws.';
 shell.append(main,lower,copyright);
 footer.insertBefore(shell,wrap);wrap.remove();
-if(!document.querySelector('link[href="/assets/css/footer-offices.css?v=19"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/assets/css/footer-offices.css?v=19';document.head.append(link)}
+if(!document.querySelector('link[href="/assets/css/footer-offices.css?v=20"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/assets/css/footer-offices.css?v=20';document.head.append(link)}
 })};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init()})();
