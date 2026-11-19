@@ -75,3 +75,28 @@ html body footer.site-footer>.elajme-v2>.elajme-v2-copyright{
 @media(max-width:650px){
  html body footer.site-footer>.elajme-v2{width:calc(100% - 28px)!important}
 }
+
+/* Original patient-trust content: compact and readable on both languages. */
+html body footer.site-footer .elajme-v2-brand p{font-size:13px!important;line-height:1.55!important;max-width:32ch!important;margin:10px auto 0!important}
+html body footer.site-footer .elajme-v2-benefits .elajme-v2-benefit{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ flex-direction:row!important;gap:9px!important;min-width:0!important;
+ font-size:13px!important;line-height:1.45!important;
+}
+html body footer.site-footer .elajme-v2-benefit-icon{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ width:23px!important;height:23px!important;flex:0 0 23px!important;color:#b7e747!important;
+}
+html body footer.site-footer .elajme-v2-benefit-icon svg{display:block!important;width:22px!important;height:22px!important}
+html body footer.site-footer .elajme-v2-medical-note{
+ color:#dbe8e8!important;text-align:center!important;font-size:12px!important;
+ line-height:1.6!important;max-width:1100px!important;margin:9px auto 0!important;
+ padding:0 12px!important;
+}
+html body footer.site-footer .elajme-v2-medical-note strong{color:#fff!important;font-weight:700!important}
+html body footer.site-footer .elajme-v2-medical-note a{color:#c7ef74!important;text-decoration:underline!important;text-underline-offset:3px!important}
+html body footer.site-footer .elajme-v2-copyright{font-size:11px!important;padding-top:9px!important}
+@media(max-width:650px){
+ html body footer.site-footer .elajme-v2-benefits .elajme-v2-benefit{font-size:12px!important;gap:5px!important}
+ html body footer.site-footer .elajme-v2-medical-note{text-align:start!important;padding:0 5px!important}
+}
