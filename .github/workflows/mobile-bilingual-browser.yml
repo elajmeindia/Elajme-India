@@ -338,15 +338,15 @@ jobs:
              r.geometry=await p.evaluate(()=>{
               const h=document.querySelector('.master-site-header'),inner=h.querySelector('.master-header-inner'),rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height}};
               let cls=0,sum=0,start=0,last=0;for(const e of window.__layoutShifts){if(e.time-last>1000||e.time-start>5000){sum=0;start=e.time}sum+=e.value;last=e.time;cls=Math.max(cls,sum)}
-              return{header:rect(h),row:rect(inner),cls,overflow:document.documentElement.scrollWidth>innerWidth+2,mainTop:document.querySelector('main').getBoundingClientRect().top,innerHtml:inner.outerHTML,footer:document.querySelector('footer').outerHTML,processColumns:getComputedStyle(document.querySelector('.process-grid')).gridTemplateColumns};
+              return{emailStripPresent:!!h.querySelector('.master-email-strip'),header:rect(h),row:rect(inner),cls,overflow:document.documentElement.scrollWidth>innerWidth+2,mainTop:document.querySelector('main').getBoundingClientRect().top,innerHtml:inner.outerHTML,footer:document.querySelector('footer').outerHTML,processColumns:getComputedStyle(document.querySelector('.process-grid')).gridTemplateColumns};
              });
              await p.screenshot({path:output+'/'+id+'-top.png',animations:'disabled'});await p.locator('.master-site-header').screenshot({path:output+'/'+id+'-header.png',animations:'disabled'});
              const key=lang+'-'+width;
              if(variant==='before'){baseline.set(key,r.geometry);await p.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,600)});await p.waitForTimeout(100);r.sticky=await p.locator('.master-site-header').evaluate(h=>({top:h.getBoundingClientRect().top,scrollY}));await p.evaluate(()=>scrollTo(0,0))}
              else{
-              const before=baseline.get(key);check(r.geometry.innerHtml===before.innerHtml,'Existing header control markup changed');check(r.geometry.footer===before.footer,'Footer markup changed');
-              check(Math.abs(r.geometry.row.height-before.row.height)<1,'Navigation row height changed');check(Math.abs(r.geometry.header.height-before.header.height-44)<1,'Expected only 44px added header height');
-              check(Math.abs(r.geometry.mainTop-before.mainTop-44)<1,'Unexpected main-content offset');check(r.geometry.processColumns===before.processColumns,'Journey grid changed');
+              const before=baseline.get(key),addedHeight=before.emailStripPresent?0:44;check(r.geometry.innerHtml===before.innerHtml,'Existing header control markup changed');check(r.geometry.footer===before.footer,'Footer markup changed');
+              check(Math.abs(r.geometry.row.height-before.row.height)<1,'Navigation row height changed');check(Math.abs(r.geometry.header.height-before.header.height-addedHeight)<1,'Header height must differ only by the new contact strip');
+              check(Math.abs(r.geometry.mainTop-before.mainTop-addedHeight)<1,'Unexpected main-content offset');check(r.geometry.processColumns===before.processColumns,'Journey grid changed');
               check(!r.geometry.overflow,'Horizontal overflow');check(r.geometry.cls<0.1,'Startup CLS >=0.1');
               const email=p.locator('.master-site-header > .master-email-strip > .master-email-link');check(await email.count()===1,'Exactly one header email');
               check(await email.innerText()==='care@elajmeindia.com','Full address');check(await email.getAttribute('href')==='mailto:care@elajmeindia.com','Mailto');check(await email.getAttribute('aria-label')===(lang==='ar'?'مراسلة علاج مي إنديا: care@elajmeindia.com':'Email Elajme India: care@elajmeindia.com'),'Accessible name');
