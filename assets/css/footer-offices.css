@@ -183,3 +183,45 @@ html body footer.site-footer .elajme-visual-offices .elajme-office-grid>.elajme-
 html body footer.site-footer .elajme-visual-offices .elajme-office-grid>.elajme-office-card+.elajme-office-card{margin-top:14px!important}
 html body footer.site-footer .elajme-visual-offices .elajme-office-card .elajme-office-address{display:block!important;max-width:none!important;width:100%!important;white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important;hyphens:none!important}
 @media(max-width:1100px){html body footer.site-footer .elajme-visual-offices{min-width:0!important}}
+
+/* Consolidated approved visual polish. Break out of narrower page-level
+   containers; no modification to header, routes or other site components. */
+html body footer.site-footer .elajme-visual-footer,
+html body footer.site-footer .elajme-visual-bottom,
+html body footer.site-footer .footer-bottom{
+ box-sizing:border-box!important;
+ width:min(1440px,calc(100vw - 64px))!important;
+ max-width:none!important;
+ position:relative!important;
+ left:50%!important;
+ transform:translateX(-50%)!important;
+ margin-left:0!important;
+ margin-right:0!important;
+}
+@media(min-width:1101px){
+ html body footer.site-footer .elajme-visual-footer{
+  grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.1fr) minmax(0,1.35fr) minmax(0,1.85fr)!important;
+  padding:18px 0 30px!important;
+ }
+ html body footer.site-footer .elajme-visual-footer>*{padding-inline:clamp(15px,2vw,32px)!important}
+ html body footer.site-footer .elajme-visual-offices{min-width:0!important}
+}
+html body footer.site-footer .elajme-visual-heading{font-size:clamp(17px,1.5vw,22px)!important;margin-bottom:22px!important}
+html body footer.site-footer .elajme-visual-heading:after{background:#b8e64b!important;width:60px!important;height:4px!important}
+html body footer.site-footer .elajme-visual-nav a{font-size:clamp(13px,1vw,16px)!important;line-height:1.65!important}
+html body footer.site-footer .elajme-visual-description{font-size:clamp(13px,1vw,15px)!important;line-height:1.7!important}
+html body footer.site-footer .elajme-visual-brand .footer-brand .brand-icon{width:120px!important;height:120px!important;max-width:120px!important;max-height:120px!important;flex:0 0 120px!important}
+html body footer.site-footer .elajme-visual-contact .elajme-office-contact-line a{font-size:clamp(13px,1vw,15px)!important}
+html body footer.site-footer .elajme-visual-offices .elajme-office-card h2{font-size:clamp(14px,1.1vw,17px)!important}
+html body footer.site-footer .elajme-visual-offices .elajme-office-card p{font-size:clamp(12px,.95vw,15px)!important;line-height:1.65!important}
+html body footer.site-footer .elajme-visual-benefits span{font-size:clamp(12px,1vw,15px)!important}
+html body footer.site-footer .elajme-visual-bottom .elajme-office-website{font-size:clamp(17px,2vw,25px)!important}
+html body footer.site-footer .footer-bottom p{font-size:13px!important}
+@media(max-width:650px){
+ html body footer.site-footer .elajme-visual-footer,
+ html body footer.site-footer .elajme-visual-bottom,
+ html body footer.site-footer .footer-bottom{width:calc(100vw - 32px)!important}
+ html body footer.site-footer .elajme-visual-footer{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html body footer.site-footer .elajme-visual-footer>*{padding-inline:10px!important}
+ html body footer.site-footer .elajme-visual-offices{grid-column:1/-1!important}
+}
