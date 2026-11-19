@@ -8,7 +8,7 @@ html body footer.site-footer .elajme-v2-main{display:grid!important;grid-templat
 html body footer.site-footer .elajme-v2-col{display:block!important;min-width:0!important;width:auto!important;max-width:none!important;position:static!important;float:none!important;margin:0!important;padding:0 clamp(12px,1.5vw,25px)!important;border:0!important;border-inline-end:1px solid rgba(255,255,255,.27)!important;text-align:start!important}
 html body footer.site-footer .elajme-v2-col:last-child{border-inline-end:0!important}
 html body footer.site-footer .elajme-v2-col h2{display:block!important;color:#fff!important;font-size:clamp(17px,1.4vw,21px)!important;line-height:1.35!important;font-weight:750!important;margin:0 0 16px!important;padding:0 0 12px!important;position:relative!important;text-align:start!important}
-html body footer.site-footer .elajme-v2-col h2:after{content:""!important;position:absolute!important;bottom:0!important;inset-inline-start:0!important;width:54px!important;height:3px!important;border-radius:4px!important;background:#b7e747!important}
+html body footer.site-footer .elajme-v2-col h2:after{content:""!important;position:absolute!important;bottom:0!important;inset-inline-start:0!important;width:54px!important;height:3px!important;border-radius:4px!important;background:#9bd5d0!important}
 html body footer.site-footer .elajme-v2-brand{text-align:center!important}
 html body footer.site-footer .elajme-v2-brand .footer-brand{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:6px!important;margin:0!important;padding:0!important}
 html body footer.site-footer .elajme-v2-brand .footer-brand .brand-icon{display:block!important;width:112px!important;height:112px!important;max-width:112px!important;max-height:112px!important;object-fit:contain!important;flex:0 0 112px!important}
@@ -19,11 +19,11 @@ html body footer.site-footer .elajme-v2-col nav:not(.elajme-footer-socials) a{di
 html body footer.site-footer .elajme-v2-col nav a:hover{text-decoration:underline!important}
 html body footer.site-footer .elajme-v2 .elajme-office-contact-line{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;margin:0 0 14px!important;padding:0!important;min-width:0!important;direction:inherit!important}
 html body footer.site-footer .elajme-v2 .elajme-office-contact-line a{display:inline-block!important;color:#fff!important;font-size:14px!important;line-height:1.55!important;direction:ltr!important;unicode-bidi:isolate!important;white-space:nowrap!important;text-decoration:none!important}
-html body footer.site-footer .elajme-v2 .elajme-contact-icon{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 19px!important;width:19px!important;height:19px!important;color:#b7e747!important}
+html body footer.site-footer .elajme-v2 .elajme-contact-icon{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 19px!important;width:19px!important;height:19px!important;color:#9bd5d0!important}
 html body footer.site-footer .elajme-v2 .elajme-contact-icon svg{width:19px!important;height:19px!important;display:block!important}
 html body footer.site-footer .elajme-v2 .elajme-footer-socials{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:nowrap!important;gap:10px!important;margin:15px 0 0!important;padding:0!important;width:auto!important;direction:inherit!important}
 html body footer.site-footer .elajme-v2 .elajme-footer-socials a{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 44px!important;width:44px!important;height:44px!important;border:1px solid rgba(255,255,255,.4)!important;border-radius:10px!important;color:#fff!important;text-decoration:none!important}
-html body footer.site-footer .elajme-v2 .elajme-footer-socials a:hover{border-color:#b7e747!important;background:rgba(255,255,255,.08)!important}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a:hover{border-color:#9bd5d0!important;background:rgba(255,255,255,.08)!important}
 html body footer.site-footer .elajme-v2 .elajme-footer-socials svg{width:21px!important;height:21px!important}
 html body footer.site-footer .elajme-v2-offices .elajme-office-grid{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;float:none!important;margin:0!important;padding:0!important}
 html body footer.site-footer .elajme-v2-offices .elajme-office-card{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;float:none!important;position:static!important;margin:0!important;padding:0!important;border:0!important}
@@ -33,12 +33,12 @@ html body footer.site-footer .elajme-v2-offices .elajme-office-card h2:after{dis
 html body footer.site-footer .elajme-v2-offices .elajme-office-address{display:block!important;font-size:14px!important;line-height:1.6!important;margin:0!important;padding:0!important;color:#eaf3f3!important;overflow-wrap:break-word!important;word-break:normal!important;max-width:none!important;white-space:normal!important}
 html body footer.site-footer .elajme-v2-lower{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:12px 0 0!important;border-top:1px solid rgba(255,255,255,.5)!important;float:none!important;clear:both!important;text-align:center!important}
 html body footer.site-footer .elajme-v2-lower .elajme-office-website{display:flex!important;align-items:center!important;justify-content:center!important;gap:18px!important;width:100%!important;margin:0 0 13px!important;padding:0!important;direction:ltr!important;white-space:nowrap!important;border:0!important}
-html body footer.site-footer .elajme-v2-lower .elajme-office-website:before,html body footer.site-footer .elajme-v2-lower .elajme-office-website:after{content:""!important;display:block!important;flex:1 1 0!important;max-width:240px!important;height:2px!important;background:#b7e747!important}
+html body footer.site-footer .elajme-v2-lower .elajme-office-website:before,html body footer.site-footer .elajme-v2-lower .elajme-office-website:after{content:""!important;display:block!important;flex:1 1 0!important;max-width:240px!important;height:2px!important;background:#9bd5d0!important}
 html body footer.site-footer .elajme-v2-lower .elajme-office-website a{font-size:clamp(17px,1.7vw,24px)!important;color:#fff!important;font-weight:750!important;text-decoration:none!important;direction:ltr!important;unicode-bidi:isolate!important}
 html body footer.site-footer .elajme-v2-benefits{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;align-items:center!important;width:100%!important;margin:0!important;padding:13px 0!important;border-top:1px solid rgba(255,255,255,.2)!important;border-bottom:1px solid rgba(255,255,255,.2)!important}
 html body footer.site-footer .elajme-v2-benefits span{font-size:13px!important;line-height:1.5!important;color:#e9f3f2!important;text-align:center!important}
 html body footer.site-footer .elajme-v2-copyright{display:block!important;text-align:center!important;width:100%!important;font-size:12px!important;line-height:1.5!important;color:#d6e5e5!important;margin:0!important;padding:12px 0 0!important}
-html body footer.site-footer .elajme-v2 a:focus-visible{outline:3px solid #b7e747!important;outline-offset:3px!important}
+html body footer.site-footer .elajme-v2 a:focus-visible{outline:3px solid #9bd5d0!important;outline-offset:3px!important}
 @media(max-width:1100px){
  html body footer.site-footer .elajme-v2-main{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:24px 0!important}
  html body footer.site-footer .elajme-v2-col{border-inline-end:0!important}
@@ -85,7 +85,7 @@ html body footer.site-footer .elajme-v2-benefits .elajme-v2-benefit{
 }
 html body footer.site-footer .elajme-v2-benefit-icon{
  display:inline-flex!important;align-items:center!important;justify-content:center!important;
- width:23px!important;height:23px!important;flex:0 0 23px!important;color:#b7e747!important;
+ width:23px!important;height:23px!important;flex:0 0 23px!important;color:#9bd5d0!important;
 }
 html body footer.site-footer .elajme-v2-benefit-icon svg{display:block!important;width:22px!important;height:22px!important}
 html body footer.site-footer .elajme-v2-medical-note{
@@ -94,7 +94,7 @@ html body footer.site-footer .elajme-v2-medical-note{
  padding:0 12px!important;
 }
 html body footer.site-footer .elajme-v2-medical-note strong{color:#fff!important;font-weight:700!important}
-html body footer.site-footer .elajme-v2-medical-note a{color:#c7ef74!important;text-decoration:underline!important;text-underline-offset:3px!important}
+html body footer.site-footer .elajme-v2-medical-note a{color:#b6e8df!important;text-decoration:underline!important;text-underline-offset:3px!important}
 html body footer.site-footer .elajme-v2-copyright{font-size:11px!important;padding-top:9px!important}
 @media(max-width:650px){
  html body footer.site-footer .elajme-v2-benefits .elajme-v2-benefit{font-size:12px!important;gap:5px!important}
