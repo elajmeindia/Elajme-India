@@ -342,7 +342,7 @@ jobs:
              });
              await p.screenshot({path:output+'/'+id+'-top.png',animations:'disabled'});await p.locator('.master-site-header').screenshot({path:output+'/'+id+'-header.png',animations:'disabled'});
              const key=lang+'-'+width;
-             if(variant==='before'){baseline.set(key,r.geometry)}
+             if(variant==='before'){baseline.set(key,r.geometry);await p.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,600)});await p.waitForTimeout(100);r.sticky=await p.locator('.master-site-header').evaluate(h=>({top:h.getBoundingClientRect().top,scrollY}));await p.evaluate(()=>scrollTo(0,0))}
              else{
               const before=baseline.get(key);check(r.geometry.innerHtml===before.innerHtml,'Existing header control markup changed');check(r.geometry.footer===before.footer,'Footer markup changed');
               check(Math.abs(r.geometry.row.height-before.row.height)<1,'Navigation row height changed');check(Math.abs(r.geometry.header.height-before.header.height-44)<1,'Expected only 44px added header height');
@@ -361,8 +361,8 @@ jobs:
                const g=await p.evaluate(()=>({top:document.querySelector('.master-nav').getBoundingClientRect().top,bottom:document.querySelector('.master-site-header').getBoundingClientRect().bottom}));check(g.top>=g.bottom-1,'Menu overlaps header');r.menu=g;
                await p.screenshot({path:output+'/'+id+'-menu.png'});await p.keyboard.press('Escape');check(await menu.getAttribute('aria-expanded')==='false','Menu closes');
               }
-              await p.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,600)});await p.waitForTimeout(100);check(await p.locator('.master-site-header').evaluate(h=>Math.abs(h.getBoundingClientRect().top)<1),'Header remains sticky');check(await email.isVisible(),'Email visible while sticky');
-              await p.locator('.hero-actions a[href="#enquiry"]').first().click();await p.waitForTimeout(100);check(await p.locator('#enquiry h2').evaluate(e=>e.getBoundingClientRect().top>=document.querySelector('.master-site-header').getBoundingClientRect().bottom-1),'Enquiry heading obscured after anchor');
+              await p.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,600)});await p.waitForTimeout(100);r.sticky=await p.locator('.master-site-header').evaluate(h=>({top:h.getBoundingClientRect().top,scrollY}));check(Math.abs(r.sticky.top)<1,'Header remains sticky');check(await email.isVisible(),'Email visible while sticky');
+              await p.evaluate(()=>scrollTo(0,0));await p.locator('.hero-actions a[href$="#enquiry"]').first().click();await p.waitForTimeout(100);check(await p.locator('#enquiry h2').evaluate(e=>e.getBoundingClientRect().top>=document.querySelector('.master-site-header').getBoundingClientRect().bottom-1),'Enquiry heading obscured after anchor');
               r.geometry.innerHtml=undefined;r.geometry.footer=undefined;
              }
             }catch(e){r.errors.push(e.message);try{await p.screenshot({path:output+'/'+id+'-failure.png'})}catch{}}
