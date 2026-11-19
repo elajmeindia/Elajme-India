@@ -292,3 +292,36 @@ html[lang="ar"] body footer.site-footer .elajme-visual-offices .elajme-office-co
  html body footer.site-footer .elajme-visual-footer{grid-template-columns:repeat(2,minmax(0,1fr))!important}
  html body footer.site-footer .elajme-visual-footer>*{padding-inline:10px!important}
 }
+
+/* Website feature row: centered address with balanced decorative rules,
+   not a link floating between two full-width horizontal borders. */
+html body footer.site-footer .elajme-visual-bottom{
+ border-top:1px solid rgba(255,255,255,.38)!important;
+ padding-top:20px!important;
+}
+html body footer.site-footer .elajme-visual-bottom>.elajme-office-website{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ gap:20px!important;margin:0 auto 20px!important;padding:0!important;
+ width:100%!important;max-width:100%!important;text-align:center!important;
+ border:0!important;white-space:nowrap!important;
+}
+html body footer.site-footer .elajme-visual-bottom>.elajme-office-website::before,
+html body footer.site-footer .elajme-visual-bottom>.elajme-office-website::after{
+ content:""!important;display:block!important;flex:1 1 0!important;
+ max-width:250px!important;min-width:0!important;height:2px!important;
+ background:#b8e64b!important;border-radius:2px!important;
+}
+html body footer.site-footer .elajme-visual-bottom>.elajme-office-website a{
+ display:inline-flex!important;align-items:center!important;gap:9px!important;
+ flex:0 0 auto!important;direction:ltr!important;unicode-bidi:isolate!important;
+ text-decoration:none!important;color:#fff!important;
+}
+html body footer.site-footer .elajme-visual-bottom .elajme-visual-benefits{
+ border-top:0!important;border-bottom:1px solid rgba(255,255,255,.28)!important;
+ padding:12px 0 18px!important;margin:0!important;
+}
+@media(max-width:650px){
+ html body footer.site-footer .elajme-visual-bottom>.elajme-office-website{gap:9px!important}
+ html body footer.site-footer .elajme-visual-bottom>.elajme-office-website::before,
+ html body footer.site-footer .elajme-visual-bottom>.elajme-office-website::after{max-width:44px!important;height:1px!important}
+}
