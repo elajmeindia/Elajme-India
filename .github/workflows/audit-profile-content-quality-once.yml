@@ -95,7 +95,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git hash-object assets/css/master-header.css)" = "0baaf5293f43c5b04c9452e1071ba058ac5b23d7"
+          test "$(git hash-object assets/css/master-header.css)" = "6da8e8d0ef80d4512721af76925c0f99b81483b8"
           test "$(git hash-object assets/css/arabic-master-header.css)" = "47e50b51ec23f550677a5594110b481664192882"
           test "$(git hash-object assets/css/mobile-header.css)" = "e2e1b33e23b0881749c0cc019f622fc793cbce45"
           test "$(git hash-object assets/css/arabic-mobile-header.css)" = "19af6f197ce194a9c9c043c8e22c5703a8c86ced"
