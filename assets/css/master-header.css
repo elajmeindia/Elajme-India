@@ -20,3 +20,6 @@ html:has(.master-site-header){scroll-padding-top:140px}
 
 /* Keep horizontal clipping without making the English mobile body a sticky scroll ancestor. */
 @media(max-width:900px){html[lang="en"] body:has(>.master-site-header):not(.mobile-menu-open){overflow-x:clip!important;overflow-y:visible!important}}
+
+/* At 1200–1399px, reserve enough room for the complete desktop navigation and phone/actions. Keep approved 5% gutters at >=1400px. */
+@media(min-width:1200px) and (max-width:1399px){.master-site-header .master-header-inner{width:calc(100% - 48px)!important;max-width:none!important}}
