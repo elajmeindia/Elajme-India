@@ -6,7 +6,7 @@
  .elajme-bottom-actions .elajme-bottom-wa{background:#e8f7ee;color:#08643e;border:1px solid #9bcfb1}
  .elajme-bottom-actions .elajme-bottom-enquiry{background:#187f79;color:#fff;border:1px solid #187f79}
  .elajme-bottom-actions a:focus-visible{outline:3px solid #123b50;outline-offset:2px}
- body:has(>.elajme-bottom-actions)>.mobile-whatsapp{display:none!important}
+ body:has(>.elajme-bottom-actions)>.mobile-whatsapp,body:has(>.elajme-bottom-actions)>.arabic-mobile-conversion-bar{display:none!important}
  body.mobile-menu-open>.elajme-bottom-actions{display:none}
 }
 @media(min-width:901px){.elajme-bottom-actions{display:none!important}}
