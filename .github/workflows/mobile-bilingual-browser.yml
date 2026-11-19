@@ -344,7 +344,7 @@ jobs:
              const key=lang+'-'+width;
              if(variant==='before'){baseline.set(key,r.geometry);await p.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,600)});await p.waitForTimeout(100);r.sticky=await p.locator('.master-site-header').evaluate(h=>({top:h.getBoundingClientRect().top,scrollY}));await p.evaluate(()=>scrollTo(0,0))}
              else{
-              const before=baseline.get(key),addedHeight=before.emailStripPresent?0:44;check(r.geometry.innerHtml===before.innerHtml,'Approved navigation layout changed');check(r.geometry.footer===before.footer,'Footer markup changed');
+              const before=baseline.get(key),addedHeight=before.emailStripPresent?0:44;check(r.geometry.innerHtml.includes('master-nav')&&r.geometry.innerHtml.includes('master-lang'),'Approved navigation or language switcher missing');check(!r.geometry.innerHtml.includes('class="master-phone"')&&!r.geometry.innerHtml.includes('class="master-whatsapp"'),'Duplicate desktop contact controls remain');if(lang==='en')check(r.geometry.innerHtml.includes('>Contact Us</a>'),'Contact Us navigation label missing');check(r.geometry.footer===before.footer,'Footer markup changed');
               check(Math.abs(r.geometry.row.height-before.row.height)<1,'Navigation row height changed');check(Math.abs(r.geometry.header.height-(width<=900?176:126))<1,'Approved contact-strip header height');
               check(Math.abs(r.geometry.mainTop-before.mainTop-(r.geometry.header.height-before.header.height))<1,'Unexpected main-content offset');check(r.geometry.processColumns===before.processColumns,'Journey grid changed');
               check(!r.geometry.overflow,'Horizontal overflow');check(r.geometry.cls<0.1,'Startup CLS >=0.1');
@@ -594,7 +594,7 @@ jobs:
              const ct=p.locator('main a[href*="#enquiry"]').first();await ct.evaluate(e=>e.scrollIntoView({block:'center'}));
              r.ctaHit=await ct.evaluate(a=>{const r=a.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;return y>=0&&y<innerHeight&&a.contains(document.elementFromPoint(x,y))});check(r.ctaHit,'CTA centre blocked');
              await p.screenshot({path:`${output}/${lang}-${slug}-${width}-cta.png`,animations:'disabled',mask:[p.locator('main img')]});
-             await p.evaluate(()=>scrollTo(0,0));const wa=p.locator(width<=900?'.master-mobile-whatsapp':'.master-actions .master-whatsapp').first();check(await wa.isVisible(),'Actual WhatsApp control hidden');
+             await p.evaluate(()=>scrollTo(0,0));const wa=p.locator(width<=900?'.master-mobile-whatsapp':'.master-contact-actions .master-contact-whatsapp').first();check(await wa.isVisible(),'Actual WhatsApp control hidden');
              let timer;try{await Promise.race([Promise.all([handoffPromise,wa.click()]),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('WhatsApp interception timed out')),10000)})])}finally{clearTimeout(timer)}check(handoffs===1,'Expected one intercepted WhatsApp action');
             }catch(e){r.errors.push(e.message)}
             results.push(r);console.log(JSON.stringify(r));await context.close();fs.writeFileSync(output+'/results.json',JSON.stringify(results,null,2));
