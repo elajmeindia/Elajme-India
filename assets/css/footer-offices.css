@@ -30,3 +30,27 @@ html[lang="ar"] body footer.site-footer .elajme-office-card .elajme-office-conta
 html[lang="ar"] body footer.site-footer .elajme-office-card .elajme-office-contact-line a{order:1!important}
 html body footer.site-footer .elajme-office-website{direction:ltr!important;justify-content:center!important;white-space:nowrap!important}
 @media(max-width:650px){html body footer.site-footer .elajme-office-grid{grid-template-columns:1fr!important;gap:15px!important}html body footer.site-footer .elajme-office-card .elajme-office-address{max-width:none!important}}
+
+/* Final Arabic footer correction: the icon precedes the contact text visually from the RIGHT. */
+html[lang="ar"] body footer.site-footer .elajme-office-card .elajme-office-contact-line{
+  direction:rtl!important;flex-direction:row!important;justify-content:flex-start!important;
+  text-align:right!important;gap:6px!important
+}
+html[lang="ar"] body footer.site-footer .elajme-office-card .elajme-office-contact-line .elajme-contact-icon{
+  order:0!important;flex-shrink:0!important
+}
+html[lang="ar"] body footer.site-footer .elajme-office-card .elajme-office-contact-line a{
+  order:1!important;direction:ltr!important;unicode-bidi:isolate!important;text-align:left!important
+}
+/* One website link, centred against the entire full-width footer container. */
+html body footer.site-footer > .footer-wrap > .elajme-office-contacts > .elajme-office-website{
+  display:flex!important;width:100%!important;max-width:none!important;box-sizing:border-box!important;
+  direction:rtl!important;justify-content:center!important;align-items:center!important;
+  text-align:center!important;gap:6px!important;margin:12px auto 0!important;
+  padding:0!important;float:none!important;clear:both!important
+}
+html body footer.site-footer .elajme-office-website .elajme-contact-icon{order:0!important}
+html body footer.site-footer .elajme-office-website a{
+  order:1!important;direction:ltr!important;unicode-bidi:isolate!important;
+  white-space:nowrap!important;overflow-wrap:normal!important
+}
