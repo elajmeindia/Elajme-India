@@ -54,3 +54,24 @@ html body footer.site-footer .elajme-v2 a:focus-visible{outline:3px solid #b7e74
  html body footer.site-footer .elajme-v2-lower .elajme-office-website{gap:8px!important}
  html body footer.site-footer .elajme-v2-lower .elajme-office-website:before,html body footer.site-footer .elajme-v2-lower .elajme-office-website:after{max-width:36px!important;height:1px!important}
 }
+
+/* Full-width root: bypass the old footer-wrap column constraint entirely. */
+html body footer.site-footer{
+ display:block!important;grid-template-columns:none!important;grid-template-rows:none!important;
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ margin-inline:0!important;padding-inline:0!important;float:none!important;clear:both!important;
+}
+html body footer.site-footer>.elajme-v2{
+ display:block!important;position:relative!important;float:none!important;clear:both!important;
+ width:calc(100% - 48px)!important;max-width:1440px!important;min-width:0!important;
+ margin-inline:auto!important;left:auto!important;right:auto!important;transform:none!important;
+}
+html body footer.site-footer>.elajme-v2>.elajme-v2-main,
+html body footer.site-footer>.elajme-v2>.elajme-v2-lower,
+html body footer.site-footer>.elajme-v2>.elajme-v2-copyright{
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ grid-column:1/-1!important;float:none!important;clear:both!important;
+}
+@media(max-width:650px){
+ html body footer.site-footer>.elajme-v2{width:calc(100% - 28px)!important}
+}
