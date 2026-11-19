@@ -10,3 +10,7 @@
 html[lang="ar"] .site-footer .elajme-office-contacts{direction:rtl;text-align:right}
 html[lang="en"] .site-footer .elajme-office-contacts{direction:ltr;text-align:left}
 @media(max-width:650px){.site-footer .elajme-office-grid{grid-template-columns:1fr;gap:22px}.site-footer .elajme-office-contacts{padding:22px 0 18px}}
+
+.site-footer .elajme-office-card .elajme-contact-icon{display:inline-flex;align-items:center;justify-content:center;width:19px;min-width:19px;height:19px;margin-inline-end:7px;color:#b8e5d6;font-size:17px;line-height:1;vertical-align:middle}
+.site-footer .elajme-office-card p:has(.elajme-contact-icon){display:flex;align-items:baseline;flex-wrap:wrap;gap:0 2px}
+.site-footer .elajme-office-card p:has(.elajme-contact-icon) a{margin-inline-start:4px}
