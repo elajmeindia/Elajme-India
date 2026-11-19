@@ -1,0 +1,77 @@
+name: Arabic Desktop Header Navigation Journey
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '19 5 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/arabic-desktop-header-journey.yml'
+      - 'ar/index.html'
+      - 'ar/treatments/index.html'
+      - 'ar/hospitals/index.html'
+      - 'ar/about/index.html'
+      - 'ar/contact/index.html'
+      - 'assets/css/master-header.css'
+      - 'assets/css/arabic-master-header.css'
+      - 'assets/js/mobile-header.js'
+permissions:
+  contents: read
+jobs:
+  arabic-desktop-header:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install chromium
+      - name: Verify live Arabic navigation and stable header geometry
+        env:
+          SITE_ORIGIN: https://elajmeindia.com
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const paths=['/ar/','/ar/treatments/','/ar/hospitals/','/ar/about/','/ar/contact/'];
+            const expected=['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا','المدونة'];
+            const errors=[];
+            try{
+              for(const width of [1200,1363,1440]){
+                const page=await browser.newPage({viewport:{width,height:900}});
+                await page.context().route(url=>/google-analytics|googletagmanager|doubleclick|cloudflareinsights/.test(url.hostname),r=>r.abort());
+                let baseline;
+                for(const path of paths){
+                  try{
+                    const response=await page.goto(process.env.SITE_ORIGIN+path,{waitUntil:'domcontentloaded',timeout:25000});
+                    if(response?.status()!==200)throw Error('HTTP '+response?.status());
+                    await page.waitForTimeout(700);
+                    const data=await page.evaluate(()=>{
+                      const header=document.querySelector('.master-site-header');
+                      const nav=header?.querySelector('.master-nav');
+                      const rect=header?.getBoundingClientRect();
+                      const navRect=nav?.getBoundingClientRect();
+                      const links=[...nav?.querySelectorAll('a')||[]];
+                      return {labels:links.map(a=>a.textContent.trim()),blogVisible:links.find(a=>a.getAttribute('href')==='/ar/blog/')?.getBoundingClientRect().width>0,header:rect?{x:rect.x,y:rect.y,width:rect.width,height:rect.height}:null,nav:navRect?{x:navRect.x,y:navRect.y,width:navRect.width,height:navRect.height}:null,overflow:document.documentElement.scrollWidth>innerWidth+2};
+                    });
+                    if(JSON.stringify(data.labels)!==JSON.stringify(expected))errors.push(width+' '+path+' navigation mismatch '+JSON.stringify(data.labels));
+                    if(!data.blogVisible)errors.push(width+' '+path+' Blog not visible');
+                    if(data.overflow)errors.push(width+' '+path+' horizontal overflow');
+                    if(!data.header||!data.nav)errors.push(width+' '+path+' header/nav missing');
+                    if(baseline&&data.header){
+                      for(const key of ['x','y','width','height'])if(Math.abs(data.header[key]-baseline.header[key])>2)errors.push(width+' '+path+' header '+key+' differs '+data.header[key]+' vs '+baseline.header[key]);
+                    }else if(data.header)baseline=data;
+                    console.log('AR DESKTOP',width,path,JSON.stringify(data));
+                  }catch(e){errors.push(width+' '+path+' '+e.message)}
+                }
+                await page.close();
+              }
+            }finally{await browser.close()}
+            if(errors.length){console.error(errors.join('\n'));process.exit(1)}
+            console.log('Arabic desktop navigation and header geometry: PASS');
+          })().catch(e=>{console.error(e);process.exit(1)});
+          JS
