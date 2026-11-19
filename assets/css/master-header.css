@@ -2,3 +2,18 @@
 /* Approved desktop layout: 5% side gutters on wide screens, compact gutters below. */
 @media(min-width:1400px){.master-site-header .master-header-inner{width:90%!important;max-width:none!important;justify-content:space-between!important;gap:10px!important}.master-site-header .master-nav{flex:1 1 auto!important;min-width:0!important;justify-content:space-evenly!important;gap:4px!important}.master-site-header .master-brand,.master-site-header .master-actions{flex-shrink:0!important}}
 @media(min-width:1200px) and (max-width:1399px){.master-site-header .master-header-inner{width:90%!important;max-width:none!important;justify-content:space-between!important;gap:8px!important}.master-site-header .master-nav{flex:1 1 auto!important;justify-content:space-around!important;gap:3px!important}.master-site-header .master-brand{margin-right:10px!important}}
+
+/* Owner-approved email contact strip: reserve space before shared header JS runs. */
+.master-site-header.master-site-header{height:126px!important;min-height:126px!important;max-height:126px!important;padding:44px 0 0!important;box-sizing:border-box!important}
+.master-site-header>.master-email-strip{position:absolute;inset:0 0 auto;display:flex;align-items:center;justify-content:center;height:44px;box-sizing:border-box;background:#f0f8f7;border-bottom:1px solid #dceae7;direction:ltr}
+.master-email-strip>.master-email-link{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 12px;box-sizing:border-box;color:#123b50;font-family:inherit;font-size:13px;font-weight:600;line-height:1.4;text-decoration:none;white-space:nowrap;direction:ltr;unicode-bidi:isolate}
+.master-email-strip>.master-email-link svg{display:block;width:16px;height:16px;flex:0 0 16px;color:#1c827e}
+.master-email-strip>.master-email-link:hover{color:#146b68;text-decoration:underline;text-underline-offset:3px}
+.master-email-strip>.master-email-link:focus-visible{outline:2px solid #123b50;outline-offset:-4px;border-radius:6px}
+html:has(.master-site-header){scroll-padding-top:140px}
+@media(max-width:900px){
+  .master-site-header.master-site-header{height:116px!important;min-height:116px!important;max-height:116px!important}
+  .master-site-header.master-site-header.mobile-menu-open .master-header-inner>.master-nav{top:116px!important;max-height:calc(100dvh - 116px)!important}
+  html:has(.master-site-header){scroll-padding-top:130px}
+}
+

@@ -18,13 +18,13 @@ jobs:
           from pathlib import Path
           import hashlib,re,sys
           problems=[]
-          # Approved baseline after the verified bilingual mobile-header repair and directory language-switch normalization.
+          # Owner-approved contact-strip addition; original header controls and footer remain protected.
           locked_hashes={
-            'assets/css/master-header.css':'97d1b98203185bd444d7f66a11df89cee58b4f16',
+            'assets/css/master-header.css':'dbfd6879664f4f1c12cb3e47ae82b8c3373ea824',
             'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
-            'assets/js/mobile-header.js':'bc3a3fac18efe7b6eac1771a9e2b2e4321b11661',
+            'assets/js/mobile-header.js':'f2afa255b0762788f289b98a12895036356d9785',
             'assets/css/footer-approved.css':'05faf239dd9cf39a19b41e596f433c99989c1e9b',
           }
           def git_blob_sha(data): return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
@@ -54,6 +54,12 @@ jobs:
           if '◉' in js: problems.append('ARABIC_WHATSAPP_DOT_REINTRODUCED')
           for token in [".arabic-mobile-wa-cta::before{content:'☎'!important","width:18px!important;height:18px!important;flex:0 0 18px!important","background:#20a86b!important",".arabic-mobile-case-cta::before{content:none!important"]:
               if token not in ar_mobile: problems.append('ARABIC_MOBILE_CTA_STYLE_DRIFT '+token)
+
+          # Preserve the explicitly approved full-address strip and its reserved layout space.
+          for token in ['height:126px!important','height:116px!important','top:116px!important','.master-email-link:focus-visible']:
+              if token not in master: problems.append('EMAIL_STRIP_STYLE_DRIFT '+token)
+          for token in ["email.href='mailto:care@elajmeindia.com'","<span>care@elajmeindia.com</span>","email.dir='ltr'","header.prepend(strip)"]:
+              if token not in js: problems.append('EMAIL_STRIP_CONTACT_DRIFT '+token)
 
           ar_sequence=['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا']
           ar_actions=['+91 74889 55154','واتساب','English','ابدأ استفسارك']
