@@ -126,3 +126,29 @@ html body footer.site-footer .elajme-v2-copyright{padding-top:7px!important}
  html body footer.site-footer .elajme-v2 .elajme-office-contact-line{margin-bottom:9px!important}
  html body footer.site-footer .elajme-v2 .elajme-footer-socials{margin-top:9px!important}
 }
+
+/* Match approved logo lockup: symbol on the left, bilingual name stacked to its right.
+   Reuse the existing official logo asset and text; never redraw the brand. */
+html body footer.site-footer .elajme-v2-brand .footer-brand{
+ display:flex!important;flex-direction:row!important;align-items:center!important;
+ justify-content:center!important;gap:10px!important;direction:ltr!important;
+}
+html body footer.site-footer .elajme-v2-brand .footer-brand .brand-icon{
+ display:block!important;width:76px!important;height:76px!important;
+ max-width:76px!important;max-height:76px!important;flex:0 0 76px!important;object-fit:contain!important;
+}
+html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text{
+ display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+ text-align:left!important;gap:3px!important;direction:ltr!important;
+}
+html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text strong{
+ white-space:nowrap!important;line-height:1.15!important;
+}
+html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text span{
+ white-space:nowrap!important;line-height:1.25!important;direction:rtl!important;
+}
+@media(max-width:650px){
+ html body footer.site-footer .elajme-v2-brand .footer-brand .brand-icon{
+  width:70px!important;height:70px!important;max-width:70px!important;max-height:70px!important;flex-basis:70px!important;
+ }
+}
