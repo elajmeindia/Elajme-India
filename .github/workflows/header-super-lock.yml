@@ -24,7 +24,7 @@ jobs:
             'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
-            'assets/js/mobile-header.js':'fffa169fb9cdacd58ba5c6c34a3220e4fbfb1cae',
+            'assets/js/mobile-header.js':'a25c5d49263de08922ac66f021f6010973ca3487',
             'assets/css/footer-approved.css':'05faf239dd9cf39a19b41e596f433c99989c1e9b',
           }
           def git_blob_sha(data): return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
@@ -60,6 +60,12 @@ jobs:
               if token not in master: problems.append('EMAIL_STRIP_STYLE_DRIFT '+token)
           for token in ["email.href='mailto:care@elajmeindia.com'","<span>care@elajmeindia.com</span>","email.dir='ltr'","header.prepend(strip)"]:
               if token not in js: problems.append('EMAIL_STRIP_CONTACT_DRIFT '+token)
+
+          if "footer-offices.js?v=1" not in js: problems.append('OFFICE_FOOTER_LOADER_MISSING')
+          office_js=Path('assets/js/footer-offices.js').read_text(encoding='utf-8')
+          for token in ['C-67, Multani Dhanda','C-3, First Floor','tel:+917488955154','mailto:care@elajmeindia.com','مكتب دلهي','مكتب مومباي']:
+              if token not in office_js: problems.append('OFFICE_CONTACT_DRIFT '+token)
+          if not Path('assets/css/footer-offices.css').exists(): problems.append('OFFICE_FOOTER_STYLE_MISSING')
 
           ar_sequence=['الرئيسية','العلاجات','المستشفيات','الأطباء','المرضى الدوليون','من نحن','تواصل معنا']
           ar_actions=['+91 74889 55154','واتساب','English','ابدأ استفسارك']

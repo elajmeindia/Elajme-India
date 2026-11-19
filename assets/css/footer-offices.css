@@ -1,0 +1,17 @@
+/* Compact office details; the approved footer logo, brand text, navigation and copyright are untouched. */
+.site-footer .elajme-office-contacts{border-top:1px solid rgba(255,255,255,.16);padding:18px 0 12px;color:#d6e5e8}
+.site-footer .elajme-office-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 32px;align-items:start}
+.site-footer .elajme-office-card{min-width:0}
+.site-footer .elajme-office-card h2{display:flex;align-items:center;gap:6px;margin:0 0 6px;color:#fff;font-size:15px;font-weight:700;line-height:1.4}
+.site-footer .elajme-office-card p{margin:0 0 5px;color:#d6e5e8;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.site-footer .elajme-office-card .elajme-office-address{margin-bottom:9px}
+.site-footer .elajme-office-contact-line{display:flex;align-items:center;gap:6px;min-width:0}
+.site-footer .elajme-contact-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 16px;width:16px;height:16px;color:#b8e5d6}
+.site-footer .elajme-contact-icon svg{display:block;width:16px;height:16px}
+.site-footer .elajme-office-contacts a{color:#fff;text-decoration:none;overflow-wrap:anywhere;unicode-bidi:isolate}
+.site-footer .elajme-office-contacts a:hover{text-decoration:underline;text-underline-offset:3px}
+.site-footer .elajme-office-contacts a:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:2px}
+.site-footer .elajme-office-website{display:flex;align-items:center;justify-content:center;gap:6px;margin:9px 0 0;font-size:13px;line-height:1.5}
+html[lang="ar"] .site-footer .elajme-office-contacts{direction:rtl;text-align:right}
+html[lang="en"] .site-footer .elajme-office-contacts{direction:ltr;text-align:left}
+@media(max-width:650px){.site-footer .elajme-office-grid{grid-template-columns:1fr;gap:15px}.site-footer .elajme-office-contacts{padding:17px 0 11px}}
