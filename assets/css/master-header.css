@@ -42,3 +42,8 @@ html:has(.master-site-header){scroll-padding-top:140px}
  .master-site-header.master-site-header.mobile-menu-open .master-header-inner>.master-nav{top:176px!important;max-height:calc(100dvh - 176px)!important}
  html:has(.master-site-header){scroll-padding-top:190px}
 }
+
+/* Single, clearly labelled contact actions in the approved top strip. */
+.master-contact-actions .master-contact-phone,.master-contact-actions .master-contact-whatsapp{width:auto;min-width:44px;padding:0 7px;gap:7px;white-space:nowrap;font-size:13px;font-weight:700}
+.master-contact-actions .master-contact-phone .master-contact-number{font-size:inherit}
+@media(max-width:900px){.master-contact-actions .master-contact-phone,.master-contact-actions .master-contact-whatsapp{width:auto;min-width:40px;padding:0 5px;gap:5px;font-size:11px}.master-site-header>.master-email-strip{gap:0!important}.master-contact-actions{gap:7px}}
