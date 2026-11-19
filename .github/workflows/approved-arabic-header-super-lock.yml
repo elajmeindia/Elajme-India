@@ -1,0 +1,49 @@
+name: Approved Arabic Header Super Lock
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  protect-approved-arabic-header:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify approved Arabic header navigation and structure
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,sys
+          errors=[]
+          expected=[('/ar/','الرئيسية'),('/ar/treatments/','العلاجات'),('/ar/hospitals/','المستشفيات'),('/ar/doctors/','الأطباء'),('/ar/international-patients/mea/','المرضى الدوليون'),('/ar/about/','من نحن'),('/ar/contact/','تواصل معنا'),('/ar/blog/','المدونة')]
+          core=['ar/index.html','ar/treatments/index.html','ar/hospitals/index.html','ar/doctors/index.html','ar/international-patients/mea/index.html','ar/about/index.html','ar/contact/index.html']
+          count=0
+          for path in Path('ar').rglob('*.html'):
+              rel=path.as_posix()
+              html=path.read_text(encoding='utf-8',errors='ignore')
+              if 'class="master-site-header"' not in html: continue
+              count+=1
+              headers=re.findall(r'<header class="master-site-header">.*?</header>',html,re.S)
+              if len(headers)!=1: errors.append(f'{rel}: expected one approved header'); continue
+              header=headers[0]
+              nav=re.search(r'<nav class="master-nav"[^>]*>(.*?)</nav>',header,re.S)
+              if not nav: errors.append(f'{rel}: master navigation missing'); continue
+              for token in ['class="master-header-inner"','class="master-actions"','class="master-lang"','917488955154']:
+                  if token not in header: errors.append(f'{rel}: missing {token}')
+              for asset in ['/assets/css/master-header.css?v=6','/assets/css/arabic-master-header.css?v=2','/assets/css/mobile-header.css?v=3','/assets/js/mobile-header.js?v=3']:
+                  if html.count(asset)!=1: errors.append(f'{rel}: missing or duplicate {asset}')
+              if rel in core:
+                  links=re.findall(r'<a\s+[^>]*href="([^"]+)"[^>]*>(.*?)</a>',nav.group(1),re.S)
+                  normalized=[(href,re.sub(r'<[^>]+>','',label).strip()) for href,label in links]
+                  if normalized!=expected: errors.append(f'{rel}: approved navigation changed: {normalized}')
+          if count==0: errors.append('No Arabic master headers found')
+          js=Path('assets/js/mobile-header.js').read_text(encoding='utf-8')
+          for token in ["link.textContent=arabicPage?'المدونة':'Blog'","nav.append(link)"]:
+              if token not in js: errors.append('Shared Arabic Blog fallback missing: '+token)
+          if errors:
+              print('\n'.join(errors));sys.exit(1)
+          print(f'Approved Arabic header structure: PASS ({count} pages)')
+          PY
