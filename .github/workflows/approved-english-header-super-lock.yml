@@ -1,0 +1,47 @@
+name: Approved English Header Super Lock
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  protect-approved-english-header:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify English header consistency and approved navigation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re,sys
+          errors=[]
+          expected=[('/', 'Home'),('/treatments/', 'Treatments'),('/hospitals/', 'Hospitals'),('/doctors/', 'Doctors'),('/international-patients/mea/', 'International Patients'),('/about/', 'About Us'),('/contact/', 'Contact'),('/blog/', 'Blog')]
+          initial_nav_pages=['index.html','about/index.html','contact/index.html','treatments/index.html','hospitals/index.html','doctors/index.html','international-patients/mea/index.html']
+          for path in Path('.').rglob('*.html'):
+              rel=path.as_posix()
+              if rel.startswith(('ar/','.git/','.github/')) or rel=='404.html': continue
+              html=path.read_text(encoding='utf-8',errors='ignore')
+              if 'class="master-site-header"' not in html: continue
+              headers=re.findall(r'<header class="master-site-header">.*?</header>',html,re.S)
+              if len(headers)!=1: errors.append(f'{rel}: expected one approved header'); continue
+              header=headers[0]
+              nav=re.search(r'<nav class="master-nav"[^>]*>(.*?)</nav>',header,re.S)
+              if not nav: errors.append(f'{rel}: master navigation missing'); continue
+              for token in ['class="master-header-inner"','class="master-actions"','class="master-lang"','917488955154']:
+                  if token not in header: errors.append(f'{rel}: missing {token}')
+              for asset in ['/assets/css/master-header.css?v=6','/assets/css/mobile-header.css?v=3','/assets/js/mobile-header.js?v=3']:
+                  if html.count(asset)!=1: errors.append(f'{rel}: missing or duplicate {asset}')
+              if rel in initial_nav_pages:
+                  links=re.findall(r'<a\s+[^>]*href="([^"]+)"[^>]*>(.*?)</a>',nav.group(1),re.S)
+                  normalized=[(href,re.sub(r'<[^>]+>','',label).strip()) for href,label in links]
+                  if normalized!=expected: errors.append(f'{rel}: approved initial navigation changed: {normalized}')
+          js=Path('assets/js/mobile-header.js').read_text(encoding='utf-8')
+          for token in ["nav.querySelector('a[href=\"'+href+'\"]')","link.textContent=arabicPage?'المدونة':'Blog'","nav.append(link)"]:
+              if token not in js: errors.append('Shared Blog navigation fallback missing: '+token)
+          if errors:
+              print('\n'.join(errors));sys.exit(1)
+          print('Approved English header navigation and structure: PASS')
+          PY
