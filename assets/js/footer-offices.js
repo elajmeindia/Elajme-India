@@ -21,7 +21,8 @@ navLinks.forEach((a,i)=>(i<Math.ceil(navLinks.length/2)?navA:navB).append(a));
 // International Patients already appears first in Useful links; add the two missing pages directly after it.
 const extraUseful=ar?[['من نحن','/ar/about/'],['المدونة','/ar/blog/']]:[['About Us','/about/'],['Blog','/blog/']];
 const firstUseful=navB.firstElementChild;
-extraUseful.forEach(([label,href])=>{const a=document.createElement('a');a.href=href;a.textContent=label;if(firstUseful)firstUseful.after(a);else navB.append(a)});
+let insertAfter=firstUseful;
+extraUseful.forEach(([label,href])=>{const a=document.createElement('a');a.href=href;a.textContent=label;if(insertAfter)insertAfter.after(a);else navB.append(a);insertAfter=a});
 services.append(navA);useful.append(navB);
 const contact=makeCol('elajme-v2-contact',ar?'تواصل معنا':'Contact us');
 contact.append(line('phone','+91 74889 55154','tel:+917488955154'),line('mail','care@elajmeindia.com','mailto:care@elajmeindia.com'),socials);
