@@ -20,11 +20,11 @@ jobs:
           problems=[]
           # Owner-approved contact-strip addition; original header controls and footer remain protected.
           locked_hashes={
-            'assets/css/master-header.css':'837a6d9d55967d7aec16860b1cf56d9f6d8305f0',
+            'assets/css/master-header.css':'17e33efc6d6e075d2a49e23b141db9ef5bde2064',
             'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
-            'assets/js/mobile-header.js':'f2afa255b0762788f289b98a12895036356d9785',
+            'assets/js/mobile-header.js':'b14544701b3166fabb5fea96557ae449d8a973a4',
             'assets/css/footer-approved.css':'05faf239dd9cf39a19b41e596f433c99989c1e9b',
           }
           def git_blob_sha(data): return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
