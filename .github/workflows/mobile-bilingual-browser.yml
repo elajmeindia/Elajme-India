@@ -87,7 +87,7 @@ jobs:
                     if(await enquiry.count()!==1 || (await enquiry.innerText()).trim()!=='Enquire Now')errors.push(path+': Enquire Now action missing or incorrect');
                   }
                 }
-                if(lang==='ar' && await page.locator('body > .elajme-bottom-actions').count())errors.push(path+': English bar leaked into Arabic');
+                if(lang==='ar'){const bar=page.locator('body > .elajme-bottom-actions');if(await bar.count()){const text=(await bar.innerText()).trim();if(text.includes('WhatsApp Us')||text.includes('Enquire Now'))errors.push(path+': English labels leaked into Arabic');}}
                 const menu=page.locator('.master-mobile-menu').first();
                 if(await menu.count()){
                   await menu.click();
