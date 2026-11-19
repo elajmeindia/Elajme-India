@@ -169,3 +169,17 @@ html body footer.site-footer .elajme-visual-offices .elajme-office-grid > .elajm
 html body footer.site-footer .elajme-visual-offices .elajme-office-grid > .elajme-office-card:last-child{grid-column:1 / -1!important;grid-row:2!important}
 html body footer.site-footer .elajme-visual-offices .elajme-office-grid{grid-auto-columns:minmax(0,1fr)!important;grid-auto-rows:auto!important}
 html body footer.site-footer .elajme-visual-offices .elajme-office-card .elajme-office-address{overflow-wrap:break-word!important;word-break:normal!important;max-width:none!important}
+
+/* The office card inherits a historical max-width:48ch and several direct-child
+   grid rules. Keep the approved office column genuinely wide and prevent
+   one-word-per-line addresses at desktop sizes. */
+@media(min-width:1101px){
+ html body footer.site-footer .elajme-visual-footer{grid-template-columns:minmax(170px,1.3fr) minmax(130px,.9fr) minmax(145px,1fr) minmax(185px,1.3fr) minmax(275px,2fr)!important}
+ html body footer.site-footer .elajme-visual-footer>*{padding-inline:14px!important}
+ html body footer.site-footer .elajme-visual-offices{min-width:275px!important}
+}
+html body footer.site-footer .elajme-visual-offices .elajme-office-grid{display:block!important;grid-template-columns:none!important;max-width:none!important;width:100%!important}
+html body footer.site-footer .elajme-visual-offices .elajme-office-grid>.elajme-office-card{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;grid-column:auto!important;grid-row:auto!important}
+html body footer.site-footer .elajme-visual-offices .elajme-office-grid>.elajme-office-card+.elajme-office-card{margin-top:14px!important}
+html body footer.site-footer .elajme-visual-offices .elajme-office-card .elajme-office-address{display:block!important;max-width:none!important;width:100%!important;white-space:normal!important;overflow-wrap:break-word!important;word-break:normal!important;hyphens:none!important}
+@media(max-width:1100px){html body footer.site-footer .elajme-visual-offices{min-width:0!important}}
