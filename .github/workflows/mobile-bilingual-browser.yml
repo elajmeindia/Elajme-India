@@ -75,6 +75,19 @@ jobs:
                   return rect.width>0 && rect.height>0 && rect.top<window.innerHeight && rect.bottom>0 && img.complete && img.naturalWidth===0;
                 }).slice(0,8).map(img=>img.getAttribute('src')));
                 if(images.length)errors.push(path+': visible broken images '+images.join(', '));
+                if(lang==='en'){
+                  const bar=page.locator('body > .elajme-bottom-actions');
+                  if(await bar.count()!==1)errors.push(path+': English mobile bottom bar missing or duplicated');
+                  else{
+                    const visible=await bar.isVisible();
+                    if(!visible)errors.push(path+': English mobile bottom bar not visible');
+                    const whatsapp=bar.locator('a.elajme-bottom-wa');
+                    const enquiry=bar.locator('a.elajme-bottom-enquiry');
+                    if(await whatsapp.count()!==1 || (await whatsapp.innerText()).trim()!=='WhatsApp Us')errors.push(path+': WhatsApp Us action missing or incorrect');
+                    if(await enquiry.count()!==1 || (await enquiry.innerText()).trim()!=='Enquire Now')errors.push(path+': Enquire Now action missing or incorrect');
+                  }
+                }
+                if(lang==='ar' && await page.locator('body > .elajme-bottom-actions').count())errors.push(path+': English bar leaked into Arabic');
                 const menu=page.locator('.master-mobile-menu').first();
                 if(await menu.count()){
                   await menu.click();
