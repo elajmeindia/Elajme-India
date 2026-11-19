@@ -152,3 +152,11 @@ html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text span{
   width:70px!important;height:70px!important;max-width:70px!important;max-height:70px!important;flex-basis:70px!important;
  }
 }
+
+/* Desktop: visually align the complete official logo lockup with the first-row headings.
+   Offset its image's transparent upper padding without moving the footer columns. */
+@media(min-width:1101px){
+ html body footer.site-footer .elajme-v2-brand .footer-brand{
+  position:relative!important;top:-17px!important;margin-bottom:-17px!important;
+ }
+}
