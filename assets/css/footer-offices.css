@@ -173,3 +173,42 @@ html body footer.site-footer a:focus-visible{outline:3px solid #b8e64b!important
  html body footer.site-footer .elajme-visual-bottom .elajme-office-website:before,
  html body footer.site-footer .elajme-visual-bottom .elajme-office-website:after{max-width:40px!important;height:1px!important}
 }
+
+/* Structural fix: the inherited .elajme-office-contacts styles previously
+   floated the website and benefits into a narrow left-hand column. */
+html body footer.site-footer>.footer-wrap>.elajme-visual-footer{
+ order:1!important;float:none!important;flex:none!important;align-self:stretch!important;
+ clear:both!important;
+}
+html body footer.site-footer>.footer-wrap>.elajme-office-contacts.elajme-visual-bottom{
+ order:2!important;display:block!important;float:none!important;clear:both!important;
+ flex:0 0 100%!important;align-self:stretch!important;
+ grid-area:auto!important;grid-column:1/-1!important;grid-row:auto!important;
+ position:static!important;inset:auto!important;transform:none!important;
+ box-sizing:border-box!important;width:100%!important;min-width:0!important;
+ max-width:100%!important;margin:0!important;padding:12px 0 4px!important;
+ text-align:center!important;direction:inherit!important;
+}
+html body footer.site-footer>.footer-wrap>.footer-bottom{
+ order:3!important;float:none!important;clear:both!important;flex:none!important;
+ align-self:stretch!important;width:100%!important;grid-area:auto!important;
+}
+html body footer.site-footer>.footer-wrap>.elajme-visual-bottom>.elajme-office-website{
+ float:none!important;clear:both!important;width:100%!important;max-width:100%!important;
+ display:flex!important;justify-content:center!important;align-items:center!important;
+}
+html body footer.site-footer>.footer-wrap>.elajme-visual-bottom>.elajme-visual-benefits{
+ float:none!important;clear:both!important;width:100%!important;max-width:100%!important;
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+html body footer.site-footer .elajme-visual-contact .elajme-footer-socials{
+ display:flex!important;flex-wrap:nowrap!important;gap:7px!important;
+}
+html body footer.site-footer .elajme-visual-contact .elajme-footer-socials a{
+ flex:0 0 44px!important;
+}
+@media(max-width:650px){
+ html body footer.site-footer>.footer-wrap>.elajme-visual-bottom>.elajme-visual-benefits{
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+}
