@@ -160,3 +160,10 @@ html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text span{
   position:relative!important;top:-17px!important;margin-bottom:-17px!important;
  }
 }
+
+/* Match the adjacent medical-enquiry section's teal family.
+   Keep the footer distinctly darker for readable white text and clear hierarchy. */
+html body footer.site-footer{
+ background:linear-gradient(115deg,#0b444b 0%,#0d5155 55%,#0d5558 100%)!important;
+ background-color:#0b444b!important;
+}
