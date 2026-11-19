@@ -450,7 +450,7 @@ jobs:
                     await menu.click();
                     await page.waitForTimeout(250);
                     check(await menu.getAttribute('aria-expanded')==='true','Menu did not open');
-                    check(await page.locator('.master-nav a:visible').count()===7,'Seven existing navigation tabs unavailable');
+                    check(await page.locator('.master-nav a:visible').count()===8,'Eight approved navigation tabs unavailable');
                     await page.screenshot({path:`qa-artifacts/${id}-menu.png`});
                     await menu.click();
                     check(await menu.getAttribute('aria-expanded')==='false','Menu did not close');
