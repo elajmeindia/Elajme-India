@@ -14,14 +14,21 @@ class EnquiryLinks(HTMLParser):
     def __init__(self):
         super().__init__()
         self.links = []
+        self.header_depth = 0
 
     def handle_starttag(self, tag, attrs):
-        if tag.lower() != "a":
+        if tag.lower() == "header":
+            self.header_depth += 1
+        if tag.lower() != "a" or self.header_depth:
             return
         attributes = dict(attrs)
         href = attributes.get("href", "")
         if urlsplit(href).fragment == "enquiry":
             self.links.append(href)
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "header" and self.header_depth:
+            self.header_depth -= 1
 
 def main():
     xml = ET.parse(SITEMAP)

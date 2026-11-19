@@ -20,3 +20,25 @@ html:has(.master-site-header){scroll-padding-top:140px}
 
 /* Keep horizontal clipping without making the English mobile body a sticky scroll ancestor. */
 @media(max-width:900px){html[lang="en"] body:has(>.master-site-header):not(.mobile-menu-open){overflow-x:clip!important;overflow-y:visible!important}}
+
+/* Approved patient contact strip: one number, two independent actions, existing enquiry CTA moved rather than duplicated. */
+.master-site-header>.master-email-strip{gap:20px!important;padding:0 12px!important}
+.master-contact-actions{display:flex;align-items:center;justify-content:center;gap:9px;direction:ltr}
+.master-contact-actions a{display:inline-flex;align-items:center;justify-content:center;width:40px;height:44px;min-width:40px;min-height:44px;color:#123b50;text-decoration:none;direction:ltr}
+.master-contact-actions svg{display:block;width:18px;height:18px;color:#1c827e}
+.master-contact-actions .master-contact-whatsapp svg{color:#168451}
+.master-contact-number{font-size:13px;font-weight:700;color:#123b50;white-space:nowrap;direction:ltr;unicode-bidi:isolate}
+.master-site-header>.master-email-strip>.master-contact-enquiry{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;min-height:34px!important;height:34px!important;padding:8px 13px!important;font-size:12px!important;box-shadow:none!important}
+.master-contact-actions a:hover{background:#e0f2ed;border-radius:8px}
+.master-contact-actions a:focus-visible{outline:2px solid #123b50;outline-offset:-4px;border-radius:6px}
+@media(max-width:900px){
+ .master-site-header.master-site-header{height:176px!important;min-height:176px!important;max-height:176px!important;padding-top:104px!important}
+ .master-site-header>.master-email-strip{height:104px!important;flex-wrap:wrap;gap:0!important;align-content:center;justify-content:center}
+ .master-email-strip>.master-email-link{height:38px!important;min-height:38px!important;width:100%;padding:0!important}
+ .master-contact-actions{height:34px;gap:7px;width:100%}
+ .master-contact-actions a{height:34px;min-height:34px;width:36px;min-width:36px}
+ .master-contact-number{font-size:12px}
+ .master-site-header>.master-email-strip>.master-contact-enquiry{height:32px!important;min-height:32px!important;padding:7px 13px!important;font-size:11px!important}
+ .master-site-header.master-site-header.mobile-menu-open .master-header-inner>.master-nav{top:176px!important;max-height:calc(100dvh - 176px)!important}
+ html:has(.master-site-header){scroll-padding-top:190px}
+}
