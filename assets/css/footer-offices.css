@@ -102,3 +102,20 @@ html body footer.site-footer > .footer-wrap > .elajme-office-contacts > .elajme-
  html body footer.site-footer .elajme-office-contacts .elajme-office-grid > .elajme-office-card:first-child{grid-column:1!important;grid-row:1!important}
  html body footer.site-footer .elajme-office-contacts .elajme-office-grid > .elajme-office-card:last-child{grid-column:1!important;grid-row:2!important}
 }
+
+/* Office addresses stacked vertically, Delhi first, Mumbai second, in both languages. */
+html body footer.site-footer .elajme-office-contacts .elajme-office-grid{
+ display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+ row-gap:18px!important;column-gap:0!important;max-width:760px!important;
+ margin-inline:auto!important;width:100%!important
+}
+html body footer.site-footer .elajme-office-contacts .elajme-office-grid > .elajme-office-card:first-child{
+ grid-column:1!important;grid-row:1!important
+}
+html body footer.site-footer .elajme-office-contacts .elajme-office-grid > .elajme-office-card:last-child{
+ grid-column:1!important;grid-row:2!important
+}
+html body footer.site-footer > .footer-wrap > .elajme-office-contacts > .elajme-office-website{
+ width:100%!important;justify-content:center!important;text-align:center!important;
+ margin:16px auto 0!important
+}

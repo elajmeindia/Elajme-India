@@ -63,7 +63,7 @@ jobs:
 
           if "footer-offices.js?v=1" not in js: problems.append('OFFICE_FOOTER_LOADER_MISSING')
           office_js=Path('assets/js/footer-offices.js').read_text(encoding='utf-8')
-          for token in ['C-67, Multani Dhanda','C-3, First Floor','tel:+917488955154','mailto:care@elajmeindia.com','مكتب دلهي','مكتب مومباي']:
+          for token in ['C-67, Multani Dhanda','C-3, First Floor','tel:+917488955154','mailto:care@elajmeindia.com','عنوان المكتب في دلهي','عنوان المكتب في مومباي']:
               if token not in office_js: problems.append('OFFICE_CONTACT_DRIFT '+token)
           if not Path('assets/css/footer-offices.css').exists(): problems.append('OFFICE_FOOTER_STYLE_MISSING')
 
