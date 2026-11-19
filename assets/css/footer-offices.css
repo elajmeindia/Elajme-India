@@ -225,3 +225,21 @@ html body footer.site-footer .footer-bottom p{font-size:13px!important}
  html body footer.site-footer .elajme-visual-footer>*{padding-inline:10px!important}
  html body footer.site-footer .elajme-visual-offices{grid-column:1/-1!important}
 }
+
+/* Patient-first footer readability: maintain the approved five-column layout. */
+html body footer.site-footer .elajme-visual-footer{column-gap:0!important}
+html body footer.site-footer .elajme-visual-footer .elajme-visual-nav a{font-size:15px!important;line-height:1.7!important;min-height:24px!important}
+html body footer.site-footer .elajme-visual-footer .elajme-visual-description{font-size:14px!important;line-height:1.75!important;max-width:27ch!important;margin-inline:auto!important}
+html body footer.site-footer .elajme-visual-footer .elajme-visual-contact .elajme-office-contact-line a{font-size:14px!important;line-height:1.6!important}
+html body footer.site-footer .elajme-visual-footer .elajme-visual-offices .elajme-office-card h2{font-size:16px!important;line-height:1.55!important}
+html body footer.site-footer .elajme-visual-footer .elajme-visual-offices .elajme-office-card p{font-size:14px!important;line-height:1.65!important}
+html body footer.site-footer .elajme-visual-footer .elajme-visual-offices .elajme-office-card .elajme-office-contact-line a{font-size:13px!important;line-height:1.6!important}
+html body footer.site-footer .elajme-visual-footer .elajme-visual-contact .elajme-footer-socials a{min-width:44px!important;min-height:44px!important;width:44px!important;height:44px!important}
+html body footer.site-footer .elajme-visual-footer a:focus-visible,html body footer.site-footer .elajme-visual-bottom a:focus-visible{outline:3px solid #b8e64b!important;outline-offset:3px!important;border-radius:3px!important}
+html body footer.site-footer .elajme-visual-bottom .elajme-visual-benefits{gap:18px!important}
+html body footer.site-footer .elajme-visual-bottom .elajme-visual-benefits span{font-size:14px!important;line-height:1.6!important}
+@media(max-width:650px){
+ html body footer.site-footer .elajme-visual-footer .elajme-visual-nav a{font-size:14px!important}
+ html body footer.site-footer .elajme-visual-footer .elajme-visual-offices .elajme-office-card p{font-size:14px!important}
+ html body footer.site-footer .elajme-visual-bottom .elajme-visual-benefits span{font-size:12px!important}
+}
