@@ -167,3 +167,24 @@ html body footer.site-footer{
  background:linear-gradient(115deg,#0b444b 0%,#0d5155 55%,#0d5558 100%)!important;
  background-color:#0b444b!important;
 }
+
+/* Official social brand treatments, scoped to footer icons only. */
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-whatsapp{
+ background:linear-gradient(135deg,#5BEF78 0%,#25D366 58%,#1DAF54 100%)!important;border-color:#25D366!important;color:#fff!important;
+}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-facebook{
+ background:linear-gradient(135deg,#328BFF 0%,#0866FF 55%,#2636A3 100%)!important;border-color:#0866FF!important;color:#fff!important;
+}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-instagram{
+ background:linear-gradient(135deg,#833AB4 0%,#C13584 35%,#E1306C 60%,#F77737 85%,#FCAF45 100%)!important;
+ border-color:#C13584!important;color:#fff!important;
+}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-whatsapp:hover,
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-facebook:hover,
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-instagram:hover{
+ filter:brightness(1.12)!important;
+}
+
+/* Reference-inspired rounded app-icon appearance; retain 44px touch target. */
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"]{border-radius:12px!important;box-shadow:0 2px 7px rgba(0,0,0,.12)!important}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"] svg{width:25px!important;height:25px!important;stroke-width:2!important}
