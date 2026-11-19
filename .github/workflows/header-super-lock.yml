@@ -20,7 +20,7 @@ jobs:
           problems=[]
           # Owner-approved contact-strip addition; original header controls and footer remain protected.
           locked_hashes={
-            'assets/css/master-header.css':'f0c4c5fa244d2cc9d424e5ecf8fddf6cd553b3a7',
+            'assets/css/master-header.css':'dab50f2dbccc948a70c9da02b33063d57a94c039',
             'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
