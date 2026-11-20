@@ -25,3 +25,23 @@
   .enquiry-section .enquiry-form .form-field{margin-bottom:10px}
   .enquiry-section .enquiry-card-heading{margin-bottom:12px!important}
 }
+
+/* Desktop: two short rows of fields instead of a tall single-column form. */
+@media (min-width:901px){
+  .enquiry-section .enquiry-wrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:clamp(20px,2.5vw,36px)!important}
+  .enquiry-section .enquiry-form{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:12px;row-gap:9px;align-content:start;max-width:580px;width:100%;justify-self:end;padding:16px 18px!important}
+  .enquiry-section .enquiry-form>.enquiry-card-heading{grid-column:1/-1;margin:0 0 2px!important}
+  .enquiry-section .enquiry-form>.form-field,.enquiry-section .enquiry-form>.form-row{min-width:0;margin:0!important}
+  .enquiry-section .enquiry-form>.form-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.65fr);gap:8px}
+  .enquiry-section .enquiry-form>.form-row .form-field{min-width:0;margin:0!important}
+  .enquiry-section .enquiry-form>.form-field:nth-child(5){grid-column:1/-1;order:1}
+  .enquiry-section .enquiry-form>.form-field:nth-child(5) p{margin:0;font-size:11px;line-height:1.35}
+  .enquiry-section .enquiry-form>.enquiry-submit{grid-column:1/-1;order:2;margin:0;min-height:40px}
+  .enquiry-section .enquiry-form .form-field{gap:3px!important}
+  .enquiry-section .enquiry-form .form-field input,.enquiry-section .enquiry-form .form-field select{height:38px;min-height:38px}
+  .enquiry-section .enquiry-points>span{padding:7px 10px!important}
+}
+@media (min-width:901px) and (max-width:1050px){
+  .enquiry-section .enquiry-form{column-gap:8px;padding:14px!important}
+  .enquiry-section .enquiry-form>.form-row{gap:5px}
+}
