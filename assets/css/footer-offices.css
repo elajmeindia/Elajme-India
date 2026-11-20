@@ -236,3 +236,16 @@ html[lang="ar"] body footer.site-footer{
  html body footer.site-footer .elajme-v2-main{padding-bottom:3px!important}
  html body footer.site-footer .elajme-v2-lower{padding-top:5px!important}
 }
+
+/* Owner-approved bilingual brand refinement: center both name lines to the
+   same axis inside the existing lockup, preserving icon and column geometry. */
+html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text{
+ align-items:center!important;
+ text-align:center!important;
+}
+html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text strong,
+html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text span{
+ display:block!important;
+ width:100%!important;
+ text-align:center!important;
+}
