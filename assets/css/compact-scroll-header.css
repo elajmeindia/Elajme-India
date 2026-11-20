@@ -3,7 +3,7 @@
  .master-site-header.master-site-header{
   height:110px!important;min-height:110px!important;max-height:110px!important;
   padding-top:44px!important;
-  transition:height .18s ease,padding-top .18s ease!important;
+  transition:none!important;
  }
  .master-site-header .master-header-inner{
   height:66px!important;min-height:66px!important;max-height:66px!important;
@@ -28,7 +28,7 @@
  .master-site-header.master-site-header{
   height:112px!important;min-height:112px!important;max-height:112px!important;
   padding-top:44px!important;
-  transition:height .18s ease,padding-top .18s ease!important;
+  transition:none!important;
  }
  .master-site-header .master-header-inner{
   height:68px!important;min-height:68px!important;max-height:68px!important;
