@@ -41,13 +41,14 @@ const origin=process.env.AUDIT_ORIGIN||'https://elajmeindia.com';
     const form=page.locator('#patientEnquiryForm');r.validation={blank:await form.evaluate(f=>f.checkValidity())};
     await form.locator('#patientName').fill('Synthetic QA');await form.locator('#patientCountry').fill('Oman');await form.locator('#patientMobile').fill('+96890000000');r.validation.valid=await form.evaluate(f=>f.checkValidity());
     await form.locator('#patientMobile').fill('invalid');r.validation.invalidPhone=await form.evaluate(f=>f.checkValidity());
-    const originalURL=page.url();await form.locator('.enquiry-submit').click();
-    r.validation.invalidSubmit=await form.evaluate(f=>({phoneMessage:f.querySelector('#patientMobile').validationMessage,status:f.querySelector('.form-status')?.innerText||'',focused:document.activeElement?.id}));
+    const originalURL=page.url();await form.locator('.enquiry-submit').click();await page.waitForTimeout(600);
+    r.validation.invalidSubmit=await form.evaluate(f=>({phoneMessage:f.querySelector('#patientMobile').validationMessage,status:f.querySelector('.form-status')?.innerText||'',focused:document.activeElement?.id,phoneRect:(()=>{const r=f.querySelector('#patientMobile').getBoundingClientRect();return{top:r.top,bottom:r.bottom,height:r.height}})(),headerBottom:document.querySelector('.master-site-header').getBoundingClientRect().bottom}));
     if(page.url()!==originalURL||(!r.validation.invalidSubmit.phoneMessage&&!r.validation.invalidSubmit.status))r.errors.push('Invalid phone submission not rejected');
     await page.screenshot({path:output+'/'+id+'-invalid-phone.png'});
     await form.locator('#patientMobile').fill('');await form.locator('#patientCountry').fill('');await form.locator('#patientName').fill('');
     await form.screenshot({path:output+'/'+id+'-form.png'});
     await page.addScriptTag({path:require.resolve('axe-core')});r.axe=await page.evaluate(async()=>{const r=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}});return r.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary})).slice(0,12)}))});
+    await page.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,0)});r.axeAtTop=await page.evaluate(async()=>{const a=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}});return a.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))});
     r.text=await page.locator('main').innerText();
    }
    await page.evaluate(()=>{document.documentElement.style.scrollBehavior='auto';scrollTo(0,document.documentElement.scrollHeight)});await page.waitForTimeout(80);
