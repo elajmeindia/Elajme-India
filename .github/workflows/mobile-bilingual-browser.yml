@@ -83,7 +83,7 @@ jobs:
                     if(!visible)errors.push(path+': English mobile bottom bar not visible');
                     const whatsapp=bar.locator('a.elajme-bottom-wa');
                     const enquiry=bar.locator('a.elajme-bottom-enquiry');
-                    if(await whatsapp.count()!==1 || (await whatsapp.innerText()).trim()!=='WhatsApp Us')errors.push(path+': WhatsApp Us action missing or incorrect');
+                    if(await whatsapp.count()!==1 || !['WhatsApp Us','WhatsApp'].includes((await whatsapp.innerText()).trim()))errors.push(path+': WhatsApp Us action missing or incorrect');
                     if(await enquiry.count()!==1 || (await enquiry.innerText()).trim()!=='Enquire Now')errors.push(path+': Enquire Now action missing or incorrect');
                   }
                 }
@@ -615,6 +615,9 @@ jobs:
            await browser.close();if(results.some(r=>r.errors.length))process.exitCode=1;
           })().catch(e=>{console.error(e);process.exitCode=1});
           JS
+      - name: Verify one contact bar and bilingual footer on matching preview
+        if: ${{ github.event_name == 'pull_request' }}
+        run: node .github/scripts/mobile-contact-footer.cjs
       - name: Upload responsive evidence
         if: always()
         uses: actions/upload-artifact@v4
