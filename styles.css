@@ -108,3 +108,11 @@ main .countries-section .country-tags > a:focus-visible{outline:2px solid #fff;o
 .enquiry-section .enquiry-form .enquiry-submit:hover{background:#e4f7f1;color:#0b454c}
 .enquiry-section .enquiry-form .enquiry-submit:focus-visible{outline:3px solid #a9e8df;outline-offset:3px}
 @media(max-width:600px){.enquiry-section .enquiry-form{padding:21px}.enquiry-section .enquiry-card-heading{margin-bottom:16px}}
+
+/* English tablet containment: retain approved mobile/desktop and Arabic layouts. */
+@media(min-width:561px) and (max-width:900px){
+ html[lang="en"] #home .container.hero-grid{padding-inline:24px!important}
+}
+@media(min-width:621px) and (max-width:767px){
+ html[lang="en"] #treatments .treatment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
