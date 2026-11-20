@@ -18,10 +18,11 @@ const useful=makeCol('elajme-v2-useful',ar?'روابط مفيدة':'Useful links
 const navA=document.createElement('nav'),navB=document.createElement('nav');
 navA.setAttribute('aria-label',ar?'خدماتنا':'Services');navB.setAttribute('aria-label',ar?'روابط مفيدة':'Useful links');
 navLinks.slice(0,4).forEach(a=>navA.append(a));
+const patientsLink=document.createElement('a');patientsLink.href=ar?'/ar/international-patients/mea/':'/international-patients/mea/';patientsLink.textContent=ar?'المرضى الدوليون':'International Patients';navA.append(patientsLink);
 const usefulEntries=ar?[
- ['من نحن','/ar/about/'],['المرضى الدوليون','/ar/international-patients/mea/'],['الأسئلة الشائعة','/ar/faq/'],['المدونة','/ar/blog/'],['سياسة الخصوصية','/ar/privacy.html'],['الشروط وإخلاء المسؤولية الطبية','/ar/terms.html']
+ ['من نحن','/ar/about/'],['الأسئلة الشائعة','/ar/faq/'],['المدونة','/ar/blog/'],['سياسة الخصوصية','/ar/privacy.html'],['الشروط وإخلاء المسؤولية الطبية','/ar/terms.html']
 ]:[
- ['About Us','/about/'],['International Patients','/international-patients/mea/'],['FAQs','/faq/'],['Blog','/blog/'],['Privacy Policy','/privacy.html'],['Terms & Medical Disclaimer','/terms.html']
+ ['About Us','/about/'],['FAQs','/faq/'],['Blog','/blog/'],['Privacy Policy','/privacy.html'],['Terms & Medical Disclaimer','/terms.html']
 ];
 usefulEntries.forEach(([label,href])=>{const a=document.createElement('a');a.href=href;a.textContent=label;navB.append(a)});
 services.append(navA);useful.append(navB);
@@ -52,5 +53,5 @@ const copyright=document.createElement('div');copyright.className='elajme-v2-cop
 copyright.textContent=ar?'© 2026 علاج مي إنديا. جميع الحقوق محفوظة. يخضع المحتوى الأصلي والهوية البصرية للحماية بموجب قوانين الملكية الفكرية المعمول بها.':'© 2026 Elajme India. All rights reserved. Original content and branding are protected under applicable intellectual property laws.';
 shell.append(main,lower,copyright);
 footer.insertBefore(shell,wrap);wrap.remove();
-if(!document.querySelector('link[href="/assets/css/footer-offices.css?v=27"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/assets/css/footer-offices.css?v=27';document.head.append(link)}
+if(!document.querySelector('link[href="/assets/css/footer-offices.css?v=28"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/assets/css/footer-offices.css?v=28';document.head.append(link)}
 })};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init()})();

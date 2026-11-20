@@ -103,8 +103,8 @@ html body footer.site-footer .elajme-v2-copyright{font-size:11px!important;paddi
 
 /* Small vertical trim only: preserve five-column widths, typography and touch targets. */
 html body footer.site-footer>.elajme-v2{padding-top:16px!important;padding-bottom:8px!important}
-html body footer.site-footer .elajme-v2-main{padding-bottom:14px!important}
-html body footer.site-footer .elajme-v2-lower{padding-top:8px!important}
+html body footer.site-footer .elajme-v2-main{padding-bottom:10px!important}
+html body footer.site-footer .elajme-v2-lower{padding-top:7px!important}
 html body footer.site-footer .elajme-v2-lower .elajme-office-website{margin-bottom:9px!important}
 html body footer.site-footer .elajme-v2-benefits{padding-top:9px!important;padding-bottom:9px!important}
 html body footer.site-footer .elajme-v2-copyright{padding-top:7px!important}
@@ -131,7 +131,7 @@ html body footer.site-footer .elajme-v2-copyright{padding-top:7px!important}
    Reuse the existing official logo asset and text; never redraw the brand. */
 html body footer.site-footer .elajme-v2-brand .footer-brand{
  display:flex!important;flex-direction:row!important;align-items:center!important;
- justify-content:center!important;gap:10px!important;direction:ltr!important;
+ justify-content:center!important;gap:10px!important;direction:ltr!important;width:100%!important;max-width:100%!important;
 }
 html body footer.site-footer .elajme-v2-brand .footer-brand .brand-icon{
  display:block!important;width:76px!important;height:76px!important;
@@ -168,26 +168,21 @@ html body footer.site-footer{
  background-color:#0b444b!important;
 }
 
-/* Official social brand treatments, scoped to footer icons only. */
-html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-whatsapp{
- background:linear-gradient(135deg,#5BEF78 0%,#25D366 58%,#1DAF54 100%)!important;border-color:#25D366!important;color:#fff!important;
+/* Compact social artwork: branded 34px squares centered in accessible 44px links. */
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"]{
+ position:relative!important;width:44px!important;height:44px!important;flex:0 0 44px!important;
+ border:0!important;border-radius:10px!important;background:transparent!important;
+ color:#fff!important;box-shadow:none!important;isolation:isolate!important;
 }
-html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-facebook{
- background:linear-gradient(135deg,#328BFF 0%,#0866FF 55%,#2636A3 100%)!important;border-color:#0866FF!important;color:#fff!important;
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"]:before{
+ content:""!important;position:absolute!important;inset:5px!important;border-radius:9px!important;
+ box-shadow:0 2px 5px rgba(0,0,0,.12)!important;z-index:-1!important;
 }
-html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-instagram{
- background:linear-gradient(135deg,#833AB4 0%,#C13584 35%,#E1306C 60%,#F77737 85%,#FCAF45 100%)!important;
- border-color:#C13584!important;color:#fff!important;
-}
-html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-whatsapp:hover,
-html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-facebook:hover,
-html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-instagram:hover{
- filter:brightness(1.12)!important;
-}
-
-/* Reference-inspired rounded app-icon appearance; retain 44px touch target. */
-html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"]{border-radius:12px!important;box-shadow:0 2px 7px rgba(0,0,0,.12)!important}
-html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"] svg{width:25px!important;height:25px!important;stroke-width:2!important}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-whatsapp:before{background:linear-gradient(135deg,#5BEF78,#25D366 58%,#1DAF54)!important}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-facebook:before{background:linear-gradient(135deg,#328BFF,#0866FF 55%,#2636A3)!important}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-instagram:before{background:linear-gradient(135deg,#833AB4,#C13584 35%,#E1306C 60%,#F77737 85%,#FCAF45)!important}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"] svg{width:19px!important;height:19px!important;stroke-width:1.9!important}
+html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"]:hover:before{filter:brightness(1.1)!important}
 
 /* Mobile footer parity: same structure and visual rhythm for EN (LTR) and AR (RTL).
    Preserve existing desktop five-column footer and all legal/contact content. */
