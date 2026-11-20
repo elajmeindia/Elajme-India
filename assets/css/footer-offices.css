@@ -249,3 +249,14 @@ html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text span{
  width:100%!important;
  text-align:center!important;
 }
+
+/* Owner-approved website row: keep the globe immediately beside the URL.
+   Preserve the existing teal dividers and all other footer spacing. */
+html body footer.site-footer .elajme-v2-lower .elajme-office-website{
+ gap:5px!important;
+}
+html body footer.site-footer .elajme-v2-lower .elajme-office-website .elajme-contact-icon{
+ margin:0!important;
+ padding:0!important;
+ flex:0 0 19px!important;
+}
