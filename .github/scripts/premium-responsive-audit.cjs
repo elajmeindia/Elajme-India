@@ -9,7 +9,7 @@ const origin=process.env.AUDIT_ORIGIN||'https://elajmeindia.com';
  for(const asset of ['script.js?v=172','script.js?v=173','assets/js/mobile-header.js?v=3','assets/js/mobile-header.js?v=4']){try{const response=await fetch(origin+'/'+asset),body=Buffer.from(await response.arrayBuffer());delivery.push({asset,status:response.status,bytes:body.length,sha256:crypto.createHash('sha256').update(body).digest('hex'),cacheControl:response.headers.get('cache-control'),etag:response.headers.get('etag'),age:response.headers.get('age'),cacheStatus:response.headers.get('cf-cache-status')})}catch(e){delivery.push({asset,error:e.message})}}
  fs.writeFileSync(output+'/asset-delivery.json',JSON.stringify(delivery,null,2));
  const browser=await chromium.launch({headless:true}),results=[],tasks=[];
- for(const [width,height]of widths)for(const lang of ['en','ar'])for(const suffix of types)tasks.push({width,height,lang,suffix});
+ for(const [width,height]of widths)for(const lang of ['en','ar'])for(const suffix of (process.env.AUDIT_HOME_ONLY==='1'?['']:types))tasks.push({width,height,lang,suffix});
  async function worker(){while(tasks.length){const t=tasks.shift(),{width,height,lang,suffix}=t,path=(lang==='ar'?'/ar/':'/')+suffix,id=lang+'-'+width+'-'+(suffix.replaceAll('/','_')||'home'),r={...t,path,id,errors:[],observations:[]};results.push(r);
   const context=await browser.newContext({viewport:{width,height},isMobile:width<=430,hasTouch:width<=900,serviceWorkers:'block'});
   await context.route('**/*',route=>{const q=route.request(),u=new URL(q.url());if(!['GET','HEAD'].includes(q.method())||/google-analytics|googletagmanager|doubleclick|cloudflareinsights|(^|\.)wa\.me$|(^|\.)whatsapp\.com$|embed.tawk.to/.test(u.hostname))return route.abort();return route.continue()});
@@ -41,6 +41,10 @@ const origin=process.env.AUDIT_ORIGIN||'https://elajmeindia.com';
     const form=page.locator('#patientEnquiryForm');r.validation={blank:await form.evaluate(f=>f.checkValidity())};
     await form.locator('#patientName').fill('Synthetic QA');await form.locator('#patientCountry').fill('Oman');await form.locator('#patientMobile').fill('+96890000000');r.validation.valid=await form.evaluate(f=>f.checkValidity());
     await form.locator('#patientMobile').fill('invalid');r.validation.invalidPhone=await form.evaluate(f=>f.checkValidity());
+    const originalURL=page.url();await form.locator('.enquiry-submit').click();
+    r.validation.invalidSubmit=await form.evaluate(f=>({phoneMessage:f.querySelector('#patientMobile').validationMessage,status:f.querySelector('.form-status')?.innerText||'',focused:document.activeElement?.id}));
+    if(page.url()!==originalURL||(!r.validation.invalidSubmit.phoneMessage&&!r.validation.invalidSubmit.status))r.errors.push('Invalid phone submission not rejected');
+    await page.screenshot({path:output+'/'+id+'-invalid-phone.png'});
     await form.locator('#patientMobile').fill('');await form.locator('#patientCountry').fill('');await form.locator('#patientName').fill('');
     await form.screenshot({path:output+'/'+id+'-form.png'});
     await page.addScriptTag({path:require.resolve('axe-core')});r.axe=await page.evaluate(async()=>{const r=await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}});return r.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary})).slice(0,12)}))});
@@ -56,5 +60,6 @@ const origin=process.env.AUDIT_ORIGIN||'https://elajmeindia.com';
  }}
  await Promise.all([worker(),worker(),worker(),worker()]);await browser.close();
  const summary={origin,cases:results.length,failures:results.filter(r=>r.errors.length).map(r=>({id:r.id,errors:r.errors})),observations:results.filter(r=>r.observations.length).map(r=>({id:r.id,observations:r.observations})),axe:results.filter(r=>r.axe?.length).map(r=>({id:r.id,violations:r.axe}))};fs.writeFileSync(output+'/summary.json',JSON.stringify(summary,null,2));console.log(JSON.stringify(summary));
- // Discovery audit preserves every observation; findings are reviewed before production changes.
+ // Retain observations for review, while failing on functional errors.
+ assert.equal(summary.failures.length,0,'Responsive production functional failures');
 })();

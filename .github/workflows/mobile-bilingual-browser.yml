@@ -647,9 +647,10 @@ jobs:
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.56.1 axe-core@4.10.3
           npx playwright install --with-deps chromium
-      - name: Read-only production audit across requested viewports and page types
+      - name: Read-only production homepage regression at all requested widths
         env:
           AUDIT_ORIGIN: https://elajmeindia.com
+          AUDIT_HOME_ONLY: '1'
         run: node .github/scripts/premium-responsive-audit.cjs
       - name: Retain premium audit evidence
         if: always()
