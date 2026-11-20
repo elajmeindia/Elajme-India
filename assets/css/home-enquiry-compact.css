@@ -240,3 +240,41 @@
   }
   .enquiry-section .enquiry-form{max-width:390px!important}
 }
+
+
+/* Match the homepage hero's balanced, inset two-column composition.
+   Form occupies the left on Arabic / right on English; copy opposite. */
+@media (min-width:1100px){
+  .enquiry-section .enquiry-wrap,
+  html[lang="ar"] .enquiry-section .enquiry-wrap{
+    box-sizing:border-box!important;
+    width:calc(100% - 48px)!important;
+    max-width:1160px!important;
+    margin-inline:auto!important;
+    padding-inline:0!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,405px)!important;
+    column-gap:clamp(48px,6vw,100px)!important;
+    align-items:center!important;
+  }
+  .enquiry-section .enquiry-form{
+    width:100%!important;
+    max-width:405px!important;
+    justify-self:stretch!important;
+  }
+  .enquiry-section .enquiry-copy{
+    min-width:0!important;
+    align-self:center!important;
+  }
+}
+@media (min-width:901px) and (max-width:1099px){
+  .enquiry-section .enquiry-wrap,
+  html[lang="ar"] .enquiry-section .enquiry-wrap{
+    box-sizing:border-box!important;
+    width:calc(100% - 48px)!important;
+    max-width:1000px!important;
+    margin-inline:auto!important;
+    padding-inline:0!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,390px)!important;
+    column-gap:clamp(20px,3vw,36px)!important;
+  }
+}
