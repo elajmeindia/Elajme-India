@@ -88,20 +88,30 @@
   .enquiry-section .enquiry-form{max-width:390px;padding:14px!important}
 }
 
-/* Move the enquiry card to the left desktop column; keep copy on the right.
-   Avoid fixed inch offsets that would overlap content on smaller screens. */
+/* Keep the form on the RIGHT; add breathing room inside the right edge. */
 @media (min-width:901px){
-  .enquiry-section .enquiry-wrap{direction:ltr!important;grid-template-columns:minmax(0,420px) minmax(0,1fr)!important;gap:clamp(28px,5vw,80px)!important;align-items:center}
-  .enquiry-section .enquiry-form{grid-column:1;grid-row:1;justify-self:start!important;max-width:420px}
-  .enquiry-section .enquiry-copy{grid-column:2;grid-row:1;max-width:620px}
-  html[lang="ar"] .enquiry-section .enquiry-form,
-  html[lang="ar"] .enquiry-section .enquiry-copy{direction:rtl}
+  .enquiry-section .enquiry-wrap{
+    grid-template-columns:minmax(0,1fr) minmax(0,420px)!important;
+    gap:clamp(20px,3vw,48px)!important;
+    padding-right:clamp(32px,5vw,88px)!important;
+    align-items:center
+  }
+  .enquiry-section .enquiry-copy{grid-column:1;grid-row:1}
+  .enquiry-section .enquiry-form{grid-column:2;grid-row:1;justify-self:end!important}
+  .enquiry-section .enquiry-form>.form-field,
+  .enquiry-section .enquiry-form>.form-row,
   .enquiry-section .enquiry-form>.enquiry-submit{order:initial!important}
-  .enquiry-section .enquiry-form>.enquiry-legal{order:initial!important}
+  .enquiry-section .enquiry-form>.enquiry-submit{margin-top:2px!important}
 }
 @media (min-width:901px) and (max-width:1050px){
-  .enquiry-section .enquiry-wrap{grid-template-columns:minmax(0,390px) minmax(0,1fr)!important;gap:24px!important}
+  .enquiry-section .enquiry-wrap{grid-template-columns:minmax(0,1fr) minmax(0,390px)!important;padding-right:24px!important;gap:20px!important}
 }
-.enquiry-section .enquiry-form>.enquiry-legal{margin:2px 0 0!important;font-size:11px;line-height:1.45;text-align:center;color:inherit}
+.enquiry-section .enquiry-form>.enquiry-legal{margin:4px 0 0!important;font-size:11px;line-height:1.45;text-align:center}
 .enquiry-section .enquiry-form>.enquiry-legal a{color:inherit;text-decoration:underline;text-underline-offset:2px;font-weight:700}
 .enquiry-section .enquiry-form>.enquiry-legal a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+
+@media (min-width:901px){
+  html[lang="ar"] .enquiry-section .enquiry-wrap{direction:ltr!important}
+  html[lang="ar"] .enquiry-section .enquiry-copy,
+  html[lang="ar"] .enquiry-section .enquiry-form{direction:rtl}
+}
