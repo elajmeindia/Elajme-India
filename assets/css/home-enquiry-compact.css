@@ -134,3 +134,30 @@
     padding-right:0!important;
   }
 }
+
+/* Arabic homepage must mirror English: copy RIGHT, enquiry form LEFT. */
+@media (min-width:901px){
+  html[lang="ar"] .enquiry-section .enquiry-wrap{
+    direction:rtl!important;
+    grid-template-columns:minmax(0,420px) minmax(0,600px)!important;
+    gap:clamp(20px,2vw,30px)!important;
+    justify-content:start!important;
+    padding:0!important;
+  }
+  html[lang="ar"] .enquiry-section .enquiry-copy{
+    grid-column:1!important;grid-row:1!important;
+    direction:rtl!important;text-align:right;
+  }
+  html[lang="ar"] .enquiry-section .enquiry-form{
+    grid-column:2!important;grid-row:1!important;
+    direction:rtl!important;justify-self:start!important;
+    max-width:420px;
+  }
+}
+@media (min-width:901px) and (max-width:1099px){
+  html[lang="ar"] .enquiry-section .enquiry-wrap{
+    grid-template-columns:minmax(0,1fr) minmax(0,390px)!important;
+    gap:20px!important;
+  }
+  html[lang="ar"] .enquiry-section .enquiry-form{max-width:390px}
+}
