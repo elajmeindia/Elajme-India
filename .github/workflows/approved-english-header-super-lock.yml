@@ -37,7 +37,9 @@ jobs:
               if rel in initial_nav_pages:
                   links=re.findall(r'<a\s+[^>]*href="([^"]+)"[^>]*>(.*?)</a>',nav.group(1),re.S)
                   normalized=[(href,re.sub(r'<[^>]+>','',label).strip()) for href,label in links]
-                  if normalized!=expected: errors.append(f'{rel}: approved initial navigation changed: {normalized}')
+                  if normalized not in (expected, expected[:-1]): errors.append(f'{rel}: approved initial navigation changed: {normalized}')
+          # The approved shared script inserts the Blog link on pages with the original seven-item static nav.
+          # Accept only the exact approved seven-item order or the exact eight-item order with Blog.
           js=Path('assets/js/mobile-header.js').read_text(encoding='utf-8')
           for token in ["nav.querySelector('a[href=\"'+href+'\"]')","link.textContent=arabicPage?'المدونة':'Blog'","nav.append(link)"]:
               if token not in js: errors.append('Shared Blog navigation fallback missing: '+token)
