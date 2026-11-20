@@ -115,3 +115,22 @@
   html[lang="ar"] .enquiry-section .enquiry-copy,
   html[lang="ar"] .enquiry-section .enquiry-form{direction:rtl}
 }
+
+/* Keep the copy and right-hand form visually grouped rather than
+   distributing a large unused desktop column between them. */
+@media (min-width:1100px){
+  .enquiry-section .enquiry-wrap{
+    grid-template-columns:minmax(0,600px) minmax(0,420px)!important;
+    gap:clamp(20px,2vw,30px)!important;
+    justify-content:start!important;
+    padding-right:0!important;
+  }
+  .enquiry-section .enquiry-form{justify-self:start!important}
+}
+@media (min-width:901px) and (max-width:1099px){
+  .enquiry-section .enquiry-wrap{
+    grid-template-columns:minmax(0,1fr) minmax(0,390px)!important;
+    gap:20px!important;
+    padding-right:0!important;
+  }
+}
