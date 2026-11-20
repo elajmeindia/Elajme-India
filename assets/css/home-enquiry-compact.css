@@ -45,3 +45,20 @@
   .enquiry-section .enquiry-form{column-gap:8px;padding:14px!important}
   .enquiry-section .enquiry-form>.form-row{gap:5px}
 }
+
+/* Final premium sizing pass: shorter card without shrinking tap targets or hiding privacy text. */
+@media (min-width:901px){
+  .enquiry-section{padding-top:28px!important;padding-bottom:30px!important}
+  .enquiry-section .enquiry-form{max-width:520px;row-gap:7px;padding:13px 16px!important;border-radius:16px}
+  .enquiry-section .enquiry-form>.enquiry-card-heading{margin-bottom:0!important;gap:9px}
+  .enquiry-section .enquiry-card-icon{height:30px;flex-basis:30px}
+  .enquiry-section .enquiry-card-heading h3{font-size:18px;line-height:1.2}
+  .enquiry-section .enquiry-card-heading p{font-size:11px;line-height:1.25}
+  .enquiry-section .enquiry-form .form-field label{font-size:12px;line-height:1.25}
+  .enquiry-section .enquiry-form .form-field input,
+  .enquiry-section .enquiry-form .form-field select{height:40px;min-height:40px;padding:7px 10px}
+  .enquiry-section .enquiry-form>.form-field:nth-child(5) p{font-size:11px;line-height:1.35}
+  .enquiry-section .enquiry-form>.enquiry-submit{min-height:42px;padding:9px 12px}
+  .enquiry-section .enquiry-copy>p{margin-bottom:10px}
+  .enquiry-section .enquiry-points{gap:5px!important}
+}
