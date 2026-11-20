@@ -1,0 +1,58 @@
+name: Approved Bilingual Footer Super Lock
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  protect-approved-bilingual-footer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Protect approved English and Arabic footer assets and layout
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess, re, sys
+          locked = {
+              'assets/css/footer-approved.css': '05faf239dd9cf39a19b41e596f433c99989c1e9b',
+              'assets/css/footer-offices.css': 'be1ebd7ae17cb72b31f643b661e486723fa447f0',
+              'assets/js/footer-offices.js': '86997d9b789fd82f5d6259f28ef8418444ed3a43',
+              'FOOTER-LOCK.md': 'f79b98808c1aafa7f9ed10e7d58d5f904700d15f',
+          }
+          problems=[]
+          for name, expected in locked.items():
+              path=Path(name)
+              if not path.is_file():
+                  problems.append('MISSING_LOCKED_FILE '+name)
+                  continue
+              actual=subprocess.check_output(['git','hash-object',name],text=True).strip()
+              if actual!=expected:
+                  problems.append('FOOTER_CHANGE_REQUIRES_EXPLICIT_OWNER_APPROVAL '+name)
+          for name,lang in [('index.html','en'),('ar/index.html','ar')]:
+              path=Path(name)
+              if not path.is_file():
+                  problems.append('MISSING_HOME '+name)
+                  continue
+              content=path.read_text(encoding='utf-8')
+              footer=re.search(r'<footer\b[^>]*class="[^"]*site-footer[^"]*"[^>]*>(.*?)</footer>',content,re.S)
+              if not footer:
+                  problems.append('MISSING_APPROVED_FOOTER '+name)
+                  continue
+              body=footer.group(1)
+              for token in ('class="footer-brand"','class="brand-icon"','class="brand-text"','class="footer-links"','class="footer-bottom"','Healthcare%20Travel%20Swoosh%20Emblem.png'):
+                  if token not in body:
+                      problems.append('FOOTER_STRUCTURE_CHANGED '+name+' '+token)
+              if not re.search(r'<html[^>]+lang="'+lang+r'"',content):
+                  problems.append('FOOTER_LANGUAGE_CHANGED '+name)
+              if lang=='ar' and not re.search(r'<html[^>]+dir="rtl"',content):
+                  problems.append('FOOTER_RTL_CHANGED '+name)
+          if problems:
+              print('\n'.join(problems))
+              sys.exit(1)
+          print('Approved EN/AR desktop and mobile footer super lock: PASS')
+          PY
