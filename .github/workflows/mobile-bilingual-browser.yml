@@ -658,3 +658,33 @@ jobs:
           name: premium-responsive-audit
           path: qa-artifacts/premium-audit/
           retention-days: 14
+  desktop-lighthouse-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned Lighthouse runtime
+        run: |
+          npm install --no-save --no-audit --no-fund lighthouse@12.8.2 playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Measure production desktop with applied throttling
+        run: |
+          mkdir -p qa-artifacts/desktop-lighthouse
+          export CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          for n in 1 2 3; do
+            for lang in en ar; do
+              target=https://elajmeindia.com/
+              if [ "$lang" = ar ]; then target=https://elajmeindia.com/ar/; fi
+              npx lighthouse "$target" --preset=desktop --screenEmulation.width=1440 --screenEmulation.height=936 --screenEmulation.deviceScaleFactor=1 --throttling-method=devtools --throttling.cpuSlowdownMultiplier=1 --throttling.requestLatencyMs=40 --throttling.downloadThroughputKbps=10240 --throttling.uploadThroughputKbps=5120 --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --save-assets --output=json --output-path="qa-artifacts/desktop-lighthouse/$lang-$n.json" --quiet || echo "Failed attempt $lang-$n" >> qa-artifacts/desktop-lighthouse/failures.txt
+            done
+          done
+      - name: Retain all desktop reports and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-lighthouse-audit
+          path: qa-artifacts/desktop-lighthouse/
+          retention-days: 14

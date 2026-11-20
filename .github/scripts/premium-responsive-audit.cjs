@@ -5,6 +5,9 @@ const types=['','treatments/','treatments/cancer-treatment-india/','doctors/','d
 const output='qa-artifacts/premium-audit';fs.mkdirSync(output,{recursive:true});
 const origin=process.env.AUDIT_ORIGIN||'https://elajmeindia.com';
 (async()=>{
+ const crypto=require('crypto'),delivery=[];
+ for(const asset of ['script.js?v=172','script.js?v=173','assets/js/mobile-header.js?v=3','assets/js/mobile-header.js?v=4']){try{const response=await fetch(origin+'/'+asset),body=Buffer.from(await response.arrayBuffer());delivery.push({asset,status:response.status,bytes:body.length,sha256:crypto.createHash('sha256').update(body).digest('hex'),cacheControl:response.headers.get('cache-control'),etag:response.headers.get('etag'),age:response.headers.get('age'),cacheStatus:response.headers.get('cf-cache-status')})}catch(e){delivery.push({asset,error:e.message})}}
+ fs.writeFileSync(output+'/asset-delivery.json',JSON.stringify(delivery,null,2));
  const browser=await chromium.launch({headless:true}),results=[],tasks=[];
  for(const [width,height]of widths)for(const lang of ['en','ar'])for(const suffix of types)tasks.push({width,height,lang,suffix});
  async function worker(){while(tasks.length){const t=tasks.shift(),{width,height,lang,suffix}=t,path=(lang==='ar'?'/ar/':'/')+suffix,id=lang+'-'+width+'-'+(suffix.replaceAll('/','_')||'home'),r={...t,path,id,errors:[],observations:[]};results.push(r);
