@@ -145,3 +145,9 @@ html[lang="ar"] .master-site-header.master-site-header{
   outline:2px solid #146b68!important;
   outline-offset:3px!important;
 }
+
+/* Owner-approved header polish: darker navigation and clearer mint divider.
+   Color-only changes, preserving layout, sizing and responsive behavior. */
+.master-site-header .master-nav a{color:#234454!important}
+html[lang="en"] .master-site-header.master-site-header,
+html[lang="ar"] .master-site-header.master-site-header{border-bottom-color:#a8d5cd!important}
