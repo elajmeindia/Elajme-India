@@ -343,3 +343,21 @@ html body footer.site-footer .elajme-v2-lower .elajme-office-website .elajme-con
   transform:none!important;left:auto!important;right:auto!important;
  }
 }
+
+/* Mobile brand visual order requested by owner: name first, official logo second.
+   Keep EN lockup at left and AR lockup at right, without changing DOM or desktop. */
+@media(max-width:650px){
+ html body footer.site-footer .elajme-v2-brand .footer-brand{
+  flex-direction:row!important;
+  direction:ltr!important;
+ }
+ html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text{
+  order:0!important;
+ }
+ html body footer.site-footer .elajme-v2-brand .footer-brand .brand-icon{
+  order:1!important;
+ }
+ html[lang="ar"] body footer.site-footer .elajme-v2-brand .footer-brand .brand-text{
+  direction:rtl!important;
+ }
+}
