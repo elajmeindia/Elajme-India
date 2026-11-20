@@ -131,7 +131,7 @@ html body footer.site-footer .elajme-v2-copyright{padding-top:7px!important}
    Reuse the existing official logo asset and text; never redraw the brand. */
 html body footer.site-footer .elajme-v2-brand .footer-brand{
  display:flex!important;flex-direction:row!important;align-items:center!important;
- justify-content:center!important;gap:10px!important;direction:ltr!important;
+ justify-content:center!important;gap:10px!important;direction:ltr!important;width:100%!important;max-width:100%!important;
 }
 html body footer.site-footer .elajme-v2-brand .footer-brand .brand-icon{
  display:block!important;width:76px!important;height:76px!important;
