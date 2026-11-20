@@ -1,17 +1,11 @@
-/* Desktop only: collapse the upper contact strip on downward scroll.
-   Mobile and tablet navigation remain exactly as approved. */
+/* Both desktop and mobile: collapse top strip on downward scroll. */
 (()=>{const init=()=>{
  const headers=[...document.querySelectorAll('.master-site-header')];
  if(!headers.length)return;
- const desktop=window.matchMedia('(min-width:901px)');
  let last=window.scrollY,raf=false;
  const apply=()=>{
   raf=false;
   const y=window.scrollY;
-  if(!desktop.matches){
-   headers.forEach(h=>h.classList.remove('elajme-header-condensed'));
-   last=y;return;
-  }
   const menuOpen=headers.some(h=>h.classList.contains('mobile-menu-open'));
   const up=y<last-3;
   const nearTop=y<36;
