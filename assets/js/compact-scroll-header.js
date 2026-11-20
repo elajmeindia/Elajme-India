@@ -7,10 +7,10 @@
   raf=false;
   const y=window.scrollY;
   const menuOpen=headers.some(h=>h.classList.contains('mobile-menu-open'));
-  const up=y<last-3;
+  // Keep the strip hidden at scrolled positions; small scroll reversals must not flicker.
   const nearTop=y<36;
   headers.forEach(h=>{
-   if(nearTop||up||menuOpen)h.classList.remove('elajme-header-condensed');
+   if(nearTop||menuOpen)h.classList.remove('elajme-header-condensed');
    else if(y>120)h.classList.add('elajme-header-condensed');
   });
   last=y;
