@@ -18,9 +18,9 @@ jobs:
           from pathlib import Path
           import hashlib,re,sys
           problems=[]
-          # Owner-approved contact-strip addition; original header controls and footer remain protected.
+          # Owner-approved mint-white header palette update; all other approved header controls and footer remain protected.
           locked_hashes={
-            'assets/css/master-header.css':'6da8e8d0ef80d4512721af76925c0f99b81483b8',
+            'assets/css/master-header.css':'1ca00580a3ecb0deec0a1413e235ec2d0a57b71c',
             'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
