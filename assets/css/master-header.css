@@ -57,3 +57,23 @@ html:has(.master-site-header){scroll-padding-top:140px}
  .master-site-header.master-site-header.mobile-menu-open .master-header-inner>.master-nav{top:116px!important;max-height:calc(100dvh - 116px)!important}
  html:has(.master-site-header){scroll-padding-top:130px}
 }
+
+
+/* Premium bilingual header palette: subtle clinical mint, not stark white.
+   No structural, navigation, mobile-control or logo changes. */
+html[lang="en"] .master-site-header.master-site-header,
+html[lang="ar"] .master-site-header.master-site-header{
+  background:#f0f8f6!important;
+  border-bottom:1px solid #c9e5df!important;
+  box-shadow:0 4px 18px rgba(18,59,80,.075)!important;
+}
+.master-site-header .master-lang{
+  background:#fff!important;
+  border-color:#c9e5df!important;
+}
+.master-site-header .master-nav a:focus-visible,
+.master-site-header .master-lang:focus-visible,
+.master-site-header .master-cta:focus-visible{
+  outline:2px solid #146b68!important;
+  outline-offset:3px!important;
+}
