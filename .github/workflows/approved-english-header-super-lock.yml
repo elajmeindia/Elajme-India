@@ -32,7 +32,7 @@ jobs:
               if not nav: errors.append(f'{rel}: master navigation missing'); continue
               for token in ['class="master-header-inner"','class="master-actions"','class="master-lang"','917488955154']:
                   if token not in header: errors.append(f'{rel}: missing {token}')
-              for asset in ['/assets/css/master-header.css?v=6','/assets/css/mobile-header.css?v=3','/assets/js/mobile-header.js?v=3']:
+              for asset in ['/assets/css/master-header.css?v=6','/assets/css/mobile-header.css?v=3','/assets/js/mobile-header.js?v=4']:
                   if html.count(asset)!=1: errors.append(f'{rel}: missing or duplicate {asset}')
               if rel in initial_nav_pages:
                   links=re.findall(r'<a\s+[^>]*href="([^"]+)"[^>]*>(.*?)</a>',nav.group(1),re.S)
