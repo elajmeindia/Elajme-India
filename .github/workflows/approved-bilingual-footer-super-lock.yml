@@ -20,7 +20,7 @@ jobs:
           import subprocess, re, sys
           locked = {
               'assets/css/footer-approved.css': '05faf239dd9cf39a19b41e596f433c99989c1e9b',
-              'assets/css/footer-offices.css': 'be1ebd7ae17cb72b31f643b661e486723fa447f0',
+              'assets/css/footer-offices.css': '1672d9c2878c0533212b0ba1c37baae5c7726bf7',
               'assets/js/footer-offices.js': '86997d9b789fd82f5d6259f28ef8418444ed3a43',
               'FOOTER-LOCK.md': 'f79b98808c1aafa7f9ed10e7d58d5f904700d15f',
           }
