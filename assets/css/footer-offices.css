@@ -223,3 +223,16 @@ html[lang="ar"] body footer.site-footer{
  }
  html body footer.site-footer .elajme-v2-main{padding-bottom:8px!important}
 }
+
+/* Reduce the desktop gap above the website URL without shifting the footer grid.
+   The offices column is the tallest; tighten only its vertical rhythm. */
+@media(min-width:1101px){
+ html body footer.site-footer .elajme-v2-offices .elajme-office-address{
+  line-height:1.42!important;
+ }
+ html body footer.site-footer .elajme-v2-offices .elajme-office-card+.elajme-office-card{
+  margin-top:8px!important;padding-top:8px!important;
+ }
+ html body footer.site-footer .elajme-v2-main{padding-bottom:3px!important}
+ html body footer.site-footer .elajme-v2-lower{padding-top:5px!important}
+}
