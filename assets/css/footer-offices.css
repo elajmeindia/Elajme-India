@@ -284,3 +284,23 @@ html body footer.site-footer .elajme-v2-lower .elajme-office-website .elajme-con
   font-size:clamp(15px,4.1vw,19px)!important;
  }
 }
+
+
+/* Mobile footer brand: left-aligned English lockup, right-aligned Arabic lockup.
+   Preserve the official logo, stacked bilingual names and desktop layout. */
+@media(max-width:650px){
+ html[lang="en"] body footer.site-footer .elajme-v2-brand .footer-brand,
+ html:not([lang="ar"]) body footer.site-footer .elajme-v2-brand .footer-brand{
+  direction:ltr!important;
+  justify-content:flex-start!important;
+  margin-inline:0!important;
+ }
+ html[lang="ar"] body footer.site-footer .elajme-v2-brand .footer-brand{
+  direction:rtl!important;
+  justify-content:flex-start!important;
+  margin-inline:0!important;
+ }
+ html[lang="ar"] body footer.site-footer .elajme-v2-brand .footer-brand .brand-text{
+  direction:rtl!important;
+ }
+}
