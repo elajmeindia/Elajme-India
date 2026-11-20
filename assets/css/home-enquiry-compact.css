@@ -190,3 +190,53 @@
     grid-column:2!important;justify-self:stretch!important;
   }
 }
+
+
+/* Standard desktop reading directions and natural two-column positions.
+   English LTR: copy left, form right. Arabic RTL: copy right, form left.
+   Avoid centered/narrow paired columns and any offset that creates blank space. */
+@media (min-width:901px){
+  html[lang="en"] .enquiry-section .enquiry-wrap,
+  html:not([lang="ar"]) .enquiry-section .enquiry-wrap{
+    direction:ltr!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,420px)!important;
+    gap:clamp(20px,3vw,40px)!important;
+    justify-content:stretch!important;
+    padding-left:0!important;
+    padding-right:0!important;
+  }
+  html[lang="ar"] .enquiry-section .enquiry-wrap{
+    direction:rtl!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,420px)!important;
+    gap:clamp(20px,3vw,40px)!important;
+    justify-content:stretch!important;
+    padding-left:0!important;
+    padding-right:0!important;
+  }
+  .enquiry-section .enquiry-copy{
+    grid-column:1!important;
+    grid-row:1!important;
+    justify-self:stretch!important;
+    max-width:none!important;
+  }
+  .enquiry-section .enquiry-form{
+    grid-column:2!important;
+    grid-row:1!important;
+    justify-self:stretch!important;
+    max-width:420px!important;
+    width:100%!important;
+  }
+  html[lang="ar"] .enquiry-section .enquiry-copy,
+  html[lang="ar"] .enquiry-section .enquiry-form{
+    direction:rtl!important;
+    text-align:right;
+  }
+}
+@media (min-width:901px) and (max-width:1099px){
+  .enquiry-section .enquiry-wrap,
+  html[lang="ar"] .enquiry-section .enquiry-wrap{
+    grid-template-columns:minmax(0,1fr) minmax(0,390px)!important;
+    gap:20px!important;
+  }
+  .enquiry-section .enquiry-form{max-width:390px!important}
+}
