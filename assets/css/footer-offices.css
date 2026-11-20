@@ -260,3 +260,27 @@ html body footer.site-footer .elajme-v2-lower .elajme-office-website .elajme-con
  padding:0!important;
  flex:0 0 19px!important;
 }
+
+/* Mobile screenshot review: stable two-column trust row in both LTR and RTL.
+   Avoid cramped centered text and uneven icon positions on narrow phones. */
+@media(max-width:650px){
+ html body footer.site-footer .elajme-v2-benefits{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px 14px!important;
+ }
+ html body footer.site-footer .elajme-v2-benefits .elajme-v2-benefit{
+  justify-content:flex-start!important;
+  align-items:center!important;
+  text-align:start!important;
+  gap:8px!important;
+  min-width:0!important;
+ }
+ html body footer.site-footer .elajme-v2-benefits .elajme-v2-benefit>span:last-child{
+  min-width:0!important;
+  overflow-wrap:break-word!important;
+  line-height:1.4!important;
+ }
+ html body footer.site-footer .elajme-v2-lower .elajme-office-website a{
+  font-size:clamp(15px,4.1vw,19px)!important;
+ }
+}
