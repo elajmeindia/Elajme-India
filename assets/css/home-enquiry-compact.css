@@ -109,3 +109,9 @@
 .enquiry-section .enquiry-form>.enquiry-legal{margin:4px 0 0!important;font-size:11px;line-height:1.45;text-align:center}
 .enquiry-section .enquiry-form>.enquiry-legal a{color:inherit;text-decoration:underline;text-underline-offset:2px;font-weight:700}
 .enquiry-section .enquiry-form>.enquiry-legal a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+
+@media (min-width:901px){
+  html[lang="ar"] .enquiry-section .enquiry-wrap{direction:ltr!important}
+  html[lang="ar"] .enquiry-section .enquiry-copy,
+  html[lang="ar"] .enquiry-section .enquiry-form{direction:rtl}
+}
