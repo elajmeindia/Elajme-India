@@ -635,3 +635,26 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  premium-responsive-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned browser audit runtime
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1 axe-core@4.10.3
+          npx playwright install --with-deps chromium
+      - name: Read-only production audit across requested viewports and page types
+        env:
+          AUDIT_ORIGIN: https://elajmeindia.com
+        run: node .github/scripts/premium-responsive-audit.cjs
+      - name: Retain premium audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: premium-responsive-audit
+          path: qa-artifacts/premium-audit/
+          retention-days: 14
