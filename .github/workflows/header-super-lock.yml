@@ -18,14 +18,17 @@ jobs:
           from pathlib import Path
           import hashlib,re,sys
           problems=[]
-          # Owner-approved mint-white header palette update; all other approved header controls and footer remain protected.
+          # Owner-approved final bilingual header/footer snapshot. Any visual change requires a reviewed lock update.
           locked_hashes={
             'assets/css/master-header.css':'b8ee90f7020771c228c25b98b25f912470ce17b0',
+            'assets/css/home-header-critical-v1.css':'a9dcb1a9506c5aa1b872edf94b10a9d47674f356',
             'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
             'assets/js/mobile-header.js':'c7e02ee1dfb0d6ee76562194e5314f0080eadc32',
             'assets/css/footer-approved.css':'05faf239dd9cf39a19b41e596f433c99989c1e9b',
+            'assets/css/footer-offices.css':'be1ebd7ae17cb72b31f643b661e486723fa447f0',
+            'assets/js/footer-offices.js':'86997d9b789fd82f5d6259f28ef8418444ed3a43',
           }
           def git_blob_sha(data): return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
           for path,expected in locked_hashes.items():
@@ -59,6 +62,14 @@ jobs:
           if '◉' in js: problems.append('ARABIC_WHATSAPP_DOT_REINTRODUCED')
           for token in [".arabic-mobile-wa-cta::before{content:'☎'!important","width:18px!important;height:18px!important;flex:0 0 18px!important","background:#20a86b!important",".arabic-mobile-case-cta::before{content:none!important"]:
               if token not in ar_mobile: problems.append('ARABIC_MOBILE_CTA_STYLE_DRIFT '+token)
+
+          # Freeze the approved desktop 120px header, 76px navigation row and 44px strip;
+          # retain 116px mobile header and bilingual mint palette.
+          for token in ['@media(min-width:901px)', 'height:120px!important', 'height:76px!important', 'height:116px!important', 'height:44px', 'background:#f0f8f6!important', 'border-bottom-color:#a8d5cd!important', 'color:#234454!important']:
+              if token not in master: problems.append('FINAL_HEADER_DESIGN_DRIFT '+token)
+          critical=Path('assets/css/home-header-critical-v1.css').read_text(encoding='utf-8')
+          for token in ['@media(min-width:901px)', 'height:120px!important', 'height:76px!important', 'border-bottom-color:#a8d5cd!important']:
+              if token not in critical: problems.append('HOMEPAGE_HEADER_DESIGN_DRIFT '+token)
 
           # Preserve the explicitly approved full-address strip and its reserved layout space.
           for token in ['height:126px!important','height:116px!important','top:116px!important','.master-email-link:focus-visible']:
