@@ -390,3 +390,14 @@ html body footer.site-footer .elajme-v2-lower .elajme-office-website .elajme-con
   text-align:right!important;direction:rtl!important;
  }
 }
+
+/* Approved English mobile footer: official logo first, Elajme India name second.
+   Arabic order and all desktop layouts are intentionally unchanged. */
+@media(max-width:650px){
+ html[lang="en"] body footer.site-footer .elajme-v2-brand .footer-brand .brand-icon{
+  order:0!important;
+ }
+ html[lang="en"] body footer.site-footer .elajme-v2-brand .footer-brand .brand-text{
+  order:1!important;
+ }
+}
