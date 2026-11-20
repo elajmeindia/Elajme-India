@@ -1,0 +1,52 @@
+/* Compact bilingual header: preserve approved controls, collapse top strip on scroll. */
+@media(min-width:901px){
+ .master-site-header.master-site-header{
+  height:110px!important;min-height:110px!important;max-height:110px!important;
+  padding-top:44px!important;
+  transition:none!important;
+ }
+ .master-site-header .master-header-inner{
+  height:66px!important;min-height:66px!important;max-height:66px!important;
+ }
+ .master-site-header>.master-email-strip{height:44px!important;min-height:44px!important}
+ .master-site-header.master-site-header.elajme-header-condensed{
+  height:66px!important;min-height:66px!important;max-height:66px!important;
+  padding-top:0!important;
+ }
+ .master-site-header.elajme-header-condensed>.master-email-strip{
+  opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+ }
+ html:has(.master-site-header){scroll-padding-top:122px}
+ html:has(.master-site-header.elajme-header-condensed){scroll-padding-top:78px}
+}
+@media(prefers-reduced-motion:reduce){
+ .master-site-header.master-site-header{transition:none!important}
+}
+
+/* Mobile/tablet: preserve logo, contact controls and navigation arrangement. */
+@media(max-width:900px){
+ .master-site-header.master-site-header{
+  height:112px!important;min-height:112px!important;max-height:112px!important;
+  padding-top:44px!important;
+  transition:none!important;
+ }
+ .master-site-header .master-header-inner{
+  height:68px!important;min-height:68px!important;max-height:68px!important;
+ }
+ .master-site-header>.master-email-strip{height:44px!important;min-height:44px!important}
+ .master-site-header.master-site-header.elajme-header-condensed{
+  height:68px!important;min-height:68px!important;max-height:68px!important;
+  padding-top:0!important;
+ }
+ .master-site-header.elajme-header-condensed>.master-email-strip{
+  opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+ }
+ .master-site-header.master-site-header.mobile-menu-open .master-header-inner>.master-nav{
+  top:112px!important;max-height:calc(100dvh - 112px)!important;
+ }
+ .master-site-header.master-site-header.elajme-header-condensed.mobile-menu-open .master-header-inner>.master-nav{
+  top:68px!important;max-height:calc(100dvh - 68px)!important;
+ }
+ html:has(.master-site-header){scroll-padding-top:124px}
+ html:has(.master-site-header.elajme-header-condensed){scroll-padding-top:80px}
+}

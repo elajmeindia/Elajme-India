@@ -9,3 +9,10 @@ let whatsapp=bar.querySelector('.elajme-bottom-wa');if(!whatsapp){whatsapp=docum
 whatsapp.target='_blank';whatsapp.rel='noopener noreferrer';whatsapp.setAttribute('aria-label',arabicPage?'واتساب علاج مي إنديا':'Chat with Elajme India on WhatsApp');whatsapp.textContent=arabicPage?'واتساب':'WhatsApp';
 bar.append(enquiry,whatsapp)};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init()})();
 ;(()=>{if(document.querySelector('script[data-elajme-footer-offices]'))return;const s=document.createElement('script');s.src='/assets/js/footer-offices.js?v=2';s.defer=true;s.dataset.elajmeFooterOffices='true';document.head.appendChild(s)})();
+
+;(()=>{if(document.querySelector('script[data-elajme-compact-header]'))return;
+ const css=document.createElement('link');css.rel='stylesheet';
+ css.href='/assets/css/compact-scroll-header.css?v=1';document.head.appendChild(css);
+ const script=document.createElement('script');script.src='/assets/js/compact-scroll-header.js?v=1';
+ script.defer=true;script.dataset.elajmeCompactHeader='true';document.head.appendChild(script);
+})();
