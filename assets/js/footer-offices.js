@@ -12,7 +12,7 @@ const shell=document.createElement('div');shell.className='elajme-v2';shell.dir=
 const main=document.createElement('div');main.className='elajme-v2-main';
 const makeCol=(cls,title)=>{const col=document.createElement('section');col.className='elajme-v2-col '+cls;if(title){const h=document.createElement('h2');h.textContent=title;col.append(h)}return col};
 const branding=makeCol('elajme-v2-brand');branding.append(brand);
-const intro=document.createElement('p');intro.textContent=ar?'تلتزم علاج مي إنديا بمساعدة المرضى الدوليين على استكشاف خيارات العلاج في الهند، والتواصل مع المستشفيات، وتنظيم رحلتهم العلاجية باهتمام ووضوح وثقة.':'Elajme India is dedicated to helping international patients explore treatment options in India, connect with hospitals, and navigate their medical journey with care and confidence.';branding.append(intro);
+const intro=document.createElement('p');intro.textContent=ar?'تلتزم علاج مي إنديا بمساعدة المرضى الدوليين على استكشاف خيارات العلاج في الهند، والتواصل مع المستشفيات، وتنظيم رحلتهم العلاجية باهتمام ووضوح وثقة.':'Elajme India is dedicated to helping international patients explore treatment options in India, connect with hospitals, and navigate their medical journey with care and confidence.';intro.classList.add('elajme-footer-intro');intro.setAttribute('dir',ar?'rtl':'ltr');branding.append(intro);
 const services=makeCol('elajme-v2-services',ar?'خدماتنا':'Services');
 const useful=makeCol('elajme-v2-useful',ar?'روابط مفيدة':'Useful links');
 const navA=document.createElement('nav'),navB=document.createElement('nav');
@@ -53,5 +53,5 @@ const copyright=document.createElement('div');copyright.className='elajme-v2-cop
 copyright.textContent=ar?'© 2026 علاج مي إنديا. جميع الحقوق محفوظة. يخضع المحتوى الأصلي والهوية البصرية للحماية بموجب قوانين الملكية الفكرية المعمول بها.':'© 2026 Elajme India. All rights reserved. Original content and branding are protected under applicable intellectual property laws.';
 shell.append(main,lower,copyright);
 footer.insertBefore(shell,wrap);wrap.remove();
-if(!document.querySelector('link[href="/assets/css/footer-offices.css?v=35"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/assets/css/footer-offices.css?v=35';document.head.append(link)}
+if(!document.querySelector('link[href="/assets/css/footer-offices.css?v=36"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/assets/css/footer-offices.css?v=36';document.head.append(link)}
 })};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init()})();
