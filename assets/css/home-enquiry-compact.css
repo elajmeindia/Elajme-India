@@ -147,3 +147,19 @@
 .enquiry-section .enquiry-form .enquiry-medical-field textarea{min-height:64px!important;height:64px;max-height:150px;resize:vertical;padding:9px 11px;font-size:13px;line-height:1.4}
 .enquiry-section .enquiry-form .optional-label{font-weight:400;font-size:11px}
 .enquiry-section .enquiry-form>.privacy-assurance{display:none!important}
+
+/* Arabic desktop: center the whole RTL pair, not just its contents.
+   Copy remains right, form remains left, with a modest actual gap. */
+@media (min-width:1100px){
+  html[lang="ar"] .enquiry-section .enquiry-wrap{
+    grid-template-columns:minmax(0,420px) minmax(0,420px)!important;
+    gap:24px!important;
+    justify-content:center!important;
+  }
+  html[lang="ar"] .enquiry-section .enquiry-copy{
+    grid-column:1!important;justify-self:stretch!important;
+  }
+  html[lang="ar"] .enquiry-section .enquiry-form{
+    grid-column:2!important;justify-self:stretch!important;
+  }
+}
