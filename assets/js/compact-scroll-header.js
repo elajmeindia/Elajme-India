@@ -1,4 +1,5 @@
-/* Desktop-only sticky navigation. Mobile retains its approved header behavior. */
+/* Desktop only: collapse the upper contact strip on downward scroll.
+   Mobile and tablet navigation remain exactly as approved. */
 (()=>{const init=()=>{
  const headers=[...document.querySelectorAll('.master-site-header')];
  if(!headers.length)return;
@@ -7,10 +8,15 @@
  const apply=()=>{
   raf=false;
   const y=window.scrollY;
-  if(!desktop.matches){headers.forEach(h=>h.classList.remove('elajme-header-condensed'));last=y;return}
-  const up=y<last-3,nearTop=y<36;
+  if(!desktop.matches){
+   headers.forEach(h=>h.classList.remove('elajme-header-condensed'));
+   last=y;return;
+  }
+  const menuOpen=headers.some(h=>h.classList.contains('mobile-menu-open'));
+  const up=y<last-3;
+  const nearTop=y<36;
   headers.forEach(h=>{
-   if(nearTop||up)h.classList.remove('elajme-header-condensed');
+   if(nearTop||up||menuOpen)h.classList.remove('elajme-header-condensed');
    else if(y>120)h.classList.add('elajme-header-condensed');
   });
   last=y;
