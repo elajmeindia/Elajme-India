@@ -53,5 +53,5 @@ const copyright=document.createElement('div');copyright.className='elajme-v2-cop
 copyright.textContent=ar?'© 2026 علاج مي إنديا. جميع الحقوق محفوظة. يخضع المحتوى الأصلي والهوية البصرية للحماية بموجب قوانين الملكية الفكرية المعمول بها.':'© 2026 Elajme India. All rights reserved. Original content and branding are protected under applicable intellectual property laws.';
 shell.append(main,lower,copyright);
 footer.insertBefore(shell,wrap);wrap.remove();
-if(!document.querySelector('link[href="/assets/css/footer-offices.css?v=33"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/assets/css/footer-offices.css?v=33';document.head.append(link)}
+if(!document.querySelector('link[href="/assets/css/footer-offices.css?v=34"]')){const link=document.createElement('link');link.rel='stylesheet';link.href='/assets/css/footer-offices.css?v=34';document.head.append(link)}
 })};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init()})();
