@@ -304,3 +304,18 @@ html body footer.site-footer .elajme-v2-lower .elajme-office-website .elajme-con
   direction:rtl!important;
  }
 }
+
+/* Mobile: one clear contact action bar, without a redundant Tawk bubble. */
+@media(max-width:650px){
+ html body:has(>.elajme-bottom-actions)>.elajme-mobile-chat,
+ html body:has(>.elajme-bottom-actions) .elajme-mobile-chat{
+  display:none!important;
+ }
+ /* Align the whole brand row to the corresponding page edge. */
+ html[lang="ar"] body footer.site-footer .elajme-v2-brand .footer-brand{
+  width:100%!important;justify-content:flex-start!important;direction:rtl!important;
+ }
+ html:not([lang="ar"]) body footer.site-footer .elajme-v2-brand .footer-brand{
+  width:100%!important;justify-content:flex-start!important;direction:ltr!important;
+ }
+}
