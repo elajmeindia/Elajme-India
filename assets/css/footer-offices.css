@@ -199,3 +199,27 @@ html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-
  html body footer.site-footer .elajme-v2-offices .elajme-office-address{overflow-wrap:anywhere!important;line-height:1.55!important}
  html body footer.site-footer .elajme-v2-medical-note{font-size:12px!important;line-height:1.65!important}
 }
+
+/* Final EN/AR desktop footer parity: explicit same background in both language roots.
+   Solid dark teal avoids visual direction/reversal differences across RTL rendering. */
+html[lang="en"] body footer.site-footer,
+html[lang="ar"] body footer.site-footer{
+ background:#0b3942!important;
+ background-image:none!important;
+ background-color:#0b3942!important;
+}
+@media(min-width:1101px){
+ /* Balanced columns: slightly more room for the five service links. */
+ html body footer.site-footer .elajme-v2-main{
+  grid-template-columns:minmax(0,1.45fr) minmax(0,1.12fr) minmax(0,1.22fr) minmax(0,1.45fr) minmax(0,2fr)!important;
+ }
+ /* Center the complete logo lockup, not only the icon, in either writing direction. */
+ html body footer.site-footer .elajme-v2-brand .footer-brand{
+  width:fit-content!important;max-width:100%!important;margin-inline:auto!important;
+  top:-10px!important;margin-bottom:-10px!important;
+ }
+ html body footer.site-footer .elajme-v2-brand{
+  display:flex!important;flex-direction:column!important;align-items:center!important;
+ }
+ html body footer.site-footer .elajme-v2-main{padding-bottom:8px!important}
+}
