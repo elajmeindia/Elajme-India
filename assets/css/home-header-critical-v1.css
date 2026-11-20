@@ -158,3 +158,13 @@ html[lang="ar"] .master-site-header.master-site-header{border-bottom-color:#a8d5
   .master-site-header .master-header-inner{height:76px!important;min-height:76px!important;max-height:76px!important}
   html:has(.master-site-header){scroll-padding-top:134px}
 }
+
+/* Owner-approved final compact desktop proportions; mobile remains unchanged. */
+@media(min-width:901px){
+  .master-site-header.master-site-header{height:117px!important;min-height:117px!important;max-height:117px!important;padding-top:42px!important}
+  .master-site-header .master-header-inner{height:75px!important;min-height:75px!important;max-height:75px!important}
+  .master-site-header>.master-email-strip{height:42px!important;min-height:42px!important}
+  .master-email-strip>.master-email-link{min-height:42px!important}
+  .master-site-header .master-brand img{width:60px!important;height:60px!important;min-width:60px!important;max-width:60px!important;min-height:60px!important;max-height:60px!important;flex-basis:60px!important}
+  html:has(.master-site-header){scroll-padding-top:131px}
+}

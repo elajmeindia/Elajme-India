@@ -20,8 +20,8 @@ jobs:
           problems=[]
           # Owner-approved final bilingual header/footer snapshot. Any visual change requires a reviewed lock update.
           locked_hashes={
-            'assets/css/master-header.css':'b8ee90f7020771c228c25b98b25f912470ce17b0',
-            'assets/css/home-header-critical-v1.css':'a9dcb1a9506c5aa1b872edf94b10a9d47674f356',
+            'assets/css/master-header.css':'4f838997a48fa7cfff7da7f5161ffc12a9b62ea2',
+            'assets/css/home-header-critical-v1.css':'d7590c2cb17af6407879b8a4d72748058fd1105c',
             'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
@@ -63,12 +63,12 @@ jobs:
           for token in [".arabic-mobile-wa-cta::before{content:'☎'!important","width:18px!important;height:18px!important;flex:0 0 18px!important","background:#20a86b!important",".arabic-mobile-case-cta::before{content:none!important"]:
               if token not in ar_mobile: problems.append('ARABIC_MOBILE_CTA_STYLE_DRIFT '+token)
 
-          # Freeze the approved desktop 120px header, 76px navigation row and 44px strip;
+          # Freeze the approved desktop 117px header, 75px navigation row and 42px strip;
           # retain 116px mobile header and bilingual mint palette.
-          for token in ['@media(min-width:901px)', 'height:120px!important', 'height:76px!important', 'height:116px!important', 'height:44px', 'background:#f0f8f6!important', 'border-bottom-color:#a8d5cd!important', 'color:#234454!important']:
+          for token in ['@media(min-width:901px)', 'height:117px!important', 'height:75px!important', 'height:42px!important', 'padding-top:42px!important', 'height:116px!important', 'background:#f0f8f6!important', 'border-bottom-color:#a8d5cd!important', 'color:#234454!important']:
               if token not in master: problems.append('FINAL_HEADER_DESIGN_DRIFT '+token)
           critical=Path('assets/css/home-header-critical-v1.css').read_text(encoding='utf-8')
-          for token in ['@media(min-width:901px)', 'height:120px!important', 'height:76px!important', 'border-bottom-color:#a8d5cd!important']:
+          for token in ['@media(min-width:901px)', 'height:117px!important', 'height:75px!important', 'height:42px!important', 'border-bottom-color:#a8d5cd!important']:
               if token not in critical: problems.append('HOMEPAGE_HEADER_DESIGN_DRIFT '+token)
 
           # Preserve the explicitly approved full-address strip and its reserved layout space.
