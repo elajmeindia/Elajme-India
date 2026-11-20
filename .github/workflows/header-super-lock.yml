@@ -20,7 +20,7 @@ jobs:
           problems=[]
           # Owner-approved mint-white header palette update; all other approved header controls and footer remain protected.
           locked_hashes={
-            'assets/css/master-header.css':'efa480d7526313752ec67d8ee877277a4bcc5d93',
+            'assets/css/master-header.css':'b8ee90f7020771c228c25b98b25f912470ce17b0',
             'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',

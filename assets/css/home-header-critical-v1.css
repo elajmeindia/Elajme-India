@@ -151,3 +151,10 @@ html[lang="ar"] .master-site-header.master-site-header{
 .master-site-header .master-nav a{color:#234454!important}
 html[lang="en"] .master-site-header.master-site-header,
 html[lang="ar"] .master-site-header.master-site-header{border-bottom-color:#a8d5cd!important}
+
+/* Approved desktop-only 5% compact header: retain 44px contact strip and 60px logo. */
+@media(min-width:901px){
+  .master-site-header.master-site-header{height:120px!important;min-height:120px!important;max-height:120px!important}
+  .master-site-header .master-header-inner{height:76px!important;min-height:76px!important;max-height:76px!important}
+  html:has(.master-site-header){scroll-padding-top:134px}
+}
