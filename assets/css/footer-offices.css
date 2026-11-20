@@ -188,3 +188,19 @@ html body footer.site-footer .elajme-v2 .elajme-footer-socials a.elajme-social-i
 /* Reference-inspired rounded app-icon appearance; retain 44px touch target. */
 html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"]{border-radius:12px!important;box-shadow:0 2px 7px rgba(0,0,0,.12)!important}
 html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"] svg{width:25px!important;height:25px!important;stroke-width:2!important}
+
+/* Mobile footer parity: same structure and visual rhythm for EN (LTR) and AR (RTL).
+   Preserve existing desktop five-column footer and all legal/contact content. */
+@media(max-width:650px){
+ html body footer.site-footer .elajme-v2-main{row-gap:20px!important}
+ html body footer.site-footer .elajme-v2-brand{margin-bottom:0!important}
+ html body footer.site-footer .elajme-v2-col h2{font-size:18px!important;line-height:1.4!important;margin-bottom:11px!important;padding-bottom:9px!important}
+ html body footer.site-footer .elajme-v2-col nav:not(.elajme-footer-socials){gap:9px!important}
+ html body footer.site-footer .elajme-v2-col nav:not(.elajme-footer-socials) a{font-size:14px!important;line-height:1.55!important;overflow-wrap:anywhere!important}
+ html body footer.site-footer .elajme-v2 .elajme-footer-socials{justify-content:flex-start!important;gap:9px!important;margin-top:12px!important}
+ /* Compact icon artwork inside accessible 44px touch targets. */
+ html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"]{width:44px!important;height:44px!important;flex:0 0 44px!important;border-radius:11px!important}
+ html body footer.site-footer .elajme-v2 .elajme-footer-socials a[class*="elajme-social-"] svg{width:20px!important;height:20px!important;stroke-width:1.9!important}
+ html body footer.site-footer .elajme-v2-offices .elajme-office-address{overflow-wrap:anywhere!important;line-height:1.55!important}
+ html body footer.site-footer .elajme-v2-medical-note{font-size:12px!important;line-height:1.65!important}
+}

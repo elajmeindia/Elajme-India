@@ -24,7 +24,7 @@ jobs:
             'assets/css/arabic-master-header.css':'47e50b51ec23f550677a5594110b481664192882',
             'assets/css/mobile-header.css':'e2e1b33e23b0881749c0cc019f622fc793cbce45',
             'assets/css/arabic-mobile-header.css':'19af6f197ce194a9c9c043c8e22c5703a8c86ced',
-            'assets/js/mobile-header.js':'a25c5d49263de08922ac66f021f6010973ca3487',
+            'assets/js/mobile-header.js':'0eeb04af6b84cdd39f37c7b7aa3a59b41155e163',
             'assets/css/footer-approved.css':'05faf239dd9cf39a19b41e596f433c99989c1e9b',
           }
           def git_blob_sha(data): return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
@@ -49,8 +49,13 @@ jobs:
           if '.master-mobile-controls,.arabic-mobile-conversion-bar{display:none!important}' not in mobile: problems.append('DESKTOP_MOBILE_CONTROLS_GUARD_REMOVED')
           for token in ['.master-actions{display:none!important}', '.master-mobile-controls{display:flex!important', '.master-site-header .master-header-inner>.master-nav{display:none!important']:
               if token not in mobile: problems.append('MOBILE_SINGLE_ROW_GUARD_DRIFT '+token)
-          for token in ["enquiry.innerHTML='<span aria-hidden=\"true\">＋</span><span>ابدأ الاستفسار</span>'","wa.innerHTML='<span>واتساب</span>'","wa.className='arabic-mobile-wa-cta'"]:
+          # Owner-approved PR #330: one shared bar replaces both legacy generators.
+          for token in ["bar.className='elajme-bottom-actions'", "enquiry.textContent=arabicPage?'أرسل استفسارك':'Enquire Now'", "whatsapp.textContent=arabicPage?'واتساب':'WhatsApp'", "bar.append(enquiry,whatsapp)"]:
               if token not in js: problems.append('MOBILE_CTA_MARKUP_DRIFT '+token)
+          for source in ['assets/js/mobile-header.js','script.js','assets/js/arabic-mobile-menu.js']:
+              text=Path(source).read_text(encoding='utf-8')
+              for legacy in ["className='mobile-conversion-bar'", "className='arabic-mobile-conversion-bar'"]:
+                  if legacy in text: problems.append('DUPLICATE_CTA_GENERATOR '+source)
           if '◉' in js: problems.append('ARABIC_WHATSAPP_DOT_REINTRODUCED')
           for token in [".arabic-mobile-wa-cta::before{content:'☎'!important","width:18px!important;height:18px!important;flex:0 0 18px!important","background:#20a86b!important",".arabic-mobile-case-cta::before{content:none!important"]:
               if token not in ar_mobile: problems.append('ARABIC_MOBILE_CTA_STYLE_DRIFT '+token)
