@@ -268,6 +268,18 @@ html[lang="ar"] #home.hero .hero-photo img{transform:scaleX(-1)}
 #home.hero .hero-photo{height:auto!important;aspect-ratio:1672/941!important;align-self:center!important;overflow:visible!important;background:transparent!important;border-radius:14px!important}
 #home.hero .hero-photo img{width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:1672/941!important;object-fit:contain!important;object-position:center!important;border-radius:14px!important}
 @media(min-width:1101px){#home.hero .hero-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(290px,325px)!important;gap:clamp(12px,1.4vw,22px)!important}}
+
+/* Final subject-aware framing: the source has unused space on its left.
+   Show the right 72% of the image so BOTH doctor and patient fit in the centre panel. */
+@media(min-width:901px){
+#home.hero .hero-photo{aspect-ratio:1.12!important;height:auto!important;overflow:hidden!important;border-radius:18px!important}
+#home.hero .hero-photo img{display:block!important;width:100%!important;height:100%!important;aspect-ratio:auto!important;object-fit:cover!important;object-position:100% center!important;max-height:none!important}
+}
+@media(max-width:900px){
+#home.hero .hero-photo{aspect-ratio:1.35!important;overflow:hidden!important}
+#home.hero .hero-photo img{width:100%!important;height:100%!important;aspect-ratio:auto!important;object-fit:cover!important;object-position:100% center!important}
+}
+html[lang="ar"] #home.hero .hero-photo img{transform:none!important}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
