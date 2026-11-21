@@ -82,6 +82,24 @@ jobs:
                     const restored=cards.filter(e=>e.getClientRects().length>0).length;
                     return {hasSearch:!!input,hasCity:!!city,cards:cards.length,before,after,restored};
                   });
+                  if(pageName==='ar/hospitals/') {
+                    const cityCheck=await page.evaluate(() => {
+                      const city=document.querySelector('#city');
+                      const cards=[...document.querySelectorAll('.grid .card')];
+                      if(!city)return {hasCity:false};
+                      const counts={};
+                      for(const value of ['New Delhi','Gurugram','Noida','Mumbai','Navi Mumbai']){
+                        city.value=value;
+                        city.dispatchEvent(new Event('change',{bubbles:true}));
+                        counts[value]=cards.filter(e=>e.getClientRects().length>0).length;
+                      }
+                      city.value='';
+                      city.dispatchEvent(new Event('change',{bubbles:true}));
+                      return {hasCity:true,counts,restored:cards.filter(e=>e.getClientRects().length>0).length};
+                    });
+                    console.log('AR_HOSPITAL_CITY_CHECK',JSON.stringify(cityCheck));
+                    if(!cityCheck.hasCity || cityCheck.restored!==20 || Object.values(cityCheck.counts||{}).some(n=>n<1))errors.push('Arabic hospital city filter missing or failing');
+                  }
                   console.log('FILTER_CHECK',pageName,JSON.stringify(filterCheck));
                   if(filterCheck.cards && filterCheck.hasSearch && (filterCheck.after!==0||filterCheck.restored!==filterCheck.before))errors.push(pageName+': search filter did not hide/restore all cards');
                 }
