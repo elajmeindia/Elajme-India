@@ -140,3 +140,24 @@ html[lang="ar"] .site-header .nav-wrap{direction:rtl!important;display:grid!impo
     padding-top: 24px !important;
   }
 }
+
+/* Screenshot-guided visual polish: use restrained teal-tinted section surfaces
+   to replace large flat white/grey areas, preserving the approved brand palette. */
+@media (min-width: 1100px) {
+  html[lang="en"] body > main > section.section.homepage-enquiry-info,
+  html[lang="ar"] body > main > section.section.homepage-enquiry-info {
+    background: linear-gradient(180deg, #ffffff 0%, #f5fbfa 100%) !important;
+  }
+  html[lang="en"] body > main > section.section.approach-section,
+  html[lang="ar"] body > main > section.section.approach-section {
+    background: linear-gradient(145deg, #f1f8f7 0%, #f8fbfa 70%, #eff7f5 100%) !important;
+  }
+  html[lang="en"] body > main > section.section.faq-section,
+  html[lang="ar"] body > main > section.section.faq-section {
+    background: linear-gradient(180deg, #eff7f5 0%, #f7fbfa 100%) !important;
+  }
+  html[lang="en"] body > main > section.section.treatments-section,
+  html[lang="ar"] body > main > section.section.treatments-section {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fcfb 100%) !important;
+  }
+}
