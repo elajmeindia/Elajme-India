@@ -26,6 +26,14 @@ on:
       - 'ar/treatments/fertility-ivf-treatment-india/index.html'
       - 'treatments/dental-treatment-india/index.html'
       - 'ar/treatments/dental-treatment-india/index.html'
+      - 'treatments/cosmetic-surgery-india/index.html'
+      - 'ar/treatments/cosmetic-surgery-india/index.html'
+      - 'treatments/eye-treatment-india/index.html'
+      - 'ar/treatments/eye-treatment-india/index.html'
+      - 'treatments/womens-health-gynaecology-india/index.html'
+      - 'ar/treatments/womens-health-gynaecology-india/index.html'
+      - 'treatments/ent-treatment-india/index.html'
+      - 'ar/treatments/ent-treatment-india/index.html'
   workflow_dispatch:
 permissions:
   contents: read
@@ -72,7 +80,15 @@ jobs:
               ['/treatments/fertility-ivf-treatment-india/','/?treatment=fertility-ivf-treatment-india#enquiry'],
               ['/ar/treatments/fertility-ivf-treatment-india/','/ar/?treatment=fertility-ivf-treatment-india#enquiry'],
               ['/treatments/dental-treatment-india/','/?treatment=dental-treatment-india#enquiry'],
-              ['/ar/treatments/dental-treatment-india/','/ar/?treatment=dental-treatment-india#enquiry']
+              ['/ar/treatments/dental-treatment-india/','/ar/?treatment=dental-treatment-india#enquiry'],
+              ['/treatments/cosmetic-surgery-india/','/?treatment=cosmetic-surgery-india#enquiry'],
+              ['/ar/treatments/cosmetic-surgery-india/','/ar/?treatment=cosmetic-surgery-india#enquiry'],
+              ['/treatments/eye-treatment-india/','/?treatment=eye-treatment-india#enquiry'],
+              ['/ar/treatments/eye-treatment-india/','/ar/?treatment=eye-treatment-india#enquiry'],
+              ['/treatments/womens-health-gynaecology-india/','/?treatment=womens-health-gynaecology-india#enquiry'],
+              ['/ar/treatments/womens-health-gynaecology-india/','/ar/?treatment=womens-health-gynaecology-india#enquiry'],
+              ['/treatments/ent-treatment-india/','/?treatment=ent-treatment-india#enquiry'],
+              ['/ar/treatments/ent-treatment-india/','/ar/?treatment=ent-treatment-india#enquiry']
             ]){
               const page=await browser.newPage({viewport:{width:390,height:844}});
               try{
