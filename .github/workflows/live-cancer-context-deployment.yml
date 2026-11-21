@@ -36,7 +36,15 @@ jobs:
               ['/treatments/heart-treatment-india/','/?treatment=heart-treatment-india#enquiry'],
               ['/ar/treatments/heart-treatment-india/','/ar/?treatment=heart-treatment-india#enquiry'],
               ['/treatments/kidney-transplant-india/','/?treatment=kidney-transplant-india#enquiry'],
-              ['/ar/treatments/kidney-transplant-india/','/ar/?treatment=kidney-transplant-india#enquiry']
+              ['/ar/treatments/kidney-transplant-india/','/ar/?treatment=kidney-transplant-india#enquiry'],
+              ['/treatments/gastroenterology-treatment-india/','/?treatment=gastroenterology-treatment-india#enquiry'],
+              ['/ar/treatments/gastroenterology-treatment-india/','/ar/?treatment=gastroenterology-treatment-india#enquiry'],
+              ['/treatments/knee-replacement-india/','/?treatment=knee-replacement-india#enquiry'],
+              ['/ar/treatments/knee-replacement-india/','/ar/?treatment=knee-replacement-india#enquiry'],
+              ['/treatments/liver-transplant-india/','/?treatment=liver-transplant-india#enquiry'],
+              ['/ar/treatments/liver-transplant-india/','/ar/?treatment=liver-transplant-india#enquiry'],
+              ['/treatments/neurosurgery-india/','/?treatment=neurosurgery-india#enquiry'],
+              ['/ar/treatments/neurosurgery-india/','/ar/?treatment=neurosurgery-india#enquiry']
             ]){
               const page=await browser.newPage({viewport:{width:390,height:844}});
               try{
