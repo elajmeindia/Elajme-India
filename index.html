@@ -159,6 +159,32 @@ html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#edf7f5 0%,
   html[lang="en"] body > main > section.section.treatments-section{padding-bottom:18px!important}
   html[lang="en"] body > main > section.section.process-section{padding-top:20px!important}
 }
+
+/* Desktop screenshot follow-up: reduce empty canvas and soften high-white surfaces.
+   Keep header, footer, FAQ, mobile and patient forms unchanged. */
+@media (min-width:1100px){
+  html body > main > section.section.homepage-enquiry-info{background:#f2f8f7!important;padding-block:22px 20px!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-copy{row-gap:6px!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-points{margin-top:4px!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-points > span{min-height:40px!important;padding:7px 10px!important;background:#e7f3f0!important}
+  html body > main > section.section.why-section{background:#f6faf9!important;padding-block:24px!important}
+  html body > main > section.section.why-section .section-heading{margin-bottom:16px!important}
+  html body > main > section.section.why-section .why-grid{gap:14px!important}
+  html body > main > section.section.why-section .why-card{background:#fff!important}
+  html body > main > section.section.treatments-section{background:#edf6f5!important;padding-block:28px 16px!important}
+  html body > main > section.section.treatments-section .section-heading{margin-bottom:18px!important}
+  html body > main > section.section.treatments-section .treatment-grid{gap:12px!important}
+  html body > main > section.section.process-section{background:#f4faf8!important;padding-block:22px 28px!important}
+  html body > main > section.section.process-section .section-heading{margin-bottom:16px!important}
+  html body > main > section.section.process-section .process-grid{margin-top:14px!important}
+  html body > main > section.section.process-section .process-step{padding-top:20px!important;padding-bottom:20px!important;min-height:0!important}
+  html body > main > section.section.approach-section{background:#edf6f5!important;padding-block:24px!important}
+  html body > main > section.section.approach-section .approach-grid{gap:28px!important;align-items:center!important}
+  html body > main > section.section.approach-section .approach-points{gap:12px!important}
+  html body > main > section.section.approach-section .approach-points > div{background:#fff!important}
+  html body > main > section.audience-strip{background:#f0f7f7!important}
+  html body > main > section.audience-strip .country{background:#fbfdfc!important}
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
