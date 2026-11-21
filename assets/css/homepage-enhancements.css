@@ -80,3 +80,10 @@ html[lang="ar"] .site-header .nav-wrap{direction:rtl!important;display:grid!impo
   html[lang="en"] #home.hero .trust-row,
   html[lang="ar"] #home.hero .trust-row { margin-top: 16px !important; }
 }
+
+/* Reduce actual mobile hero grid whitespace between copy, image and enquiry.
+   Preserve image dimensions, form fields and the 72px bottom contact clearance. */
+@media (max-width: 900px) {
+  html[lang="en"] #home.hero .hero-grid,
+  html[lang="ar"] #home.hero .hero-grid { gap: 14px !important; }
+}
