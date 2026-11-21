@@ -115,3 +115,14 @@ html[lang="ar"] .site-header .nav-wrap{direction:rtl!important;display:grid!impo
     padding-top: 20px !important;
   }
 }
+
+/* English desktop screenshots: tighten the empty transition between treatment
+   links and the four-step process without changing cards or their content. */
+@media (min-width: 1100px) {
+  html[lang="en"] body > main > section.section.treatments-section {
+    padding-bottom: 24px !important;
+  }
+  html[lang="en"] body > main > section.section.process-section {
+    padding-top: 24px !important;
+  }
+}
