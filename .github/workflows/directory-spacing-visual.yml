@@ -1,0 +1,65 @@
+name: Directory spacing visual baseline
+on:
+  pull_request:
+    paths:
+      - 'treatments/index.html'
+      - 'ar/treatments/index.html'
+      - 'doctors/index.html'
+      - 'ar/doctors/index.html'
+      - 'hospitals/index.html'
+      - 'ar/hospitals/index.html'
+      - '.github/workflows/directory-spacing-visual.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  screenshots:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Capture bilingual responsive screenshots and check overflow
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/elajme-spacing-server.log 2>&1 &
+          mkdir -p spacing-evidence
+          node <<'JS'
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({headless:true});
+            const pages = ['treatments/','ar/treatments/','doctors/','ar/doctors/','hospitals/','ar/hospitals/'];
+            const viewports = [{width:390,height:844},{width:768,height:1024},{width:1363,height:936}];
+            let errors = [];
+            for (const pageName of pages) {
+              for (const viewport of viewports) {
+                const page = await browser.newPage({viewport,deviceScaleFactor:1});
+                const url = 'http://127.0.0.1:8765/' + pageName;
+                await page.goto(url,{waitUntil:'networkidle'});
+                await page.screenshot({path:'spacing-evidence/'+pageName.replaceAll('/','-')+viewport.width+'.png',fullPage:true,animations:'disabled'});
+                const result = await page.evaluate(() => ({
+                  viewport:document.documentElement.clientWidth,
+                  scroll:document.documentElement.scrollWidth,
+                  hero:document.querySelector('.hero')?.getBoundingClientRect().height,
+                  sections:[...document.querySelectorAll('.sec')].map(e=>Math.round(e.getBoundingClientRect().height))
+                }));
+                console.log(pageName,viewport.width,JSON.stringify(result));
+                if(result.scroll > result.viewport+2)errors.push(pageName+' at '+viewport.width+': horizontal overflow '+result.scroll);
+                await page.close();
+              }
+            }
+            await browser.close();
+            if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: directory-spacing-baseline-screenshots
+          path: spacing-evidence/
+          retention-days: 14
