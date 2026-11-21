@@ -10,6 +10,14 @@ on:
       - 'ar/treatments/heart-treatment-india/index.html'
       - 'treatments/kidney-transplant-india/index.html'
       - 'ar/treatments/kidney-transplant-india/index.html'
+      - 'treatments/gastroenterology-treatment-india/index.html'
+      - 'ar/treatments/gastroenterology-treatment-india/index.html'
+      - 'treatments/knee-replacement-india/index.html'
+      - 'ar/treatments/knee-replacement-india/index.html'
+      - 'treatments/liver-transplant-india/index.html'
+      - 'ar/treatments/liver-transplant-india/index.html'
+      - 'treatments/neurosurgery-india/index.html'
+      - 'ar/treatments/neurosurgery-india/index.html'
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,7 +33,7 @@ jobs:
       - run: |
           npm install --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Test six bilingual treatment pages in Chromium
+      - name: Test fourteen bilingual treatment pages in Chromium
         shell: bash
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/elajme-http.log 2>&1 &
@@ -40,7 +48,15 @@ jobs:
               ['/treatments/heart-treatment-india/','/?treatment=heart-treatment-india#enquiry'],
               ['/ar/treatments/heart-treatment-india/','/ar/?treatment=heart-treatment-india#enquiry'],
               ['/treatments/kidney-transplant-india/','/?treatment=kidney-transplant-india#enquiry'],
-              ['/ar/treatments/kidney-transplant-india/','/ar/?treatment=kidney-transplant-india#enquiry']
+              ['/ar/treatments/kidney-transplant-india/','/ar/?treatment=kidney-transplant-india#enquiry'],
+              ['/treatments/gastroenterology-treatment-india/','/?treatment=gastroenterology-treatment-india#enquiry'],
+              ['/ar/treatments/gastroenterology-treatment-india/','/ar/?treatment=gastroenterology-treatment-india#enquiry'],
+              ['/treatments/knee-replacement-india/','/?treatment=knee-replacement-india#enquiry'],
+              ['/ar/treatments/knee-replacement-india/','/ar/?treatment=knee-replacement-india#enquiry'],
+              ['/treatments/liver-transplant-india/','/?treatment=liver-transplant-india#enquiry'],
+              ['/ar/treatments/liver-transplant-india/','/ar/?treatment=liver-transplant-india#enquiry'],
+              ['/treatments/neurosurgery-india/','/?treatment=neurosurgery-india#enquiry'],
+              ['/ar/treatments/neurosurgery-india/','/ar/?treatment=neurosurgery-india#enquiry']
             ]){
               const page=await browser.newPage({viewport:{width:390,height:844}});
               try{
