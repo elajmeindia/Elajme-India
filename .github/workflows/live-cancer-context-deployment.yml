@@ -50,6 +50,7 @@ jobs:
               try{
                 const response=await page.goto('https://elajmeindia.com'+path,{waitUntil:'domcontentloaded',timeout:45000});
                 await page.waitForFunction(()=>document.querySelector('.elajme-bottom-actions .elajme-bottom-enquiry')?.getAttribute('href')?.includes('?treatment='),null,{timeout:15000});
+                await page.waitForFunction(()=>{const bar=document.querySelector('.elajme-bottom-actions');return bar&&getComputedStyle(bar).position==='fixed'},null,{timeout:15000});
                 const r=await page.evaluate(()=>{
                   const enq=document.querySelector('.elajme-bottom-enquiry'),wa=document.querySelector('.elajme-bottom-wa'),bar=document.querySelector('.elajme-bottom-actions');
                   return {href:enq?.getAttribute('href'),whatsapp:new URL(wa.href).pathname,barCount:document.querySelectorAll('.elajme-bottom-actions').length,fixed:getComputedStyle(bar).position==='fixed',overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2};
