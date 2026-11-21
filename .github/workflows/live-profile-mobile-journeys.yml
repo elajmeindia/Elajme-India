@@ -1,0 +1,60 @@
+name: Live bilingual profile mobile journeys
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/live-profile-mobile-journeys.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-profile-mobile-journeys.yml'
+      - 'assets/js/mobile-header.js'
+      - 'assets/css/mobile-bottom-actions.css'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  profiles:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Check live profile contact actions
+        shell: bash
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const paths=['/doctors/dr-abhideep-chaudhary/','/ar/doctors/dr-abhideep-chaudhary/','/hospitals/apollo-hospitals-navi-mumbai/','/ar/hospitals/apollo-hospitals-navi-mumbai/','/treatments/cancer-treatment-india/','/ar/treatments/cancer-treatment-india/'];
+            const errors=[];
+            for(const path of paths){
+              const page=await browser.newPage({viewport:{width:390,height:844}});
+              try{
+                const response=await page.goto('https://elajmeindia.com'+path,{waitUntil:'domcontentloaded',timeout:45000});
+                await page.locator('.elajme-bottom-actions .elajme-bottom-enquiry').waitFor({state:'visible',timeout:15000});
+                await page.waitForFunction(()=>{const bar=document.querySelector('.elajme-bottom-actions');return bar&&getComputedStyle(bar).position==='fixed';},null,{timeout:15000});
+                const r=await page.evaluate(()=>{
+                  const bar=document.querySelector('.elajme-bottom-actions'),enq=bar?.querySelector('.elajme-bottom-enquiry'),wa=bar?.querySelector('.elajme-bottom-wa');
+                  const visible=e=>!!e&&e.getClientRects().length>0;
+                  const u=wa?new URL(wa.href):null;
+                  const rect=bar?.getBoundingClientRect();
+                  return {count:document.querySelectorAll('.elajme-bottom-actions').length,enqVisible:visible(enq),waVisible:visible(wa),enqHref:enq?.getAttribute('href'),waHost:u?.hostname,waNumber:u?.pathname,arabicPrefill:(u?.searchParams.get('text')||'').includes('مرحبا'),bottomGap:rect?Math.round(innerHeight-rect.bottom):null,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2};
+                });
+                const ar=path.startsWith('/ar/');
+                const pass=response.status()===200&&r.count===1&&r.enqVisible&&r.waVisible&&r.enqHref===(ar?'/ar/#enquiry':'/#enquiry')&&r.waHost==='wa.me'&&r.waNumber==='/917488955154'&&(!ar||r.arabicPrefill)&&r.bottomGap>=-3&&!r.overflow;
+                console.log('LIVE_PROFILE_MOBILE',path,JSON.stringify({...r,pass}));
+                if(!pass)errors.push(path+': profile mobile actions failed');
+              }catch(e){errors.push(path+': '+e.message);}
+              await page.close();
+            }
+            await browser.close();
+            if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
