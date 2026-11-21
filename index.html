@@ -297,6 +297,37 @@ html[lang="ar"] #home.hero .hero-photo img{transform:none!important}
 }
 @media(min-width:901px) and (max-width:1100px){#home.hero .hero-actions{display:flex!important;flex-wrap:wrap!important;gap:10px!important}}
 @media(max-width:900px){#home.hero .hero-actions{display:flex!important;flex-wrap:wrap!important;gap:10px!important}}
+
+/* Full-bleed hero photograph, with overlay content as in reference layout. */
+#home.hero{position:relative!important;isolation:isolate!important;overflow:hidden!important;background:#edf6f5 url('/assets/images/elajme-approved-two-person-hero.webp') center center/cover no-repeat!important}
+#home.hero .hero-photo{display:none!important}
+#home.hero::after{display:none!important;content:none!important}
+#home.hero::before{display:block!important;content:""!important;position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;background:linear-gradient(90deg,rgba(242,250,248,.98) 0%,rgba(242,250,248,.95) 21%,rgba(242,250,248,.72) 32%,rgba(242,250,248,.05) 53%,rgba(242,250,248,0) 75%)!important}
+#home.hero .hero-grid{position:relative!important;z-index:1!important}
+@media(min-width:1101px){
+#home.hero{padding-block:26px!important;background-size:cover!important;background-position:center center!important;min-height:570px!important}
+#home.hero .hero-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(290px,325px)!important;gap:clamp(28px,3vw,46px)!important;min-height:520px!important;width:min(100% - 54px,1400px)!important;max-width:1400px!important;align-items:center!important}
+#home.hero .hero-copy{grid-column:1!important;grid-row:1!important;width:min(100%,475px)!important;max-width:475px!important;justify-self:start!important}
+#home.hero .homepage-hero-form{grid-column:2!important;grid-row:1!important;justify-self:end!important;max-width:325px!important;width:100%!important}
+#home.hero h1{font-size:clamp(34px,3.35vw,48px)!important}
+#home.hero .hero-actions{display:flex!important;flex-wrap:wrap!important;gap:10px!important}
+#home.hero .hero-actions .button{font-size:12px!important;padding:12px 14px!important}
+}
+@media(min-width:901px) and (max-width:1100px){
+#home.hero{background-position:center center!important}
+#home.hero .hero-grid{grid-template-columns:minmax(0,1fr) 325px!important;min-height:540px!important}
+#home.hero .hero-copy{grid-column:1!important;grid-row:1!important;max-width:440px!important}
+#home.hero .homepage-hero-form{grid-column:2!important;grid-row:1!important}
+}
+@media(max-width:900px){
+#home.hero{background-image:none!important;background-color:#edf6f5!important;padding:18px 0 24px!important;min-height:0!important}
+#home.hero::before{display:none!important}
+#home.hero .hero-photo{display:block!important;grid-column:1!important;grid-row:auto!important;width:100%!important;aspect-ratio:1672/941!important;height:auto!important;overflow:hidden!important}
+#home.hero .hero-photo img{display:block!important;width:100%!important;height:auto!important;aspect-ratio:1672/941!important;object-fit:contain!important;mask-image:none!important;-webkit-mask-image:none!important}
+#home.hero .hero-grid{grid-template-columns:minmax(0,1fr)!important;gap:18px!important}
+#home.hero .hero-copy,#home.hero .homepage-hero-form{grid-column:1!important;grid-row:auto!important}
+}
+html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(242,250,248,.98) 0%,rgba(242,250,248,.95) 21%,rgba(242,250,248,.72) 32%,rgba(242,250,248,.05) 53%,rgba(242,250,248,0) 75%)!important}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
