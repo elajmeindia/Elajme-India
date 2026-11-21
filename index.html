@@ -120,6 +120,16 @@ html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#edf7f5 0%,
 /* The form must stay unobstructed by fixed on-page contact controls. */
 @media(max-width:900px){#home.hero .homepage-hero-form{margin-bottom:72px!important}}
 
+/* Screenshot follow-up: balance the desktop enquiry copy without changing mobile or form. */
+@media (min-width:1100px){
+  html body > main > section.section.homepage-enquiry-info{padding-block:24px 22px!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-wrap{max-width:1100px!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-copy{display:grid!important;grid-template-columns:minmax(0,0.9fr) minmax(0,1.1fr);column-gap:clamp(24px,3vw,44px);row-gap:8px;align-items:center}
+  html body > main > section.section.homepage-enquiry-info .enquiry-copy > .section-label{grid-column:1;grid-row:1;align-self:end}
+  html body > main > section.section.homepage-enquiry-info .enquiry-copy > h2{grid-column:1;grid-row:2;margin:0!important;align-self:start}
+  html body > main > section.section.homepage-enquiry-info .enquiry-copy > p{grid-column:2;grid-row:1 / span 2;margin:0!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-copy > .enquiry-points{grid-column:1 / -1;margin-top:8px}
+}
 /* Screenshot-guided bilingual desktop polish: restrained surfaces and compact content flow. */
 @media (min-width:1100px){
   html body > main > section.section[aria-labelledby="international-patients-heading"]{min-height:0!important;padding-block:22px 18px!important;background:#f3f7f9!important}
