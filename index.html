@@ -172,6 +172,22 @@ html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,25
 #home.hero .homepage-hero-form .enquiry-submit{min-height:37px!important;padding:8px 12px!important;font-size:12px!important}
 #home.hero .homepage-hero-form .enquiry-legal{font-size:9px!important;line-height:1.25!important;margin:5px 0 0!important}
 }
+
+/* Final compact enquiry card refinements: preserve readable labels and touch targets. */
+@media(min-width:901px){
+#home.hero .hero-grid{grid-template-columns:minmax(0,1fr) 325px!important;gap:clamp(24px,3vw,44px)!important}
+#home.hero .homepage-hero-form{max-width:325px!important}
+#home.hero .homepage-hero-form .enquiry-form{padding:12px 14px 14px!important}
+#home.hero .homepage-hero-form .enquiry-card-heading{margin-bottom:6px!important}
+#home.hero .homepage-hero-form .enquiry-card-heading h3{font-size:17px!important}
+#home.hero .homepage-hero-form .enquiry-card-heading p{font-size:10px!important}
+#home.hero .homepage-hero-form .form-field{margin-bottom:4px!important}
+#home.hero .homepage-hero-form .form-field label{font-size:10px!important;margin-bottom:2px!important}
+#home.hero .homepage-hero-form .enquiry-form input,#home.hero .homepage-hero-form .enquiry-form select{height:34px!important;min-height:34px!important}
+#home.hero .homepage-hero-form .enquiry-form textarea{height:50px!important;min-height:50px!important}
+#home.hero .homepage-hero-form .enquiry-submit{min-height:40px!important}
+#home.hero .homepage-hero-form .enquiry-legal{font-size:9px!important;line-height:1.35!important;margin-top:7px!important}
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
