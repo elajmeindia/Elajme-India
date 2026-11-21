@@ -1,0 +1,80 @@
+name: Live bilingual hospital filter smoke
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/live-hospital-filter-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-hospital-filter-smoke.yml'
+      - 'hospitals/index.html'
+      - 'ar/hospitals/index.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-filter:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify live hospital search and city filters
+        shell: bash
+        run: |
+          mkdir -p live-hospital-evidence
+          node <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const errors=[];
+            for(const language of ['en','ar']){
+              const page=await browser.newPage({viewport:{width:390,height:844}});
+              const url='https://elajmeindia.com/'+(language==='ar'?'ar/':'')+'hospitals/';
+              try {
+                const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
+                await page.locator('.grid .card').first().waitFor({timeout:15000});
+                const result=await page.evaluate(()=>{
+                  const input=document.querySelector('#q');
+                  const city=document.querySelector('#city');
+                  const cards=[...document.querySelectorAll('.grid .card')];
+                  const visible=()=>cards.filter(c=>c.getClientRects().length>0).length;
+                  const initial=visible();
+                  if(input){input.value='zzzxxyy-no-match';input.dispatchEvent(new Event('input',{bubbles:true}));}
+                  const noMatch=visible();
+                  if(input){input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));}
+                  const restored=visible();
+                  const cityCounts={};
+                  if(city){
+                    for(const value of ['New Delhi','Gurugram','Noida','Mumbai','Navi Mumbai']){
+                      city.value=value;city.dispatchEvent(new Event('change',{bubbles:true}));
+                      cityCounts[value]=visible();
+                    }
+                    city.value='';city.dispatchEvent(new Event('change',{bubbles:true}));
+                  }
+                  return {hasSearch:!!input,hasCity:!!city,total:cards.length,initial,noMatch,restored,cityCounts,reset:visible(),overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2};
+                });
+                console.log('LIVE_HOSPITAL_CHECK',language,'HTTP',response.status(),JSON.stringify(result));
+                await page.screenshot({path:'live-hospital-evidence/'+language+'-mobile.png',fullPage:true});
+                const expected={'New Delhi':4,'Gurugram':3,'Noida':3,'Mumbai':8,'Navi Mumbai':2};
+                if(response.status()!==200||!result.hasSearch||!result.hasCity||result.total!==20||result.initial!==20||result.noMatch!==0||result.restored!==20||result.reset!==20||result.overflow)errors.push(language+': live search/layout check failed');
+                for(const [city,count] of Object.entries(expected))if(result.cityCounts[city]!==count)errors.push(language+': '+city+' expected '+count+' got '+result.cityCounts[city]);
+              }catch(e){errors.push(language+': '+e.message);}
+              await page.close();
+            }
+            await browser.close();
+            if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-hospital-mobile-evidence
+          path: live-hospital-evidence/
+          if-no-files-found: ignore
