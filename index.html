@@ -138,6 +138,24 @@ html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,25
 #home.hero .hero-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:24px!important}
 #home.hero .hero-copy,#home.hero .homepage-hero-form{grid-column:1!important;grid-row:auto!important;position:relative!important;inset:auto!important;transform:none!important}
 }
+
+/* Keep complete enquiry card visible; no clipped form or absolute positioning. */
+#home.hero{overflow:visible!important}
+#home.hero .hero-grid{height:auto!important;max-height:none!important}
+#home.hero .homepage-hero-form{height:auto!important;max-height:none!important;overflow:visible!important}
+#home.hero .homepage-hero-form .enquiry-form{height:auto!important;max-height:none!important;overflow:visible!important;box-sizing:border-box!important}
+@media(min-width:901px){
+#home.hero{padding-block:26px!important}
+#home.hero .hero-grid{min-height:0!important;align-items:center!important}
+#home.hero .homepage-hero-form .enquiry-form{padding:16px 20px!important}
+#home.hero .homepage-hero-form .enquiry-form .form-field{margin-bottom:6px!important}
+#home.hero .homepage-hero-form .enquiry-form input,#home.hero .homepage-hero-form .enquiry-form select{min-height:40px!important;height:40px!important}
+#home.hero .homepage-hero-form .enquiry-form textarea{min-height:66px!important;height:66px!important}
+#home.hero .homepage-hero-form .enquiry-card-heading{margin-bottom:8px!important}
+#home.hero .homepage-hero-form .enquiry-submit{min-height:42px!important}
+#home.hero::before{background:linear-gradient(90deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.94) 26%,rgba(247,251,250,.7) 42%,rgba(247,251,250,.08) 67%)!important}
+html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.94) 26%,rgba(247,251,250,.7) 42%,rgba(247,251,250,.08) 67%)!important}
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
