@@ -71,3 +71,12 @@ html[lang="ar"] .site-header .nav-wrap{direction:rtl!important;display:grid!impo
   html[lang="en"] #home.hero .trust-row,
   html[lang="ar"] #home.hero .trust-row { margin-top: 16px !important; }
 }
+
+/* Mobile hero: reduce measured text/action whitespace without touching image,
+   form, bottom contact clearance, approved header or footer. */
+@media (max-width: 900px) {
+  html[lang="en"] #home.hero .hero-actions,
+  html[lang="ar"] #home.hero .hero-actions { margin-top: 18px !important; }
+  html[lang="en"] #home.hero .trust-row,
+  html[lang="ar"] #home.hero .trust-row { margin-top: 16px !important; }
+}
