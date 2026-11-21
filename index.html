@@ -263,6 +263,11 @@ html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,25
 html[lang="ar"] #home.hero .hero-photo img{transform:scaleX(-1)}
 /* Keep any automatic chat welcome panel away from the enquiry card. */
 #home.hero .homepage-hero-form{isolation:isolate}
+
+/* Preserve both people in the wide source image: never crop to a portrait viewport. */
+#home.hero .hero-photo{height:auto!important;aspect-ratio:1672/941!important;align-self:center!important;overflow:visible!important;background:transparent!important;border-radius:14px!important}
+#home.hero .hero-photo img{width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:1672/941!important;object-fit:contain!important;object-position:center!important;border-radius:14px!important}
+@media(min-width:1101px){#home.hero .hero-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(290px,325px)!important;gap:clamp(12px,1.4vw,22px)!important}}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
