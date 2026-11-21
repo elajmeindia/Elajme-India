@@ -280,6 +280,23 @@ html[lang="ar"] #home.hero .hero-photo img{transform:scaleX(-1)}
 #home.hero .hero-photo img{width:100%!important;height:100%!important;aspect-ratio:auto!important;object-fit:cover!important;object-position:100% center!important}
 }
 html[lang="ar"] #home.hero .hero-photo img{transform:none!important}
+
+/* Integrated Vaidam-style composition without overlapping text or form. */
+@media(min-width:1101px){
+#home.hero{padding-block:16px!important;background:#f0f8f6!important}
+#home.hero .hero-grid{width:min(100% - 28px,1440px)!important;max-width:1440px!important;grid-template-columns:minmax(0,1.1fr) minmax(0,1.18fr) minmax(290px,325px)!important;gap:clamp(10px,1.25vw,20px)!important;min-height:500px!important}
+#home.hero .hero-copy{align-self:center!important;padding-block:14px!important}
+#home.hero h1{font-size:clamp(30px,3.05vw,44px)!important;line-height:1.13!important;margin-bottom:18px!important}
+#home.hero .hero-lead{font-size:clamp(13px,1.1vw,16px)!important;line-height:1.6!important}
+#home.hero .hero-actions{display:flex!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:8px!important;margin-top:20px!important}
+#home.hero .hero-actions .button{min-width:0!important;width:auto!important;flex:0 1 auto!important;white-space:nowrap!important;padding:12px clamp(9px,1vw,16px)!important;font-size:clamp(10px,.88vw,13px)!important}
+#home.hero .trust-row{display:flex!important;flex-wrap:wrap!important;gap:8px 12px!important;margin-top:22px!important}
+#home.hero .hero-photo{height:480px!important;aspect-ratio:auto!important;align-self:center!important;overflow:hidden!important;border-radius:0!important;background:transparent!important}
+#home.hero .hero-photo img{width:100%!important;height:100%!important;aspect-ratio:auto!important;object-fit:cover!important;object-position:100% center!important;border-radius:0!important;mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 94%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 94%,transparent 100%)}
+#home.hero .homepage-hero-form{align-self:center!important}
+}
+@media(min-width:901px) and (max-width:1100px){#home.hero .hero-actions{display:flex!important;flex-wrap:wrap!important;gap:10px!important}}
+@media(max-width:900px){#home.hero .hero-actions{display:flex!important;flex-wrap:wrap!important;gap:10px!important}}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
