@@ -94,6 +94,25 @@ html[lang="ar"] #home.hero .homepage-hero-form{grid-column:2!important;justify-s
 @media(max-width:620px){.homepage-case-journey .journey-steps{grid-template-columns:1fr}.homepage-case-journey .journey-step{padding:11px 12px}}
 .homepage-enquiry-info .enquiry-wrap{display:block!important;max-width:1000px!important}
 .homepage-enquiry-info .enquiry-copy{max-width:100%!important}
+
+/* Final balanced desktop composition: photo sized to show both people, not cover-cropped. */
+@media(min-width:1101px){
+#home.hero{background:#eff8f6!important;min-height:0!important;padding:24px 0!important}
+#home.hero::before,html[lang="ar"] #home.hero::before{display:block!important;content:""!important;position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;background:linear-gradient(90deg,#eff8f6 0%,rgba(239,248,246,.94) 23%,rgba(239,248,246,.24) 38%,rgba(239,248,246,0) 53%),url('/assets/images/elajme-approved-two-person-hero.webp') 51% center / auto 100% no-repeat!important}
+#home.hero .hero-grid{min-height:495px!important;grid-template-columns:minmax(0,1fr) 325px!important}
+#home.hero .hero-copy{max-width:430px!important}
+#home.hero h1{font-size:clamp(34px,3.15vw,44px)!important}
+#home.hero .homepage-hero-form .enquiry-form{padding:12px 15px 13px!important}
+#home.hero .homepage-hero-form .form-field{margin-bottom:5px!important}
+#home.hero .homepage-hero-form input,#home.hero .homepage-hero-form select{height:35px!important;min-height:35px!important}
+#home.hero .homepage-hero-form textarea{height:52px!important;min-height:52px!important}
+#home.hero .homepage-hero-form .enquiry-card-heading{margin-bottom:6px!important}
+#home.hero .homepage-hero-form .enquiry-legal{font-size:10px!important}
+}
+@media(min-width:1101px){
+#home.hero::before{background:linear-gradient(90deg,#eff8f6 0%,rgba(239,248,246,.96) 22%,rgba(239,248,246,.45) 34%,rgba(239,248,246,0) 52%,rgba(239,248,246,.08) 74%,#eff8f6 99%),url('/assets/images/elajme-approved-two-person-hero.webp') 51% center / auto 100% no-repeat!important}
+html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#eff8f6 0%,rgba(239,248,246,.96) 22%,rgba(239,248,246,.45) 34%,rgba(239,248,246,0) 52%,rgba(239,248,246,.08) 74%,#eff8f6 99%),url('/assets/images/elajme-approved-two-person-hero.webp') 49% center / auto 100% no-repeat!important}
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
