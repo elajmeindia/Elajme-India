@@ -87,3 +87,18 @@ html[lang="ar"] .site-header .nav-wrap{direction:rtl!important;display:grid!impo
   html[lang="en"] #home.hero .hero-grid,
   html[lang="ar"] #home.hero .hero-grid { gap: 14px !important; }
 }
+
+/* Screenshot-reviewed bilingual homepage: remove excess outer whitespace only.
+   Scope to the enquiry information, approach and FAQ sections at desktop widths.
+   Keep all cards, typography, forms, hero, footer and responsive layouts intact. */
+@media (min-width: 1100px) {
+  html[lang="en"] body > main > section.section.homepage-enquiry-info,
+  html[lang="ar"] body > main > section.section.homepage-enquiry-info,
+  html[lang="en"] body > main > section.section.approach-section,
+  html[lang="ar"] body > main > section.section.approach-section,
+  html[lang="en"] body > main > section.section.faq-section,
+  html[lang="ar"] body > main > section.section.faq-section {
+    padding-top: 38px !important;
+    padding-bottom: 38px !important;
+  }
+}
