@@ -38,6 +38,7 @@ jobs:
               try{
                 const response=await page.goto('https://elajmeindia.com'+path,{waitUntil:'domcontentloaded',timeout:45000});
                 await page.locator('.elajme-bottom-actions .elajme-bottom-enquiry').waitFor({state:'visible',timeout:15000});
+                await page.waitForFunction(()=>{const bar=document.querySelector('.elajme-bottom-actions');return bar&&getComputedStyle(bar).position==='fixed';},{timeout:15000});
                 const result=await page.evaluate(()=>{
                   const bar=document.querySelector('.elajme-bottom-actions');
                   const enquiry=bar?.querySelector('.elajme-bottom-enquiry');
