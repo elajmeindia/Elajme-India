@@ -4,6 +4,7 @@ let bar=document.querySelector('.elajme-bottom-actions');
 if(!bar){bar=document.createElement('nav');bar.className='elajme-bottom-actions';document.body.appendChild(bar)}
 bar.setAttribute('aria-label',arabicPage?'خيارات التواصل السريع':'Quick patient contact');bar.dir=arabicPage?'rtl':'ltr';
 let enquiry=bar.querySelector('.elajme-bottom-enquiry');if(!enquiry){enquiry=document.createElement('a');enquiry.className='elajme-bottom-enquiry';enquiry.href=arabicPage?'/ar/#enquiry':'/#enquiry'}
+const contextualEnquiry=[...document.querySelectorAll('a[href]')].find(a=>{const href=a.getAttribute('href')||'';return href.startsWith(arabicPage?'/ar/?treatment=':'/?treatment=')&&href.endsWith('#enquiry')});if(contextualEnquiry)enquiry.setAttribute('href',contextualEnquiry.getAttribute('href'));
 enquiry.textContent=arabicPage?'أرسل استفسارك':'Enquire Now';
 let whatsapp=bar.querySelector('.elajme-bottom-wa');if(!whatsapp){whatsapp=document.createElement('a');whatsapp.className='elajme-bottom-wa';whatsapp.href=arabicPage?arabicWhatsAppUrl:'https://wa.me/917488955154'}
 whatsapp.target='_blank';whatsapp.rel='noopener noreferrer';whatsapp.setAttribute('aria-label',arabicPage?'واتساب علاج مي إنديا':'Chat with Elajme India on WhatsApp');whatsapp.textContent=arabicPage?'واتساب':'WhatsApp';
