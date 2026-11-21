@@ -31,12 +31,13 @@ jobs:
                   await page.goto('https://elajmeindia.com'+path,{waitUntil:'networkidle',timeout:45000});
                   const data=await page.evaluate(()=>{
                     const box=s=>{const e=document.querySelector(s);if(!e)return null;const r=e.getBoundingClientRect();return {top:Math.round(r.top),bottom:Math.round(r.bottom),height:Math.round(r.height),width:Math.round(r.width)}};
-                    const hero=box('#home'),grid=box('#home .hero-grid'),copy=box('#home .hero-copy'),visual=box('#home .hero-visual'),title=box('#home h1'),lead=box('#home .hero-lead'),actions=box('#home .hero-actions'),trust=box('#home .trust-row'),next=box('#home + section');
+                    const hero=box('#home'),grid=box('#home .hero-grid'),copy=box('#home .hero-copy'),visual=box('#home .hero-photo'),form=box('#home .homepage-hero-form'),title=box('#home h1'),lead=box('#home .hero-lead'),actions=box('#home .hero-actions'),trust=box('#home .trust-row'),next=box('#home + section');
                     const gap=(a,b)=>a&&b?b.top-a.bottom:null;
-                    return {hero,grid,copy,visual,title,lead,actions,trust,next,gaps:{titleToLead:gap(title,lead),leadToActions:gap(lead,actions),actionsToTrust:gap(actions,trust),copyToHeroBottom:gap(copy,hero),visualToHeroBottom:gap(visual,hero),heroToNext:gap(hero,next)},overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2};
+                    return {hero,grid,copy,visual,form,title,lead,actions,trust,next,gaps:{titleToLead:gap(title,lead),leadToActions:gap(lead,actions),actionsToTrust:gap(actions,trust),copyToHeroBottom:gap(copy,hero),visualToHeroBottom:gap(visual,hero),formToHeroBottom:gap(form,hero),copyToForm:gap(copy,form),photoToForm:gap(visual,form),heroToNext:gap(hero,next)},overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2};
                   });
                   console.log('HERO_GAP_DIAGNOSTIC',width,path,JSON.stringify(data));
                   if(data.overflow)throw Error('Horizontal overflow');
+                  if(width===1363 && (data.gaps.leadToActions>22||data.gaps.actionsToTrust>18))throw Error('Excessive desktop hero text gap: '+JSON.stringify(data.gaps));
                 }finally{await page.close()}
               }
             }
