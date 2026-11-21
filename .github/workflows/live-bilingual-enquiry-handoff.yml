@@ -1,0 +1,64 @@
+name: Live bilingual enquiry handoff smoke
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/live-bilingual-enquiry-handoff.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-bilingual-enquiry-handoff.yml'
+      - 'index.html'
+      - 'ar/index.html'
+      - 'script.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  enquiry:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify live enquiry WhatsApp handoff without sending
+        shell: bash
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const errors=[];
+            for(const language of ['en','ar']){
+              const page=await browser.newPage({viewport:{width:390,height:844}});
+              const path=language==='ar'?'/ar/':'/';
+              const url='https://elajmeindia.com'+path+'?treatment=cancer-treatment-india#enquiry';
+              const captured=[];
+              await page.route('https://wa.me/**',route=>{captured.push(route.request().url());return route.abort();});
+              try{
+                const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
+                await page.locator('#patientEnquiryForm').waitFor({timeout:15000});
+                await page.locator('#patientName').fill('Test Patient');
+                await page.locator('#patientCountry').fill('Oman');
+                await page.locator('#patientMobile').fill('+968 91234567');
+                const select=page.locator('#preferredLanguage');
+                if(await select.count())await select.selectOption({label:language==='ar'?'Arabic':'English'}).catch(async()=>await select.selectOption(language==='ar'?'Arabic':'English'));
+                await page.locator('#patientEnquiryForm').evaluate(form=>form.requestSubmit());
+                await page.waitForTimeout(1500);
+                const wa=captured[0]||'';
+                const message=wa?new URL(wa).searchParams.get('text')||'':'';
+                const result={http:response.status(),intercepted:captured.length,recipient:wa?new URL(wa).pathname:'',hasTestName:message.includes('Test Patient'),hasCountry:message.includes('Oman'),hasPhone:message.includes('91234567'),hasTreatment:language==='ar'?message.includes('علاج السرطان'):message.includes('Cancer'),arabicMessage:message.includes('اسم المريض'),englishMessage:message.includes('Patient name')};
+                console.log('LIVE_ENQUIRY_CHECK',language,JSON.stringify(result));
+                if(result.http!==200||result.intercepted!==1||result.recipient!=='/917488955154'||!result.hasTestName||!result.hasCountry||!result.hasPhone||!result.hasTreatment||(language==='ar'?!result.arabicMessage:!result.englishMessage))errors.push(language+': enquiry handoff failed');
+              }catch(e){errors.push(language+': '+e.message);}
+              await page.close();
+            }
+            await browser.close();
+            if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
