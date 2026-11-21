@@ -102,3 +102,16 @@ html[lang="ar"] .site-header .nav-wrap{direction:rtl!important;display:grid!impo
     padding-bottom: 38px !important;
   }
 }
+
+/* Screenshot-confirmed gap between Our Approach cards and FAQ heading.
+   Tighten only the facing edges of these desktop sections, EN and AR. */
+@media (min-width: 1100px) {
+  html[lang="en"] body > main > section.section.approach-section,
+  html[lang="ar"] body > main > section.section.approach-section {
+    padding-bottom: 20px !important;
+  }
+  html[lang="en"] body > main > section.section.faq-section,
+  html[lang="ar"] body > main > section.section.faq-section {
+    padding-top: 20px !important;
+  }
+}
