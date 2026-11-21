@@ -44,7 +44,15 @@ jobs:
               ['/treatments/liver-transplant-india/','/?treatment=liver-transplant-india#enquiry'],
               ['/ar/treatments/liver-transplant-india/','/ar/?treatment=liver-transplant-india#enquiry'],
               ['/treatments/neurosurgery-india/','/?treatment=neurosurgery-india#enquiry'],
-              ['/ar/treatments/neurosurgery-india/','/ar/?treatment=neurosurgery-india#enquiry']
+              ['/ar/treatments/neurosurgery-india/','/ar/?treatment=neurosurgery-india#enquiry'],
+              ['/treatments/spine-surgery-india/','/?treatment=spine-surgery-india#enquiry'],
+              ['/ar/treatments/spine-surgery-india/','/ar/?treatment=spine-surgery-india#enquiry'],
+              ['/treatments/urology-treatment-india/','/?treatment=urology-treatment-india#enquiry'],
+              ['/ar/treatments/urology-treatment-india/','/ar/?treatment=urology-treatment-india#enquiry'],
+              ['/treatments/fertility-ivf-treatment-india/','/?treatment=fertility-ivf-treatment-india#enquiry'],
+              ['/ar/treatments/fertility-ivf-treatment-india/','/ar/?treatment=fertility-ivf-treatment-india#enquiry'],
+              ['/treatments/dental-treatment-india/','/?treatment=dental-treatment-india#enquiry'],
+              ['/ar/treatments/dental-treatment-india/','/ar/?treatment=dental-treatment-india#enquiry']
             ]){
               const page=await browser.newPage({viewport:{width:390,height:844}});
               try{
