@@ -188,6 +188,12 @@ html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,25
 #home.hero .homepage-hero-form .enquiry-submit{min-height:40px!important}
 #home.hero .homepage-hero-form .enquiry-legal{font-size:9px!important;line-height:1.35!important;margin-top:7px!important}
 }
+
+/* Zoom out consultation photo on desktop, retaining mobile composition. */
+@media(min-width:901px){
+#home.hero{background-size:auto 88%!important;background-position:right center!important;background-repeat:no-repeat!important;background-color:#edf6f5!important}
+html[lang="ar"] #home.hero{background-position:left center!important}
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
