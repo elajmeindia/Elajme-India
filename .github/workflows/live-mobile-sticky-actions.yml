@@ -1,0 +1,62 @@
+name: Live mobile sticky patient actions
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/live-mobile-sticky-actions.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-mobile-sticky-actions.yml'
+      - 'assets/js/mobile-header.js'
+      - 'assets/css/mobile-bottom-actions.css'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mobile-actions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Check live mobile actions without opening WhatsApp
+        shell: bash
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const errors=[];
+            for(const path of ['/','/ar/','/doctors/','/ar/doctors/','/hospitals/','/ar/hospitals/','/treatments/','/ar/treatments/']){
+              const page=await browser.newPage({viewport:{width:390,height:844}});
+              try{
+                const response=await page.goto('https://elajmeindia.com'+path,{waitUntil:'domcontentloaded',timeout:45000});
+                await page.locator('.elajme-bottom-actions .elajme-bottom-enquiry').waitFor({state:'visible',timeout:15000});
+                await page.waitForFunction(()=>{const bar=document.querySelector('.elajme-bottom-actions');return bar&&getComputedStyle(bar).position==='fixed';},{timeout:15000});
+                const result=await page.evaluate(()=>{
+                  const bar=document.querySelector('.elajme-bottom-actions');
+                  const enquiry=bar?.querySelector('.elajme-bottom-enquiry');
+                  const wa=bar?.querySelector('.elajme-bottom-wa');
+                  const visible=e=>!!e&&e.getClientRects().length>0&&getComputedStyle(e).visibility!=='hidden';
+                  const rect=bar?.getBoundingClientRect();
+                  const waUrl=wa?new URL(wa.href):null;
+                  return {count:document.querySelectorAll('.elajme-bottom-actions').length,enquiryVisible:visible(enquiry),waVisible:visible(wa),enquiryHref:enquiry?.getAttribute('href'),waHost:waUrl?.hostname,waNumber:waUrl?.pathname,waText:waUrl?.searchParams.get('text')||'',bottomGap:rect?Math.round(innerHeight-rect.bottom):null,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2};
+                });
+                const ar=path.startsWith('/ar/');
+                const expected=ar?'/ar/#enquiry':'/#enquiry';
+                const passed=response.status()===200&&result.count===1&&result.enquiryVisible&&result.waVisible&&result.enquiryHref===expected&&result.waHost==='wa.me'&&result.waNumber==='/917488955154'&&(!ar||result.waText.includes('مرحبا'))&&result.bottomGap!==null&&result.bottomGap>=-3&&!result.overflow;
+                console.log('LIVE_MOBILE_ACTIONS',path,'HTTP',response.status(),JSON.stringify({...result,waText:result.waText?'present':'absent',passed}));
+                if(!passed)errors.push(path+': sticky actions failed');
+              }catch(e){errors.push(path+': '+e.message);}
+              await page.close();
+            }
+            await browser.close();
+            if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
