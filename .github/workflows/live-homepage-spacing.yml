@@ -1,0 +1,53 @@
+name: Live bilingual homepage spacing verification
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/live-homepage-spacing.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-homepage-spacing.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  spacing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Inspect live bilingual desktop hero and section spacing
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch();
+            const failures=[];
+            for(const [path,lang] of [['/','en'],['/ar/','ar']]){
+              const page=await browser.newPage({viewport:{width:1363,height:936}});
+              try{
+                const response=await page.goto('https://elajmeindia.com'+path,{waitUntil:'networkidle',timeout:45000});
+                const data=await page.evaluate(()=>{
+                  const hero=document.querySelector('main > #home.hero');
+                  const section=document.querySelector('main > .section:not(.hero)');
+                  const header=document.querySelector('.master-site-header');
+                  const css=hero&&getComputedStyle(hero);
+                  const secCss=section&&getComputedStyle(section);
+                  return {heroTop:css?.paddingTop,heroBottom:css?.paddingBottom,sectionTop:secCss?.paddingTop,sectionBottom:secCss?.paddingBottom,headerHeight:header?Math.round(header.getBoundingClientRect().height):null,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2,language:document.documentElement.lang};
+                });
+                const pass=response.status()===200&&data.language===lang&&parseFloat(data.heroTop)<=52&&parseFloat(data.heroBottom)<=64&&(!data.sectionTop||(parseFloat(data.sectionTop)<=72&&parseFloat(data.sectionBottom)<=72))&&!data.overflow;
+                console.log('LIVE_HOMEPAGE_SPACING',path,JSON.stringify({...data,pass}));
+                if(!pass)failures.push(path);
+              }catch(e){failures.push(path+': '+e.message)}
+              await page.close();
+            }
+            await browser.close();
+            if(failures.length){console.error(failures.join('\n'));process.exitCode=1}
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
