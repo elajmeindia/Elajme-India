@@ -1,0 +1,51 @@
+name: Treatment mobile context pilot browser test
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/treatment-mobile-context-pilot.yml'
+      - 'assets/js/treatment-mobile-enquiry-context.js'
+      - 'treatments/cancer-treatment-india/index.html'
+      - 'ar/treatments/cancer-treatment-india/index.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test both treatment pages in Chromium
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/elajme-http.log 2>&1 &
+          node <<'JS'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch();
+            const failures=[];
+            for(const [path,expected] of [
+              ['/treatments/cancer-treatment-india/','/?treatment=cancer-treatment-india#enquiry'],
+              ['/ar/treatments/cancer-treatment-india/','/ar/?treatment=cancer-treatment-india#enquiry']
+            ]){
+              const page=await browser.newPage({viewport:{width:390,height:844}});
+              try{
+                const response=await page.goto('http://127.0.0.1:8765'+path,{waitUntil:'domcontentloaded'});
+                await page.waitForFunction(()=>document.querySelector('.elajme-bottom-actions .elajme-bottom-enquiry')?.getAttribute('href')?.includes('?treatment='),null,{timeout:15000});
+                const r=await page.evaluate(()=>({href:document.querySelector('.elajme-bottom-enquiry')?.getAttribute('href'),whatsapp:new URL(document.querySelector('.elajme-bottom-wa').href).pathname,count:document.querySelectorAll('.elajme-bottom-actions').length,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2}));
+                const pass=response.status()===200&&r.href===expected&&r.whatsapp==='/917488955154'&&r.count===1&&!r.overflow;
+                console.log('TREATMENT_CONTEXT_PILOT',path,JSON.stringify({...r,pass}));
+                if(!pass)failures.push(path);
+              }catch(e){failures.push(path+': '+e.message)}
+              await page.close();
+            }
+            await browser.close();
+            if(failures.length){console.error(failures.join('\n'));process.exitCode=1}
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
