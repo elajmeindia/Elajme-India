@@ -1,4 +1,4 @@
-name: Live cancer treatment context deployment
+name: Live bilingual treatment context deployment
 on:
   pull_request:
     paths:
@@ -32,7 +32,11 @@ jobs:
             const failures=[];
             for(const [path,expected] of [
               ['/treatments/cancer-treatment-india/','/?treatment=cancer-treatment-india#enquiry'],
-              ['/ar/treatments/cancer-treatment-india/','/ar/?treatment=cancer-treatment-india#enquiry']
+              ['/ar/treatments/cancer-treatment-india/','/ar/?treatment=cancer-treatment-india#enquiry'],
+              ['/treatments/heart-treatment-india/','/?treatment=heart-treatment-india#enquiry'],
+              ['/ar/treatments/heart-treatment-india/','/ar/?treatment=heart-treatment-india#enquiry'],
+              ['/treatments/kidney-transplant-india/','/?treatment=kidney-transplant-india#enquiry'],
+              ['/ar/treatments/kidney-transplant-india/','/ar/?treatment=kidney-transplant-india#enquiry']
             ]){
               const page=await browser.newPage({viewport:{width:390,height:844}});
               try{
@@ -43,7 +47,7 @@ jobs:
                   return {href:enq?.getAttribute('href'),whatsapp:new URL(wa.href).pathname,barCount:document.querySelectorAll('.elajme-bottom-actions').length,fixed:getComputedStyle(bar).position==='fixed',overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2};
                 });
                 const pass=response.status()===200&&r.href===expected&&r.whatsapp==='/917488955154'&&r.barCount===1&&r.fixed&&!r.overflow;
-                console.log('LIVE_CANCER_CONTEXT',path,JSON.stringify({...r,pass}));
+                console.log('LIVE_TREATMENT_CONTEXT',path,JSON.stringify({...r,pass}));
                 if(!pass)failures.push(path);
               }catch(e){failures.push(path+': '+e.message)}
               await page.close();
