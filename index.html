@@ -200,6 +200,16 @@ html[lang="ar"] #home.hero{background-position:left center!important}
 #home.hero{background-size:82% auto!important;background-position:left center!important;background-repeat:no-repeat!important;background-color:#edf6f5!important}
 html[lang="ar"] #home.hero{background-position:right center!important}
 }
+
+/* Seamless hero background: fill the entire section rather than ending at 82%. */
+@media(min-width:901px){
+#home.hero{background-size:cover!important;background-position:center 44%!important;background-repeat:no-repeat!important;background-color:#edf6f5!important}
+html[lang="ar"] #home.hero{background-position:center 44%!important}
+#home.hero::before{background:linear-gradient(90deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.96) 24%,rgba(247,251,250,.74) 37%,rgba(247,251,250,.22) 54%,rgba(247,251,250,.02) 72%)!important}
+html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.96) 24%,rgba(247,251,250,.74) 37%,rgba(247,251,250,.22) 54%,rgba(247,251,250,.02) 72%)!important}
+#home.hero .homepage-hero-form .enquiry-legal{font-size:11px!important;line-height:1.4!important;margin-top:8px!important}
+#home.hero .homepage-hero-form .enquiry-form{padding-bottom:16px!important}
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
