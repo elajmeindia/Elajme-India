@@ -185,6 +185,43 @@ html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#edf7f5 0%,
   html body > main > section.audience-strip{background:#f0f7f7!important}
   html body > main > section.audience-strip .country{background:#fbfdfc!important}
 }
+
+/* Final screenshot-led desktop whitespace correction, English and Arabic.
+   Keep mobile, FAQ cards, forms, header and footer unchanged. */
+@media (min-width:1100px){
+  html body > main > section.section.homepage-enquiry-info{padding-block:14px 12px!important;min-height:0!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-wrap{max-width:1160px!important;gap:12px!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-copy{padding-top:0!important;row-gap:4px!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-copy > h2{font-size:clamp(28px,2.6vw,36px)!important;line-height:1.16!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-copy > p{line-height:1.55!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-points{margin-top:4px!important;gap:8px!important}
+  html body > main > section.section.homepage-enquiry-info .enquiry-points > span{min-height:36px!important;padding:6px 9px!important}
+  html body > main > section.section.homepage-enquiry-info .patient-trust-panel{margin-top:10px!important;padding:10px 14px!important}
+  html body > main > section.section.why-section{padding-block:16px 22px!important}
+  html body > main > section.section.why-section .section-heading{margin-bottom:12px!important}
+  html body > main > section.section.why-section .section-heading h2{margin-bottom:8px!important}
+  html body > main > section.section.why-section .why-grid{gap:12px!important}
+  html body > main > section.section.why-section .why-card{padding-block:16px!important}
+  html body > main > section.section.treatments-section{padding-block:18px 12px!important;background:#edf6f5!important}
+  html body > main > section.section.treatments-section .section-heading{margin-bottom:12px!important}
+  html body > main > section.section.treatments-section .section-heading h2{margin-bottom:8px!important}
+  html body > main > section.section.treatments-section .treatment-grid{gap:10px!important}
+  html body > main > section.section.process-section{padding-block:16px 22px!important}
+  html body > main > section.section.process-section .section-heading{margin-bottom:12px!important}
+  html body > main > section.section.process-section .process-grid{margin-top:10px!important}
+  html body > main > section.section.process-section .process-step{min-height:0!important;padding:16px 14px!important}
+  html body > main > section.section.approach-section{padding-block:18px 14px!important;min-height:0!important}
+  html body > main > section.section.approach-section .approach-grid{gap:22px!important;align-items:center!important}
+  html body > main > section.section.approach-section .approach-points{gap:10px!important}
+  html body > main > section.section.approach-section .approach-points > div{min-height:0!important;padding:13px 16px!important}
+  html body > main > section.section.approach-section .approach-points p{line-height:1.5!important}
+  html body > main > section.section.faq-section{padding-top:16px!important}
+  html[lang="ar"] body > main > section.section[aria-labelledby="international-patients-heading"]{padding-block:14px 10px!important;min-height:0!important}
+  html[lang="ar"] body > main > section.section[aria-labelledby="international-patients-heading"] .section-heading{margin:0 auto!important;padding:0!important}
+  html[lang="ar"] body > main > section.section[aria-labelledby="international-patients-heading"] .section-heading h2{margin:6px 0!important}
+  html[lang="ar"] body > main > section.section[aria-labelledby="international-patients-heading"] .section-heading p{margin:6px auto!important;line-height:1.55!important}
+  html[lang="ar"] body > main > section.section[aria-labelledby="international-patients-heading"] .section-heading p:last-child{margin-bottom:0!important}
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
