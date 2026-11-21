@@ -113,6 +113,12 @@ html[lang="ar"] #home.hero .homepage-hero-form{grid-column:2!important;justify-s
 #home.hero::before{background:linear-gradient(90deg,#eff8f6 0%,rgba(239,248,246,.96) 22%,rgba(239,248,246,.45) 34%,rgba(239,248,246,0) 52%,rgba(239,248,246,.08) 74%,#eff8f6 99%),url('/assets/images/elajme-approved-two-person-hero.webp') 51% center / auto 100% no-repeat!important}
 html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#eff8f6 0%,rgba(239,248,246,.96) 22%,rgba(239,248,246,.45) 34%,rgba(239,248,246,0) 52%,rgba(239,248,246,.08) 74%,#eff8f6 99%),url('/assets/images/elajme-approved-two-person-hero.webp') 49% center / auto 100% no-repeat!important}
 }
+
+/* Position the consultation subjects farther left on desktop. */
+@media(min-width:1101px){
+#home.hero::before{background-position:center center,35% center!important}
+html[lang="ar"] #home.hero::before{background-position:center center,65% center!important}
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
