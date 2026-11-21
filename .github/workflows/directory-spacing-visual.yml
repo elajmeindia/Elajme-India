@@ -64,6 +64,27 @@ jobs:
                     });
                   })()
                 }));
+                if(viewport.width===390 && /(?:doctors|hospitals)\/$/.test(pageName)) {
+                  const filterCheck=await page.evaluate(() => {
+                    const input=document.querySelector('#q');
+                    const city=document.querySelector('#city');
+                    const cards=[...document.querySelectorAll('.grid .card')];
+                    const before=cards.filter(e=>e.getClientRects().length>0).length;
+                    if(input){
+                      input.value='zzzxxyy-no-match';
+                      input.dispatchEvent(new Event('input',{bubbles:true}));
+                    }
+                    const after=cards.filter(e=>e.getClientRects().length>0).length;
+                    if(input){
+                      input.value='';
+                      input.dispatchEvent(new Event('input',{bubbles:true}));
+                    }
+                    const restored=cards.filter(e=>e.getClientRects().length>0).length;
+                    return {hasSearch:!!input,hasCity:!!city,cards:cards.length,before,after,restored};
+                  });
+                  console.log('FILTER_CHECK',pageName,JSON.stringify(filterCheck));
+                  if(filterCheck.cards && filterCheck.hasSearch && (filterCheck.after!==0||filterCheck.restored!==filterCheck.before))errors.push(pageName+': search filter did not hide/restore all cards');
+                }
                 console.log(pageName,viewport.width,JSON.stringify(result));
                 if(result.scroll > result.viewport+2)errors.push(pageName+' at '+viewport.width+': horizontal overflow '+result.scroll);
                 await page.close();
