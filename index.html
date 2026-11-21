@@ -221,6 +221,14 @@ html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,25
 html[lang="ar"] #home.hero::after{left:auto;right:9%;transform:scaleX(-1)}
 html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.94) 21%,rgba(247,251,250,.45) 34%,rgba(247,251,250,0) 55%)!important}
 }
+
+/* Restore reliably visible image; avoid masked pseudo-element layering. */
+@media(min-width:901px){
+#home.hero{background-image:url('/assets/images/elajme-homepage.webp')!important;background-size:cover!important;background-position:center center!important;background-repeat:no-repeat!important;background-color:#edf6f5!important}
+#home.hero::after{content:none!important;display:none!important}
+#home.hero::before{background:linear-gradient(90deg,rgba(247,251,250,.97) 0%,rgba(247,251,250,.88) 18%,rgba(247,251,250,.43) 32%,rgba(247,251,250,0) 48%)!important}
+html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,251,250,.97) 0%,rgba(247,251,250,.88) 18%,rgba(247,251,250,.43) 32%,rgba(247,251,250,0) 48%)!important}
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
