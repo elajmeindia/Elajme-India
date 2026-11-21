@@ -210,6 +210,17 @@ html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,25
 #home.hero .homepage-hero-form .enquiry-legal{font-size:11px!important;line-height:1.4!important;margin-top:8px!important}
 #home.hero .homepage-hero-form .enquiry-form{padding-bottom:16px!important}
 }
+
+/* Compose consultation photograph in the clear central area, away from the form.
+   Soft-edge the photo rather than leaving a visible rectangular boundary. */
+@media(min-width:901px){
+#home.hero{background:#edf6f5!important;isolation:isolate!important}
+#home.hero::after{content:"";position:absolute;top:0;bottom:0;left:9%;width:76%;z-index:0;pointer-events:none;background:url('/assets/images/elajme-homepage.webp') center center/cover no-repeat;mask-image:linear-gradient(90deg,transparent 0%,#000 12%,#000 83%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 12%,#000 83%,transparent 100%)}
+#home.hero::before{z-index:1!important;background:linear-gradient(90deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.94) 21%,rgba(247,251,250,.45) 34%,rgba(247,251,250,0) 55%)!important;pointer-events:none}
+#home.hero .hero-grid{z-index:2!important}
+html[lang="ar"] #home.hero::after{left:auto;right:9%;transform:scaleX(-1)}
+html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.94) 21%,rgba(247,251,250,.45) 34%,rgba(247,251,250,0) 55%)!important}
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
