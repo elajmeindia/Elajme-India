@@ -36,12 +36,21 @@ jobs:
               ['/treatments/heart-treatment-india/','/?treatment=heart-treatment-india#enquiry'],
               ['/ar/treatments/heart-treatment-india/','/ar/?treatment=heart-treatment-india#enquiry'],
               ['/treatments/kidney-transplant-india/','/?treatment=kidney-transplant-india#enquiry'],
-              ['/ar/treatments/kidney-transplant-india/','/ar/?treatment=kidney-transplant-india#enquiry']
+              ['/ar/treatments/kidney-transplant-india/','/ar/?treatment=kidney-transplant-india#enquiry'],
+              ['/treatments/gastroenterology-treatment-india/','/?treatment=gastroenterology-treatment-india#enquiry'],
+              ['/ar/treatments/gastroenterology-treatment-india/','/ar/?treatment=gastroenterology-treatment-india#enquiry'],
+              ['/treatments/knee-replacement-india/','/?treatment=knee-replacement-india#enquiry'],
+              ['/ar/treatments/knee-replacement-india/','/ar/?treatment=knee-replacement-india#enquiry'],
+              ['/treatments/liver-transplant-india/','/?treatment=liver-transplant-india#enquiry'],
+              ['/ar/treatments/liver-transplant-india/','/ar/?treatment=liver-transplant-india#enquiry'],
+              ['/treatments/neurosurgery-india/','/?treatment=neurosurgery-india#enquiry'],
+              ['/ar/treatments/neurosurgery-india/','/ar/?treatment=neurosurgery-india#enquiry']
             ]){
               const page=await browser.newPage({viewport:{width:390,height:844}});
               try{
                 const response=await page.goto('https://elajmeindia.com'+path,{waitUntil:'domcontentloaded',timeout:45000});
                 await page.waitForFunction(()=>document.querySelector('.elajme-bottom-actions .elajme-bottom-enquiry')?.getAttribute('href')?.includes('?treatment='),null,{timeout:15000});
+                await page.waitForFunction(()=>{const bar=document.querySelector('.elajme-bottom-actions');return bar&&getComputedStyle(bar).position==='fixed'},null,{timeout:15000});
                 const r=await page.evaluate(()=>{
                   const enq=document.querySelector('.elajme-bottom-enquiry'),wa=document.querySelector('.elajme-bottom-wa'),bar=document.querySelector('.elajme-bottom-actions');
                   return {href:enq?.getAttribute('href'),whatsapp:new URL(wa.href).pathname,barCount:document.querySelectorAll('.elajme-bottom-actions').length,fixed:getComputedStyle(bar).position==='fixed',overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+2};
