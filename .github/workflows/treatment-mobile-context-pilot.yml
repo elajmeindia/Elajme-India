@@ -6,6 +6,10 @@ on:
       - 'assets/js/treatment-mobile-enquiry-context.js'
       - 'treatments/cancer-treatment-india/index.html'
       - 'ar/treatments/cancer-treatment-india/index.html'
+      - 'treatments/heart-treatment-india/index.html'
+      - 'ar/treatments/heart-treatment-india/index.html'
+      - 'treatments/kidney-transplant-india/index.html'
+      - 'ar/treatments/kidney-transplant-india/index.html'
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,7 +25,7 @@ jobs:
       - run: |
           npm install --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Test both treatment pages in Chromium
+      - name: Test six bilingual treatment pages in Chromium
         shell: bash
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/elajme-http.log 2>&1 &
@@ -32,7 +36,11 @@ jobs:
             const failures=[];
             for(const [path,expected] of [
               ['/treatments/cancer-treatment-india/','/?treatment=cancer-treatment-india#enquiry'],
-              ['/ar/treatments/cancer-treatment-india/','/ar/?treatment=cancer-treatment-india#enquiry']
+              ['/ar/treatments/cancer-treatment-india/','/ar/?treatment=cancer-treatment-india#enquiry'],
+              ['/treatments/heart-treatment-india/','/?treatment=heart-treatment-india#enquiry'],
+              ['/ar/treatments/heart-treatment-india/','/ar/?treatment=heart-treatment-india#enquiry'],
+              ['/treatments/kidney-transplant-india/','/?treatment=kidney-transplant-india#enquiry'],
+              ['/ar/treatments/kidney-transplant-india/','/ar/?treatment=kidney-transplant-india#enquiry']
             ]){
               const page=await browser.newPage({viewport:{width:390,height:844}});
               try{
