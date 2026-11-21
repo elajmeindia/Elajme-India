@@ -48,286 +48,52 @@
 <link rel="stylesheet" href="/assets/css/homepage-enhancements.css" data-homepage-enhancements>
 <link rel="stylesheet" href="/assets/css/mobile-bottom-actions.css?v=2"><link rel="stylesheet" href="/assets/css/home-enquiry-compact.css?v=1">
 <link rel="stylesheet" href="/assets/css/master-header.css?v=6"><style id="homepage-medical-photo">
-#home.hero{position:relative;isolation:isolate;overflow:hidden;background:#edf6f5 url('/assets/images/elajme-approved-two-person-hero.webp') center center/cover no-repeat!important;padding-block:36px!important}
-#home.hero::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(245,250,249,.98) 0%,rgba(245,250,249,.92) 24%,rgba(245,250,249,.73) 40%,rgba(245,250,249,.12) 59%,transparent 78%)}
-html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(245,250,249,.98) 0%,rgba(245,250,249,.92) 24%,rgba(245,250,249,.73) 40%,rgba(245,250,249,.12) 59%,transparent 78%)}
-#home.hero .hero-glow{display:none}
-#home.hero .hero-grid{position:relative;z-index:1;display:grid!important;grid-template-columns:minmax(0,1fr)!important;align-items:center!important;min-height:420px}
-#home.hero .hero-copy{min-width:0!important;width:100%!important;max-width:540px!important;justify-self:start}
-#home.hero h1{font-size:clamp(32px,3.5vw,48px)!important;line-height:1.16!important}
-.homepage-case-journey{padding:28px 0;background:#f4f9f8}
-.homepage-case-journey .hero-visual{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;position:relative!important;inset:auto!important;transform:none!important;width:100%!important;max-width:760px!important;min-width:0!important;margin:0 auto!important;padding:0!important}
-.homepage-case-journey .visual-topline,.homepage-case-journey .main-visual-card,.homepage-case-journey .floating-note{position:relative!important;inset:auto!important;transform:none!important;width:auto!important;min-width:0!important;max-width:100%!important;margin:0!important}
-.homepage-case-journey .main-visual-card{padding:20px!important;background:#fff!important}
-@media(max-width:900px){#home.hero{background-size:100% auto!important;background-position:center top!important;background-color:#f2f8f8!important;padding-top:calc(56.25vw + 16px)!important;padding-bottom:24px!important}#home.hero::before,html[lang="ar"] #home.hero::before{background:none}#home.hero .hero-grid{min-height:0}#home.hero .hero-copy{max-width:100%!important}}
-
-@media(min-width:901px){
-#home.hero{background-position:center 18%!important;padding-block:48px!important}
-#home.hero .hero-grid{min-height:460px;width:min(100% - 64px,1320px)!important;max-width:1320px!important;margin-inline:auto!important}
-#home.hero .hero-copy{max-width:560px!important}
-#home.hero h1{font-size:clamp(36px,3.6vw,50px)!important}
-.homepage-case-journey{padding:24px 0}
-.homepage-case-journey .hero-visual{max-width:100%!important}
-.homepage-case-journey .main-visual-card{display:grid!important;grid-template-columns:minmax(220px,1fr) minmax(0,2fr);gap:8px 24px;align-items:center}
-.homepage-case-journey .visual-icon{display:none!important}
-.homepage-case-journey .visual-kicker,.homepage-case-journey h2{grid-column:1;margin:0!important}
-.homepage-case-journey .visual-steps{grid-column:2;grid-row:1 / 3;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.homepage-case-journey .visual-steps>div{display:flex!important;flex-wrap:wrap;align-items:center;gap:8px;border:0!important;padding:10px!important}
-.homepage-case-journey .floating-note{align-self:start!important}
-}
-
-@media(min-width:901px){
-#home.hero{background-size:auto 100%!important;background-position:right center!important;background-color:#edf6f5!important}
-html[lang="ar"] #home.hero{background-position:left center!important}
-#home.hero::before{background:linear-gradient(90deg,#edf6f5 0%,#edf6f5 35%,rgba(237,246,245,.78) 43%,transparent 60%)}
-html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#edf6f5 0%,#edf6f5 35%,rgba(237,246,245,.78) 43%,transparent 60%)}
-#home.hero .hero-copy{max-width:480px!important}
-.homepage-case-journey{padding:20px 0!important;min-height:0!important;height:auto!important}
-.homepage-case-journey .hero-visual{min-height:0!important;height:auto!important;gap:8px!important}
-.homepage-case-journey .main-visual-card{height:auto!important;min-height:0!important;box-shadow:0 4px 16px rgba(14,65,70,.07)!important}
-.homepage-case-journey .floating-note{box-shadow:none!important;align-self:stretch!important;display:flex!important;background:transparent!important;padding:4px 12px!important}
-}
-
-/* Focused, bilingual case-journey redesign. Existing header, footer and hero unaffected. */
-.homepage-case-journey{padding:18px 0!important;background:#f4f9f8!important;min-height:0!important;height:auto!important}
+/* Premium bilingual homepage hero. Single source of truth, no competing overrides. */
+#home.hero{position:relative!important;isolation:isolate!important;overflow:hidden!important;background:#eff8f6!important;padding:32px 0!important}
+#home.hero::before{content:""!important;display:block!important;position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;background:linear-gradient(90deg,#eff8f6 0%,rgba(239,248,246,.98) 22%,rgba(239,248,246,.84) 33%,rgba(239,248,246,.12) 51%,rgba(239,248,246,0) 76%),url('/assets/images/elajme-approved-two-person-hero.webp') center center/cover no-repeat!important}
+#home.hero::after{display:none!important;content:none!important}
+#home.hero .hero-glow,#home.hero .hero-photo{display:none!important}
+#home.hero .hero-grid{position:relative!important;z-index:1!important;display:grid!important;grid-template-columns:minmax(0,1fr) 325px!important;gap:clamp(28px,3.5vw,56px)!important;align-items:center!important;min-height:510px!important;height:auto!important;width:min(100% - 56px,1390px)!important;max-width:1390px!important;margin-inline:auto!important}
+#home.hero .hero-copy{grid-column:1!important;grid-row:1!important;justify-self:start!important;min-width:0!important;width:100%!important;max-width:460px!important;position:relative!important;z-index:2!important}
+#home.hero h1{font-size:clamp(35px,3.35vw,48px)!important;line-height:1.14!important;letter-spacing:-.035em!important;margin-bottom:20px!important}
+#home.hero .hero-lead{font-size:clamp(14px,1.15vw,16px)!important;line-height:1.7!important;max-width:440px!important}
+#home.hero .hero-actions{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:10px!important;margin-top:24px!important}
+#home.hero .hero-actions .button{width:auto!important;min-width:0!important;white-space:normal!important;padding:13px 15px!important;font-size:12px!important;line-height:1.25!important}
+#home.hero .trust-row{display:flex!important;flex-wrap:wrap!important;gap:10px 15px!important;margin-top:22px!important}
+#home.hero .homepage-hero-form{grid-column:2!important;grid-row:1!important;justify-self:end!important;align-self:center!important;position:relative!important;inset:auto!important;transform:none!important;z-index:3!important;width:100%!important;max-width:325px!important;min-width:0!important;overflow:visible!important}
+#home.hero .homepage-hero-form .enquiry-form{box-sizing:border-box!important;width:100%!important;max-width:100%!important;height:auto!important;margin:0!important;padding:17px 16px 18px!important;border-radius:16px!important;background:#075b65!important;color:#fff!important;box-shadow:0 18px 44px rgba(6,49,58,.2)!important;border:1px solid rgba(255,255,255,.12)!important}
+#home.hero .homepage-hero-form .enquiry-card-heading{margin-bottom:9px!important}
+#home.hero .homepage-hero-form .enquiry-card-icon{display:none!important}
+#home.hero .homepage-hero-form .enquiry-card-heading h3{font-size:18px!important;line-height:1.2!important;margin:0!important}
+#home.hero .homepage-hero-form .enquiry-card-heading p{font-size:11px!important;line-height:1.35!important;margin:3px 0 0!important}
+#home.hero .homepage-hero-form .enquiry-card-heading h3,#home.hero .homepage-hero-form .enquiry-card-heading p,#home.hero .homepage-hero-form .form-field label,#home.hero .homepage-hero-form .enquiry-legal,#home.hero .homepage-hero-form .enquiry-legal a{color:#fff!important}
+#home.hero .homepage-hero-form .form-field{margin-bottom:7px!important}
+#home.hero .homepage-hero-form .form-field label{font-size:11px!important;line-height:1.3!important;margin-bottom:3px!important}
+#home.hero .homepage-hero-form .form-row{gap:8px!important}
+#home.hero .homepage-hero-form input,#home.hero .homepage-hero-form select,#home.hero .homepage-hero-form textarea{box-sizing:border-box!important;width:100%!important;background:#fff!important;color:#123846!important;border-radius:9px!important;font-size:13px!important;padding:8px 10px!important}
+#home.hero .homepage-hero-form input,#home.hero .homepage-hero-form select{height:38px!important;min-height:38px!important}
+#home.hero .homepage-hero-form textarea{height:64px!important;min-height:64px!important}
+#home.hero .homepage-hero-form .enquiry-submit{width:100%!important;min-height:42px!important;background:#e9f5f2!important;color:#075b65!important;border-color:#e9f5f2!important;border-radius:9px!important;font-size:13px!important}
+#home.hero .homepage-hero-form .enquiry-legal{font-size:10px!important;line-height:1.45!important;margin:9px 0 0!important}
+html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#eff8f6 0%,rgba(239,248,246,.98) 22%,rgba(239,248,246,.84) 33%,rgba(239,248,246,.12) 51%,rgba(239,248,246,0) 76%),url('/assets/images/elajme-approved-two-person-hero.webp') center center/cover no-repeat!important}
+html[lang="ar"] #home.hero .hero-copy{grid-column:1!important;justify-self:start!important}
+html[lang="ar"] #home.hero .homepage-hero-form{grid-column:2!important;justify-self:end!important}
+@media(min-width:901px) and (max-width:1150px){#home.hero .hero-grid{grid-template-columns:minmax(0,1fr) 310px!important;gap:20px!important;width:calc(100% - 36px)!important}#home.hero .hero-copy{max-width:410px!important}#home.hero h1{font-size:clamp(30px,3.2vw,39px)!important}#home.hero::before{background-size:cover!important}}
+@media(max-width:900px){#home.hero{padding:22px 0 28px!important}#home.hero::before,html[lang="ar"] #home.hero::before{display:none!important}#home.hero .hero-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:20px!important;min-height:0!important;width:calc(100% - 32px)!important}#home.hero .hero-copy,#home.hero .homepage-hero-form{grid-column:1!important;grid-row:auto!important;justify-self:stretch!important;max-width:100%!important}#home.hero .hero-photo{display:block!important;grid-column:1!important;grid-row:auto!important;aspect-ratio:1672/941!important;width:100%!important;height:auto!important;overflow:hidden!important;border-radius:14px!important}#home.hero .hero-photo img{display:block!important;width:100%!important;height:auto!important;object-fit:contain!important;transform:none!important}#home.hero .hero-actions{gap:10px!important}#home.hero .homepage-hero-form{max-width:540px!important;margin-inline:auto!important}}
+/* Preserve compact case-journey section. */
+.homepage-case-journey{padding:18px 0!important;background:#f4f9f8!important}
 .homepage-case-journey .container{width:min(100% - 40px,1160px)!important;max-width:1160px!important}
 .homepage-case-journey .journey-panel{display:grid;grid-template-columns:minmax(220px,.85fr) minmax(0,1.65fr);align-items:center;gap:30px;padding:22px 28px;background:#fff;border:1px solid #dceae7;border-radius:18px;box-shadow:0 5px 18px rgba(15,69,72,.045)}
-.homepage-case-journey .journey-intro{min-width:0}
 .homepage-case-journey .journey-eyebrow{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#187e79;margin-bottom:8px}
 .homepage-case-journey h2{font-size:clamp(19px,1.7vw,25px)!important;line-height:1.3!important;color:#0b3546!important;margin:0 0 10px!important}
 .homepage-case-journey .journey-language{display:inline-block;font-size:12px;color:#41646c}
-.homepage-case-journey .journey-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
+.homepage-case-journey .journey-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .homepage-case-journey .journey-step{display:flex;align-items:center;gap:11px;min-width:0;padding:15px 12px;background:#f3f8f7;border-radius:12px;font-size:14px;line-height:1.4;color:#173e4c;font-weight:600}
 .homepage-case-journey .journey-number{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#dcefeb;color:#137a73;font-size:12px;font-weight:800}
-@media(max-width:900px){.homepage-case-journey .journey-panel{grid-template-columns:1fr;gap:16px;padding:20px}.homepage-case-journey .journey-steps{gap:8px}}
-@media(max-width:620px){.homepage-case-journey .container{width:calc(100% - 28px)!important}.homepage-case-journey .journey-steps{grid-template-columns:1fr}.homepage-case-journey .journey-step{padding:11px 12px}}
-
-/* Hero enquiry: same original form and IDs, moved without changing validation or WhatsApp behavior. */
-@media(min-width:901px){
-#home.hero{background-size:cover!important;background-position:center center!important;padding-block:36px!important}
-html[lang="ar"] #home.hero{background-position:center center!important}
-#home.hero::before{background:linear-gradient(90deg,rgba(247,251,250,.98) 0%,rgba(247,251,250,.91) 24%,rgba(247,251,250,.55) 40%,rgba(247,251,250,.03) 64%)!important}
-html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,251,250,.98) 0%,rgba(247,251,250,.91) 24%,rgba(247,251,250,.55) 40%,rgba(247,251,250,.03) 64%)!important}
-#home.hero .hero-grid{display:grid!important;grid-template-columns:minmax(0,1.3fr) minmax(320px,.8fr)!important;align-items:center!important;gap:32px!important;min-height:560px!important}
-#home.hero .hero-copy{max-width:560px!important;justify-self:start}
-#home.hero .homepage-hero-form{width:100%;max-width:390px;min-width:0;justify-self:end;align-self:center}
-}
-#home.hero .homepage-hero-form .enquiry-form{width:100%!important;max-width:100%!important;margin:0!important;padding:20px 22px!important;border-radius:18px!important;background:#075b65!important;color:#fff!important;box-shadow:0 12px 32px rgba(6,49,58,.2)!important}
-#home.hero .homepage-hero-form .enquiry-card-heading h3,#home.hero .homepage-hero-form .enquiry-card-heading p,#home.hero .homepage-hero-form .form-field label,#home.hero .homepage-hero-form .enquiry-legal,#home.hero .homepage-hero-form .enquiry-legal a{color:#fff!important}
-#home.hero .homepage-hero-form .enquiry-card-icon{display:none!important}
-#home.hero .homepage-hero-form .enquiry-form input,#home.hero .homepage-hero-form .enquiry-form select,#home.hero .homepage-hero-form .enquiry-form textarea{background:#fff!important;color:#123846!important}
-#home.hero .homepage-hero-form .enquiry-submit{background:#e9f5f2!important;color:#075b65!important;border-color:#e9f5f2!important}
-#home.hero .homepage-hero-form .enquiry-legal{font-size:10px!important;line-height:1.4!important}
-#home.hero .homepage-hero-form .form-field{margin-bottom:8px!important}
-#home.hero .homepage-hero-form .enquiry-card-heading{margin-bottom:10px!important}
+@media(max-width:900px){.homepage-case-journey .journey-panel{grid-template-columns:1fr;gap:16px;padding:20px}}
+@media(max-width:620px){.homepage-case-journey .journey-steps{grid-template-columns:1fr}.homepage-case-journey .journey-step{padding:11px 12px}}
 .homepage-enquiry-info .enquiry-wrap{display:block!important;max-width:1000px!important}
 .homepage-enquiry-info .enquiry-copy{max-width:100%!important}
-@media(max-width:900px){
-#home.hero .hero-grid{grid-template-columns:minmax(0,1fr)!important;gap:22px!important}
-#home.hero .homepage-hero-form{width:100%;max-width:540px;margin-inline:auto}
-#home.hero .homepage-hero-form .enquiry-form{padding:18px!important}
-}
-
-/* Explicit sibling columns for hero copy and enquiry form. */
-@media(min-width:901px){
-#home.hero .hero-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(350px,390px)!important;gap:clamp(24px,4vw,64px)!important;align-items:center!important;min-height:650px!important}
-#home.hero .hero-copy{grid-column:1!important;grid-row:1!important;width:100%!important;max-width:570px!important;min-width:0!important}
-#home.hero .homepage-hero-form{grid-column:2!important;grid-row:1!important;justify-self:end!important;align-self:center!important;position:relative!important;inset:auto!important;transform:none!important;width:100%!important;max-width:390px!important}
-}
-@media(max-width:900px){
-#home.hero .hero-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:24px!important}
-#home.hero .hero-copy,#home.hero .homepage-hero-form{grid-column:1!important;grid-row:auto!important;position:relative!important;inset:auto!important;transform:none!important}
-}
-
-/* Keep complete enquiry card visible; no clipped form or absolute positioning. */
-#home.hero{overflow:visible!important}
-#home.hero .hero-grid{height:auto!important;max-height:none!important}
-#home.hero .homepage-hero-form{height:auto!important;max-height:none!important;overflow:visible!important}
-#home.hero .homepage-hero-form .enquiry-form{height:auto!important;max-height:none!important;overflow:visible!important;box-sizing:border-box!important}
-@media(min-width:901px){
-#home.hero{padding-block:26px!important}
-#home.hero .hero-grid{min-height:0!important;align-items:center!important}
-#home.hero .homepage-hero-form .enquiry-form{padding:16px 20px!important}
-#home.hero .homepage-hero-form .enquiry-form .form-field{margin-bottom:6px!important}
-#home.hero .homepage-hero-form .enquiry-form input,#home.hero .homepage-hero-form .enquiry-form select{min-height:40px!important;height:40px!important}
-#home.hero .homepage-hero-form .enquiry-form textarea{min-height:66px!important;height:66px!important}
-#home.hero .homepage-hero-form .enquiry-card-heading{margin-bottom:8px!important}
-#home.hero .homepage-hero-form .enquiry-submit{min-height:42px!important}
-#home.hero::before{background:linear-gradient(90deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.94) 26%,rgba(247,251,250,.7) 42%,rgba(247,251,250,.08) 67%)!important}
-html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.94) 26%,rgba(247,251,250,.7) 42%,rgba(247,251,250,.08) 67%)!important}
-}
-
-/* Compact Vaidam-proportioned card; keep all original form fields and submission. */
-@media(min-width:901px){
-#home.hero .hero-grid{grid-template-columns:minmax(0,1fr) minmax(300px,350px)!important;gap:36px!important}
-#home.hero .homepage-hero-form{max-width:350px!important}
-#home.hero .homepage-hero-form .enquiry-form{padding:14px 16px!important;border-radius:14px!important}
-#home.hero .homepage-hero-form .enquiry-card-heading h3{font-size:18px!important;line-height:1.2!important;margin:0!important}
-#home.hero .homepage-hero-form .enquiry-card-heading p{font-size:11px!important;line-height:1.3!important;margin:3px 0 0!important}
-#home.hero .homepage-hero-form .form-field label{font-size:10px!important;line-height:1.2!important;margin-bottom:3px!important}
-#home.hero .homepage-hero-form .form-field{margin-bottom:5px!important}
-#home.hero .homepage-hero-form .form-row{gap:8px!important}
-#home.hero .homepage-hero-form .enquiry-form input,#home.hero .homepage-hero-form .enquiry-form select{height:35px!important;min-height:35px!important;padding:7px 10px!important;font-size:13px!important}
-#home.hero .homepage-hero-form .enquiry-form textarea{height:55px!important;min-height:55px!important;padding:7px 10px!important;font-size:13px!important}
-#home.hero .homepage-hero-form .enquiry-submit{min-height:37px!important;padding:8px 12px!important;font-size:12px!important}
-#home.hero .homepage-hero-form .enquiry-legal{font-size:9px!important;line-height:1.25!important;margin:5px 0 0!important}
-}
-
-/* Final compact enquiry card refinements: preserve readable labels and touch targets. */
-@media(min-width:901px){
-#home.hero .hero-grid{grid-template-columns:minmax(0,1fr) 325px!important;gap:clamp(24px,3vw,44px)!important}
-#home.hero .homepage-hero-form{max-width:325px!important}
-#home.hero .homepage-hero-form .enquiry-form{padding:12px 14px 14px!important}
-#home.hero .homepage-hero-form .enquiry-card-heading{margin-bottom:6px!important}
-#home.hero .homepage-hero-form .enquiry-card-heading h3{font-size:17px!important}
-#home.hero .homepage-hero-form .enquiry-card-heading p{font-size:10px!important}
-#home.hero .homepage-hero-form .form-field{margin-bottom:4px!important}
-#home.hero .homepage-hero-form .form-field label{font-size:10px!important;margin-bottom:2px!important}
-#home.hero .homepage-hero-form .enquiry-form input,#home.hero .homepage-hero-form .enquiry-form select{height:34px!important;min-height:34px!important}
-#home.hero .homepage-hero-form .enquiry-form textarea{height:50px!important;min-height:50px!important}
-#home.hero .homepage-hero-form .enquiry-submit{min-height:40px!important}
-#home.hero .homepage-hero-form .enquiry-legal{font-size:9px!important;line-height:1.35!important;margin-top:7px!important}
-}
-
-/* Zoom out consultation photo on desktop, retaining mobile composition. */
-@media(min-width:901px){
-#home.hero{background-size:auto 88%!important;background-position:right center!important;background-repeat:no-repeat!important;background-color:#edf6f5!important}
-html[lang="ar"] #home.hero{background-position:left center!important}
-}
-
-/* Keep the doctor's face left of the enquiry card instead of cropping it behind the card. */
-@media(min-width:901px){
-#home.hero{background-size:82% auto!important;background-position:left center!important;background-repeat:no-repeat!important;background-color:#edf6f5!important}
-html[lang="ar"] #home.hero{background-position:right center!important}
-}
-
-/* Seamless hero background: fill the entire section rather than ending at 82%. */
-@media(min-width:901px){
-#home.hero{background-size:cover!important;background-position:center 44%!important;background-repeat:no-repeat!important;background-color:#edf6f5!important}
-html[lang="ar"] #home.hero{background-position:center 44%!important}
-#home.hero::before{background:linear-gradient(90deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.96) 24%,rgba(247,251,250,.74) 37%,rgba(247,251,250,.22) 54%,rgba(247,251,250,.02) 72%)!important}
-html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.96) 24%,rgba(247,251,250,.74) 37%,rgba(247,251,250,.22) 54%,rgba(247,251,250,.02) 72%)!important}
-#home.hero .homepage-hero-form .enquiry-legal{font-size:11px!important;line-height:1.4!important;margin-top:8px!important}
-#home.hero .homepage-hero-form .enquiry-form{padding-bottom:16px!important}
-}
-
-/* Compose consultation photograph in the clear central area, away from the form.
-   Soft-edge the photo rather than leaving a visible rectangular boundary. */
-@media(min-width:901px){
-#home.hero{background:#edf6f5!important;isolation:isolate!important}
-#home.hero::after{content:"";position:absolute;top:0;bottom:0;left:9%;width:76%;z-index:0;pointer-events:none;background:url('/assets/images/elajme-approved-two-person-hero.webp') center center/cover no-repeat;mask-image:linear-gradient(90deg,transparent 0%,#000 12%,#000 83%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 12%,#000 83%,transparent 100%)}
-#home.hero::before{z-index:1!important;background:linear-gradient(90deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.94) 21%,rgba(247,251,250,.45) 34%,rgba(247,251,250,0) 55%)!important;pointer-events:none}
-#home.hero .hero-grid{z-index:2!important}
-html[lang="ar"] #home.hero::after{left:auto;right:9%;transform:scaleX(-1)}
-html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,251,250,.99) 0%,rgba(247,251,250,.94) 21%,rgba(247,251,250,.45) 34%,rgba(247,251,250,0) 55%)!important}
-}
-
-/* Restore reliably visible image; avoid masked pseudo-element layering. */
-@media(min-width:901px){
-#home.hero{background-image:url('/assets/images/elajme-approved-two-person-hero.webp')!important;background-size:cover!important;background-position:center center!important;background-repeat:no-repeat!important;background-color:#edf6f5!important}
-#home.hero::after{content:none!important;display:none!important}
-#home.hero::before{background:linear-gradient(90deg,rgba(247,251,250,.97) 0%,rgba(247,251,250,.88) 18%,rgba(247,251,250,.43) 32%,rgba(247,251,250,0) 48%)!important}
-html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(247,251,250,.97) 0%,rgba(247,251,250,.88) 18%,rgba(247,251,250,.43) 32%,rgba(247,251,250,0) 48%)!important}
-}
-
-/* Three-zone hero: copy, uncropped consultation, enquiry card. */
-#home.hero{background:#edf6f5!important;overflow:hidden!important}
-#home.hero::before,#home.hero::after{display:none!important;content:none!important}
-#home.hero .hero-photo{display:block;min-width:0;align-self:stretch;position:relative;overflow:hidden;border-radius:18px;background:#edf6f5}
-#home.hero .hero-photo img{display:block;width:100%;height:100%;object-fit:cover;object-position:46% center}
-#home.hero .hero-copy{position:relative;z-index:2}
-#home.hero .homepage-hero-form{position:relative;z-index:2}
-@media(min-width:1101px){
-#home.hero{padding-block:24px!important}
-#home.hero .hero-grid{display:grid!important;grid-template-columns:minmax(0,1.12fr) minmax(0,.98fr) minmax(290px,325px)!important;gap:clamp(12px,1.5vw,24px)!important;align-items:center!important;min-height:0!important;width:min(100% - 44px,1400px)!important;max-width:1400px!important}
-#home.hero .hero-copy{grid-column:1!important;grid-row:1!important;max-width:none!important}
-#home.hero .hero-photo{grid-column:2!important;grid-row:1!important;height:clamp(390px,39vw,520px)}
-#home.hero .homepage-hero-form{grid-column:3!important;grid-row:1!important;max-width:325px!important;width:100%!important}
-#home.hero h1{font-size:clamp(30px,3vw,44px)!important}
-#home.hero .hero-lead{font-size:clamp(13px,1.1vw,16px)!important}
-}
-@media(min-width:901px) and (max-width:1100px){
-#home.hero{padding-block:22px!important}
-#home.hero .hero-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,.85fr)!important;gap:18px!important;min-height:0!important}
-#home.hero .hero-copy{grid-column:1!important;grid-row:1!important;max-width:none!important}
-#home.hero .hero-photo{grid-column:2!important;grid-row:1!important;height:360px}
-#home.hero .homepage-hero-form{grid-column:1/-1!important;grid-row:2!important;justify-self:center!important;max-width:420px!important}
-}
-@media(max-width:900px){
-#home.hero{padding:18px 0 24px!important}
-#home.hero .hero-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:20px!important}
-#home.hero .hero-copy,#home.hero .hero-photo,#home.hero .homepage-hero-form{grid-column:1!important;grid-row:auto!important}
-#home.hero .hero-photo{height:auto;aspect-ratio:16/9;max-height:420px}
-#home.hero .hero-photo img{object-position:center 45%}
-}
-html[lang="ar"] #home.hero .hero-photo img{transform:scaleX(-1)}
-/* Keep any automatic chat welcome panel away from the enquiry card. */
-#home.hero .homepage-hero-form{isolation:isolate}
-
-/* Preserve both people in the wide source image: never crop to a portrait viewport. */
-#home.hero .hero-photo{height:auto!important;aspect-ratio:1672/941!important;align-self:center!important;overflow:visible!important;background:transparent!important;border-radius:14px!important}
-#home.hero .hero-photo img{width:100%!important;height:auto!important;max-height:none!important;aspect-ratio:1672/941!important;object-fit:contain!important;object-position:center!important;border-radius:14px!important}
-@media(min-width:1101px){#home.hero .hero-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(290px,325px)!important;gap:clamp(12px,1.4vw,22px)!important}}
-
-/* Final subject-aware framing: the source has unused space on its left.
-   Show the right 72% of the image so BOTH doctor and patient fit in the centre panel. */
-@media(min-width:901px){
-#home.hero .hero-photo{aspect-ratio:1.12!important;height:auto!important;overflow:hidden!important;border-radius:18px!important}
-#home.hero .hero-photo img{display:block!important;width:100%!important;height:100%!important;aspect-ratio:auto!important;object-fit:cover!important;object-position:100% center!important;max-height:none!important}
-}
-@media(max-width:900px){
-#home.hero .hero-photo{aspect-ratio:1.35!important;overflow:hidden!important}
-#home.hero .hero-photo img{width:100%!important;height:100%!important;aspect-ratio:auto!important;object-fit:cover!important;object-position:100% center!important}
-}
-html[lang="ar"] #home.hero .hero-photo img{transform:none!important}
-
-/* Integrated Vaidam-style composition without overlapping text or form. */
-@media(min-width:1101px){
-#home.hero{padding-block:16px!important;background:#f0f8f6!important}
-#home.hero .hero-grid{width:min(100% - 28px,1440px)!important;max-width:1440px!important;grid-template-columns:minmax(0,1.1fr) minmax(0,1.18fr) minmax(290px,325px)!important;gap:clamp(10px,1.25vw,20px)!important;min-height:500px!important}
-#home.hero .hero-copy{align-self:center!important;padding-block:14px!important}
-#home.hero h1{font-size:clamp(30px,3.05vw,44px)!important;line-height:1.13!important;margin-bottom:18px!important}
-#home.hero .hero-lead{font-size:clamp(13px,1.1vw,16px)!important;line-height:1.6!important}
-#home.hero .hero-actions{display:flex!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:8px!important;margin-top:20px!important}
-#home.hero .hero-actions .button{min-width:0!important;width:auto!important;flex:0 1 auto!important;white-space:nowrap!important;padding:12px clamp(9px,1vw,16px)!important;font-size:clamp(10px,.88vw,13px)!important}
-#home.hero .trust-row{display:flex!important;flex-wrap:wrap!important;gap:8px 12px!important;margin-top:22px!important}
-#home.hero .hero-photo{height:480px!important;aspect-ratio:auto!important;align-self:center!important;overflow:hidden!important;border-radius:0!important;background:transparent!important}
-#home.hero .hero-photo img{width:100%!important;height:100%!important;aspect-ratio:auto!important;object-fit:cover!important;object-position:100% center!important;border-radius:0!important;mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 94%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 94%,transparent 100%)}
-#home.hero .homepage-hero-form{align-self:center!important}
-}
-@media(min-width:901px) and (max-width:1100px){#home.hero .hero-actions{display:flex!important;flex-wrap:wrap!important;gap:10px!important}}
-@media(max-width:900px){#home.hero .hero-actions{display:flex!important;flex-wrap:wrap!important;gap:10px!important}}
-
-/* Full-bleed hero photograph, with overlay content as in reference layout. */
-#home.hero{position:relative!important;isolation:isolate!important;overflow:hidden!important;background:#edf6f5 url('/assets/images/elajme-approved-two-person-hero.webp') center center/cover no-repeat!important}
-#home.hero .hero-photo{display:none!important}
-#home.hero::after{display:none!important;content:none!important}
-#home.hero::before{display:block!important;content:""!important;position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;background:linear-gradient(90deg,rgba(242,250,248,.98) 0%,rgba(242,250,248,.95) 21%,rgba(242,250,248,.72) 32%,rgba(242,250,248,.05) 53%,rgba(242,250,248,0) 75%)!important}
-#home.hero .hero-grid{position:relative!important;z-index:1!important}
-@media(min-width:1101px){
-#home.hero{padding-block:26px!important;background-size:cover!important;background-position:center center!important;min-height:570px!important}
-#home.hero .hero-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(290px,325px)!important;gap:clamp(28px,3vw,46px)!important;min-height:520px!important;width:min(100% - 54px,1400px)!important;max-width:1400px!important;align-items:center!important}
-#home.hero .hero-copy{grid-column:1!important;grid-row:1!important;width:min(100%,475px)!important;max-width:475px!important;justify-self:start!important}
-#home.hero .homepage-hero-form{grid-column:2!important;grid-row:1!important;justify-self:end!important;max-width:325px!important;width:100%!important}
-#home.hero h1{font-size:clamp(34px,3.35vw,48px)!important}
-#home.hero .hero-actions{display:flex!important;flex-wrap:wrap!important;gap:10px!important}
-#home.hero .hero-actions .button{font-size:12px!important;padding:12px 14px!important}
-}
-@media(min-width:901px) and (max-width:1100px){
-#home.hero{background-position:center center!important}
-#home.hero .hero-grid{grid-template-columns:minmax(0,1fr) 325px!important;min-height:540px!important}
-#home.hero .hero-copy{grid-column:1!important;grid-row:1!important;max-width:440px!important}
-#home.hero .homepage-hero-form{grid-column:2!important;grid-row:1!important}
-}
-@media(max-width:900px){
-#home.hero{background-image:none!important;background-color:#edf6f5!important;padding:18px 0 24px!important;min-height:0!important}
-#home.hero::before{display:none!important}
-#home.hero .hero-photo{display:block!important;grid-column:1!important;grid-row:auto!important;width:100%!important;aspect-ratio:1672/941!important;height:auto!important;overflow:hidden!important}
-#home.hero .hero-photo img{display:block!important;width:100%!important;height:auto!important;aspect-ratio:1672/941!important;object-fit:contain!important;mask-image:none!important;-webkit-mask-image:none!important}
-#home.hero .hero-grid{grid-template-columns:minmax(0,1fr)!important;gap:18px!important}
-#home.hero .hero-copy,#home.hero .homepage-hero-form{grid-column:1!important;grid-row:auto!important}
-}
-html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,rgba(242,250,248,.98) 0%,rgba(242,250,248,.95) 21%,rgba(242,250,248,.72) 32%,rgba(242,250,248,.05) 53%,rgba(242,250,248,0) 75%)!important}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
