@@ -69,17 +69,17 @@ jobs:
                     const input=document.querySelector('#q');
                     const city=document.querySelector('#city');
                     const cards=[...document.querySelectorAll('.grid .card')];
-                    const before=cards.filter(e=>getComputedStyle(e).display!=='none').length;
+                    const before=cards.filter(e=>e.getClientRects().length>0).length;
                     if(input){
                       input.value='zzzxxyy-no-match';
                       input.dispatchEvent(new Event('input',{bubbles:true}));
                     }
-                    const after=cards.filter(e=>getComputedStyle(e).display!=='none').length;
+                    const after=cards.filter(e=>e.getClientRects().length>0).length;
                     if(input){
                       input.value='';
                       input.dispatchEvent(new Event('input',{bubbles:true}));
                     }
-                    const restored=cards.filter(e=>getComputedStyle(e).display!=='none').length;
+                    const restored=cards.filter(e=>e.getClientRects().length>0).length;
                     return {hasSearch:!!input,hasCity:!!city,cards:cards.length,before,after,restored};
                   });
                   console.log('FILTER_CHECK',pageName,JSON.stringify(filterCheck));
