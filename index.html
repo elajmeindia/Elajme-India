@@ -95,10 +95,9 @@ html[lang="ar"] #home.hero .homepage-hero-form{grid-column:2!important;justify-s
 .homepage-enquiry-info .enquiry-wrap{display:block!important;max-width:1000px!important}
 .homepage-enquiry-info .enquiry-copy{max-width:100%!important}
 
-/* Final balanced desktop composition: photo sized to show both people, not cover-cropped. */
+/* Single desktop framing rule: reserve the copy zone and keep both subjects visible. */
 @media(min-width:1101px){
 #home.hero{background:#eff8f6!important;min-height:0!important;padding:24px 0!important}
-#home.hero::before,html[lang="ar"] #home.hero::before{display:block!important;content:""!important;position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;background:linear-gradient(90deg,#eff8f6 0%,rgba(239,248,246,.94) 23%,rgba(239,248,246,.24) 38%,rgba(239,248,246,0) 53%),url('/assets/images/elajme-approved-two-person-hero.webp') 51% center / auto 100% no-repeat!important}
 #home.hero .hero-grid{min-height:495px!important;grid-template-columns:minmax(0,1fr) 325px!important}
 #home.hero .hero-copy{max-width:430px!important}
 #home.hero h1{font-size:clamp(34px,3.15vw,44px)!important}
@@ -108,17 +107,15 @@ html[lang="ar"] #home.hero .homepage-hero-form{grid-column:2!important;justify-s
 #home.hero .homepage-hero-form textarea{height:52px!important;min-height:52px!important}
 #home.hero .homepage-hero-form .enquiry-card-heading{margin-bottom:6px!important}
 #home.hero .homepage-hero-form .enquiry-legal{font-size:10px!important}
+#home.hero::before{background:linear-gradient(90deg,#eff8f6 0%,rgba(239,248,246,.99) 19%,rgba(239,248,246,.94) 28%,rgba(239,248,246,.72) 34%,rgba(239,248,246,.12) 47%,rgba(239,248,246,0) 57%,rgba(239,248,246,.06) 78%,#eff8f6 100%),url('/assets/images/elajme-approved-two-person-hero.webp') 5% center / auto 100% no-repeat!important}
+html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#eff8f6 0%,rgba(239,248,246,.99) 19%,rgba(239,248,246,.94) 28%,rgba(239,248,246,.72) 34%,rgba(239,248,246,.12) 47%,rgba(239,248,246,0) 57%,rgba(239,248,246,.06) 78%,#eff8f6 100%),url('/assets/images/elajme-approved-two-person-hero.webp') 25% center / auto 100% no-repeat!important}
 }
-@media(min-width:1101px){
-#home.hero::before{background:linear-gradient(90deg,#eff8f6 0%,rgba(239,248,246,.96) 22%,rgba(239,248,246,.45) 34%,rgba(239,248,246,0) 52%,rgba(239,248,246,.08) 74%,#eff8f6 99%),url('/assets/images/elajme-approved-two-person-hero.webp') 51% center / auto 100% no-repeat!important}
-html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#eff8f6 0%,rgba(239,248,246,.96) 22%,rgba(239,248,246,.45) 34%,rgba(239,248,246,0) 52%,rgba(239,248,246,.08) 74%,#eff8f6 99%),url('/assets/images/elajme-approved-two-person-hero.webp') 49% center / auto 100% no-repeat!important}
+@media(min-width:901px) and (max-width:1100px){
+#home.hero::before{background:linear-gradient(90deg,#eff8f6 0%,rgba(239,248,246,.97) 27%,rgba(239,248,246,.65) 43%,rgba(239,248,246,.10) 60%,#eff8f6 100%),url('/assets/images/elajme-approved-two-person-hero.webp') center center / auto 100% no-repeat!important}
+html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#eff8f6 0%,rgba(239,248,246,.97) 27%,rgba(239,248,246,.65) 43%,rgba(239,248,246,.10) 60%,#eff8f6 100%),url('/assets/images/elajme-approved-two-person-hero.webp') center center / auto 100% no-repeat!important}
 }
-
-/* Position the consultation subjects farther left on desktop. */
-@media(min-width:1101px){
-#home.hero::before{background-position:center center,5% center!important}
-html[lang="ar"] #home.hero::before{background-position:center center,25% center!important}
-}
+/* The form must stay unobstructed by fixed on-page contact controls. */
+@media(max-width:900px){#home.hero .homepage-hero-form{margin-bottom:72px!important}}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
