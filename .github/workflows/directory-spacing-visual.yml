@@ -46,7 +46,23 @@ jobs:
                   viewport:document.documentElement.clientWidth,
                   scroll:document.documentElement.scrollWidth,
                   hero:document.querySelector('.hero')?.getBoundingClientRect().height,
-                  sections:[...document.querySelectorAll('.sec')].map(e=>Math.round(e.getBoundingClientRect().height))
+                  sections:[...document.querySelectorAll('.sec')].map(e=>Math.round(e.getBoundingClientRect().height)),
+                  heroOverlays:(() => {
+                    const hero=document.querySelector('.hero');
+                    if(!hero)return [];
+                    const h=hero.getBoundingClientRect();
+                    const text=[...hero.querySelectorAll('p,h1,h2,.lead')].filter(e=>e.getClientRects().length);
+                    return [...document.querySelectorAll('body *')].filter(e=>{
+                      const style=getComputedStyle(e);
+                      if(style.position!=='fixed' || style.visibility==='hidden'||style.display==='none')return false;
+                      const b=e.getBoundingClientRect();
+                      return b.width>0&&b.height>0&&b.right>h.left&&b.left<h.right&&b.bottom>h.top&&b.top<h.bottom;
+                    }).slice(0,20).map(e=>{
+                      const b=e.getBoundingClientRect();
+                      const overlappingText=text.filter(t=>{const q=t.getBoundingClientRect();return b.left<q.right&&b.right>q.left&&b.top<q.bottom&&b.bottom>q.top;});
+                      return {tag:e.tagName,id:e.id,classes:String(e.className).slice(0,100),text:e.innerText?.slice(0,70),rect:[Math.round(b.x),Math.round(b.y),Math.round(b.width),Math.round(b.height)],overlappingText:overlappingText.map(t=>t.innerText.slice(0,75))};
+                    });
+                  })()
                 }));
                 console.log(pageName,viewport.width,JSON.stringify(result));
                 if(result.scroll > result.viewport+2)errors.push(pageName+' at '+viewport.width+': horizontal overflow '+result.scroll);
