@@ -161,3 +161,49 @@ html[lang="ar"] .site-header .nav-wrap{direction:rtl!important;display:grid!impo
     background: linear-gradient(180deg, #ffffff 0%, #f8fcfb 100%) !important;
   }
 }
+
+/* Reference-inspired compact FAQs: two columns on desktop, one on mobile.
+   Native details/summary keeps keyboard and screen-reader interaction intact. */
+html[lang="en"] body > main > section.faq-section .faq-list,
+html[lang="ar"] body > main > section.faq-section .faq-list {
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:12px 18px !important;
+  max-width:1200px !important;
+  margin-inline:auto !important;
+  align-items:start !important;
+}
+html[lang="en"] body > main > section.faq-section .faq-list details,
+html[lang="ar"] body > main > section.faq-section .faq-list details {
+  margin:0 !important;
+  padding:13px 16px !important;
+  border:1px solid #b7d8d5 !important;
+  border-radius:9px !important;
+  background:#fff !important;
+  box-shadow:0 2px 8px rgba(13,70,76,.035) !important;
+  min-width:0;
+}
+html[lang="en"] body > main > section.faq-section .faq-list summary,
+html[lang="ar"] body > main > section.faq-section .faq-list summary {
+  font-size:14px !important;
+  line-height:1.5 !important;
+  min-height:22px;
+}
+html[lang="en"] body > main > section.faq-section .faq-list details[open],
+html[lang="ar"] body > main > section.faq-section .faq-list details[open] {
+  border-color:#258b84 !important;
+  box-shadow:0 5px 15px rgba(13,70,76,.08) !important;
+}
+html[lang="en"] body > main > section.faq-section .faq-list details p,
+html[lang="ar"] body > main > section.faq-section .faq-list details p {
+  font-size:14px !important;
+  line-height:1.65 !important;
+  margin-top:10px !important;
+}
+@media(max-width:767px) {
+  html[lang="en"] body > main > section.faq-section .faq-list,
+  html[lang="ar"] body > main > section.faq-section .faq-list {
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:10px !important;
+  }
+}
