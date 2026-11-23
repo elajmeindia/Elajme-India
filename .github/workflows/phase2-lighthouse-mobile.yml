@@ -99,7 +99,7 @@ jobs:
         run: |
           CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
           export CHROME_PATH
-          for locale in en ar; do
+          for locale in ar; do
             prefix=/
             if [ "$locale" = ar ]; then prefix=/ar/; fi
             for page in home international-patients/mea saudi-arabia/treatment-in-india nigeria/treatment-in-india oman/treatment-in-india tanzania/treatment-in-india fiji/treatment-in-india; do
@@ -110,10 +110,14 @@ jobs:
               case "$page" in saudi-arabia/*|nigeria/*|oman/*|tanzania/*|fiji/*) widths='390 768 1366';; esac
               for width in $widths; do
                 if [ "$page" = home ] && [ "$width" != 390 ]; then continue; fi
-                for sample in 1; do
+                for sample in $(if [ "$page" = home ]; then echo '1 2 3'; else echo 1; fi); do
                   output="phase3-results/$locale-$name-$width-$sample.json"
                   mkdir -p phase3-results
-                  npx lighthouse "https://elajmeindia.com$prefix$suffix" --only-categories=performance --form-factor=mobile --screenEmulation.mobile --screenEmulation.width="$width" --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path="$output" --quiet
+                  for attempt in 1 2 3; do
+                    if npx lighthouse "https://elajmeindia.com$prefix$suffix" --only-categories=performance --form-factor=mobile --screenEmulation.mobile --screenEmulation.width="$width" --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path="$output" --quiet; then break; fi
+                    sleep 4
+                  done
+                  if [ ! -s "$output" ]; then echo "::error::Lighthouse sampling failed for $prefix$suffix at $width"; continue; fi
                   node -e 'const r=require("./"+process.argv[1]);const a=r.audits;console.log(JSON.stringify({url:r.finalDisplayedUrl,file:process.argv[1],lcp:a["largest-contentful-paint"].numericValue,fcp:a["first-contentful-paint"].numericValue,cls:a["cumulative-layout-shift"].numericValue,tbt:a["total-blocking-time"].numericValue,element:a["lcp-breakdown-insight"]?.details?.items?.find(x=>x.type==="node")?.selector,breakdown:a["lcp-breakdown-insight"]?.details?.items?.find(x=>x.type==="table")?.items,blocking:a["render-blocking-insight"]?.details?.items?.map(x=>({url:x.url,ms:x.wastedMs}))}));' "$output"
                 done
               done
