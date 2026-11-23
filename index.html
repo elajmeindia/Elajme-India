@@ -220,6 +220,21 @@ html[lang="ar"] #home.hero::before{background:linear-gradient(270deg,#edf7f5 0%,
   html[lang="ar"] body > main > section.section[aria-labelledby="international-patients-heading"] .section-heading p{margin:6px auto!important;line-height:1.55!important}
   html[lang="ar"] body > main > section.section[aria-labelledby="international-patients-heading"] .section-heading p:last-child{margin-bottom:0!important}
 }
+/* Keep all country links in view in both reading directions. */
+html body > main > section.audience-strip .audience-inner {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  overflow: visible !important;
+}
+html body > main > section.audience-strip .country {
+  min-width: 0 !important;
+}
+@media (max-width: 640px) {
+  html body > main > section.audience-strip .audience-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    column-gap: 10px !important;
+  }
+}
 </style></head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>

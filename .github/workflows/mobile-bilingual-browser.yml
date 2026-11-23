@@ -459,8 +459,34 @@ jobs:
                   const prefix=lang==='ar'?'/ar':'';
                   const links=await page.locator('.treatments-section .hero-actions > .button').evaluateAll(nodes=>nodes.map(a=>new URL(a.href).pathname));
                   check(links.length===3&&['/treatments/','/hospitals/','/doctors/'].every(p=>links.includes(prefix+p)),'Directory destinations');
-                  const countryCount=await page.locator('.audience-inner .country').count();
-                  check(countryCount===8,'Eight country cards');
+                  const countryCards=page.locator('.audience-strip .country a');
+                  const expectedCountries=['saudi-arabia','uae','oman','qatar','kuwait','bahrain','nigeria','chad','algeria','ghana'];
+                  const expectedLabels=lang==='ar'
+                    ? ['السعودية','الإمارات','عُمان','قطر','الكويت','البحرين','نيجيريا','تشاد','الجزائر','غانا','الدول الأخرى']
+                    : ['Saudi Arabia','United Arab Emirates','Oman','Qatar','Kuwait','Bahrain','Nigeria','Chad','Algeria','Ghana','Other Countries'];
+                  const expectedPaths=expectedCountries.map(country=>prefix+'/'+country+'/treatment-in-india/');
+                  expectedPaths.push(prefix+'/contact/');
+                  const countryTargets=await countryCards.evaluateAll(cards=>cards.map(card=>{
+                    const {left,right,width,height}=card.getBoundingClientRect();
+                    const label=card.querySelector('span') ?? card;
+                    return {
+                      path:card.getAttribute('href'),label:card.innerText.trim(),
+                      inView:left>=-1&&right<=innerWidth+1,
+                      readable:Boolean(label?.getClientRects().length)&&label.scrollWidth<=label.clientWidth+1,
+                      width,height
+                    };
+                  }));
+                  const countryCount=countryTargets.length;
+                  check(countryCount===expectedPaths.length&&countryTargets.every((card,i)=>
+                    card.path===expectedPaths[i]&&card.label===expectedLabels[i]),'Complete country list with language-specific routes and Other Countries last');
+                  check(countryTargets.every(card=>card.inView&&card.readable&&card.width>=44&&card.height>=44),
+                    'Country labels and 44px tap targets fit in the viewport');
+                  await countryCards.first().focus();
+                  for(let i=0;i<countryCount;i++){
+                    check(await countryCards.nth(i).evaluate(card=>card===document.activeElement),'Country links follow keyboard order');
+                    if(i+1<countryCount)await page.keyboard.press('Tab');
+                  }
+                  await page.locator('.audience-strip').screenshot({path:`qa-artifacts/${id}-countries.png`});
                   check(await page.locator('.process-grid .process-step').count()===4,'Four journey cards');
                   result.observations.grids=await page.evaluate(()=>{
                     const out={};
@@ -472,8 +498,9 @@ jobs:
                     return out;
                   });
                   check(!Object.values(result.observations.grids).some(g=>g.overlaps),'Overlapping grid cards');
+                  check(result.observations.grids.countries.rows===Math.ceil(expectedPaths.length/(width<=640?2:4)),
+                    'Country boxes wrap into balanced rows');
                   if(width===1363){
-                    check(result.observations.grids.countries.rows===2,'Desktop country cards should occupy two rows');
                     check(result.observations.grids.journey.rows===1,'Desktop journey should occupy one row');
                   }
                   check(await page.locator('.master-lang').getAttribute('href')===(lang==='ar'?'/':'/ar/'),'Homepage language switch destination');
