@@ -460,10 +460,10 @@ jobs:
                   const links=await page.locator('.treatments-section .hero-actions > .button').evaluateAll(nodes=>nodes.map(a=>new URL(a.href).pathname));
                   check(links.length===3&&['/treatments/','/hospitals/','/doctors/'].every(p=>links.includes(prefix+p)),'Directory destinations');
                   const countryCards=page.locator('.audience-strip .country a, .audience-strip a.country');
-                  const expectedCountries=['saudi-arabia','uae','oman','qatar','kuwait','bahrain','nigeria','chad','algeria','ghana'];
+                  const expectedCountries=['saudi-arabia','uae','oman','qatar','kuwait','bahrain','nigeria','chad','algeria','ghana','tanzania','mauritius'];
                   const expectedLabels=lang==='ar'
-                    ? ['السعودية','الإمارات','عُمان','قطر','الكويت','البحرين','نيجيريا','تشاد','الجزائر','غانا','الدول الأخرى']
-                    : ['Saudi Arabia','United Arab Emirates','Oman','Qatar','Kuwait','Bahrain','Nigeria','Chad','Algeria','Ghana','Other Countries'];
+                    ? ['السعودية','الإمارات','عُمان','قطر','الكويت','البحرين','نيجيريا','تشاد','الجزائر','غانا','تنزانيا','موريشيوس','الدول الأخرى']
+                    : ['Saudi Arabia','United Arab Emirates','Oman','Qatar','Kuwait','Bahrain','Nigeria','Chad','Algeria','Ghana','Tanzania','Mauritius','Other Countries'];
                   const expectedPaths=expectedCountries.map(country=>prefix+'/'+country+'/treatment-in-india/');
                   expectedPaths.push(prefix+'/contact/');
                   const countryTargets=await countryCards.evaluateAll(cards=>cards.map(card=>{
