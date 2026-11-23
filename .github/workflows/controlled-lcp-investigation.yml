@@ -1,0 +1,106 @@
+name: Controlled stylesheet and Oman Lighthouse investigation
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/controlled-lcp-investigation.yml'
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [en-home, ar-home, en-oman, ar-oman, en-nigeria, ar-nigeria]
+    env:
+      TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned tools
+        run: |
+          npm install --no-save --no-audit --no-fund lighthouse@12.8.2 playwright@1.56.1
+          npx playwright install chromium
+      - name: Run alternating cold Lighthouse samples
+        run: |
+          set -eu
+          mkdir -p controlled-results
+          export CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          prefix=/
+          case "$TARGET" in ar-*) prefix=/ar/;; esac
+          if [[ "$TARGET" == *-home ]]; then
+            cat > phase3-serve.py <<'PYTHON'
+          import os, re
+          from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          class Handler(SimpleHTTPRequestHandler):
+              def do_GET(self):
+                  request = urlsplit(self.path)
+                  path = 'ar/index.html' if os.environ['TARGET'] == 'ar-home' else 'index.html'
+                  if request.path in ('/', '/ar/') and request.path == ('/ar/' if path.startswith('ar/') else '/'):
+                      source = Path(path).read_text()
+                      if request.query == 'sample=candidate':
+                          css = '/assets/css/site-shell.css' if path.startswith('ar/') else '/assets/css/homepage-enhancements.css'
+                          source, count = re.subn(r'(<link rel="stylesheet" href="' + re.escape(css) + r'")', r'\1 fetchpriority="high"', source)
+                          assert count == 1, css
+                      payload = source.encode()
+                      self.send_response(200)
+                      self.send_header('Content-Type', 'text/html; charset=utf-8')
+                      self.send_header('Content-Length', str(len(payload)))
+                      self.end_headers()
+                      self.wfile.write(payload)
+                  else:
+                      super().do_GET()
+          ThreadingHTTPServer(('127.0.0.1', 8765), Handler).serve_forever()
+          PYTHON
+            python3 phase3-serve.py > /tmp/phase3-server.log 2>&1 &
+            origin=http://127.0.0.1:8765
+            suffix=
+            curl -fsS --retry 5 --retry-connrefused "$origin$prefix?sample=candidate" > /tmp/phase3-candidate.html
+            grep -q 'fetchpriority="high"' /tmp/phase3-candidate.html
+          else
+            origin=https://elajmeindia.com
+            suffix="${TARGET#*-}/treatment-in-india/"
+          fi
+          failures=0
+          for width in 390 768; do
+            for sample in 1 2 3; do
+              variants=production
+              if [[ "$TARGET" == *-home ]]; then
+                variants='baseline candidate'
+                if [ "$sample" = 2 ]; then variants='candidate baseline'; fi
+              fi
+              for variant in $variants; do
+                query=
+                block=()
+                if [[ "$TARGET" == *-home ]]; then
+                  query="?sample=$variant"
+                  block=(--blocked-url-patterns='*googletagmanager.com*,*google-analytics.com*,*analytics.google.com*,*doubleclick.net*,*cloudflareinsights.com*,*tawk.to*')
+                fi
+                output="controlled-results/$TARGET-$width-$sample-$variant.json"
+                for attempt in 1 2 3; do
+                  rm -f "$output"
+                  if npx lighthouse "$origin$prefix$suffix$query" --only-categories=performance --form-factor=mobile --screenEmulation.mobile --screenEmulation.width="$width" --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path="$output" --quiet "${block[@]}"; then break; fi
+                  rm -f "$output"
+                  sleep 3
+                done
+                if [ ! -s "$output" ]; then failures=$((failures+1)); continue; fi
+                node - "$output" <<'JS'
+          const file=process.argv[2], r=require('./'+file), a=r.audits;
+          const insight=a['lcp-breakdown-insight']?.details?.items??[];
+          const metrics=Object.fromEntries(['largest-contentful-paint','first-contentful-paint','cumulative-layout-shift','total-blocking-time','server-response-time'].map(k=>[k,a[k]?.numericValue]));
+          console.log('PHASE3_RESULT '+JSON.stringify({file,metrics,element:insight.find(x=>x.type==='node')?.selector,parts:insight.find(x=>x.type==='table')?.items,layout:a['mainthread-work-breakdown']?.details?.items?.find(x=>x.group==='styleLayout')?.duration,blocking:a['render-blocking-insight']?.details?.items?.map(x=>[x.url,x.wastedMs])}));
+          JS
+              done
+            done
+          done
+          test "$failures" -eq 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: controlled-lcp-${{ matrix.target }}
+          path: controlled-results/
