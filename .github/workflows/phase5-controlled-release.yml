@@ -1,0 +1,46 @@
+name: Phase 5 controlled release browser checks
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/phase5-controlled-release.yml'
+      - 'scripts/phase5-release-*'
+permissions:
+  contents: read
+jobs:
+  browser:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {mode: production-458, ref: 38df79183afb634c0dfe0d7ef9c2fa26f45f46c2}
+          - {mode: links, ref: 397acb433eea5615d8438b229a0a1cae774f26c1}
+          - {mode: analytics, ref: d4e02e09ab2b1fcbf6dc73c33e58456a6918825c}
+          - {mode: privacy, ref: 66a21e88aa18a4a93e2b6f0249686000c7c568d2}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      AUDIT_MODE: ${{ matrix.mode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+          path: candidate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1
+      - run: npx playwright install chromium
+      - shell: bash
+        run: |
+          python3 -m http.server 8765 --directory candidate >/tmp/phase5-http.log 2>&1 &
+          for i in {1..10}; do
+            if curl -fsS http://127.0.0.1:8765/ -o /dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/phase5-release-check.cjs | tee evidence.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase5-controlled-${{ matrix.mode }}
+          path: evidence.log
