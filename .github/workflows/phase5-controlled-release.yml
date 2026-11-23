@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {mode: links, ref: 0f2d8343b11074cbe4e81bfa12b053c6196be7e7}
+          - {mode: links, ref: 397acb433eea5615d8438b229a0a1cae774f26c1}
           - {mode: analytics, ref: d4e02e09ab2b1fcbf6dc73c33e58456a6918825c}
           - {mode: privacy, ref: 66a21e88aa18a4a93e2b6f0249686000c7c568d2}
     runs-on: ubuntu-24.04

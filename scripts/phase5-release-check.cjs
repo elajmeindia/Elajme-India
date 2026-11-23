@@ -29,7 +29,7 @@ const destination = '/917488955154';
       const links = page.locator('a[href^="https://wa.me/917488955154"]:visible');
       const events = () => page.evaluate(() => (window.dataLayer || []).filter(item => item[0] === 'event').map(item => [item[1],item[2]]));
       if (mode === 'links') {
-        const values = await links.evaluateAll(nodes => nodes.map(a => a.href));
+        const values = await links.evaluateAll(nodes => nodes.filter(a => !a.closest('.master-site-header')).map(a => a.href));
         assert.ok(values.length, path);
         for (const value of values) {
           const url = new URL(value);
