@@ -1,0 +1,30 @@
+name: Phase 5 intercepted patient journeys
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/phase5-enquiry-evidence.yml'
+      - 'scripts/phase5-enquiry-evidence.py'
+permissions:
+  contents: read
+jobs:
+  audit:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [forms, links]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      AUDIT_MODE: ${{ matrix.mode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright==1.56.0
+      - run: python -m playwright install --with-deps chromium
+      - run: python scripts/phase5-enquiry-evidence.py | tee phase5-results.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase5-${{ matrix.mode }}
+          path: phase5-results.jsonl
