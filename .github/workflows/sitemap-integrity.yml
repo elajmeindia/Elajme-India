@@ -25,7 +25,7 @@ jobs:
           from pathlib import Path
           from urllib.parse import urlparse,unquote
           import xml.etree.ElementTree as ET
-          import sys
+          import re, sys
           errors=[]
           root=ET.parse('sitemap.xml').getroot()
           ns={'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
@@ -40,8 +40,16 @@ jobs:
                   errors.append('unclean sitemap URL: '+url)
               relative=unquote(p.path).lstrip('/')
               target=Path(relative)/'index.html' if relative.endswith('/') or not relative else Path(relative)
+              if relative and not p.path.endswith('/') and not target.suffix:
+                  # Cloudflare Pages serves standalone HTML at extensionless URLs.
+                  target=target.with_suffix('.html')
               if not target.is_file():
                   errors.append('sitemap target missing: '+str(target))
+                  continue
+              html=target.read_text(encoding='utf-8')
+              canonical=re.search(r'<link\b[^>]*rel="canonical"[^>]*href="([^"]+)"',html,re.I)
+              if not canonical or canonical.group(1)!=url:
+                  errors.append('sitemap URL does not match source canonical: '+url)
           robots=Path('robots.txt').read_text(encoding='utf-8')
           if 'Sitemap: https://elajmeindia.com/sitemap.xml' not in robots:
               errors.append('robots.txt missing official sitemap URL')
