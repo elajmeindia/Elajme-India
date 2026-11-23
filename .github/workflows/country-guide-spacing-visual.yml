@@ -39,7 +39,7 @@ jobs:
           const fs = require('node:fs');
           const { chromium } = require('playwright');
 
-          const countries = ['algeria', 'bahrain', 'chad', 'ghana', 'kuwait', 'mauritius', 'nigeria', 'oman', 'qatar', 'saudi-arabia', 'tanzania', 'uae']
+          const countries = ['algeria', 'bahrain', 'chad', 'ghana', 'kuwait', 'liberia', 'mauritania', 'mauritius', 'nigeria', 'oman', 'qatar', 'saudi-arabia', 'tanzania', 'uae']
             .filter(country => fs.existsSync(`${country}/treatment-in-india/index.html`));
           const sizes = [[320, 720], [375, 812], [390, 844], [768, 1024], [1366, 936], [1920, 1080]];
           const errors = [];
@@ -90,7 +90,7 @@ jobs:
                       if (!response.ok() || !metrics.sections.length || metrics.direction !== expectedDirection) {
                         errors.push(`${key}/${version}-${language}: wrong page or text direction`);
                       }
-                      if (version === 'after' && ['chad', 'algeria', 'ghana', 'tanzania', 'mauritius'].includes(country)) {
+                      if (version === 'after' && ['chad', 'algeria', 'ghana', 'tanzania', 'mauritius', 'liberia', 'mauritania'].includes(country)) {
                         const expectedAlternate = `${language === 'en' ? '/ar' : ''}/${country}/treatment-in-india/`;
                         if (metrics.alternate !== expectedAlternate) errors.push(`${key}/${language}: wrong language switch`);
                         if (width <= 390 && (!metrics.enquiryVisible || !metrics.whatsappVisible)) {
