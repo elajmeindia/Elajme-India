@@ -351,7 +351,7 @@ jobs:
              r.geometry=await p.evaluate(()=>{
               const h=document.querySelector('.master-site-header'),inner=h.querySelector('.master-header-inner'),rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height}};
               let cls=0,sum=0,start=0,last=0;for(const e of window.__layoutShifts){if(e.time-last>1000||e.time-start>5000){sum=0;start=e.time}sum+=e.value;last=e.time;cls=Math.max(cls,sum)}
-              return{emailStripPresent:!!h.querySelector('.master-email-strip'),header:rect(h),row:rect(inner),cls,overflow:document.documentElement.scrollWidth>innerWidth+2,mainTop:document.querySelector('main').getBoundingClientRect().top,innerHtml:inner.outerHTML,footer:document.querySelector('footer').outerHTML,processColumns:getComputedStyle(document.querySelector('.process-grid')).gridTemplateColumns};
+              return{emailStripPresent:!!h.querySelector('.master-email-strip'),header:rect(h),row:rect(inner),cls,shiftSources:window.__layoutShifts.filter(e=>e.value>=0.01).slice(0,12),overflow:document.documentElement.scrollWidth>innerWidth+2,mainTop:document.querySelector('main').getBoundingClientRect().top,innerHtml:inner.outerHTML,footer:document.querySelector('footer').outerHTML,processColumns:getComputedStyle(document.querySelector('.process-grid')).gridTemplateColumns};
              });
              await p.screenshot({path:output+'/'+id+'-top.png',animations:'disabled'});await p.locator('.master-site-header').screenshot({path:output+'/'+id+'-header.png',animations:'disabled'});
              const key=lang+'-'+width;
