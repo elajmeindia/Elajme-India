@@ -1,0 +1,111 @@
+name: Country guide spacing visual evidence
+
+on:
+  pull_request:
+    paths:
+      - '**/treatment-in-india/index.html'
+      - 'assets/css/country-guide-spacing.css'
+      - '.github/workflows/country-guide-spacing-visual.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Capture both languages before and after
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/elajme-baseline" "$BASE_SHA"
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory "$RUNNER_TEMP/elajme-baseline" > "$RUNNER_TEMP/baseline.log" 2>&1 &
+          python3 -m http.server 8766 --bind 127.0.0.1 > "$RUNNER_TEMP/candidate.log" 2>&1 &
+          for port in 8765 8766; do
+            curl --fail --silent --retry 10 --retry-delay 1 --retry-connrefused "http://127.0.0.1:$port/" > /dev/null
+          done
+          node <<'JS'
+          const fs = require('node:fs');
+          const { chromium } = require('playwright');
+
+          const countries = ['bahrain', 'kuwait', 'nigeria', 'oman', 'qatar', 'saudi-arabia', 'uae'];
+          const sizes = [[375, 812], [390, 844], [768, 1024], [1366, 936], [1920, 1080]];
+          const errors = [];
+          const results = [];
+
+          async function run() {
+            const browser = await chromium.launch();
+            try {
+              const context = await browser.newContext({ reducedMotion: 'reduce' });
+              await context.route('**/*', route =>
+                new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort()
+              );
+              const page = await context.newPage();
+              for (const country of countries) {
+                for (const [width, height] of sizes) {
+                  await page.setViewportSize({ width, height });
+                  for (const [version, port] of [['before', 8765], ['after', 8766]]) {
+                    for (const language of ['en', 'ar']) {
+                      const prefix = language === 'ar' ? '/ar' : '';
+                      const url = `http://127.0.0.1:${port}${prefix}/${country}/treatment-in-india/`;
+                      const response = await page.goto(url, { waitUntil: 'load' });
+                      const metrics = await page.evaluate(async () => {
+                        const images = Array.from(document.querySelectorAll('img'));
+                        for (const image of images) image.loading = 'eager';
+                        await Promise.allSettled(images.map(image => image.decode()));
+                        const { clientWidth, scrollWidth } = document.documentElement;
+                        return {
+                          lang: document.documentElement.lang,
+                          direction: getComputedStyle(document.body).direction,
+                          overflow: scrollWidth - clientWidth,
+                          sections: Array.from(document.querySelectorAll('main > section'), section => {
+                            const { paddingBlockStart, paddingBlockEnd } = getComputedStyle(section);
+                            return { className: section.className, paddingBlockStart, paddingBlockEnd };
+                          }),
+                        };
+                      });
+                      const key = `${country}/${width}`;
+                      const folder = `spacing-evidence/${key}`;
+                      fs.mkdirSync(folder, { recursive: true });
+                      await page.screenshot({ path: `${folder}/${version}-${language}.png`, fullPage: true });
+                      results.push({ country, version, language, width, status: response.status(), ...metrics });
+                      const expectedDirection = language === 'ar' ? 'rtl' : 'ltr';
+                      if (!response.ok() || !metrics.sections.length || metrics.direction !== expectedDirection) {
+                        errors.push(`${key}/${version}-${language}: wrong page or text direction`);
+                      }
+                      if (version === 'after' && metrics.overflow > 2) {
+                        errors.push(`${key}/${language}: ${metrics.overflow}px horizontal overflow`);
+                      }
+                    }
+                  }
+                }
+              }
+            } finally {
+              await browser.close();
+              fs.mkdirSync('spacing-evidence', { recursive: true });
+              fs.writeFileSync('spacing-evidence/metrics.json', JSON.stringify(results, null, 2));
+            }
+            if (errors.length) throw new Error(errors.join('\n'));
+          }
+
+          run().catch(error => {
+            console.error(error);
+            process.exitCode = 1;
+          });
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bilingual-country-guide-spacing
+          path: spacing-evidence/
