@@ -39,8 +39,9 @@ jobs:
           const fs = require('node:fs');
           const { chromium } = require('playwright');
 
-          const countries = ['bahrain', 'kuwait', 'nigeria', 'oman', 'qatar', 'saudi-arabia', 'uae'];
-          const sizes = [[375, 812], [390, 844], [768, 1024], [1366, 936], [1920, 1080]];
+          const countries = ['algeria', 'bahrain', 'chad', 'ghana', 'kuwait', 'nigeria', 'oman', 'qatar', 'saudi-arabia', 'uae']
+            .filter(country => fs.existsSync(`${country}/treatment-in-india/index.html`));
+          const sizes = [[320, 720], [375, 812], [390, 844], [768, 1024], [1366, 936], [1920, 1080]];
           const errors = [];
           const results = [];
 
@@ -58,7 +59,9 @@ jobs:
                   for (const [version, port] of [['before', 8765], ['after', 8766]]) {
                     for (const language of ['en', 'ar']) {
                       const prefix = language === 'ar' ? '/ar' : '';
-                      const url = `http://127.0.0.1:${port}${prefix}/${country}/treatment-in-india/`;
+                      const path = `${prefix}/${country}/treatment-in-india/`;
+                      if (version === 'before' && !fs.existsSync(`${process.env.RUNNER_TEMP}/elajme-baseline${path}index.html`)) continue;
+                      const url = `http://127.0.0.1:${port}${path}`;
                       const response = await page.goto(url, { waitUntil: 'load' });
                       const metrics = await page.evaluate(async () => {
                         const images = Array.from(document.querySelectorAll('img'));
@@ -69,6 +72,9 @@ jobs:
                           lang: document.documentElement.lang,
                           direction: getComputedStyle(document.body).direction,
                           overflow: scrollWidth - clientWidth,
+                          enquiryVisible: Boolean(document.querySelector('.elajme-bottom-enquiry')?.getClientRects().length),
+                          whatsappVisible: Boolean(document.querySelector('.elajme-bottom-wa')?.getClientRects().length),
+                          alternate: document.querySelector('header .master-lang')?.getAttribute('href'),
                           sections: Array.from(document.querySelectorAll('main > section'), section => {
                             const { paddingBlockStart, paddingBlockEnd } = getComputedStyle(section);
                             return { className: section.className, paddingBlockStart, paddingBlockEnd };
@@ -83,6 +89,13 @@ jobs:
                       const expectedDirection = language === 'ar' ? 'rtl' : 'ltr';
                       if (!response.ok() || !metrics.sections.length || metrics.direction !== expectedDirection) {
                         errors.push(`${key}/${version}-${language}: wrong page or text direction`);
+                      }
+                      if (version === 'after' && ['chad', 'algeria', 'ghana'].includes(country)) {
+                        const expectedAlternate = `${language === 'en' ? '/ar' : ''}/${country}/treatment-in-india/`;
+                        if (metrics.alternate !== expectedAlternate) errors.push(`${key}/${language}: wrong language switch`);
+                        if (width <= 390 && (!metrics.enquiryVisible || !metrics.whatsappVisible)) {
+                          errors.push(`${key}/${language}: missing mobile enquiry actions`);
+                        }
                       }
                       if (version === 'after' && metrics.overflow > 2) {
                         errors.push(`${key}/${language}: ${metrics.overflow}px horizontal overflow`);
