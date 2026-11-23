@@ -2,7 +2,9 @@ import asyncio, re, json, os, urllib.parse, subprocess
 from pathlib import Path
 from playwright.async_api import async_playwright
 BASE='https://elajmeindia.com'
-CACHE={}
+CANDIDATE=os.environ.get('AUDIT_CANDIDATE','')
+FORM_PATHS={'/':'index.html','/ar/':'ar/index.html','/faq/':'faq/index.html','/ar/faq/':'ar/faq/index.html'}
+FORM_SCRIPTS={'/script.js','/assets/js/enquiry-phone.js','/assets/js/faq-enquiry.js','/assets/js/arabic-enquiry-analytics.js'}
 async def test(browser,path,width,form=False):
  ar=path.startswith('/ar/')
  height={390:844,768:1024,1366:900}[width]
@@ -13,6 +15,12 @@ async def test(browser,path,width,form=False):
   if u.hostname in ('wa.me','api.whatsapp.com','web.whatsapp.com'):
    hits.append(request.url); return await r.fulfill(status=204)
   if u.hostname!='elajmeindia.com' or request.method!='GET' or u.path.startswith('/api/'):return await r.abort()
+  if CANDIDATE=='forms' and (u.path in FORM_PATHS or u.path in FORM_SCRIPTS):
+   file=Path('candidate-forms') / FORM_PATHS.get(u.path,u.path.lstrip('/'))
+   if file.is_file():
+    return await r.fulfill(status=200,content_type='text/html; charset=utf-8' if file.suffix=='.html' else 'application/javascript; charset=utf-8',body=file.read_bytes())
+  if CANDIDATE=='links' and u.path=='/assets/js/mobile-header.js':
+   return await r.fulfill(status=200,content_type='application/javascript; charset=utf-8',body=Path('candidate-links/assets/js/mobile-header.js').read_bytes())
   await r.continue_()
  await context.route('**/*',route)
  page=await context.new_page()
@@ -49,11 +57,13 @@ async def test(browser,path,width,form=False):
    before=await events(); initial=len(hits)
    await submit.click(timeout=5000); await page.wait_for_timeout(200)
    result['valid']=[len(hits)-initial,(await events())[len(before):],bool(hits and 'QA Synthetic' in urllib.parse.unquote(hits[-1])),bool(hits and re.search('[\u0600-\u06ff]',urllib.parse.unquote(hits[-1])))]
+   if CANDIDATE=='forms':await page.wait_for_timeout(1060)
    for number in ['1------','1234567','+٩٦٨ ٩١٢٣٤٥٦٧','+1 202 555 0100']:
     await page.locator(phone).fill(number)
     before=await events(); initial=len(hits)
     await f.evaluate('f=>{f.requestSubmit();f.requestSubmit()}'); await page.wait_for_timeout(200)
     result[number]=[len(hits)-initial,(await events())[len(before):]]
+    if CANDIDATE=='forms':await page.wait_for_timeout(1050)
  if not form:
   result['interaction']=await page.evaluate("""() => {
     const bar=document.querySelector('.elajme-bottom-actions');
@@ -92,6 +102,7 @@ async def test(browser,path,width,form=False):
 async def main():
  async with async_playwright() as p:
   b=await p.chromium.launch(args=['--no-sandbox'])
+  failures=[]
   for mode,paths in [(True,['/','/ar/','/faq/','/ar/faq/']),(False,['/international-patients/mea/','/treatments/','/hospitals/','/doctors/','/contact/']+[f'/{s}/treatment-in-india/' for s in 'saudi-arabia nigeria oman uae qatar kuwait bahrain chad algeria ghana tanzania mauritius liberia mauritania fiji democratic-republic-of-the-congo republic-of-the-congo'.split()])]:
    if not mode:paths += ['/faq/','/']
    if not mode:paths += ['/ar'+x for x in paths]
@@ -100,6 +111,17 @@ async def main():
     for i in range(0,len(paths),8):
      group=paths[i:i+8]
      results=await asyncio.gather(*(test(b,path,width,mode) for path in group),return_exceptions=True)
-     for path,r in zip(group,results): print(json.dumps([path,width,r if isinstance(r,dict) else str(r)],ensure_ascii=False),flush=True)
+     for path,r in zip(group,results):
+      print(json.dumps([path,width,r if isinstance(r,dict) else str(r)],ensure_ascii=False),flush=True)
+      if not isinstance(r,dict):
+       failures.append([path,width,'test error'])
+      elif CANDIDATE=='forms':
+       if r['valid'][0]!=1 or r['1------'][0]!=0 or r['1234567'][0]!=0 or r['+٩٦٨ ٩١٢٣٤٥٦٧'][0]!=1 or r['+1 202 555 0100'][0]!=1:
+        failures.append([path,width,'handoff regression'])
+       if path in ('/','/ar/') and any(len(r[n][1])!=2 for n in ('+٩٦٨ ٩١٢٣٤٥٦٧','+1 202 555 0100')):
+        failures.append([path,width,'event duplication'])
+      elif CANDIDATE=='links' and (r['wrong'] or r['wrongLanguage'] or r['missingText'] or not isinstance(r.get('direct'),list) or r['direct'][0]!=1):
+       failures.append([path,width,'WhatsApp route or message regression'])
   await b.close()
+  if failures:raise SystemExit(json.dumps(failures))
 asyncio.run(main())

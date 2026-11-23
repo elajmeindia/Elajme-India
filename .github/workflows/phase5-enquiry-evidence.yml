@@ -11,13 +11,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [forms, links]
+        include:
+          - {name: production-forms, mode: forms, candidate: ''}
+          - {name: production-links, mode: links, candidate: ''}
+          - {name: candidate-forms, mode: forms, candidate: forms, ref: a9e47709b7c62528f4f95029dfe31c554aef5a68}
+          - {name: candidate-links, mode: links, candidate: links, ref: 23896ac10613ffb5f63ac82400fe2bbb8b973c60}
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     env:
       AUDIT_MODE: ${{ matrix.mode }}
+      AUDIT_CANDIDATE: ${{ matrix.candidate }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        if: matrix.candidate != ''
+        with:
+          ref: ${{ matrix.ref }}
+          path: candidate-${{ matrix.candidate }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -25,6 +35,7 @@ jobs:
       - run: python -m playwright install chromium
       - run: python scripts/phase5-enquiry-evidence.py | tee phase5-results.jsonl
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: phase5-${{ matrix.mode }}
+          name: phase5-${{ matrix.name }}
           path: phase5-results.jsonl
