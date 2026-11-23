@@ -9,7 +9,7 @@
     const language = document.documentElement.lang.toLowerCase().startsWith('ar') ? 'ar' : 'en';
     const genericUrl = messageUrl(language === 'ar' ? arabic : english);
     for (const link of document.querySelectorAll('a[href="' + destination + '"]')) {
-      link.href = genericUrl;
+      if (!link.closest('.master-site-header')) link.href = genericUrl;
     }
 
     if (!/^(?:\/ar)?\/[a-z-]+\/treatment-in-india\/$/.test(location.pathname)) return;
