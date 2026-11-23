@@ -2,13 +2,14 @@ const assert = require('node:assert/strict');
 const {chromium} = require('playwright');
 const paths = require('./phase5-release-routes.json');
 const mode = process.env.AUDIT_MODE;
-const origin = 'http://127.0.0.1:8765';
+const production = mode === 'production-458';
+const origin = production ? 'https://elajmeindia.com' : 'http://127.0.0.1:8765';
 const destination = '/917488955154';
 
 (async () => {
   const browser = await chromium.launch();
   const forms = mode === 'privacy' ? ['/', '/ar/'] : ['/faq/', '/ar/faq/'];
-  const checked = mode === 'privacy' ? forms : paths;
+  const checked = production ? ['/', '/ar/', '/faq/', '/ar/faq/'] : mode === 'privacy' ? forms : paths;
   const sizes = mode === 'analytics' ? [[390,844]] : [[390,844],[768,1024],[1366,900]];
   for (const [width,height] of sizes) {
     for (const path of checked) {
@@ -21,10 +22,23 @@ const destination = '/917488955154';
           handoffs.push(url);
           return route.fulfill({status:204});
         }
-        return url.origin === origin ? route.continue() : route.abort();
+        return url.origin === origin && route.request().method() === 'GET' ? route.continue() : route.abort();
       });
       const page = await context.newPage();
-      await page.goto(origin + path, {waitUntil:'domcontentloaded'});
+      const pageUrl = origin + path;
+      if (production) {
+        let ready = false;
+        for (let attempt=0; attempt<12; attempt++) {
+          const response = await page.goto(pageUrl,{waitUntil:'domcontentloaded', timeout:20000});
+          ready = response.status() === 200 && await page.locator('script[src*="/assets/js/enquiry-phone.js?v=1"]').count() === 1
+            && await page.evaluate(() => typeof window.normalizeEnquiryPhone === 'function');
+          if (ready) break;
+          await page.waitForTimeout(5000);
+        }
+        assert.ok(ready,'Expected #458 production scripts on '+path);
+      } else {
+        await page.goto(pageUrl, {waitUntil:'domcontentloaded'});
+      }
       const ar = path.startsWith('/ar/');
       const links = page.locator('a[href^="https://wa.me/917488955154"]:visible');
       const events = () => page.evaluate(() => (window.dataLayer || []).filter(item => item[0] === 'event').map(item => [item[1],item[2]]));
@@ -60,7 +74,34 @@ const destination = '/917488955154';
           assert.equal(payload.language,ar?'ar':'en');
         }
       }
-      if (mode !== 'links' && forms.includes(path)) {
+      if (production) {
+        const home = path === '/' || path === '/ar/';
+        const form = page.locator(home ? '#patientEnquiryForm' : '#faqEnquiryForm');
+        const phone = form.locator(home ? '#patientMobile' : '[name=phone]');
+        const submitTwice = () => form.evaluate(node => {node.requestSubmit();node.requestSubmit();});
+        await submitTwice();
+        assert.equal(handoffs.length,0,path);
+        await form.locator(home ? '#patientName' : '[name=name]').fill('Synthetic QA');
+        await form.locator(home ? '#patientCountry' : '[name=country]').fill('Oman');
+        await phone.fill('1------');
+        await submitTwice();
+        await page.waitForTimeout(150);
+        assert.equal(handoffs.length,0,path);
+        await phone.fill('+٩٦٨ ٩١٢٣٤٥٦٧');
+        if (home) await form.locator('#preferredLanguage').selectOption(ar ? 'English' : 'Arabic');
+        const start = (await events()).length;
+        await submitTwice();
+        await page.waitForTimeout(400);
+        assert.equal(handoffs.length,1,path);
+        const message = handoffs[0].searchParams.get('text');
+        assert.ok(message.includes('QA') && message.includes('Oman') && message.includes('+96891234567'),path);
+        assert.equal(/[\u0600-\u06ff]/.test(message),home ? !ar : ar,path);
+        const emitted = (await events()).slice(start);
+        assert.equal(emitted.filter(([name])=>name==='whatsapp_handoff_intent').length,home?1:0,path);
+        assert.equal(emitted.filter(([name])=>name==='whatsapp_enquiry_click').length,home?1:0,path);
+        assert.ok(!JSON.stringify(emitted).includes('Synthetic QA') && !emitted.some(([name])=>name==='generate_lead'));
+      }
+      if (!production && mode !== 'links' && forms.includes(path)) {
         const home = mode === 'privacy';
         const form = page.locator(home ? '#patientEnquiryForm' : '#faqEnquiryForm');
         await form.locator(home?'#patientName':'[name=name]').fill('Synthetic QA');

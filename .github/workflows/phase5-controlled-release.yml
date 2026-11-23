@@ -12,6 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - {mode: production-458, ref: 38df79183afb634c0dfe0d7ef9c2fa26f45f46c2}
           - {mode: links, ref: 397acb433eea5615d8438b229a0a1cae774f26c1}
           - {mode: analytics, ref: d4e02e09ab2b1fcbf6dc73c33e58456a6918825c}
           - {mode: privacy, ref: 66a21e88aa18a4a93e2b6f0249686000c7c568d2}
