@@ -1,0 +1,85 @@
+name: Phase 4 production visual evidence
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/phase4-visual-evidence.yml'
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [home-hubs, countries-1, countries-2, countries-3, main-sections]
+    env:
+      GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install chromium
+      - name: Capture and measure bilingual production pages
+        run: |
+          mkdir -p evidence
+          node <<'JS'
+          const fs = require('node:fs');
+          const {chromium} = require('playwright');
+          const countries = names => names.split(' ').map(name => name+'/treatment-in-india/');
+          const groups = {
+            'home-hubs':['','international-patients/mea/'],
+            'countries-1':countries('saudi-arabia nigeria oman uae qatar kuwait'),
+            'countries-2':countries('bahrain chad algeria ghana tanzania mauritius'),
+            'countries-3':countries('liberia mauritania fiji democratic-republic-of-the-congo republic-of-the-congo'),
+            'main-sections':['treatments/','hospitals/','doctors/','about/','contact/','faq/']
+          };
+          (async()=>{
+            const browser=await chromium.launch();
+            const results=[];
+            try{
+              for(const [width,height] of [[390,844],[768,1024],[1366,900]]){
+                const context=await browser.newContext({viewport:{width,height},reducedMotion:'reduce',isMobile:width===390,hasTouch:width<1000});
+                await context.route('**/*',r=>/googletagmanager|google-analytics|analytics.google|doubleclick|cloudflareinsights|tawk.to/.test(new URL(r.request().url()).hostname)?r.abort():r.continue());
+                const page=await context.newPage();
+                for(const path of groups[process.env.GROUP])for(const lang of ['en','ar']){
+                  const url='https://elajmeindia.com/'+(lang==='ar'?'ar/':'')+path;
+                  const id=[lang,path.replaceAll('/','-')||'home',width].join('_');
+                  try{
+                    const response=await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
+                    await page.evaluate(async()=>{
+                      await document.fonts.ready;
+                      for(const image of document.images) if(image.loading==='lazy') image.loading='eager';
+                      await Promise.race([Promise.allSettled(Array.from(document.images,img=>img.decode())),new Promise(r=>setTimeout(r,3500))]);
+                    });
+                    const metrics=await page.evaluate(()=>{
+                      const rect=el=>{const r=el.getBoundingClientRect();return [Math.round(r.left),Math.round(r.top),Math.round(r.width),Math.round(r.height)];};
+                      const visible=el=>el.getClientRects().length&&getComputedStyle(el).visibility==='visible';
+                      const sections=Array.from(document.querySelectorAll('main section, main > article')).filter(visible).map(el=>({title:el.querySelector('h1,h2,h3')?.innerText?.trim(),box:rect(el),padding:[getComputedStyle(el).paddingTop,getComputedStyle(el).paddingBottom]}));
+                      const clipped=Array.from(document.querySelectorAll('main h1,main h2,main h3,main .card,main a')).filter(el=>visible(el)&&el.clientWidth>0&&el.scrollWidth>el.clientWidth+3&&['hidden','clip'].includes(getComputedStyle(el).overflowX)).slice(0,12).map(el=>[el.innerText.trim().slice(0,100),rect(el)]);
+                      const bars=Array.from(document.querySelectorAll('.elajme-bottom-actions,.mobile-bottom-actions')).filter(visible).map(rect);
+                      const broken=Array.from(document.querySelectorAll('main img')).filter(i=>visible(i)&&i.complete&&!i.naturalWidth).slice(0,15).map(i=>i.getAttribute('src'));
+                      return {direction:getComputedStyle(document.body).direction,overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,sections,clipped,bars,broken};
+                    });
+                    await page.screenshot({path:'evidence/'+id+'.jpg',type:'jpeg',quality:78,fullPage:true,animations:'disabled',timeout:30000});
+                    results.push({url,lang,width,height,status:response?.status(),...metrics});
+                  }catch(e){results.push({url,lang,width,height,error:String(e)});}
+                }
+                await context.close();
+              }
+            }finally{
+              await browser.close();
+              fs.writeFileSync('evidence/metrics.json',JSON.stringify(results,null,2));
+            }
+            console.log(JSON.stringify(results.map(({url,width,status,direction,overflow,clipped,bars,broken,error})=>({url,width,status,direction,overflow,clipped,bars,broken,error}))));
+            if(results.some(r=>r.error||r.status!==200))process.exitCode=1;
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase4-${{ matrix.group }}
+          path: evidence/
