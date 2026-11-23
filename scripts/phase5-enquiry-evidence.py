@@ -3,18 +3,6 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 BASE='https://elajmeindia.com'
 CACHE={}
-LIMIT=asyncio.Semaphore(20)
-async def fetch(url):
- async with LIMIT:
-  if url in CACHE:return CACHE[url]
-  def run():
-   p=subprocess.run(['curl','-LsS','--max-time','22','-w','\n%{http_code} %{content_type}',url],capture_output=True)
-   body,_,meta=p.stdout.rpartition(b'\n')
-   status,_,mime=meta.decode(errors='replace').partition(' ')
-   return int(status) if status.isdigit() and int(status) else 502,mime or 'text/plain',body
-  result=await asyncio.to_thread(run)
-  if result[0]==200:CACHE[url]=result
-  return result
 async def test(browser,path,width,form=False):
  ar=path.startswith('/ar/')
  height={390:844,768:1024,1366:900}[width]
@@ -66,12 +54,46 @@ async def test(browser,path,width,form=False):
     before=await events(); initial=len(hits)
     await f.evaluate('f=>{f.requestSubmit();f.requestSubmit()}'); await page.wait_for_timeout(200)
     result[number]=[len(hits)-initial,(await events())[len(before):]]
+ if not form:
+  result['interaction']=await page.evaluate("""() => {
+    const bar=document.querySelector('.elajme-bottom-actions');
+    const visible=e=>e && !!e.getClientRects().length;
+    const active=visible(bar);
+    const footer=document.querySelector('footer');
+    const language=[...document.querySelectorAll('a[href]')].filter(a=>visible(a)&&
+      (a.matches('.master-mobile-language,.master-lang,.master-language,.lang-toggle') || ['English','العربية'].includes(a.textContent.trim())));
+    return {bars:[...document.querySelectorAll('.elajme-bottom-actions')].filter(visible).length,
+      targets:active?[...bar.querySelectorAll('a')].map(a=>[a.getBoundingClientRect().width,a.getBoundingClientRect().height,a.getAttribute('aria-label')||a.textContent.trim()]):[],
+      languageLinks:language.map(a=>new URL(a.href).pathname).slice(0,5),
+      footerClearance:active&&footer?Math.round(document.documentElement.scrollHeight-footer.getBoundingClientRect().bottom-window.scrollY):null};
+  }""")
+  if result['interaction']['bars']:
+   bar=page.locator('.elajme-bottom-wa:visible').first
+   tick=len(hits)
+   snapshot=await events()
+   try:
+    await bar.focus(); await page.keyboard.press('Enter')
+    await page.wait_for_timeout(150)
+    result['sticky']=[len(hits)-tick,(await events())[len(snapshot):]]
+   except Exception:result['sticky']='not activated'
+  if width<1000 and await page.locator('.master-mobile-menu:visible').count():
+   menu=page.locator('.master-mobile-menu:visible').first
+   await menu.focus(); await page.keyboard.press('Enter')
+   target=await menu.get_attribute('aria-controls')
+   result['keyboardMenu']=[await menu.get_attribute('aria-expanded'),await page.locator('#'+target).is_visible()]
+   await page.keyboard.press('Escape')
+   result['keyboardMenu'] += [await menu.get_attribute('aria-expanded')]
+  if result['faqs']:
+   summary=page.locator('details>summary:visible').first
+   await summary.focus(); await page.keyboard.press('Enter')
+   result['keyboardFaq']=await summary.evaluate('e=>e.parentElement.open')
  await context.close()
  return result
 async def main():
  async with async_playwright() as p:
   b=await p.chromium.launch(args=['--no-sandbox'])
   for mode,paths in [(True,['/','/ar/','/faq/','/ar/faq/']),(False,['/international-patients/mea/','/treatments/','/hospitals/','/doctors/','/contact/']+[f'/{s}/treatment-in-india/' for s in 'saudi-arabia nigeria oman uae qatar kuwait bahrain chad algeria ghana tanzania mauritius liberia mauritania fiji democratic-republic-of-the-congo republic-of-the-congo'.split()])]:
+   if not mode:paths += ['/faq/','/']
    if not mode:paths += ['/ar'+x for x in paths]
    if os.environ['AUDIT_MODE'] != ('forms' if mode else 'links'):continue
    for width in [390,768,1366]:
