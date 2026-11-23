@@ -459,7 +459,7 @@ jobs:
                   const prefix=lang==='ar'?'/ar':'';
                   const links=await page.locator('.treatments-section .hero-actions > .button').evaluateAll(nodes=>nodes.map(a=>new URL(a.href).pathname));
                   check(links.length===3&&['/treatments/','/hospitals/','/doctors/'].every(p=>links.includes(prefix+p)),'Directory destinations');
-                  const countryCards=page.locator('.audience-strip .country a');
+                  const countryCards=page.locator('.audience-strip .country a, .audience-strip a.country');
                   const expectedCountries=['saudi-arabia','uae','oman','qatar','kuwait','bahrain','nigeria','chad','algeria','ghana'];
                   const expectedLabels=lang==='ar'
                     ? ['السعودية','الإمارات','عُمان','قطر','الكويت','البحرين','نيجيريا','تشاد','الجزائر','غانا','الدول الأخرى']
