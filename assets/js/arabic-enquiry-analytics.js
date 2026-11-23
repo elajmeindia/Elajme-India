@@ -1,4 +1,4 @@
-/* Arabic homepage: privacy-conscious GA4 handoff-intent measurement. No patient data. */
+/* Arabic homepage: GA4 direct WhatsApp link measurement. No patient data. */
 (function () {
   'use strict';
   const id = 'G-ZEKEN0TB2N';
@@ -25,26 +25,4 @@
     });
   }, true);
 
-  const form = document.getElementById('patientEnquiryForm');
-  if (form) form.addEventListener('submit', function () {
-    const name = document.getElementById('patientName');
-    const country = document.getElementById('patientCountry');
-    const mobile = document.getElementById('patientMobile');
-    const number = mobile && mobile.value.trim();
-    if (!name || !name.value.trim() || !country || !country.value.trim() || !number ||
-        !/^[+0-9][0-9\s()\-]{6,20}$/.test(number)) return;
-    window.gtag('event', 'whatsapp_handoff_intent', {
-      page_path: location.pathname,
-      language: 'ar',
-      lead_source: 'patient_enquiry_form'
-    });
-    // GA4 key event parity with English: this records the WhatsApp handoff click,
-    // not a confirmed message or patient lead. Never include form values.
-    window.gtag('event', 'whatsapp_enquiry_click', {
-      contact_method: 'whatsapp',
-      page_path: location.pathname,
-      language: 'ar',
-      lead_source: 'patient_enquiry_form'
-    });
-  });
 })();
