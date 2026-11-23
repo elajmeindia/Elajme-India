@@ -7,7 +7,7 @@
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'elajme-page-back';
-    button.textContent = arabic ? 'العودة' : 'Back';
+    button.textContent = arabic ? 'عودة' : 'Back';
     button.setAttribute('aria-label', arabic ? 'العودة إلى الصفحة السابقة' : 'Go back to the previous page');
     button.addEventListener('click', () => {
       let internalReferrer = false;
