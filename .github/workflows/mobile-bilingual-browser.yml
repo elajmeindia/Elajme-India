@@ -491,9 +491,9 @@ jobs:
                   result.observations.grids=await page.evaluate(()=>{
                     const out={};
                     for(const [name,selector,child] of [['countries','.audience-inner','.country'],['journey','.process-grid','.process-step']]){
-                      const grid=document.querySelector(selector),cells=[...grid.querySelectorAll(child)].map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}});
+                      const grid=document.querySelector(selector),cells=[...grid.querySelectorAll(child)].map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,layoutTop:el.offsetTop}});
                       const overlaps=cells.some((a,i)=>cells.slice(i+1).some(b=>Math.min(a.x+a.width,b.x+b.width)-Math.max(a.x,b.x)>2&&Math.min(a.y+a.height,b.y+b.height)-Math.max(a.y,b.y)>2));
-                      out[name]={columns:getComputedStyle(grid).gridTemplateColumns,rows:[...new Set(cells.map(r=>Math.round(r.y)))].length,cells,overlaps};
+                      out[name]={columns:getComputedStyle(grid).gridTemplateColumns,rows:[...new Set(cells.map(r=>r.layoutTop))].length,cells,overlaps};
                     }
                     return out;
                   });
