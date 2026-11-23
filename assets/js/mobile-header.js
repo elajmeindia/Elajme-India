@@ -7,21 +7,7 @@ let enquiry=bar.querySelector('.elajme-bottom-enquiry');if(!enquiry){enquiry=doc
 enquiry.textContent=arabicPage?'أرسل استفسارك':'Enquire Now';
 let whatsapp=bar.querySelector('.elajme-bottom-wa');if(!whatsapp){whatsapp=document.createElement('a');whatsapp.className='elajme-bottom-wa';whatsapp.href=arabicPage?arabicWhatsAppUrl:'https://wa.me/917488955154'}
 whatsapp.target='_blank';whatsapp.rel='noopener noreferrer';whatsapp.setAttribute('aria-label',arabicPage?'واتساب علاج مي إنديا':'Chat with Elajme India on WhatsApp');whatsapp.textContent=arabicPage?'واتساب':'WhatsApp';
-bar.append(enquiry,whatsapp);
-
-const conversation='https://wa.me/917488955154';
-const englishWhatsAppUrl=conversation+'?text='+encodeURIComponent('Hello, I would like to enquire about treatment coordination services in India. Please contact me.');
-document.querySelectorAll('a[href="'+conversation+'"]').forEach(link=>{
-  link.href=arabicPage?arabicWhatsAppUrl:englishWhatsAppUrl;
-});
-
-if (/^(?:\/ar)?\/[a-z-]+\/treatment-in-india\/$/.test(path) &&
-    [englishWhatsAppUrl,arabicWhatsAppUrl].includes(whatsapp.href)) {
-  const countryLink=[...document.querySelectorAll('main a[href^="'+conversation+'?"]')]
-    .find(link=>link.href!==arabicWhatsAppUrl&&link.href!==englishWhatsAppUrl&&new URL(link.href).searchParams.get('text'));
-  if(countryLink)whatsapp.href=countryLink.href;
-}
-};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init()})();
+bar.append(enquiry,whatsapp)};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init()})();
 ;(()=>{if(document.querySelector('script[data-elajme-footer-offices]'))return;const s=document.createElement('script');s.src='/assets/js/footer-offices.js?v=2';s.defer=true;s.dataset.elajmeFooterOffices='true';document.head.appendChild(s)})();
 
 ;(()=>{if(document.querySelector('script[data-elajme-compact-header]'))return;
