@@ -16,7 +16,7 @@ on:
 jobs:
   lighthouse:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -95,4 +95,33 @@ jobs:
           path: |
             audit-results/
           if-no-files-found: ignore
-
+      - name: Measure patient hubs and representative country pages
+        run: |
+          CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          export CHROME_PATH
+          for locale in en ar; do
+            prefix=/
+            if [ "$locale" = ar ]; then prefix=/ar/; fi
+            for page in home international-patients/mea saudi-arabia/treatment-in-india nigeria/treatment-in-india oman/treatment-in-india tanzania/treatment-in-india fiji/treatment-in-india; do
+              suffix="$page/"
+              if [ "$page" = home ]; then suffix=; fi
+              name="$(echo "$page" | tr / -)"
+              widths=390
+              case "$page" in saudi-arabia/*|nigeria/*|oman/*|tanzania/*|fiji/*) widths='390 768 1366';; esac
+              for width in $widths; do
+                if [ "$page" = home ] && [ "$width" != 390 ]; then continue; fi
+                for sample in 1; do
+                  output="phase3-results/$locale-$name-$width-$sample.json"
+                  mkdir -p phase3-results
+                  npx lighthouse "https://elajmeindia.com$prefix$suffix" --only-categories=performance --form-factor=mobile --screenEmulation.mobile --screenEmulation.width="$width" --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=1 --throttling-method=simulate --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" --output=json --output-path="$output" --quiet
+                  node -e 'const r=require("./"+process.argv[1]);const a=r.audits;console.log(JSON.stringify({url:r.finalDisplayedUrl,file:process.argv[1],lcp:a["largest-contentful-paint"].numericValue,fcp:a["first-contentful-paint"].numericValue,cls:a["cumulative-layout-shift"].numericValue,tbt:a["total-blocking-time"].numericValue,element:a["lcp-breakdown-insight"]?.details?.items?.find(x=>x.type==="node")?.selector,breakdown:a["lcp-breakdown-insight"]?.details?.items?.find(x=>x.type==="table")?.items,blocking:a["render-blocking-insight"]?.details?.items?.map(x=>({url:x.url,ms:x.wastedMs}))}));' "$output"
+                done
+              done
+            done
+          done
+      - name: Upload Phase 3 measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-performance-baseline
+          path: phase3-results/
