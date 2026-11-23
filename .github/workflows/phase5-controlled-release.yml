@@ -13,7 +13,7 @@ jobs:
       matrix:
         include:
           - {mode: links, ref: 0f2d8343b11074cbe4e81bfa12b053c6196be7e7}
-          - {mode: analytics, ref: 2ad22f3a73246c276a4acbd1b82d90e187bb1a66}
+          - {mode: analytics, ref: d4e02e09ab2b1fcbf6dc73c33e58456a6918825c}
           - {mode: privacy, ref: 66a21e88aa18a4a93e2b6f0249686000c7c568d2}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -30,7 +30,8 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright@1.56.1
       - run: npx playwright install chromium
-      - run: |
+      - shell: bash
+        run: |
           python3 -m http.server 8765 --directory candidate >/tmp/phase5-http.log 2>&1 &
           for i in {1..10}; do
             if curl -fsS http://127.0.0.1:8765/ -o /dev/null; then break; fi
