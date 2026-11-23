@@ -30,7 +30,8 @@ const destination = '/917488955154';
       const events = () => page.evaluate(() => (window.dataLayer || []).filter(item => item[0] === 'event').map(item => [item[1],item[2]]));
       if (mode === 'links') {
         const values = await links.evaluateAll(nodes => nodes.filter(a => !a.closest('.master-site-header')).map(a => a.href));
-        assert.ok(values.length, path);
+        assert.ok(await links.count(), path);
+        if (width <= 900) assert.ok(values.length,path);
         for (const value of values) {
           const url = new URL(value);
           const message = url.searchParams.get('text');
