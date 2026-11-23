@@ -343,7 +343,7 @@ jobs:
            for(const [width,height]of [[375,812],[390,844],[768,1024],[1363,936]])for(const lang of ['en','ar'])for(const variant of ['before','after']){
             const id=lang+'-'+width+'-'+variant,r={lang,width,height,variant,errors:[]},check=(ok,msg)=>{if(!ok)r.errors.push(msg)};
             const c=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,isMobile:width<768,hasTouch:width<1363,serviceWorkers:'block'});await safe(c);
-            await c.addInitScript(()=>{window.__layoutShifts=[];new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)window.__layoutShifts.push({time:e.startTime,value:e.value})}).observe({type:'layout-shift',buffered:true})});
+            await c.addInitScript(()=>{window.__layoutShifts=[];new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)window.__layoutShifts.push({time:e.startTime,value:e.value,sources:(e.sources||[]).map(s=>({node:s.node?.tagName||null,id:s.node?.id||null,className:typeof s.node?.className==='string'?s.node.className.slice(0,120):null,previousRect:s.previousRect,currentRect:s.currentRect}))})}).observe({type:'layout-shift',buffered:true})});
             const p=await c.newPage();p.setDefaultTimeout(10000);
             try{
              const response=await p.goto((variant==='after'?origin:base)+(lang==='ar'?'/ar/':'/'),{waitUntil:'networkidle',timeout:45000});check(response?.status()===200,'Homepage HTTP');
