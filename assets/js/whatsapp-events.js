@@ -3,24 +3,28 @@
   const safePage = 'https://elajmeindia.com/';
   const language = document.documentElement.lang.toLowerCase().startsWith('ar') ? 'ar' : 'en';
 
+  const optedOut = () => window['ga-disable-' + measurementId] || navigator.globalPrivacyControl === true;
+
+  if (!optedOut() && typeof window.gtag !== 'function') {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', measurementId, {
+      send_page_view: false,
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false,
+      page_location: safePage,
+      page_referrer: ''
+    });
+    const tag = document.createElement('script');
+    tag.async = true;
+    tag.referrerPolicy = 'no-referrer';
+    tag.src = 'https://www.googletagmanager.com/gtag/js?id=' + measurementId;
+    document.head.append(tag);
+  }
+
   function record(event, source) {
-    if (window['ga-disable-' + measurementId] || navigator.globalPrivacyControl === true) return;
-    if (typeof window.gtag !== 'function') {
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = function () { window.dataLayer.push(arguments); };
-      window.gtag('js', new Date());
-      window.gtag('config', measurementId, {
-        send_page_view: false,
-        allow_google_signals: false,
-        allow_ad_personalization_signals: false,
-        page_location: safePage,
-        page_referrer: ''
-      });
-      const tag = document.createElement('script');
-      tag.async = true;
-      tag.src = 'https://www.googletagmanager.com/gtag/js?id=' + measurementId;
-      document.head.append(tag);
-    }
+    if (optedOut() || typeof window.gtag !== 'function') return;
     window.gtag('event', event, {
       send_to: measurementId,
       language,
