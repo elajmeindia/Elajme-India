@@ -203,3 +203,11 @@ html:not([dir="rtl"]) .shell-footer-bottom .shell-disclaimer{
 
 /* Arabic homepage hero CTA: preserve white text against the teal primary button. */
 html[lang="ar"] body.site-shell .hero-actions > a.button-primary{color:#fff}
+
+/* Blog index and articles need less space before the footer on phones. */
+@media (max-width: 640px) {
+  .site-shell main > .intro + section.content,
+  .site-shell main > .intro + article.content {
+    padding-block-end: 44px;
+  }
+}
