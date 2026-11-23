@@ -16,14 +16,3 @@ bar.append(enquiry,whatsapp)};document.readyState==='loading'?document.addEventL
  const script=document.createElement('script');script.src='/assets/js/compact-scroll-header.js?v=1';
  script.defer=true;script.dataset.elajmeCompactHeader='true';document.head.appendChild(script);
 })();
-
-
-/* Site-wide bilingual Back control. The page-back module guards against duplicate buttons. */
-;(() => {
-  if (document.querySelector('script[data-elajme-page-back]')) return;
-  const script = document.createElement('script');
-  script.src = '/assets/js/page-back.js?v=1';
-  script.defer = true;
-  script.dataset.elajmePageBack = 'true';
-  document.head.appendChild(script);
-})();
