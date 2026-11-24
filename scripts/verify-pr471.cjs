@@ -1,7 +1,7 @@
 const {chromium}=require('playwright');
 const fs=require('fs');
 const assert=require('node:assert/strict');
-const preview='https://99662bc5.elajme-india.pages.dev';
+const preview='https://20dec130.elajme-india.pages.dev';
 const live='https://elajmeindia.com';
 const host=process.env.VERIFY_PRODUCTION==='1'?live:preview;
 const slugs=['hematology-blood-disorders-india','bone-marrow-transplant-india'];
@@ -31,12 +31,28 @@ const slugs=['hematology-blood-disorders-india','bone-marrow-transplant-india'];
   assert.equal(v.dir,lang==='ar'?'rtl':'ltr');
   const distinguishable=v.decoration.includes('underline')||v.color!==v.parentColor;
   if(!distinguishable)stylingFailures++;
+  if(lang==='en') assert.ok(v.decoration.includes('underline'),path);
+  else {
+   assert.equal(v.decoration,'none');
+   assert.equal(v.color,'rgb(8, 116, 110)');
+  }
+  const enquiry=await page.locator('main a[href*="#enquiry"]').first().getAttribute('href');
+  assert.ok(enquiry,path);
+  const target=new URL(enquiry,host);
+  assert.equal(target.origin,host);
+  assert.equal(target.pathname,prefix+'/');
+  assert.equal(target.hash,'#enquiry');
+  assert.equal(target.searchParams.get('treatment'),slug);
   await page.screenshot({path:'evidence/'+lang+'-'+i+'-'+width+'.jpg',type:'jpeg'});
   const [to]=await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),link.click()]);
   assert.equal(page.url(),host+dest);
   assert.equal(to.status(),200);
   assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'),live+dest);
-  console.log(JSON.stringify({width,path,dest,...v,distinguishable,status:to.status()}));
+  console.log(JSON.stringify({width,path,dest,...v,enquiry,distinguishable,status:to.status()}));
+  const enquiryPage=await ctx.newPage();
+  const formResponse=await enquiryPage.goto(target.href,{waitUntil:'domcontentloaded'});
+  assert.equal(formResponse.status(),200);
+  assert.equal(await enquiryPage.locator('#enquiry #patientEnquiryForm').count(),1);
   await ctx.close();
  }
  await b.close();
