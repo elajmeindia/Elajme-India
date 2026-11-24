@@ -1,4 +1,6 @@
 (() => {
+  if (typeof window.recordFaqWhatsAppHandoff === 'function') return;
+
   const measurementId = 'G-ZEKEN0TB2N';
   const safePage = 'https://elajmeindia.com/';
   const language = document.documentElement.lang.toLowerCase().startsWith('ar') ? 'ar' : 'en';
@@ -35,14 +37,17 @@
     });
   }
 
-  document.addEventListener('click', event => {
-    const link = event.target.closest('a[href]');
+  function recordOfficialLink(event) {
+    if (event.type === 'auxclick' && event.button !== 1) return;
+    const link = event.target.closest?.('a[href]');
     if (!link) return;
     const destination = new URL(link.href);
     if (destination.origin === 'https://wa.me' && destination.pathname === '/917488955154') {
       record('whatsapp_enquiry_click', 'direct_link');
     }
-  }, true);
+  }
+  document.addEventListener('click', recordOfficialLink, true);
+  document.addEventListener('auxclick', recordOfficialLink, true);
 
   window.recordFaqWhatsAppHandoff = () => record('whatsapp_handoff_intent', 'faq_enquiry_form');
 })();

@@ -1,0 +1,28 @@
+name: Bilingual Back Button Navigation Pilot
+on:
+  pull_request:
+    paths:
+      - 'assets/js/page-back.js'
+      - 'treatments/index.html'
+      - 'ar/treatments/index.html'
+      - 'tests/back-button-pilot.cjs'
+      - '.github/workflows/back-button-pilot.yml'
+  workflow_dispatch:
+jobs:
+  navigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium test dependency
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Run isolated local browser tests
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/elajme-server.log 2>&1 &
+          sleep 2
+          node tests/back-button-pilot.cjs

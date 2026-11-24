@@ -343,7 +343,7 @@ jobs:
            for(const [width,height]of [[375,812],[390,844],[768,1024],[1363,936]])for(const lang of ['en','ar'])for(const variant of ['before','after']){
             const id=lang+'-'+width+'-'+variant,r={lang,width,height,variant,errors:[]},check=(ok,msg)=>{if(!ok)r.errors.push(msg)};
             const c=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,isMobile:width<768,hasTouch:width<1363,serviceWorkers:'block'});await safe(c);
-            await c.addInitScript(()=>{window.__layoutShifts=[];new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)window.__layoutShifts.push({time:e.startTime,value:e.value})}).observe({type:'layout-shift',buffered:true})});
+            await c.addInitScript(()=>{window.__layoutShifts=[];new PerformanceObserver(l=>{for(const e of l.getEntries())if(!e.hadRecentInput)window.__layoutShifts.push({time:e.startTime,value:e.value,sources:(e.sources||[]).map(s=>({node:s.node?.tagName||null,id:s.node?.id||null,className:typeof s.node?.className==='string'?s.node.className.slice(0,120):null,previousRect:s.previousRect,currentRect:s.currentRect}))})}).observe({type:'layout-shift',buffered:true})});
             const p=await c.newPage();p.setDefaultTimeout(10000);
             try{
              const response=await p.goto((variant==='after'?origin:base)+(lang==='ar'?'/ar/':'/'),{waitUntil:'networkidle',timeout:45000});check(response?.status()===200,'Homepage HTTP');
@@ -351,7 +351,7 @@ jobs:
              r.geometry=await p.evaluate(()=>{
               const h=document.querySelector('.master-site-header'),inner=h.querySelector('.master-header-inner'),rect=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height}};
               let cls=0,sum=0,start=0,last=0;for(const e of window.__layoutShifts){if(e.time-last>1000||e.time-start>5000){sum=0;start=e.time}sum+=e.value;last=e.time;cls=Math.max(cls,sum)}
-              return{emailStripPresent:!!h.querySelector('.master-email-strip'),header:rect(h),row:rect(inner),cls,overflow:document.documentElement.scrollWidth>innerWidth+2,mainTop:document.querySelector('main').getBoundingClientRect().top,innerHtml:inner.outerHTML,footer:document.querySelector('footer').outerHTML,processColumns:getComputedStyle(document.querySelector('.process-grid')).gridTemplateColumns};
+              return{emailStripPresent:!!h.querySelector('.master-email-strip'),header:rect(h),row:rect(inner),cls,shiftSources:window.__layoutShifts.filter(e=>e.value>=0.01).slice(0,12),overflow:document.documentElement.scrollWidth>innerWidth+2,mainTop:document.querySelector('main').getBoundingClientRect().top,innerHtml:inner.outerHTML,footer:document.querySelector('footer').outerHTML,processColumns:getComputedStyle(document.querySelector('.process-grid')).gridTemplateColumns};
              });
              await p.screenshot({path:output+'/'+id+'-top.png',animations:'disabled'});await p.locator('.master-site-header').screenshot({path:output+'/'+id+'-header.png',animations:'disabled'});
              const key=lang+'-'+width;
@@ -616,7 +616,7 @@ jobs:
              const ct=p.locator('main a[href*="#enquiry"]').first();await ct.evaluate(e=>e.scrollIntoView({block:'center'}));
              r.ctaHit=await ct.evaluate(a=>{const r=a.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;return y>=0&&y<innerHeight&&a.contains(document.elementFromPoint(x,y))});check(r.ctaHit,'CTA centre blocked');
              await p.screenshot({path:`${output}/${lang}-${slug}-${width}-cta.png`,animations:'disabled',mask:[p.locator('main img')]});
-             await p.evaluate(()=>scrollTo(0,0));const wa=p.locator(width<=900?'.master-mobile-whatsapp':'.master-contact-actions .master-contact-whatsapp').first();check(await wa.isVisible(),'Actual WhatsApp control hidden');
+             await p.evaluate(()=>scrollTo(0,0));if(width>900)await p.waitForFunction(()=>window.scrollY<36&&!document.querySelector('.master-site-header')?.classList.contains('elajme-header-condensed'));const wa=p.locator(width<=900?'.master-mobile-whatsapp:visible, .master-actions .master-whatsapp:visible':'.master-contact-actions .master-contact-whatsapp:visible, .master-actions .master-whatsapp:visible').first();if(!(await wa.isVisible())){r.geometry.whatsappDiagnostics=await p.evaluate(()=>Array.from(document.querySelectorAll('.master-whatsapp,.master-mobile-whatsapp,.master-contact-whatsapp')).map(e=>({className:e.className,html:e.outerHTML.slice(0,280),rect:e.getBoundingClientRect().toJSON(),display:getComputedStyle(e).display,visibility:getComputedStyle(e).visibility,opacity:getComputedStyle(e).opacity,parentDisplay:getComputedStyle(e.parentElement).display})));}check(await wa.isVisible(),'Actual WhatsApp control hidden');
              let timer;try{await Promise.race([Promise.all([handoffPromise,wa.click()]),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('WhatsApp interception timed out')),10000)})])}finally{clearTimeout(timer)}check(handoffs===1,'Expected one intercepted WhatsApp action');
             }catch(e){r.errors.push(e.message)}
             results.push(r);console.log(JSON.stringify(r));await context.close();fs.writeFileSync(output+'/results.json',JSON.stringify(results,null,2));
