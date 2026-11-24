@@ -26,7 +26,7 @@ jobs:
           url=https://elajmeindia.com/
           if [[ "$SITE_LANG" == ar ]]; then url+=ar/; fi
           for i in 1 2 3; do
-            npx lighthouse "$url" --only-categories=performance --form-factor=mobile --throttling-method=simulate --output=json --output-path="reports/$SITE_LANG-$i.json" --chrome-flags="--headless --no-sandbox" --blocked-url-patterns="*google-analytics.com*,*analytics.google.com/g/collect*,*doubleclick.net/g/collect*" --quiet
+            npx lighthouse "$url" --only-categories=performance --form-factor=mobile --throttling-method=simulate --output=json --output-path="reports/$SITE_LANG-$i.json" --chrome-flags="--headless --no-sandbox" --blocked-url-patterns "*google-analytics.com*" "*analytics.google.com/g/collect*" "*doubleclick.net/g/collect*" --quiet
           done
       - uses: actions/upload-artifact@v4
         if: always()
