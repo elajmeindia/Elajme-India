@@ -43,11 +43,11 @@ const pages=['/faq/','/ar/faq/'];
   }
   await page.waitForTimeout(6000);
   const expected=action==='click'?'whatsapp_enquiry_click':'whatsapp_handoff_intent';
-  console.log(JSON.stringify({path,action,endpoints:[...endpoints],events:hits.map(q=>q.get('en')),hasOutboundMessage:hits.some(q=>{const l=q.get('ep.link_url');return l?.startsWith('https://wa.me/')&&new URL(l).searchParams.has('text')})}));
+  console.log(JSON.stringify({path,action,endpoints:[...endpoints],events:hits.map(q=>[q.get('en'),[...q.entries()].filter(([_,v])=>v.includes(marker)||v.includes('2025550100')).map(([k])=>k)]),hasOutboundMessage:hits.some(q=>{const l=q.get('ep.link_url');return l?.startsWith('https://wa.me/')&&new URL(l).searchParams.has('text')})}));
   assert.equal(hits.filter(x=>x.get('en')===expected).length,1);
   for(const hit of hits){
    const data=[...hit.values()].join(' ');
-   assert.ok(!data.includes(marker));
+   if(data.includes(marker)) process.exitCode=1;
    assert.ok(!data.includes('2025550100'));
    assert.notEqual(hit.get('en'),'generate_lead');
    const url=hit.get('ep.link_url');
