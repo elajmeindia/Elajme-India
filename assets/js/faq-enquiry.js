@@ -30,11 +30,7 @@
 
     handoffPending = true;
     submit.disabled = true;
-    if (typeof window.gtag === 'function') {
-      const properties = { lead_source: 'faq_enquiry_form', language: arabic ? 'ar' : 'en', page_path: location.pathname };
-      window.gtag('event', 'whatsapp_handoff_intent', properties);
-      window.gtag('event', 'whatsapp_enquiry_click', { ...properties, contact_method: 'whatsapp' });
-    }
+    window.recordFaqWhatsAppHandoff?.();
     status.textContent = arabic
       ? 'سيُفتح واتساب برسالة جاهزة. يرجى مراجعتها وإرسالها بنفسك.'
       : 'WhatsApp will open with a prepared message. Please review and send it yourself.';
