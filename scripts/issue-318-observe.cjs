@@ -31,7 +31,16 @@ fs.mkdirSync(out,{recursive:true});
      }
      const footer=page.locator('footer.site-footer').first();
      if(mode==='pages') await page.screenshot({path:out+'/'+label+'.jpg',type:'jpeg',quality:70,fullPage:true,timeout:20000});
-     else await footer.screenshot({path:out+'/'+mode+'-'+label+'.jpg',type:'jpeg',quality:88,timeout:15000});
+     else {
+      const logo=footer.locator('img').first();
+      await logo.scrollIntoViewIfNeeded();
+      await logo.evaluate(img=>img.decode(),{timeout:10000});
+      await footer.screenshot({path:out+'/'+mode+'-'+label+'.jpg',type:'jpeg',quality:88,timeout:15000,
+       style:'.master-site-header,.elajme-bottom-actions {visibility:hidden!important}'});
+      await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
+      await page.screenshot({path:out+'/'+mode+'-'+label+'-bottom.jpg',type:'jpeg',quality:84,timeout:15000});
+      await page.locator('.final-cta a[href$="#enquiry"]').screenshot({path:out+'/'+mode+'-'+label+'-cta.jpg',type:'jpeg',quality:90,timeout:10000});
+     }
      const metrics=await page.evaluate(()=>{
       const box=e=>e?e.getBoundingClientRect().toJSON():null;
       const footer=document.querySelector('footer.site-footer');
@@ -40,7 +49,7 @@ fs.mkdirSync(out,{recursive:true});
       const disclaimer=footer?.querySelector('a[href$="/terms"]');
       const main=document.querySelector('main');
       const cta=[...document.querySelectorAll('main a[href$="#enquiry"]')].at(-1);
-      return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,lang:document.documentElement.lang,dir:css(document.documentElement,'direction'),footer:{box:box(footer),color:css(footer,'backgroundColor'),direction:css(footer,'direction'),logo:box(footer?.querySelector('img')),legalFont:css(disclaimer?.parentElement,'fontSize'),headings:[...footer?.querySelectorAll('h2,h3')||[]].map(e=>[e.textContent.trim(),box(e)]),contacts:[...footer?.querySelectorAll('a[href]')||[]].map(e=>e.href).filter(u=>/^(tel:|mailto:)|wa\.me|facebook\.com|instagram\.com/.test(u))},back:box(back),main:box(main),cta:cta?.textContent.trim()};
+      return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,lang:document.documentElement.lang,dir:css(document.documentElement,'direction'),footer:{box:box(footer),color:css(footer,'backgroundColor'),direction:css(footer,'direction'),logo:box(footer?.querySelector('img')),logoLoaded:!!footer?.querySelector('img')?.naturalWidth,legalFont:css(disclaimer?.parentElement,'fontSize'),headings:[...footer?.querySelectorAll('h2,h3')||[]].map(e=>[e.textContent.trim(),box(e)]),contacts:[...footer?.querySelectorAll('a[href]')||[]].map(e=>e.href).filter(u=>/^(tel:|mailto:)|wa\.me|facebook\.com|instagram\.com/.test(u))},back:box(back),main:box(main),cta:cta?.textContent.trim()};
      });
      console.log(JSON.stringify({mode,label,status:response?.status(),path:page.url(),...metrics}));
     }catch(e){console.log(JSON.stringify({mode,label,error:e.message.split('\n')[0]})); if(mode!=='pages')process.exitCode=1;}
