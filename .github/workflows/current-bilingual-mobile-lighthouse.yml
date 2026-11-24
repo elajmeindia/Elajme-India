@@ -1,0 +1,36 @@
+name: Current production bilingual mobile Lighthouse
+on:
+  pull_request:
+    paths: ['.github/workflows/current-bilingual-mobile-lighthouse.yml']
+permissions:
+  contents: read
+jobs:
+  lighthouse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        path: [en, ar]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-audit lighthouse@12.8.2
+      - shell: bash
+        env:
+          SITE_LANG: ${{ matrix.path }}
+        run: |
+          mkdir -p reports
+          url=https://elajmeindia.com/
+          if [[ "$SITE_LANG" == ar ]]; then url+=ar/; fi
+          for i in 1 2 3; do
+            npx lighthouse "$url" --only-categories=performance --form-factor=mobile --throttling-method=simulate --output=json --output-path="reports/$SITE_LANG-$i.json" --chrome-flags="--headless --no-sandbox" --blocked-url-patterns="*google-analytics.com*,*analytics.google.com/g/collect*,*doubleclick.net/g/collect*" --quiet
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-mobile-${{ matrix.path }}
+          path: reports/
+          retention-days: 7
