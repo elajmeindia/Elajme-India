@@ -5,6 +5,11 @@ const base='https://elajmeindia.com';
 const number='917488955154';
 const id='G-ZEKEN0TB2N';
 const marker='SYNTHETIC_PRIVATE_VALUE';
+const referrerMarker='SYNTHETIC_REFERRER_VALUE';
+const nameMarker='SYNTHETIC_PATIENT_NAME';
+const countryMarker='SYNTHETIC_PATIENT_COUNTRY';
+const privateValues=[marker,referrerMarker,nameMarker,countryMarker,'2025550100'];
+let failures=0;
 const pages=['/faq/','/ar/faq/'];
 (async()=>{
  const browser=await chromium.launch();
@@ -30,30 +35,36 @@ const pages=['/faq/','/ar/faq/'];
    return r.continue();
   });
   const page=await ctx.newPage();
-  await page.goto(base+path+'?private='+marker,{waitUntil:'domcontentloaded'});
+  await page.goto(base+path+'?private='+marker,{waitUntil:'domcontentloaded',referer:base+'/?private='+referrerMarker});
   await page.waitForFunction(()=>window.google_tag_manager?.['G-ZEKEN0TB2N'],null,{timeout:20000});
   if(action==='click'){
    await page.locator('a[href^="https://wa.me/'+number+'"]:visible').first().click();
   }else{
    const f=page.locator('#faqEnquiryForm');
-   await f.locator('[name=name]').fill(marker);
-   await f.locator('[name=country]').fill(marker);
+   await f.locator('[name=name]').fill(nameMarker);
+   await f.locator('[name=country]').fill(countryMarker);
    await f.locator('[name=phone]').fill('+1 202 555 0100');
    await f.evaluate(el=>el.requestSubmit());
   }
   await page.waitForTimeout(6000);
   const expected=action==='click'?'whatsapp_enquiry_click':'whatsapp_handoff_intent';
-  console.log(JSON.stringify({path,action,endpoints:[...endpoints],events:hits.map(q=>[q.get('en'),[...q.entries()].filter(([_,v])=>v.includes(marker)||v.includes('2025550100')).map(([k])=>k)]),hasOutboundMessage:hits.some(q=>{const l=q.get('ep.link_url');return l?.startsWith('https://wa.me/')&&new URL(l).searchParams.has('text')})}));
-  assert.equal(hits.filter(x=>x.get('en')===expected).length,1);
-  for(const hit of hits){
-   const data=[...hit.values()].join(' ');
-   if(data.includes(marker)) process.exitCode=1;
-   assert.ok(!data.includes('2025550100'));
-   assert.notEqual(hit.get('en'),'generate_lead');
-   const url=hit.get('ep.link_url');
-   if(url?.startsWith('https://wa.me/'))assert.ok(!new URL(url).searchParams.has('text'),'Enhanced outbound click includes WhatsApp message text');
-  }
+  const automatic=new Set(['click','form_start','form_submit']);
+  const findings=hits.flatMap(hit=>{
+   const event=hit.get('en');
+   return [...hit].flatMap(([key,value])=>{
+    const compact=value.replace(/[ ()+-]/g,'');
+    return privateValues.some(secret=>value.includes(secret)||compact.includes(secret))
+      || (key==='ep.link_url'&&value.startsWith('https://wa.me/')&&new URL(value).searchParams.has('text'))
+      ? [{event,key}] : [];
+   });
+  });
+  const expectedCount=hits.filter(hit=>hit.get('en')===expected).length;
+  const eventNames=hits.map(hit=>hit.get('en')).filter(Boolean);
+  const passed=expectedCount===1&&findings.length===0&&!eventNames.some(name=>automatic.has(name)||name==='generate_lead');
+  console.log(JSON.stringify({path,action,expectedCount,eventNames,findings,passed}));
+  if(!passed)failures++;
   await ctx.close();
  }
  await browser.close();
+ assert.equal(failures,0,"Wire-level privacy failures");
 })().catch(e=>{console.error(e.message);process.exit(1)});
