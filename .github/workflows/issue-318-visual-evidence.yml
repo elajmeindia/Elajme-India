@@ -37,3 +37,35 @@ jobs:
           name: issue-318-${{ matrix.mode }}
           path: evidence/
           retention-days: 7
+  candidate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {mode: arrow, ref: c18b1007f025dd73faac81b2f6a81779bd4829c9}
+          - {mode: back, ref: a2272327b2906e954dbba23cfc19b3694eea6b23}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      MODE: ${{ matrix.mode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+          path: candidate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-audit playwright@1.56.1
+      - run: npx playwright install chromium
+      - shell: bash
+        run: |
+          mkdir -p evidence
+          node scripts/issue-318-candidates.cjs | tee evidence/checks.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: issue-318-candidate-${{ matrix.mode }}
+          path: evidence/
+          retention-days: 7
