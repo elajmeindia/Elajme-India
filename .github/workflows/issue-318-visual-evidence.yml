@@ -1,0 +1,39 @@
+name: Issue 318 live responsive evidence
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/issue-318-visual-evidence.yml'
+      - 'scripts/issue-318-observe.cjs'
+permissions:
+  contents: read
+jobs:
+  capture:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [footer, pages, firefox]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      REVIEW_MODE: ${{ matrix.mode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-audit playwright@1.56.1
+      - shell: bash
+        run: |
+          if [[ "$REVIEW_MODE" == firefox ]]; then
+            npx playwright install --with-deps firefox
+          else
+            npx playwright install chromium
+          fi
+          mkdir -p evidence
+          node scripts/issue-318-observe.cjs | tee evidence/metrics.jsonl
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: issue-318-${{ matrix.mode }}
+          path: evidence/
+          retention-days: 7
