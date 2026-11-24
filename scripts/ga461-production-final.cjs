@@ -70,7 +70,10 @@ const pages=['/faq/','/ar/faq/'];
   });
   const expectedCount=hits.filter(hit=>hit.get('en')===expected).length;
   const eventNames=hits.map(hit=>hit.get('en')).filter(Boolean);
-  const passed=expectedCount===1&&eventNames.length===1&&handoffs.length===1&&handoffs[0]==='https://wa.me/'+number&&findings.length===0&&!eventNames.some(name=>automatic.has(name)||name==='generate_lead');
+  // Playwright can scroll to a footer link before clicking. The stream's
+  // scroll feature is independent of the click and handoff events under test.
+  const interactionEvents=eventNames.filter(name=>name!=='scroll');
+  const passed=expectedCount===1&&interactionEvents.length===1&&handoffs.length===1&&handoffs[0]==='https://wa.me/'+number&&findings.length===0&&!eventNames.some(name=>automatic.has(name)||name==='generate_lead');
   console.log(JSON.stringify({path,action,expectedCount,eventNames,handoffs:handoffs.length,findings,passed}));
   if(!passed)failures++;
   await ctx.close();
