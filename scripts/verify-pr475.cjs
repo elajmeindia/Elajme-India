@@ -1,7 +1,7 @@
 const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const host = 'https://93bde050.elajme-india.pages.dev';
+const host = 'https://ead730cf.elajme-india.pages.dev';
 const canonicalHost = 'https://elajmeindia.com';
 const slug = 'top-hospitals-in-mumbai-for-international-patients';
 const reference = 'how-to-choose-a-hospital-in-india';
