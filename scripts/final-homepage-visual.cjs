@@ -35,6 +35,8 @@ const paths=['/','/ar/'];
    assert.equal(await cta.locator('svg[aria-hidden="true"][focusable="false"]').count(),1);
    assert.equal(await cta.evaluate(el=>el.getAttribute('href')),'#enquiry');
    assert.equal(await cta.evaluate(el=>el.textContent.includes('↗')),false);
+   await cta.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
+   assert.ok(await cta.evaluate(el=>{const b=el.getBoundingClientRect();return el.contains(document.elementFromPoint(b.x+b.width/2,b.y+b.height/2));}));
    await cta.screenshot({path:'evidence/'+width+'-'+i+'-arrow.jpg',type:'jpeg'});
    await page.close();
   }
