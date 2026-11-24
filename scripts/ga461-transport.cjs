@@ -11,11 +11,13 @@ const pages=['/faq/','/ar/faq/'];
  for(const path of pages)for(const action of ['click','form']){
   const ctx=await browser.newContext({serviceWorkers:'block'});
   const hits=[];
+  const endpoints=new Set();
   await ctx.route('**/*',r=>{
    const request=r.request();
    const u=new URL(request.url());
    if(u.hostname==='wa.me')return r.fulfill({status:204});
-   if(/(^|\.)google-analytics\.com$/.test(u.hostname)&&u.pathname.endsWith('/collect')){
+   if (u.origin!==base) endpoints.add(u.hostname+u.pathname);
+   if(u.origin!==base&&u.pathname.endsWith('/collect')){
     const lines=(request.postData()||'').split('\n');
     for(const line of lines)hits.push(new URLSearchParams(u.search.slice(1)+'&'+line));
     return r.fulfill({status:204});
@@ -39,9 +41,9 @@ const pages=['/faq/','/ar/faq/'];
    await f.locator('[name=phone]').fill('+1 202 555 0100');
    await f.evaluate(el=>el.requestSubmit());
   }
-  await page.waitForTimeout(2100);
+  await page.waitForTimeout(6000);
   const expected=action==='click'?'whatsapp_enquiry_click':'whatsapp_handoff_intent';
-  console.log(JSON.stringify({path,action,events:hits.map(q=>q.get('en')),hasOutboundMessage:hits.some(q=>{const l=q.get('ep.link_url');return l?.startsWith('https://wa.me/')&&new URL(l).searchParams.has('text')})}));
+  console.log(JSON.stringify({path,action,endpoints:[...endpoints],events:hits.map(q=>q.get('en')),hasOutboundMessage:hits.some(q=>{const l=q.get('ep.link_url');return l?.startsWith('https://wa.me/')&&new URL(l).searchParams.has('text')})}));
   assert.equal(hits.filter(x=>x.get('en')===expected).length,1);
   for(const hit of hits){
    const data=[...hit.values()].join(' ');
