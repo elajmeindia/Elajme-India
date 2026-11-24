@@ -7,6 +7,7 @@ const host=process.env.VERIFY_PRODUCTION==='1'?live:preview;
 const slugs=['hematology-blood-disorders-india','bone-marrow-transplant-india'];
 (async()=>{
  const b=await chromium.launch();
+ let stylingFailures=0;
  fs.mkdirSync('evidence',{recursive:true});
  for(const width of [390,1440])for(const lang of ['en','ar'])for(const [i,slug] of slugs.entries()){
   const prefix=lang==='ar'?'/ar':'';
@@ -28,14 +29,16 @@ const slugs=['hematology-blood-disorders-india','bone-marrow-transplant-india'];
   });
   assert.ok(v.text&&!v.overflow,path);
   assert.equal(v.dir,lang==='ar'?'rtl':'ltr');
-  assert.ok(v.decoration.includes('underline')||v.color!==v.parentColor,path);
+  const distinguishable=v.decoration.includes('underline')||v.color!==v.parentColor;
+  if(!distinguishable)stylingFailures++;
   await page.screenshot({path:'evidence/'+lang+'-'+i+'-'+width+'.jpg',type:'jpeg'});
   const [to]=await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),link.click()]);
   assert.equal(page.url(),host+dest);
   assert.equal(to.status(),200);
   assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'),live+dest);
-  console.log(JSON.stringify({width,path,dest,...v,status:to.status()}));
+  console.log(JSON.stringify({width,path,dest,...v,distinguishable,status:to.status()}));
   await ctx.close();
  }
  await b.close();
+ assert.equal(stylingFailures,0,"Contextual link styling failures");
 })().catch(e=>{console.error(e);process.exit(1)});
