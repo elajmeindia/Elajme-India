@@ -1,0 +1,25 @@
+name: PR 474 bilingual transplant preview verification
+on:
+  pull_request:
+    paths: ['.github/workflows/verify-pr474.yml', 'scripts/verify-pr474.cjs']
+permissions:
+  contents: read
+jobs:
+  responsive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-audit playwright@1.56.1 && npx playwright install chromium
+      - run: |
+          mkdir -p evidence
+          node scripts/verify-pr474.cjs | tee evidence/results.jsonl
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr474-responsive-preview
+          path: evidence/
+          retention-days: 7
