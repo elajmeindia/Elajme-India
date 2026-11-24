@@ -1,0 +1,30 @@
+name: Check intercepted Google tag transport for GA4 candidate
+on:
+  pull_request:
+    paths: ['.github/workflows/ga461-transport-evidence.yml', 'scripts/ga461-transport.cjs']
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: 9619b266bbc2e7193d3c841cfabe236dbb9066cd
+          path: candidate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-audit playwright@1.56.1 && npx playwright install chromium
+      - shell: bash
+        run: |
+          mkdir -p evidence
+          node scripts/ga461-transport.cjs | tee evidence/transport.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ga461-restricted-transport-checks
+          path: evidence/
+          retention-days: 7
