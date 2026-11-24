@@ -36,6 +36,10 @@ fs.mkdirSync(out,{recursive:true});
       await logo.scrollIntoViewIfNeeded();
       await logo.evaluate(img=>{img.loading='eager';});
       await page.waitForFunction(()=>document.querySelector('footer.site-footer img')?.naturalWidth>0,null,{timeout:6500}).catch(()=>{});
+      await logo.evaluate(async img=>{
+       if(img.naturalWidth) await img.decode();
+       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      }).catch(()=>{});
       await footer.screenshot({path:out+'/'+mode+'-'+label+'.jpg',type:'jpeg',quality:88,timeout:15000,
        style:'.master-site-header,.elajme-bottom-actions {visibility:hidden!important}'});
       await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
