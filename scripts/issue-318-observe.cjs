@@ -34,7 +34,8 @@ fs.mkdirSync(out,{recursive:true});
      else {
       const logo=footer.locator('img').first();
       await logo.scrollIntoViewIfNeeded();
-      await logo.evaluate(img=>img.decode(),{timeout:10000});
+      await logo.evaluate(img=>{img.loading='eager';});
+      await page.waitForFunction(()=>document.querySelector('footer.site-footer img')?.naturalWidth>0,null,{timeout:6500}).catch(()=>{});
       await footer.screenshot({path:out+'/'+mode+'-'+label+'.jpg',type:'jpeg',quality:88,timeout:15000,
        style:'.master-site-header,.elajme-bottom-actions {visibility:hidden!important}'});
       await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
