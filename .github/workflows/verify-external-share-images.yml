@@ -1,0 +1,32 @@
+name: Independent external share image verification
+on:
+  pull_request:
+    paths: ['.github/workflows/verify-external-share-images.yml']
+permissions:
+  contents: read
+jobs:
+  images:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Compare anonymous image responses
+        shell: bash
+        run: |
+          while IFS= read -r url; do
+            curl -sSL --max-time 9 -o /dev/null -w '%{http_code} %{content_type} %{url_effective}\n' "$url" &
+          done <<'URLS'
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-02/dr-geeta-kadayaprah-new-profile.jpeg
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-04/untitled-design--86-.jpg
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-achal-bhagat.jpg
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-adosh-lall.jpg
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-ameet-kishore.jpg
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-dinesh-talwar.jpg
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-hardeep-singh.jpg
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-jatin-ahuja.jpg
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-kulbhushan-attri.jpg
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/2026-06/dr-sundeep-kumar-upadhyaya.jpg
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/styles/doctor_card/public/2026-03/dr-anup-dhir.jpg.webp?itok=TKjxXN5Q
+          https://drupal-cdn-hfaeddcdbng5hfbg.a01.azurefd.net/sites/default/files/styles/doctor_card/public/2026-03/dr-harsh-dua.jpg.webp?itok=IkUcYVSr
+          https://www.apollohospitals.com/sites/default/files/2025-01/dr-deepa-sharma-pediatrics-in-delhi.png
+          URLS
+          wait
