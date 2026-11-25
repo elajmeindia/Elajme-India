@@ -1,0 +1,30 @@
+name: Verify resolved PR 467
+on:
+  pull_request:
+    paths: ['.github/workflows/verify-resolved-467.yml', 'scripts/verify-resolved-467.cjs']
+permissions:
+  contents: read
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: 81864a9ec09aa35d9e0b162d2ee74f2a9014d78e
+          path: candidate
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-audit playwright@1.56.1 && npx playwright install chromium
+      - shell: bash
+        run: |
+          mkdir -p evidence
+          node scripts/verify-resolved-467.cjs | tee evidence/position.jsonl
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr-467-arrow-and-spacing
+          path: evidence/
+          retention-days: 7
