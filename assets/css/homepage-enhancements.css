@@ -207,3 +207,52 @@ html[lang="ar"] body > main > section.faq-section .faq-list details p {
     gap:10px !important;
   }
 }
+
+/* Bilingual homepage phone refinement: preserve desktop/tablet, forms and contact clearance. */
+@media (max-width: 560px) {
+  html body:has(main > #home.hero) > main > section.section {
+    padding-block: 36px !important;
+  }
+  html body:has(main > #home.hero) > main > section.section .section-heading {
+    margin-bottom: 22px !important;
+  }
+  html body:has(main > #home.hero) > main > section.section .section-heading.centered::after {
+    margin-top: 14px;
+  }
+  html body:has(main > #home.hero) > main > section.section :is(.why-grid,.treatment-grid,.process-grid,.approach-points) {
+    gap: 12px !important;
+  }
+  html body:has(main > #home.hero) > main > section.section :is(.country-layout,.approach-grid) {
+    gap: 24px !important;
+  }
+  html body:has(main > #home.hero) > main > section.why-section .why-card {
+    padding: 18px 16px !important;
+    min-height: 0 !important;
+  }
+  html body:has(main > #home.hero) > main > section.treatments-section .treatment-card {
+    padding: 14px 16px !important;
+    min-height: 64px !important;
+  }
+  html body:has(main > #home.hero) > main > section.process-section .process-step {
+    padding: 18px 15px !important;
+    min-height: 0 !important;
+  }
+  html body:has(main > #home.hero) > main > section.process-section .process-dot {
+    margin-bottom: 10px !important;
+  }
+  html body:has(main > #home.hero) > main > section.approach-section .approach-points > div {
+    padding: 16px !important;
+    min-height: 0 !important;
+  }
+  html body:has(main > #home.hero) > main > section.audience-strip .audience-inner {
+    row-gap: 8px !important;
+    padding-block: 12px !important;
+  }
+  html body:has(main > #home.hero) > main > section.audience-strip :is(.country a,a.country) {
+    min-height: 48px !important;
+    padding: 8px !important;
+  }
+  html body:has(main > #home.hero) > main > section.countries-section .country-tags > a {
+    min-height: 44px;
+  }
+}
