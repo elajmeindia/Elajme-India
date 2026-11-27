@@ -344,17 +344,18 @@ html body footer.site-footer .elajme-v2-lower .elajme-office-website .elajme-con
  }
 }
 
-/* Mobile brand visual order requested by owner: name first, official logo second.
-   Keep EN lockup at left and AR lockup at right, without changing DOM or desktop. */
+/* Owner-approved mobile lockup: official symbol physically left of bilingual name.
+   Preserve the English left edge and Arabic right edge, and desktop styling. */
 @media(max-width:650px){
- html body footer.site-footer .elajme-v2-brand .footer-brand{
+ html:not([lang="ar"]) body footer.site-footer .elajme-v2-brand .footer-brand,
+ html[lang="ar"] body footer.site-footer .elajme-v2-brand .footer-brand{
   flex-direction:row!important;
   direction:ltr!important;
  }
- html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text{
+ html body footer.site-footer .elajme-v2-brand .footer-brand .brand-icon{
   order:0!important;
  }
- html body footer.site-footer .elajme-v2-brand .footer-brand .brand-icon{
+ html body footer.site-footer .elajme-v2-brand .footer-brand .brand-text{
   order:1!important;
  }
  html[lang="ar"] body footer.site-footer .elajme-v2-brand .footer-brand .brand-text{
