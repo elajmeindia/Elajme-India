@@ -53,3 +53,19 @@
   html body:has(main > #home.hero) > main > section.countries-section .country-tags { gap: 10px !important; }
   html body:has(main > #home.hero) > main > section.section.final-cta { padding-block: 32px !important; }
 }
+
+/* Stretch both cards to the natural height of their grid row, including wrapped labels. */
+@media (max-width: 560px) {
+  html body:has(main > #home.hero) > main > section.audience-strip .audience-inner {
+    align-items: stretch !important;
+  }
+  html body:has(main > #home.hero) > main > section.audience-strip .audience-inner > .country {
+    align-self: stretch !important;
+    display: flex;
+  }
+  html body:has(main > #home.hero) > main > section.audience-strip .country > a {
+    align-self: stretch !important;
+    flex: 1 1 auto;
+    height: auto !important;
+  }
+}
