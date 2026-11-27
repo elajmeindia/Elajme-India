@@ -1,0 +1,71 @@
+/* Bilingual homepage phone refinement: preserve desktop/tablet, forms and contact clearance. */
+@media (max-width: 560px) {
+  html body:has(main > #home.hero) > main > section.section {
+    padding-block: 32px !important;
+  }
+  html body:has(main > #home.hero) > main > section.section .section-heading {
+    margin-bottom: 20px !important;
+  }
+  html body:has(main > #home.hero) > main > section.section .section-heading.centered::after {
+    margin-top: 14px;
+  }
+  html body:has(main > #home.hero) > main > section.section :is(.why-grid,.treatment-grid,.process-grid,.approach-points) {
+    gap: 12px !important;
+  }
+  html body:has(main > #home.hero) > main > section.section :is(.country-layout,.approach-grid) {
+    gap: 24px !important;
+  }
+  html body:has(main > #home.hero) > main > section.why-section .why-card {
+    padding: 18px 16px !important;
+    min-height: 0 !important;
+  }
+  html body:has(main > #home.hero) > main > section.treatments-section .treatment-card {
+    padding: 14px 16px !important;
+    min-height: 64px !important;
+  }
+  html body:has(main > #home.hero) > main > section.process-section .process-step {
+    padding: 18px 15px !important;
+    min-height: 0 !important;
+  }
+  html body:has(main > #home.hero) > main > section.process-section .process-dot {
+    margin-bottom: 10px !important;
+  }
+  html body:has(main > #home.hero) > main > section.approach-section .approach-points > div {
+    padding: 16px !important;
+    min-height: 0 !important;
+  }
+  html body:has(main > #home.hero) > main > section.audience-strip .audience-inner {
+    row-gap: 8px !important;
+    padding-block: 12px !important;
+  }
+  html body:has(main > #home.hero) > main > section.audience-strip :is(.country a,a.country) {
+    min-height: 48px !important;
+    padding: 8px !important;
+  }
+  html body:has(main > #home.hero) > main > section.countries-section .country-tags > a {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 560px) {
+  html body:has(main > #home.hero) > main > section.section.approach-section { padding-bottom: 20px !important; background: #EAF5F3 !important; }
+  html body:has(main > #home.hero) > main > section.section.faq-section { padding-top: 24px !important; background: #F0F8F6 !important; }
+  html body:has(main > #home.hero) > main > section.countries-section .country-tags { gap: 10px !important; }
+  html body:has(main > #home.hero) > main > section.section.final-cta { padding-block: 32px !important; }
+}
+
+/* Stretch both cards to the natural height of their grid row, including wrapped labels. */
+@media (max-width: 560px) {
+  html body:has(main > #home.hero) > main > section.audience-strip .audience-inner {
+    align-items: stretch !important;
+  }
+  html body:has(main > #home.hero) > main > section.audience-strip .audience-inner > .country {
+    align-self: stretch !important;
+    display: flex;
+  }
+  html body:has(main > #home.hero) > main > section.audience-strip .country > a {
+    align-self: stretch !important;
+    flex: 1 1 auto;
+    height: auto !important;
+  }
+}
