@@ -35,3 +35,16 @@
 # Always revalidate the English enquiry handler when treatment context changes.
 /script.js
   Cache-Control: no-cache, must-revalidate
+
+# Keep old enquiry query values out of speculative requests and referrers.
+/
+  Referrer-Policy: no-referrer
+
+/ar/
+  Referrer-Policy: no-referrer
+
+/faq/
+  Referrer-Policy: no-referrer
+
+/ar/faq/
+  Referrer-Policy: no-referrer

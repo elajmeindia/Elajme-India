@@ -60,8 +60,10 @@ jobs:
                 await review.waitFor({state:'visible'});
                 const summary=await review.locator('textarea').inputValue();
                 await review.getByRole('button').first().click();
+                const request=page.context().waitForEvent('request',{predicate:req=>new URL(req.url()).hostname==='wa.me'});
                 await review.locator('a').click();
-                await page.waitForFunction(()=>document.querySelector('dialog[open]'));
+                await request;
+                for(let i=0;i<25&&!captured.length;i++)await new Promise(resolve=>setTimeout(resolve,20));
                 if(response.status()!==200||captured.length!==1||new URL(captured[0]).pathname!=='/917488955154'
                    ||/Test Patient|Oman|91234567/.test(decodeURIComponent(captured[0]))||!summary.includes('Test Patient')
                    || !summary.includes('Oman') || !summary.includes('91234567')) errors.push(language+': private enquiry handoff failed');
