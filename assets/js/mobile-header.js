@@ -93,6 +93,8 @@ function elajmeDirectWhatsAppUrl(language) {
     clear();
   } else if (arriving) {
     setTimeout(() => read(location.pathname), Math.max(0, arriving.expires - Date.now()) + 5);
+  } else {
+    clear();
   }
 
   document.addEventListener('click', event => {
