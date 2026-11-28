@@ -248,7 +248,7 @@ jobs:
               try{
                 await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
                 // Intercept both old and new handoffs while production rolls out.
-                const blockWhatsApp=route=>route.abort();
+                const blockWhatsApp=route=>route.fulfill({status:200,contentType:'text/html',body:'<title>Intercepted test handoff</title>'});
                 await page.context().route('https://wa.me/**',blockWhatsApp);
                 const prepared=await page.evaluate(()=>{
                   const form=document.getElementById('patientEnquiryForm');
@@ -265,13 +265,17 @@ jobs:
                   const outgoing=page.context().waitForEvent('request',{predicate:req=>req.url().startsWith('https://wa.me/917488955154?text='),timeout:10000}).catch(()=>null);
                   await page.evaluate(()=>document.getElementById('patientEnquiryForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))).catch(()=>{});
                   const review=page.locator('dialog[data-enquiry-review]');
-                  if(await review.isVisible()){
+                  const hasLocalReview=await review.isVisible();
+                  if(hasLocalReview){
                     await review.getByRole('button').first().click();
                     if(await review.locator('a').isVisible())await review.locator('a').click();
                   }
                   const request=await outgoing;
                   if(!request)errors.push(path+': enquiry does not route to Elajme WhatsApp');
-                  else console.log('ENQUIRY DESTINATION',path,'Elajme WhatsApp (intercepted; not sent)');
+                  else{
+                    if(!hasLocalReview)await page.waitForURL(url=>url.hostname==='wa.me',{waitUntil:'domcontentloaded',timeout:10000});
+                    console.log('ENQUIRY DESTINATION',path,'Elajme WhatsApp (intercepted; not sent)');
+                  }
                 }
                 await page.context().unroute('https://wa.me/**',blockWhatsApp);
                 // Navigation may have started, so reload before the independent validation test.
