@@ -126,6 +126,12 @@ jobs:
                 await page.locator('#patientMobile').fill('+968 9000 0000');
                 if(path==='/') await page.locator('#preferredLanguage').selectOption('Arabic');
                 await page.locator('#patientEnquiryForm').evaluate(el=>el.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
+                const review=page.locator('dialog[data-enquiry-review]');
+                if(await review.isVisible()){
+                  await review.getByRole('button').first().click();
+                  await review.locator('a[href^="https://wa.me/"]').waitFor({state:'visible'});
+                  await review.locator('a[href^="https://wa.me/"]').click();
+                }
               }
               await page.waitForTimeout(300);
               const names=recorded.map(x=>x.name);

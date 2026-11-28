@@ -1,0 +1,39 @@
+dialog[data-enquiry-review] {
+  width: min(calc(100% - 2rem), 34rem);
+  max-height: calc(100% - 2rem);
+  box-sizing: border-box;
+  overflow: auto;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid #075b65;
+  border-radius: 12px;
+  background: #fff;
+  color: #092f40;
+}
+dialog[data-enquiry-review]::backdrop { background: rgb(9 47 64 / 55%); }
+dialog[data-enquiry-review] h2 { margin: 0 0 .6rem; }
+dialog[data-enquiry-review] textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: .75rem;
+  padding: .65rem;
+  border: 1px solid #075b65;
+  border-radius: 6px;
+  background: #f0f8f6;
+  color: inherit;
+  font: inherit;
+}
+.enquiry-review-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.enquiry-review-actions :is(button, a) {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: .55rem .8rem;
+  border: 1px solid #075b65;
+  border-radius: 6px;
+  background: #fff;
+  color: #075b65;
+  font: inherit;
+  cursor: pointer;
+}
+.enquiry-review-actions button:first-child { background: #075b65; color: #fff; }
+dialog[data-enquiry-review] :focus-visible { outline: 2px solid #092f40; outline-offset: 2px; }

@@ -1,2 +1,12 @@
-/* Treatment profile only: preserve the existing contextual enquiry destination. */
-(()=>{const init=()=>{const bar=document.querySelector('.elajme-bottom-actions');if(!bar)return;const enquiry=bar.querySelector('.elajme-bottom-enquiry');if(!enquiry)return;const ar=document.documentElement.lang.toLowerCase().startsWith('ar');const prefix=ar?'/ar/?treatment=':'/?treatment=';const contextual=[...document.querySelectorAll('a[href]')].map(a=>a.getAttribute('href')||'').find(h=>h.startsWith(prefix)&&h.endsWith('#enquiry'));if(!contextual)return;const url=new URL(contextual,location.origin);if(url.origin!==location.origin||url.pathname!==(ar?'/ar/':'/')||!url.searchParams.get('treatment')||url.hash!=='#enquiry')return;enquiry.setAttribute('href',url.pathname+url.search+url.hash)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();
+/* Keep the sticky enquiry button aligned with the treatment page's main link. */
+(() => {
+  function init() {
+    const sticky = document.querySelector('.elajme-bottom-enquiry');
+    const source = document.querySelector('main a[data-enquiry-treatment]');
+    if (!sticky || !source) return;
+    sticky.setAttribute('href', source.getAttribute('href'));
+    sticky.dataset.enquiryTreatment = source.dataset.enquiryTreatment;
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();

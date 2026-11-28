@@ -6,18 +6,22 @@
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
   if (!window.__elajmeGaConfigured) {
     window.gtag('js', new Date());
-    window.gtag('config', id);
+    window.gtag('config', id, {
+      page_location: location.origin + location.pathname,
+      page_referrer: ''
+    });
     window.__elajmeGaConfigured = true;
   }
   if (!document.querySelector('script[src*="googletagmanager.com/gtag/js?id=' + id + '"]')) {
     const script = document.createElement('script');
     script.async = true;
+    script.referrerPolicy = 'no-referrer';
     script.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
     document.head.appendChild(script);
   }
   document.addEventListener('click', function (event) {
     const link = event.target.closest && event.target.closest('a[href]');
-    if (!link || !/^https:\/\/wa\.me\/917488955154(?:[/?#]|$)/i.test(link.href)) return;
+    if (!link || link.closest('[data-enquiry-review]') || !/^https:\/\/wa\.me\/917488955154(?:[/?#]|$)/i.test(link.href)) return;
     window.gtag('event', 'whatsapp_enquiry_click', {
       contact_method: 'whatsapp',
       page_path: location.pathname,

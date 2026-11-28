@@ -3,8 +3,13 @@
   'use strict';
 
   const GA4_MEASUREMENT_ID = 'G-ZEKEN0TB2N';
-  const CAMPAIGN_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
-  const ATTRIBUTION_KEY = 'elajme_campaign_attribution';
+  // Keep coarse attribution without forwarding untrusted free-text query values.
+  const CAMPAIGN_VALUES = {
+    utm_source: new Set(['google', 'meta', 'facebook', 'instagram', 'linkedin', 'bing', 'youtube', 'whatsapp', 'direct']),
+    utm_medium: new Set(['cpc', 'ppc', 'paid_social', 'organic', 'social', 'referral', 'email', 'display', 'none'])
+  };
+  const ATTRIBUTION_KEY = 'elajme_traffic_attribution';
+  try { sessionStorage.removeItem('elajme_campaign_attribution'); } catch (_) {}
   const IS_MOBILE = !!(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
 
   /* Load the dedicated mobile-header stylesheet without modifying locked footer markup/styles. */
@@ -52,12 +57,16 @@
     window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
     if (!window.__elajmeGaConfigured) {
       window.gtag('js', new Date());
-      window.gtag('config', GA4_MEASUREMENT_ID);
+      window.gtag('config', GA4_MEASUREMENT_ID, {
+      page_location: location.origin + location.pathname,
+      page_referrer: ''
+    });
       window.__elajmeGaConfigured = true;
     }
     if (!document.querySelector('script[data-elajme-ga4],script[src*="googletagmanager.com/gtag/js?id=' + GA4_MEASUREMENT_ID + '"]')) {
       const script = document.createElement('script');
       script.async = true;
+    script.referrerPolicy = 'no-referrer';
       script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA4_MEASUREMENT_ID);
       script.setAttribute('data-elajme-ga4', '');
       document.head.appendChild(script);
@@ -65,13 +74,16 @@
   }
 
   function language() { return document.documentElement.lang === 'ar' ? 'ar' : 'en'; }
-  function cleanCampaignValue(value) { return value ? String(value).trim().slice(0, 100) : ''; }
+  function cleanCampaignValue(key, value) {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return CAMPAIGN_VALUES[key].has(normalized) ? normalized : '';
+  }
 
   function currentCampaignAttribution() {
     const params = new URLSearchParams(location.search);
     const attribution = {};
-    CAMPAIGN_KEYS.forEach(function (key) {
-      const value = cleanCampaignValue(params.get(key));
+    Object.keys(CAMPAIGN_VALUES).forEach(function (key) {
+      const value = cleanCampaignValue(key, params.get(key));
       if (value) attribution[key] = value;
     });
     return attribution;
@@ -83,8 +95,8 @@
       if (!value) return {};
       const parsed = JSON.parse(value);
       const attribution = {};
-      CAMPAIGN_KEYS.forEach(function (key) {
-        const clean = cleanCampaignValue(parsed && parsed[key]);
+      Object.keys(CAMPAIGN_VALUES).forEach(function (key) {
+        const clean = cleanCampaignValue(key, parsed && parsed[key]);
         if (clean) attribution[key] = clean;
       });
       return attribution;
@@ -101,8 +113,8 @@
   }
 
   function trafficSource(attribution) {
-    const source = cleanCampaignValue(attribution && attribution.utm_source).toLowerCase();
-    const medium = cleanCampaignValue(attribution && attribution.utm_medium).toLowerCase();
+    const source = cleanCampaignValue('utm_source', attribution && attribution.utm_source);
+    const medium = cleanCampaignValue('utm_medium', attribution && attribution.utm_medium);
     if (source) return source;
     if (medium) return medium;
     return document.referrer ? 'referral' : 'direct';
@@ -122,11 +134,11 @@
   campaignAttribution();
 
   /* Delegated tracking catches present and dynamically-created WhatsApp links.
-     Attribution is session-scoped and limited to standard UTM fields.
+     Attribution is session-scoped and limited to recognized sources and media.
      No patient names, phone numbers, diagnoses, reports or message text are stored or sent. */
   document.addEventListener('click', function (event) {
     const link = event.target.closest && event.target.closest('a[href]');
-    if (!link) return;
+    if (!link || link.closest('[data-enquiry-review]')) return;
     const href = link.getAttribute('href') || '';
     if (/^(?:https?:\/\/)?(?:wa\.me\/|(?:www\.)?whatsapp\.com\/)/i.test(href)) {
       track('whatsapp_enquiry', { contact_method: 'whatsapp' });

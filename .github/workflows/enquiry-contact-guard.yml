@@ -54,15 +54,16 @@ jobs:
           for marker in ('patientEnquiryForm','addEventListener("submit"','encodeURIComponent'):
               if marker not in js:errors.append(f'script.js: missing enquiry logic {marker}')
           ar=Path('ar/index.html').read_text(encoding='utf-8')
-          if "addEventListener('submit'" not in ar or 'encodeURIComponent(msg)' not in ar:
+          if "addEventListener('submit'" not in ar or 'ElajmeEnquiry.review(msg' not in ar:
               errors.append('ar/index.html: missing Arabic enquiry submission logic')
-          # Regression checks for the protected bilingual enquiry handoff.
-          if 'window.location.assign(makeWhatsAppUrl(language,buildCaseMessage(language)))' not in js:
-              errors.append('script.js: missing single same-tab WhatsApp handoff')
-          if 'const opened=window.open(makeWhatsAppUrl' in js:
-              errors.append('script.js: legacy duplicate WhatsApp opening fallback returned')
-          if "window.location.assign('https://wa.me/"+number+"?text='+encodeURIComponent(msg))" not in ar:
-              errors.append('ar/index.html: missing single same-tab WhatsApp handoff')
+          helper=Path('assets/js/enquiry-handoff.js').read_text(encoding='utf-8')
+          if 'ElajmeEnquiry.review(buildCaseMessage(language)' not in js:
+              errors.append('script.js: missing local enquiry review')
+          if 'dialog.showModal()' not in helper or 'navigator.clipboard.writeText(summary.value)' not in helper:
+              errors.append('Local enquiry review or copy action missing')
+          for source in (js, ar, Path('assets/js/faq-enquiry.js').read_text(encoding='utf-8')):
+              if re.search(r'encodeURIComponent\((?:msg|message)\)|makeWhatsAppUrl\([^;]*buildCaseMessage',source):
+                  errors.append('Enquiry text must not be put in a WhatsApp URL')
           if "try{localStorage.setItem('elajmeLanguage','ar');}catch(e)" not in ar:
               errors.append('ar/index.html: browser storage safeguard missing')
           if 'aria-label="نموذج استفسار المريض"' not in ar:
