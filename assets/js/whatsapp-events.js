@@ -40,7 +40,7 @@
   function recordOfficialLink(event) {
     if (event.type === 'auxclick' && event.button !== 1) return;
     const link = event.target.closest?.('a[href]');
-    if (!link) return;
+    if (!link || link.closest('[data-enquiry-review]')) return;
     const destination = new URL(link.href);
     if (destination.origin === 'https://wa.me' && destination.pathname === '/917488955154') {
       record('whatsapp_enquiry_click', 'direct_link');

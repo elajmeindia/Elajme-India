@@ -52,12 +52,16 @@
     window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
     if (!window.__elajmeGaConfigured) {
       window.gtag('js', new Date());
-      window.gtag('config', GA4_MEASUREMENT_ID);
+      window.gtag('config', GA4_MEASUREMENT_ID, {
+      page_location: location.origin + location.pathname,
+      page_referrer: ''
+    });
       window.__elajmeGaConfigured = true;
     }
     if (!document.querySelector('script[data-elajme-ga4],script[src*="googletagmanager.com/gtag/js?id=' + GA4_MEASUREMENT_ID + '"]')) {
       const script = document.createElement('script');
       script.async = true;
+    script.referrerPolicy = 'no-referrer';
       script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA4_MEASUREMENT_ID);
       script.setAttribute('data-elajme-ga4', '');
       document.head.appendChild(script);
@@ -126,7 +130,7 @@
      No patient names, phone numbers, diagnoses, reports or message text are stored or sent. */
   document.addEventListener('click', function (event) {
     const link = event.target.closest && event.target.closest('a[href]');
-    if (!link) return;
+    if (!link || link.closest('[data-enquiry-review]')) return;
     const href = link.getAttribute('href') || '';
     if (/^(?:https?:\/\/)?(?:wa\.me\/|(?:www\.)?whatsapp\.com\/)/i.test(href)) {
       track('whatsapp_enquiry', { contact_method: 'whatsapp' });

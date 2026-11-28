@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Validate all bilingual treatment-page enquiry links against homepage allowlists."""
+"""Validate all bilingual treatment-page enquiry links against their published routes."""
 from pathlib import Path
 from html.parser import HTMLParser
-from urllib.parse import urlsplit, parse_qs
+from urllib.parse import urlsplit
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -24,7 +24,7 @@ class EnquiryLinks(HTMLParser):
         attributes = dict(attrs)
         href = attributes.get("href", "")
         if urlsplit(href).fragment == "enquiry":
-            self.links.append(href)
+            self.links.append((href, attributes.get("data-enquiry-treatment")))
 
     def handle_endtag(self, tag):
         if tag.lower() == "header" and self.header_depth:
@@ -45,13 +45,7 @@ def main():
     errors = []
     if len(slugs) != 47 or len(pages) != 94:
         errors.append(f"Expected 47 specialties and 94 pages; found {len(slugs)} and {len(pages)}")
-    en_source = (ROOT / "script.js").read_text(encoding="utf-8")
-    ar_source = (ROOT / "ar/index.html").read_text(encoding="utf-8")
     for slug in sorted(slugs):
-        if not any(q + slug + q + ":" in en_source for q in ("\"", "\'")):
-            errors.append(f"English form mapping missing: {slug}")
-        if not any(q + slug + q + ":" in ar_source for q in ("\"", "\'")):
-            errors.append(f"Arabic form mapping missing: {slug}")
         for lang in ("en", "ar"):
             path = pages.get((lang, slug))
             if path is None or not path.is_file():
@@ -61,16 +55,15 @@ def main():
             parser.feed(path.read_text(encoding="utf-8"))
             if not parser.links:
                 errors.append(f"No enquiry links: {path.relative_to(ROOT)}")
-            for href in parser.links:
+            for href, context in parser.links:
                 parsed = urlsplit(href)
                 expected_path = "/ar/" if lang == "ar" else "/"
-                params = parse_qs(parsed.query, keep_blank_values=True)
-                if parsed.scheme or parsed.netloc or parsed.path != expected_path or params != {"treatment": [slug]}:
+                if parsed.scheme or parsed.netloc or parsed.path != expected_path or parsed.query or context != slug:
                     errors.append(f"Invalid treatment context in {path.relative_to(ROOT)}: {href}")
     if errors:
         print("\n".join(errors))
         return 1
-    print(f"PASS: {len(slugs)} specialties, {len(pages)} bilingual pages, all enquiry links and form mappings validated")
+    print(f"PASS: {len(slugs)} specialties, {len(pages)} bilingual pages, all enquiry links validated without URL context")
     return 0
 
 if __name__ == "__main__":
