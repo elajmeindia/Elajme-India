@@ -56,7 +56,8 @@
     summary.readOnly = true;
     summary.dir = messageLanguage === 'ar' ? 'rtl' : 'ltr';
     summary.rows = 7;
-    summary.value = message;
+    const selection = window.ElajmeEnquirySelection?.describe(messageLanguage);
+    summary.value = selection ? message + '\n\n' + selection : message;
 
     const status = document.createElement('p');
     status.setAttribute('role', 'status');
@@ -83,6 +84,7 @@
     function record() {
       if (recorded) return;
       recorded = true;
+      window.ElajmeEnquirySelection?.finish();
       onHandoff();
     }
 
