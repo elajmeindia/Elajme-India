@@ -19,6 +19,9 @@ assert.deepEqual(bookingHosts,[],'External booking or enquiry links found in Ara
 for(const card of cards)assert.ok(card.includes('href="/ar/#enquiry"'),'Doctor card must route enquiries through Elajme India');
 const home=read('ar/index.html');
 assert.match(home,/id="patientEnquiryForm"/,'Arabic enquiry form missing');
-assert.match(home,/wa\.me\/917488955154\?text=/,'Arabic enquiry WhatsApp routing missing');
+assert.match(home,/ElajmeEnquiry\.review\(msg/,'Arabic enquiry local review missing');
+const handoff=read('assets/js/enquiry-handoff.js');
+assert.match(handoff,/https:\/\/wa\.me\/917488955154/,'Official Arabic enquiry destination missing');
+assert.doesNotMatch(home,/encodeURIComponent\(msg\)/,'Arabic enquiry summary must stay out of the WhatsApp URL');
 for(const path of ['ar/index.html','ar/doctors/index.html','ar/contact/index.html']){const html=read(path);assert.match(html,/name="viewport"/,'Mobile viewport missing '+path);assert.match(html,/<html[^>]*dir="rtl"/i,'Arabic RTL missing '+path);}
 console.log('PASS: 60 unique Arabic doctor cards and profile files, RTL H1, localized image alt text, mobile viewport and Elajme enquiry routing');

@@ -244,6 +244,7 @@ jobs:
                 console.log('JOURNEY',treatment,'->',directory,'->',profileHref.pathname,'->',enquiry);
               }catch(e){errors.push(lang+': treatment-to-enquiry journey: '+e.message)}
             }
+            await page.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{value:{writeText:()=>Promise.reject(new Error('audit manual copy'))}}));
             for(const path of ['/','/ar/']){
               try{
                 await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:25000});
@@ -268,7 +269,7 @@ jobs:
                   const hasLocalReview=await review.isVisible();
                   if(hasLocalReview){
                     await review.getByRole('button').first().click();
-                    if(await review.locator('a').isVisible())await review.locator('a').click();
+                    await review.locator('a').click();
                   }
                   const request=await outgoing;
                   if(!request)errors.push(path+': enquiry does not route to Elajme WhatsApp');
