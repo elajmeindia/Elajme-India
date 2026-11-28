@@ -31,11 +31,18 @@ fs.mkdirSync(out,{recursive:true});
     // Observe navigation to WhatsApp without sending any message or leaving the test page.
     let interceptedWhatsApp = null;
     const capturedEvents = [];
-    await page.route('https://wa.me/**', async route => {
-      interceptedWhatsApp = route.request().url();
-      await route.abort();
+    await page.context().route('**/*', async route => {
+      const request = route.request();
+      const url = new URL(request.url());
+      if (url.hostname === 'wa.me') {
+        interceptedWhatsApp = url.href;
+        return route.fulfill({status:200,contentType:'text/html',body:'<title>Intercepted test handoff</title>'});
+      }
+      if (url.origin === new URL(base).origin && ['GET','HEAD'].includes(request.method())) return route.continue();
+      return route.abort();
     });
     await page.addInitScript(() => {
+      Object.defineProperty(navigator,'clipboard',{value:{writeText:()=>Promise.reject(new Error('audit manual copy'))}});
       window.dataLayer = window.dataLayer || [];
       const push = window.dataLayer.push;
       window.dataLayer.push = function (...entries) {
@@ -65,15 +72,26 @@ fs.mkdirSync(out,{recursive:true});
       await page.locator('#patientMobile').fill('+919999999999');
       // The approved privacy-first form collects contact details only; no medical text field.
       await page.locator('#patientEnquiryForm button[type=submit]').click();
-      await page.waitForTimeout(500);
+      const review = page.locator('dialog[data-enquiry-review]');
+      const summary = await review.locator('textarea').inputValue();
+      const intercepted = page.context().waitForEvent('request', {
+        predicate: request => new URL(request.url()).hostname === 'wa.me', timeout: 15000
+      }).catch(() => null);
+      await review.getByRole('button').first().click();
+      await review.locator('a').click();
+      await intercepted;
+      for (let attempt=0; attempt<25 && !interceptedWhatsApp; attempt++)
+        await new Promise(resolve => setTimeout(resolve,20));
       const target = interceptedWhatsApp ? new URL(interceptedWhatsApp) : null;
-      const pass = target?.hostname==='wa.me' && target.pathname==='/917488955154' && target.searchParams.get('text')?.includes('Audit Test');
+      const tokens = ['Audit Test','Test Country','9999999999'];
+      const pass = target?.hostname==='wa.me' && target.pathname==='/917488955154' &&
+        tokens.every(token => summary.includes(token) && !decodeURIComponent(target.href).includes(token));
       report.checks.push({test:'enquiry-intercept-no-message-sent',destination:target?target.origin+target.pathname:null,pass:!!pass});
       if(!pass)report.errors.push('Arabic form did not open the expected Elajme India WhatsApp destination');
       // GA4 event is a handoff intent, never a confirmed patient lead.
       // Inspect the in-page event queue without transmitting or logging patient details.
       const analytics = capturedEvents;
-      const analyticsPass = analytics.some(item =>
+      const analyticsPass = analytics.length === 1 && analytics.some(item =>
         item.page_path === '/ar/' && item.language === 'ar' &&
         item.lead_source === 'patient_enquiry_form' &&
         item.keys.every(key => ['page_path','language','lead_source'].includes(key))
@@ -83,6 +101,7 @@ fs.mkdirSync(out,{recursive:true});
     }catch(e){report.errors.push('Arabic enquiry test: '+e.message);}
     await page.close();
     const omanPage = await browser.newPage({viewport:{width:390,height:850}});
+    await omanPage.route(url=>/google-analytics|googletagmanager|analytics.google.com|doubleclick/.test(url.hostname),route=>route.abort());
     try {
       const response = await omanPage.goto(base+'/ar/oman/treatment-in-india/',{waitUntil:'domcontentloaded',timeout:30000});
       if(!response || response.status()>=400) throw Error('Oman landing page unavailable');

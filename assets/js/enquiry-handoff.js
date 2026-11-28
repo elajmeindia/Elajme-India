@@ -24,6 +24,7 @@
   };
 
   function destination(language) {
+    if (typeof elajmeDirectWhatsAppUrl === 'function') return elajmeDirectWhatsAppUrl(language);
     return number + '?text=' + encodeURIComponent(copy[language === 'ar' ? 'ar' : 'en'].greeting);
   }
 
