@@ -16,3 +16,36 @@ bar.append(enquiry,whatsapp)};document.readyState==='loading'?document.addEventL
  const script=document.createElement('script');script.src='/assets/js/compact-scroll-header.js?v=1';
  script.defer=true;script.dataset.elajmeCompactHeader='true';document.head.appendChild(script);
 })();
+
+/* Shared bilingual greeting for direct WhatsApp links. */
+function elajmeDirectWhatsAppUrl(language) {
+  const greeting = language === 'ar'
+    ? 'مرحبًا، أود الاستفسار عن تنسيق العلاج في الهند.'
+    : 'Hello, I would like help with a treatment enquiry in India.';
+  return 'https://wa.me/917488955154?text=' + encodeURIComponent(greeting);
+}
+
+(() => {
+  const selector = 'a[href^="https://wa.me/917488955154"]';
+  function localize(link) {
+    if (!link || link.closest('[data-enquiry-review]')) return;
+    const url = new URL(link.href);
+    if (url.origin !== 'https://wa.me' || url.pathname.replace(/\/$/, '') !== '/917488955154') return;
+    const language = document.documentElement.lang.toLowerCase().startsWith('ar') ? 'ar' : 'en';
+    link.href = elajmeDirectWhatsAppUrl(language);
+    link.referrerPolicy = 'no-referrer';
+  }
+
+  function localizeLinks() {
+    document.querySelectorAll(selector).forEach(localize);
+  }
+
+  document.addEventListener('DOMContentLoaded', localizeLinks);
+  window.addEventListener('load', localizeLinks);
+  function localizeActivatedLink(event) {
+    if (event.type === 'auxclick' && event.button !== 1) return;
+    localize(event.target.closest?.(selector));
+  }
+  document.addEventListener('click', localizeActivatedLink, true);
+  document.addEventListener('auxclick', localizeActivatedLink, true);
+})();
